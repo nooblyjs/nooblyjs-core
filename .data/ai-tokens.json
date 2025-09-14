@@ -1,0 +1,51 @@
+{
+  "sessions": [
+    {
+      "timestamp": "2025-09-02T17:34:01.137Z",
+      "provider": "claude",
+      "model": "claude-3-5-sonnet-20241022",
+      "promptTokens": 17,
+      "completionTokens": 50,
+      "totalTokens": 67,
+      "estimatedCost": 0.0008010000000000001
+    },
+    {
+      "timestamp": "2025-09-02T17:37:36.977Z",
+      "provider": "claude",
+      "model": "claude-3-5-sonnet-20241022",
+      "promptTokens": 17,
+      "completionTokens": 50,
+      "totalTokens": 67,
+      "estimatedCost": 0.0008010000000000001
+    },
+    {
+      "timestamp": "2025-09-02T17:38:20.797Z",
+      "provider": "claude",
+      "model": "claude-3-5-sonnet-20241022",
+      "promptTokens": 24,
+      "completionTokens": 51,
+      "totalTokens": 75,
+      "estimatedCost": 0.0008370000000000001
+    },
+    {
+      "timestamp": "2025-09-02T20:01:36.618Z",
+      "provider": "claude",
+      "model": "claude-3-5-sonnet-20241022",
+      "promptTokens": 17,
+      "completionTokens": 47,
+      "totalTokens": 64,
+      "estimatedCost": 0.000756
+    },
+    {
+      "timestamp": "2025-09-07T05:59:02.477Z",
+      "provider": "claude",
+      "model": "claude-3-5-sonnet-20241022",
+      "promptTokens": 17,
+      "completionTokens": 36,
+      "totalTokens": 53,
+      "estimatedCost": 0.000591
+    }
+  ],
+  "totalCost": 0.0037860000000000003,
+  "totalTokens": 326
+}

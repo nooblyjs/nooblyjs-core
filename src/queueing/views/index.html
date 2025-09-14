@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queueing Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Queue Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item active">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Queue Management</h1>
+                <p class="page-subtitle">Enqueue, dequeue, and manage items in the queue</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Enqueue Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Enqueue Item</h2>
+                    <p class="card-subtitle">Add an item to the queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="enqueueForm">
+                        <div class="form-group">
+                            <label class="form-label" for="enqueueItem">Item (JSON)</label>
+                            <textarea id="enqueueItem" class="form-input form-textarea" placeholder='{"task": "process-payment", "orderId": 12345}' required></textarea>
+                            <div id="enqueueValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter a valid JSON object to add to the queue</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Enqueue</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('enqueueItem')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('enqueueItem')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="enqueueResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="enqueueResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dequeue Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Dequeue Item</h2>
+                    <p class="card-subtitle">Remove and retrieve the next item from the queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="dequeueForm">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Dequeue</button>
+                        </div>
+                    </form>
+                    <div id="dequeueResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Dequeued Item:</div>
+                        <div id="dequeueResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Size Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Queue Size</h2>
+                    <p class="card-subtitle">Get the current number of items in the queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="sizeForm">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Get Size</button>
+                        </div>
+                    </form>
+                    <div id="sizeResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Queue Size:</div>
+                        <div id="sizeResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check queueing service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Queueing service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Item', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('enqueueItem').addEventListener('input', () => validateJSON('enqueueItem'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                enqueueItem: {
+                    "task": "send-welcome-email",
+                    "userId": "user-xyz-123",
+                    "template": "welcome-template-v2"
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('enqueueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const item = document.getElementById('enqueueItem').value;
+            
+            if (!validateJSON('enqueueItem')) {
+                showAlert('Please enter a valid JSON item', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('enqueueForm', true);
+                const parsedItem = JSON.parse(item);
+                const result = await makeRequest(`/services/queueing/api/enqueue`, 'POST', parsedItem);
+                showResponse('enqueueResponse', 'enqueueResponseContent', result);
+                showAlert(`Item enqueued successfully`);
+            } catch (error) {
+                showAlert('Error enqueuing item: ' + error.message, 'error');
+                showResponse('enqueueResponse', 'enqueueResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('enqueueForm', false);
+            }
+        });
+
+        document.getElementById('dequeueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                setLoading('dequeueForm', true);
+                const result = await makeRequest(`/services/queueing/api/dequeue`);
+                showResponse('dequeueResponse', 'dequeueResponseContent', result);
+                showAlert(`Item dequeued successfully`);
+            } catch (error) {
+                showAlert('Error dequeuing item: ' + error.message, 'error');
+                showResponse('dequeueResponse', 'dequeueResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('dequeueForm', false);
+            }
+        });
+
+        document.getElementById('sizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                setLoading('sizeForm', true);
+                const result = await makeRequest(`/services/queueing/api/size`);
+                showResponse('sizeResponse', 'sizeResponseContent', result);
+                showAlert(`Queue size retrieved successfully`);
+            } catch (error) {
+                showAlert('Error retrieving queue size: ' + error.message, 'error');
+                showResponse('sizeResponse', 'sizeResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('sizeForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/queueing/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Queueing API',
+                description: 'REST API for queueing operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/queueing/api', description: 'Queueing API' }
+            ],
+            paths: {
+                '/enqueue': {
+                    post: {
+                        summary: 'Enqueue an item',
+                        description: 'Adds an item to the queue',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "task": "process-payment", "orderId": 12345 }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Item enqueued successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/dequeue': {
+                    get: {
+                        summary: 'Dequeue an item',
+                        description: 'Removes and retrieves the next item from the queue',
+                        responses: {
+                            '200': {
+                                description: 'Item dequeued successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'object' }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/size': {
+                    get: {
+                        summary: 'Get queue size',
+                        description: 'Gets the current number of items in the queue',
+                        responses: {
+                            '200': {
+                                description: 'Queue size retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'number' }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the queueing service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'queueing api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>
