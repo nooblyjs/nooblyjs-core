@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Search Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item active">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Search Management</h1>
+                <p class="page-subtitle">Add, search, and delete documents in the search index</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Add Document Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Add Document</h2>
+                    <p class="card-subtitle">Add a new document to the search index</p>
+                </div>
+                <div class="card-content">
+                    <form id="addForm">
+                        <div class="form-group">
+                            <label class="form-label" for="addDocument">Document (JSON)</label>
+                            <textarea id="addDocument" class="form-input form-textarea" placeholder='{"title": "My Document", "content": "This is the content of my document."}' required></textarea>
+                            <div id="addValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter a valid JSON object for the document</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Add Document</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('addDocument')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('addDocument')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="addResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="addResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Documents Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Search Documents</h2>
+                    <p class="card-subtitle">Search for documents by a term</p>
+                </div>
+                <div class="card-content">
+                    <form id="searchForm">
+                        <div class="form-group">
+                            <label class="form-label" for="searchTerm">Search Term</label>
+                            <input type="text" id="searchTerm" class="form-input" placeholder="Enter search term" required>
+                            <div class="helper-text">The term to search for in the documents</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </form>
+                    <div id="searchResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Search Results:</div>
+                        <div id="searchResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Document Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Delete Document</h2>
+                    <p class="card-subtitle">Remove a document from the search index</p>
+                </div>
+                <div class="card-content">
+                    <form id="deleteForm">
+                        <div class="form-group">
+                            <label class="form-label" for="deleteKey">Key</label>
+                            <input type="text" id="deleteKey" class="form-input" placeholder="Enter document key to delete" required>
+                            <div class="helper-text">The key of the document to remove</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Delete Document</button>
+                        </div>
+                    </form>
+                    <div id="deleteResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="deleteResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check searching service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Searching service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Document', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('addDocument').addEventListener('input', () => validateJSON('addDocument'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                addDocument: {
+                    "title": "Another Document",
+                    "content": "This is some more content for another document.",
+                    "tags": ["sample", "testing"]
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const doc = document.getElementById('addDocument').value;
+            
+            if (!validateJSON('addDocument')) {
+                showAlert('Please enter a valid JSON document', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('addForm', true);
+                const parsedDoc = JSON.parse(doc);
+                const result = await makeRequest(`/services/searching/api/add`, 'POST', parsedDoc);
+                showResponse('addResponse', 'addResponseContent', result);
+                showAlert(`Document added successfully`);
+            } catch (error) {
+                showAlert('Error adding document: ' + error.message, 'error');
+                showResponse('addResponse', 'addResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('addForm', false);
+            }
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const term = document.getElementById('searchTerm').value;
+            
+            try {
+                setLoading('searchForm', true);
+                const result = await makeRequest(`/services/searching/api/search/${encodeURIComponent(term)}`);
+                showResponse('searchResponse', 'searchResponseContent', result);
+                showAlert(`Search completed for term: ${term}`);
+            } catch (error) {
+                showAlert('Error searching documents: ' + error.message, 'error');
+                showResponse('searchResponse', 'searchResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('searchForm', false);
+            }
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('deleteKey').value;
+            
+            if (!confirm(`Are you sure you want to delete document with key: ${key}?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('deleteForm', true);
+                const result = await makeRequest(`/services/searching/api/delete/${encodeURIComponent(key)}`, 'DELETE');
+                showResponse('deleteResponse', 'deleteResponseContent', result);
+                showAlert(`Document with key: ${key} deleted successfully`);
+            } catch (error) {
+                showAlert('Error deleting document: ' + error.message, 'error');
+                showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('deleteForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/searching/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Searching API',
+                description: 'REST API for searching operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/searching/api', description: 'Searching API' }
+            ],
+            paths: {
+                '/add': {
+                    post: {
+                        summary: 'Add a document',
+                        description: 'Adds a new document to the search index',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "title": "My Document", "content": "This is the content." }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Document added successfully',
+                                content: {
+                                    'application/json': { schema: { type: 'object', properties: { key: { type: 'string' } } } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/search/{term}': {
+                    get: {
+                        summary: 'Search documents',
+                        description: 'Searches for documents matching the term',
+                        parameters: [
+                            {
+                                name: 'term',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The term to search for'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Search results',
+                                content: {
+                                    'application/json': { schema: { type: 'array', items: { type: 'object' } } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/delete/{key}': {
+                    delete: {
+                        summary: 'Delete a document',
+                        description: 'Deletes a document from the search index',
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key of the document to delete'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Document deleted successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the searching service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'searching api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

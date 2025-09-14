@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduling Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Scheduling Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item active">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Scheduling Management</h1>
+                <p class="page-subtitle">Schedule, cancel, and manage tasks</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Schedule Task Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Schedule Task</h2>
+                    <p class="card-subtitle">Schedule a new task to run at a specific time or interval</p>
+                </div>
+                <div class="card-content">
+                    <form id="scheduleForm">
+                        <div class="form-group">
+                            <label class="form-label" for="scheduleTask">Task (JSON)</label>
+                            <textarea id="scheduleTask" class="form-input form-textarea" placeholder='{"type": "send-report", "recipient": "admin@example.com"}' required></textarea>
+                            <div id="scheduleValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter a valid JSON object for the task</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="scheduleCron">Cron Expression</label>
+                            <input type="text" id="scheduleCron" class="form-input" placeholder="* * * * *" required>
+                            <div class="helper-text">Enter a cron expression for the schedule (e.g., '0 0 * * *' for daily at midnight)</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Schedule Task</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('scheduleTask')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('scheduleTask')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="scheduleResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="scheduleResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancel Task Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Cancel Task</h2>
+                    <p class="card-subtitle">Cancel a previously scheduled task</p>
+                </div>
+                <div class="card-content">
+                    <form id="cancelForm">
+                        <div class="form-group">
+                            <label class="form-label" for="cancelTaskId">Task ID</label>
+                            <input type="text" id="cancelTaskId" class="form-input" placeholder="Enter the Task ID to cancel" required>
+                            <div class="helper-text">The ID of the task to be canceled</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Cancel Task</button>
+                        </div>
+                    </form>
+                    <div id="cancelResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="cancelResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check scheduling service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Scheduling service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Task', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('scheduleTask').addEventListener('input', () => validateJSON('scheduleTask'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                scheduleTask: {
+                    "type": "cleanup-logs",
+                    "maxAgeDays": 30
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const task = document.getElementById('scheduleTask').value;
+            const cron = document.getElementById('scheduleCron').value;
+            
+            if (!validateJSON('scheduleTask')) {
+                showAlert('Please enter a valid JSON task', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('scheduleForm', true);
+                const parsedTask = JSON.parse(task);
+                const result = await makeRequest(`/services/scheduling/api/schedule`, 'POST', { task: parsedTask, cron });
+                showResponse('scheduleResponse', 'scheduleResponseContent', result);
+                showAlert(`Task scheduled successfully`);
+            } catch (error) {
+                showAlert('Error scheduling task: ' + error.message, 'error');
+                showResponse('scheduleResponse', 'scheduleResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('scheduleForm', false);
+            }
+        });
+
+        document.getElementById('cancelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const taskId = document.getElementById('cancelTaskId').value;
+            
+            if (!confirm(`Are you sure you want to cancel task with ID: ${taskId}?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('cancelForm', true);
+                const result = await makeRequest(`/services/scheduling/api/cancel/${encodeURIComponent(taskId)}`, 'DELETE');
+                showResponse('cancelResponse', 'cancelResponseContent', result);
+                showAlert(`Task with ID: ${taskId} canceled successfully`);
+            } catch (error) {
+                showAlert('Error canceling task: ' + error.message, 'error');
+                showResponse('cancelResponse', 'cancelResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('cancelForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/scheduling/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Scheduling API',
+                description: 'REST API for scheduling operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/scheduling/api', description: 'Scheduling API' }
+            ],
+            paths: {
+                '/schedule': {
+                    post: {
+                        summary: 'Schedule a task',
+                        description: 'Schedules a new task with a cron expression',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            task: { type: 'object' },
+                                            cron: { type: 'string' }
+                                        }
+                                    },
+                                    example: { "task": { "type": "send-report" }, "cron": "0 0 * * *" }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Task scheduled successfully',
+                                content: {
+                                    'application/json': { schema: { type: 'object', properties: { taskId: { type: 'string' } } } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/cancel/{taskId}': {
+                    delete: {
+                        summary: 'Cancel a task',
+                        description: 'Cancels a scheduled task by its ID',
+                        parameters: [
+                            {
+                                name: 'taskId',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The ID of the task to cancel'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Task canceled successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the scheduling service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'scheduling api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

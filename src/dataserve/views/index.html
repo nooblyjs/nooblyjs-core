@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Serve Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Data Serve Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item active">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Data Serve Management</h1>
+                <p class="page-subtitle">Store and retrieve JSON data in containers using UUIDs</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Store Data Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Store Data</h2>
+                    <p class="card-subtitle">Add a new data entry to a container and get a UUID</p>
+                </div>
+                <div class="card-content">
+                    <form id="putForm">
+                        <div class="form-group">
+                            <label class="form-label" for="putContainer">Container</label>
+                            <input type="text" id="putContainer" class="form-input" placeholder="Enter container name (e.g., users, products)" required>
+                            <div class="helper-text">Container to store the data in (will be created if it doesn't exist)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="putValue">Value (JSON)</label>
+                            <textarea id="putValue" class="form-input form-textarea" placeholder='{"message": "Hello World", "timestamp": "2024-01-01"}' required></textarea>
+                            <div id="putValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter valid JSON data</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Store Data</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('putValue')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('putValue')">Load Example</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadContainerExample('put')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="putResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="putResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retrieve Data Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Retrieve Data</h2>
+                    <p class="card-subtitle">Get data by UUID from a specific container</p>
+                </div>
+                <div class="card-content">
+                    <form id="getForm">
+                        <div class="form-group">
+                            <label class="form-label" for="getContainer">Container</label>
+                            <input type="text" id="getContainer" class="form-input" placeholder="Enter container name" required>
+                            <div class="helper-text">Container to retrieve data from</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="getUuid">UUID</label>
+                            <input type="text" id="getUuid" class="form-input" placeholder="Enter UUID to retrieve" required>
+                            <div class="helper-text">UUID of the data entry to retrieve</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Retrieve Data</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadContainerExample('get')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="getResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Retrieved Data:</div>
+                        <div id="getResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Data Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Delete Data</h2>
+                    <p class="card-subtitle">Remove data entry by UUID from a specific container</p>
+                </div>
+                <div class="card-content">
+                    <form id="deleteForm">
+                        <div class="form-group">
+                            <label class="form-label" for="deleteContainer">Container</label>
+                            <input type="text" id="deleteContainer" class="form-input" placeholder="Enter container name" required>
+                            <div class="helper-text">Container to delete data from</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="deleteUuid">UUID</label>
+                            <input type="text" id="deleteUuid" class="form-input" placeholder="Enter UUID to delete" required>
+                            <div class="helper-text">UUID of the data entry to remove</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Delete Data</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadContainerExample('delete')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="deleteResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="deleteResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON Search Forms -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">JSON Search - Custom Predicate</h2>
+                    <p class="card-subtitle">Search using JavaScript predicate functions (like JSON.parse(data).find())</p>
+                </div>
+                <div class="card-content">
+                    <form id="jsonFindForm">
+                        <div class="form-group">
+                            <label class="form-label" for="jsonFindContainer">Container Name</label>
+                            <input type="text" id="jsonFindContainer" class="form-input" placeholder="Enter container name" required>
+                            <div class="helper-text">Container to search in (e.g., 'users', 'products')</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="jsonFindPredicate">Predicate Function</label>
+                            <textarea id="jsonFindPredicate" class="form-input form-textarea" placeholder="obj.id === 123" required></textarea>
+                            <div class="helper-text">JavaScript expression that returns true for matching objects (obj represents each item)</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadPredicateExample()">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="jsonFindResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Search Results:</div>
+                        <div id="jsonFindResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">JSON Search - Path-Based</h2>
+                    <p class="card-subtitle">Search for objects where a specific property matches a value</p>
+                </div>
+                <div class="card-content">
+                    <form id="jsonFindByPathForm">
+                        <div class="form-group">
+                            <label class="form-label" for="pathContainer">Container Name</label>
+                            <input type="text" id="pathContainer" class="form-input" placeholder="Enter container name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pathField">Property Path</label>
+                            <input type="text" id="pathField" class="form-input" placeholder="user.profile.name" required>
+                            <div class="helper-text">Dot notation path to the property (e.g., 'user.profile.name', 'id', 'metadata.tags')</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pathValue">Value</label>
+                            <input type="text" id="pathValue" class="form-input" placeholder="John" required>
+                            <div class="helper-text">Value to search for</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadPathExample()">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="jsonFindByPathResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Search Results:</div>
+                        <div id="jsonFindByPathResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">JSON Search - Multiple Criteria</h2>
+                    <p class="card-subtitle">Search for objects matching multiple conditions</p>
+                </div>
+                <div class="card-content">
+                    <form id="jsonFindByCriteriaForm">
+                        <div class="form-group">
+                            <label class="form-label" for="criteriaContainer">Container Name</label>
+                            <input type="text" id="criteriaContainer" class="form-input" placeholder="Enter container name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="searchCriteria">Search Criteria (JSON)</label>
+                            <textarea id="searchCriteria" class="form-input form-textarea" placeholder='{"id": 123, "status": "active", "profile.department": "engineering"}' required></textarea>
+                            <div id="criteriaValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">JSON object with path-value pairs (all must match)</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('searchCriteria')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadCriteriaExample()">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="jsonFindByCriteriaResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Search Results:</div>
+                        <div id="jsonFindByCriteriaResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check data serve service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Data Serve service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Value', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('putValue').addEventListener('input', () => validateJSON('putValue'));
+        document.getElementById('searchCriteria').addEventListener('input', () => validateJSON('searchCriteria'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                putValue: {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "metadata": {
+                        "created": "2024-01-01T00:00:00Z",
+                        "tags": ["user", "active"]
+                    }
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Load JSON search examples
+        function loadPredicateExample() {
+            document.getElementById('jsonFindContainer').value = 'users';
+            document.getElementById('jsonFindPredicate').value = 'obj.id === 123 && obj.status === "active"';
+        }
+
+        function loadPathExample() {
+            document.getElementById('pathContainer').value = 'users';
+            document.getElementById('pathField').value = 'profile.name';
+            document.getElementById('pathValue').value = 'John';
+        }
+
+        function loadCriteriaExample() {
+            document.getElementById('criteriaContainer').value = 'users';
+            const example = {
+                "id": 123,
+                "status": "active",
+                "profile.department": "engineering"
+            };
+            document.getElementById('searchCriteria').value = JSON.stringify(example, null, 2);
+            validateJSON('searchCriteria');
+        }
+
+        // Load container examples for basic operations
+        function loadContainerExample(operation) {
+            const examples = {
+                put: { container: 'users' },
+                get: { container: 'users', uuid: '123e4567-e89b-12d3-a456-426614174000' },
+                delete: { container: 'users', uuid: '123e4567-e89b-12d3-a456-426614174000' }
+            };
+            
+            const example = examples[operation];
+            if (example) {
+                document.getElementById(operation + 'Container').value = example.container;
+                if (example.uuid) {
+                    document.getElementById(operation + 'Uuid').value = example.uuid;
+                }
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('putForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('putContainer').value;
+            const value = document.getElementById('putValue').value;
+            
+            if (!validateJSON('putValue')) {
+                showAlert('Please enter valid JSON before storing data', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('putForm', true);
+                const parsedValue = JSON.parse(value);
+                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}`, 'POST', parsedValue);
+                showResponse('putResponse', 'putResponseContent', result);
+                showAlert(`Data stored successfully in container: ${container}. UUID: ${result.id}`);
+            } catch (error) {
+                showAlert('Error storing data: ' + error.message, 'error');
+                showResponse('putResponse', 'putResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('putForm', false);
+            }
+        });
+
+        document.getElementById('getForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('getContainer').value;
+            const uuid = document.getElementById('getUuid').value;
+            
+            try {
+                setLoading('getForm', true);
+                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`);
+                showResponse('getResponse', 'getResponseContent', result);
+                showAlert(`Data retrieved successfully from container: ${container}, UUID: ${uuid}`);
+            } catch (error) {
+                showAlert('Error retrieving data: ' + error.message, 'error');
+                showResponse('getResponse', 'getResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('getForm', false);
+            }
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('deleteContainer').value;
+            const uuid = document.getElementById('deleteUuid').value;
+            
+            if (!confirm(`Are you sure you want to delete data from container: ${container}, UUID: ${uuid}?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('deleteForm', true);
+                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`, 'DELETE');
+                showResponse('deleteResponse', 'deleteResponseContent', result);
+                showAlert(`Data deleted successfully from container: ${container}, UUID: ${uuid}`);
+            } catch (error) {
+                showAlert('Error deleting data: ' + error.message, 'error');
+                showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('deleteForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/dataserve/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // JSON Search form handlers
+        document.getElementById('jsonFindForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('jsonFindContainer').value;
+            const predicate = document.getElementById('jsonFindPredicate').value;
+            
+            try {
+                setLoading('jsonFindForm', true);
+                const result = await makeRequest(`/services/dataserve/api/jsonFind/${encodeURIComponent(container)}`, 'POST', { predicate });
+                showResponse('jsonFindResponse', 'jsonFindResponseContent', result);
+                showAlert(`Found ${result.length || 0} matching objects`);
+            } catch (error) {
+                showAlert('Error searching with predicate: ' + error.message, 'error');
+                showResponse('jsonFindResponse', 'jsonFindResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('jsonFindForm', false);
+            }
+        });
+
+        document.getElementById('jsonFindByPathForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('pathContainer').value;
+            const path = document.getElementById('pathField').value;
+            const value = document.getElementById('pathValue').value;
+            
+            try {
+                setLoading('jsonFindByPathForm', true);
+                const result = await makeRequest(`/services/dataserve/api/jsonFindByPath/${encodeURIComponent(container)}/${encodeURIComponent(path)}/${encodeURIComponent(value)}`);
+                showResponse('jsonFindByPathResponse', 'jsonFindByPathResponseContent', result);
+                showAlert(`Found ${result.length || 0} matching objects`);
+            } catch (error) {
+                showAlert('Error searching by path: ' + error.message, 'error');
+                showResponse('jsonFindByPathResponse', 'jsonFindByPathResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('jsonFindByPathForm', false);
+            }
+        });
+
+        document.getElementById('jsonFindByCriteriaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const container = document.getElementById('criteriaContainer').value;
+            const criteriaText = document.getElementById('searchCriteria').value;
+            
+            if (!validateJSON('searchCriteria')) {
+                showAlert('Please enter valid JSON criteria', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('jsonFindByCriteriaForm', true);
+                const criteria = JSON.parse(criteriaText);
+                const result = await makeRequest(`/services/dataserve/api/jsonFindByCriteria/${encodeURIComponent(container)}`, 'POST', criteria);
+                showResponse('jsonFindByCriteriaResponse', 'jsonFindByCriteriaResponseContent', result);
+                showAlert(`Found ${result.length || 0} matching objects`);
+            } catch (error) {
+                showAlert('Error searching by criteria: ' + error.message, 'error');
+                showResponse('jsonFindByCriteriaResponse', 'jsonFindByCriteriaResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('jsonFindByCriteriaForm', false);
+            }
+        });
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Data Serve API',
+                description: 'REST API for data storage and retrieval operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/dataserve/api', description: 'Data Serve API' }
+            ],
+            paths: {
+                '/{container}': {
+                    post: {
+                        summary: 'Store data in container',
+                        description: 'Store data in a container and get back a generated UUID',
+                        parameters: [
+                            {
+                                name: 'container',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The container to store the data in'
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "message": "Hello World", "timestamp": "2024-01-01" }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Data stored successfully with generated UUID',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                id: { type: 'string', description: 'Generated UUID for the stored data' }
+                                            }
+                                        },
+                                        example: { "id": "123e4567-e89b-12d3-a456-426614174000" }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/{container}/{uuid}': {
+                    get: {
+                        summary: 'Retrieve data from container',
+                        description: 'Retrieve data by UUID from a specific container',
+                        parameters: [
+                            {
+                                name: 'container',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The container to retrieve data from'
+                            },
+                            {
+                                name: 'uuid',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The UUID of the data to retrieve'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Data retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'object' },
+                                        example: { "message": "Hello World", "timestamp": "2024-01-01" }
+                                    }
+                                }
+                            },
+                            '404': {
+                                description: 'Data not found',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'null' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    },
+                    delete: {
+                        summary: 'Delete data from container',
+                        description: 'Delete data by UUID from a specific container',
+                        parameters: [
+                            {
+                                name: 'container',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The container to delete data from'
+                            },
+                            {
+                                name: 'uuid',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The UUID of the data to delete'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Data deleted successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '404': {
+                                description: 'Data not found',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'Not found' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/jsonFind/{containerName}': {
+                    post: {
+                        summary: 'JSON Search with Predicate',
+                        description: 'Search for objects using a JavaScript predicate function',
+                        parameters: [
+                            {
+                                name: 'containerName',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The container to search in'
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            predicate: { type: 'string' }
+                                        }
+                                    },
+                                    example: { "predicate": "obj.id === 123 && obj.status === 'active'" }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Search results',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'array', items: { type: 'object' } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/jsonFindByPath/{containerName}/{path}/{value}': {
+                    get: {
+                        summary: 'JSON Search by Path',
+                        description: 'Search for objects where a specific property matches a value',
+                        parameters: [
+                            {
+                                name: 'containerName',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' }
+                            },
+                            {
+                                name: 'path',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Dot notation path (e.g., user.profile.name)'
+                            },
+                            {
+                                name: 'value',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' }
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Search results',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'array', items: { type: 'object' } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/jsonFindByCriteria/{containerName}': {
+                    post: {
+                        summary: 'JSON Search by Multiple Criteria',
+                        description: 'Search for objects matching multiple path-value pairs',
+                        parameters: [
+                            {
+                                name: 'containerName',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' }
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "id": 123, "status": "active", "profile.department": "engineering" }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Search results',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'array', items: { type: 'object' } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the data serve service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'dataserve api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

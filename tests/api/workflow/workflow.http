@@ -1,0 +1,31 @@
+### Workflow API Status
+GET http://localhost:3000/api/workflow/status
+
+### Workflow API Start
+POST http://localhost:3000/api/workflow/defineworkflow
+Content-Type: application/json
+
+{
+  "name": "myWorkflow",
+  "steps": [
+    "/workspaces/nooblyjs-core/tests/workflow/steps/exampleStep1.js",
+    "/workspaces/nooblyjs-core/tests/workflow/steps/exampleStep2.js"
+  ]
+}
+
+
+
+### Workflow API Start
+POST http://localhost:3000/api/workflow/start
+Content-Type: application/json
+
+{
+  "name": "myWorkflow",
+  "data": {
+    "initialData": "someValue",
+    "moreData": {
+      "nestedData": "anotherValue"  
+    }
+  }
+}
+

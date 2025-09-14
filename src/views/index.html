@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noobly JS Service Registry</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Service Registry</div>
+            </div>
+            <a href="/services/" class="nav-item active">Home</a>
+            <a href="/services/ai/" class="nav-item">AI Service</a>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Service Registry</h1>
+                <p class="page-subtitle">A dashboard of all available services and their current status.</p>
+            </div>
+
+            <div class="service-list" id="service-list">
+                <!-- Services will be dynamically added here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const services = [
+            'ai',
+            'caching',
+            'dataserve',
+            'filing', 
+            'logging', 
+            'measuring', 
+            'notifying', 
+            'queueing', 
+            'scheduling', 
+            'searching', 
+            'workflow', 
+            'working'
+        ];
+
+        const serviceList = document.getElementById('service-list');
+
+        services.forEach(service => {
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'service-card';
+
+            const serviceName = document.createElement('div');
+            serviceName.className = 'service-name';
+            serviceName.textContent = service.charAt(0).toUpperCase() + service.slice(1);
+
+            const serviceStatus = document.createElement('div');
+            serviceStatus.className = 'service-status';
+
+            const statusIndicator = document.createElement('div');
+            statusIndicator.className = 'status-indicator';
+            statusIndicator.id = `status-${service}`;
+
+            serviceStatus.appendChild(statusIndicator);
+
+            serviceCard.appendChild(serviceName);
+            serviceCard.appendChild(serviceStatus);
+
+            serviceList.appendChild(serviceCard);
+
+            // Fetch status
+            fetch(`/services/${service}/api/status`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .then(data => {
+                    const indicator = document.getElementById(`status-${service}`);
+                    if (data) {
+                        indicator.classList.add('running');
+                    } else {
+                        indicator.classList.add('stopped');
+                    }
+                })
+                .catch(error => {
+                    const indicator = document.getElementById(`status-${service}`);
+                    indicator.classList.add('stopped');
+                    console.error(`Error fetching status for ${service}:`, error);
+                });
+        });
+    </script>
+</body>
+</html>

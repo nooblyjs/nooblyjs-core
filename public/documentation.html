@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Loading...</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <div class="logo-icon" id="logo-icon">NJS</div>
+                <span id="logo-text">Noobly JS</span>
+            </a>
+            
+            <nav class="nav-menu" id="nav-menu">
+                <!-- Navigation links will be loaded from JSON -->
+            </nav>
+            
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+        </div>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <nav class="mobile-nav-menu" id="mobile-nav-menu">
+                <!-- Mobile navigation links will be loaded from JSON -->
+            </nav>
+        </div>
+    </header>
+
+    <!-- Documentation Hero Section -->
+    <section class="service-hero">
+        <div class="service-content">
+            <div class="badge badge-default" id="hero-badge" style="margin-bottom: 1rem;">📚 Documentation</div>
+            <h1 class="service-title" id="hero-title">Loading...</h1>
+            <p class="service-description" id="hero-description">Loading...</p>
+            
+            <div id="hero-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                <!-- Buttons will be loaded from JSON -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quick-start" style="padding: 2rem 0;">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 id="quickstart-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
+                <p id="quickstart-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            </div>
+
+            <div class="service-grid" id="quickstart-steps">
+                <!-- Quick start steps will be loaded from JSON -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Documentation -->
+    <section style="padding: 2rem 0; background-color: hsl(var(--muted) / 0.3);">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 id="services-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
+                <p id="services-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            </div>
+
+            <div class="service-grid" id="services-grid">
+                <!-- Services will be loaded from JSON -->
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="cache.html" class="btn btn-primary">Explore All Services</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Reference Section -->
+    <section id="api-reference" style="padding: 2rem 0;">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 id="api-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
+                <p id="api-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <h3 id="core-framework-title">Loading...</h3>
+                    <div class="code-block" id="core-framework-code">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <div class="service-grid" id="api-sections">
+                    <!-- API sections will be loaded from JSON -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 id="footer-about-title">Loading...</h3>
+                    <p id="footer-about-description">Loading...</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links" id="footer-quick-links">
+                        <!-- Links will be loaded from JSON -->
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul class="footer-links" id="footer-resources">
+                        <!-- Resources will be loaded from JSON -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-left">
+                    <a href="index.html" class="footer-logo">
+                        <div class="footer-logo-icon" id="footer-logo-icon">NJS</div>
+                        <span id="footer-logo-text">Noobly JS</span>
+                    </a>
+                    <span class="footer-copyright" id="footer-copyright">Loading...</span>
+                </div>
+                
+                <div class="footer-bottom-right" id="footer-legal-links">
+                    <!-- Legal links will be loaded from JSON -->
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let contentData = null;
+
+        // Load content from JSON
+        async function loadContent() {
+            try {
+                const response = await fetch('./data/content.json');
+                contentData = await response.json();
+                populatePageContent();
+            } catch (error) {
+                console.error('Error loading content:', error);
+            }
+        }
+
+        function populatePageContent() {
+            if (!contentData || !contentData.documentation) return;
+
+            const data = contentData.documentation;
+            const common = contentData.common;
+
+            // Meta and title
+            document.getElementById('page-title').textContent = data.meta.title;
+
+            // Navigation
+            const logoIcon = document.getElementById('logo-icon');
+            const logoText = document.getElementById('logo-text');
+            logoIcon.textContent = common.navigation.logo.icon;
+            logoText.textContent = common.navigation.logo.text;
+
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = common.navigation.links.map(link => 
+                `<a href="${link.href}" class="nav-link ${link.href === 'documentation.html' ? 'active' : ''}">${link.text}</a>`
+            ).join('');
+
+            const mobileNavMenu = document.getElementById('mobile-nav-menu');
+            mobileNavMenu.innerHTML = common.mobileMenu.links.map(link => 
+                `<a href="${link.href}" class="mobile-nav-link">${link.text}</a>`
+            ).join('') + `<a href="${common.mobileMenu.cta.href}" class="btn btn-primary">${common.mobileMenu.cta.text}</a>`;
+
+            // Hero section
+            document.getElementById('hero-badge').textContent = data.hero.badge;
+            document.getElementById('hero-title').textContent = data.hero.title;
+            document.getElementById('hero-description').textContent = data.hero.description;
+
+            const heroButtons = document.getElementById('hero-buttons');
+            heroButtons.innerHTML = data.hero.buttons.map(btn => 
+                `<a href="${btn.href}" class="btn btn-${btn.type}">${btn.text}</a>`
+            ).join('');
+
+            // Quick Start
+            document.getElementById('quickstart-title').textContent = data.quickStart.title;
+            document.getElementById('quickstart-description').textContent = data.quickStart.description;
+
+            const quickstartSteps = document.getElementById('quickstart-steps');
+            quickstartSteps.innerHTML = data.quickStart.steps.map(step => `
+                <div class="service-card card">
+                    <div class="card-content">
+                        <h3>${step.title}</h3>
+                        <p style="margin-bottom: 1rem;">${step.description}</p>
+                        <div class="code-block">${step.code}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Services
+            document.getElementById('services-title').textContent = data.services.title;
+            document.getElementById('services-description').textContent = data.services.description;
+
+            const servicesGrid = document.getElementById('services-grid');
+            servicesGrid.innerHTML = data.services.items.map(service => `
+                <div class="service-card card">
+                    <div class="card-content">
+                        <div class="badge badge-${service.badgeType}" style="margin-bottom: 1rem;">${service.badge}</div>
+                        <h3><a href="${service.href}" style="text-decoration: none; color: hsl(var(--foreground));">${service.title}</a></h3>
+                        <p>${service.description}</p>
+                        <div class="code-block" style="margin-top: 1rem; font-size: 0.75rem;">${service.code}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // API Reference
+            document.getElementById('api-title').textContent = data.apiReference.title;
+            document.getElementById('api-description').textContent = data.apiReference.description;
+            document.getElementById('core-framework-title').textContent = data.apiReference.coreFramework.title;
+            document.getElementById('core-framework-code').textContent = data.apiReference.coreFramework.code;
+
+            const apiSections = document.getElementById('api-sections');
+            apiSections.innerHTML = data.apiReference.sections.map(section => `
+                <div class="card">
+                    <div class="card-content">
+                        <h4>${section.title}</h4>
+                        <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">${section.description}</p>
+                        <a href="${section.href}" class="btn btn-outline btn-sm">View ${section.title}</a>
+                    </div>
+                </div>
+            `).join('');
+
+            // Footer
+            document.getElementById('footer-about-title').textContent = data.footer.about.title;
+            document.getElementById('footer-about-description').textContent = data.footer.about.description;
+
+            const footerQuickLinks = document.getElementById('footer-quick-links');
+            footerQuickLinks.innerHTML = data.footer.quickLinks.map(link => 
+                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            ).join('');
+
+            const footerResources = document.getElementById('footer-resources');
+            footerResources.innerHTML = data.footer.resources.map(link => 
+                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            ).join('');
+
+            document.getElementById('footer-logo-icon').textContent = common.footer.logo.icon;
+            document.getElementById('footer-logo-text').textContent = common.footer.logo.text;
+            document.getElementById('footer-copyright').textContent = common.footer.copyright;
+
+            const footerLegalLinks = document.getElementById('footer-legal-links');
+            footerLegalLinks.innerHTML = common.footer.legalLinks.map(link => 
+                `<a href="${link.href}" class="footer-bottom-link">${link.text}</a>`
+            ).join('');
+        }
+
+        // Load content when page loads
+        document.addEventListener('DOMContentLoaded', loadContent);
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+            mobileMenuToggle.textContent = mobileMenu.classList.contains('active') ? '✕' : '☰';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!mobileMenuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
+                mobileMenu.classList.remove('active');
+                mobileMenuToggle.textContent = '☰';
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('a[href^="#"]')) {
+                e.preventDefault();
+                const target = document.querySelector(e.target.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            }
+        });
+
+        // Card hover effects
+        document.addEventListener('mouseenter', function(e) {
+            if (e.target.classList.contains('card')) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.transition = 'all 0.3s ease';
+            }
+        }, true);
+
+        document.addEventListener('mouseleave', function(e) {
+            if (e.target.classList.contains('card')) {
+                e.target.style.transform = 'translateY(0)';
+            }
+        }, true);
+    </script>
+</body>
+</html>

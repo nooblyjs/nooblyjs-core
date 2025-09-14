@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">File Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item active">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">File Management</h1>
+                <p class="page-subtitle">Upload, download, and delete files</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Upload File Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Upload File</h2>
+                    <p class="card-subtitle">Upload a new file to the system</p>
+                </div>
+                <div class="card-content">
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label class="form-label" for="uploadKey">Key</label>
+                            <input type="text" id="uploadKey" class="form-input" placeholder="Enter file key" required>
+                            <div class="helper-text">Unique identifier for the file</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="uploadFile">File</label>
+                            <input type="file" id="uploadFile" class="form-input" required>
+                            <div class="helper-text">Select a file to upload</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Upload File</button>
+                        </div>
+                    </form>
+                    <div id="uploadResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="uploadResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download File Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Download File</h2>
+                    <p class="card-subtitle">Download a file by key</p>
+                </div>
+                <div class="card-content">
+                    <form id="downloadForm">
+                        <div class="form-group">
+                            <label class="form-label" for="downloadKey">Key</label>
+                            <input type="text" id="downloadKey" class="form-input" placeholder="Enter file key to download" required>
+                            <div class="helper-text">Key of the file to download</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Download File</button>
+                        </div>
+                    </form>
+                    <div id="downloadResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Downloaded File:</div>
+                        <div id="downloadResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete File Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Delete File</h2>
+                    <p class="card-subtitle">Remove a file from the system</p>
+                </div>
+                <div class="card-content">
+                    <form id="deleteForm">
+                        <div class="form-group">
+                            <label class="form-label" for="deleteKey">Key</label>
+                            <input type="text" id="deleteKey" class="form-input" placeholder="Enter file key to delete" required>
+                            <div class="helper-text">Key of the file to remove</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Delete File</button>
+                        </div>
+                    </form>
+                    <div id="deleteResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="deleteResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check filing service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Filing service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {},
+            };
+
+            if (body instanceof FormData) {
+                options.body = body;
+            } else if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('uploadKey').value;
+            const fileInput = document.getElementById('uploadFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showAlert('Please select a file to upload', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                setLoading('uploadForm', true);
+                const result = await makeRequest(`/services/filing/api/upload/${encodeURIComponent(key)}`, 'POST', formData);
+                showResponse('uploadResponse', 'uploadResponseContent', result);
+                showAlert(`File uploaded successfully with key: ${key}`);
+            } catch (error) {
+                showAlert('Error uploading file: ' + error.message, 'error');
+                showResponse('uploadResponse', 'uploadResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('uploadForm', false);
+            }
+        });
+
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('downloadKey').value;
+            
+            try {
+                setLoading('downloadForm', true);
+                const result = await makeRequest(`/services/filing/api/download/${encodeURIComponent(key)}`);
+                showResponse('downloadResponse', 'downloadResponseContent', result);
+                showAlert(`File downloaded successfully for key: ${key}`);
+            } catch (error) {
+                showAlert('Error downloading file: ' + error.message, 'error');
+                showResponse('downloadResponse', 'downloadResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('downloadForm', false);
+            }
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('deleteKey').value;
+            
+            if (!confirm(`Are you sure you want to delete the file with key: ${key}?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('deleteForm', true);
+                const result = await makeRequest(`/services/filing/api/remove/${encodeURIComponent(key)}`, 'DELETE');
+                showResponse('deleteResponse', 'deleteResponseContent', result);
+                showAlert(`File deleted successfully for key: ${key}`);
+            } catch (error) {
+                showAlert('Error deleting file: ' + error.message, 'error');
+                showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('deleteForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/filing/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Filing API',
+                description: 'REST API for file management operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/filing/api', description: 'Filing API' }
+            ],
+            paths: {
+                '/upload/{key}': {
+                    post: {
+                        summary: 'Upload a file',
+                        description: 'Upload a file with the specified key',
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to store the file under'
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'multipart/form-data': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            file: {
+                                                type: 'string',
+                                                format: 'binary'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'File uploaded successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/download/{key}': {
+                    get: {
+                        summary: 'Download a file',
+                        description: 'Download a file by key',
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to retrieve the file for'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'File downloaded successfully',
+                                content: {
+                                    'application/octet-stream': {}
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/remove/{key}': {
+                    delete: {
+                        summary: 'Delete a file',
+                        description: 'Delete a file by key',
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to delete the file for'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'File deleted successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the filing service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'filing api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

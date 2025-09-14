@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Cache Management</div>
+            </div>
+            <a href="/services/caching/" class="nav-item active">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Cache Management</h1>
+                <p class="page-subtitle">Store, retrieve, and delete cache entries</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Store/Update Cache Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Store / Update Cache</h2>
+                    <p class="card-subtitle">Add or update a cache entry</p>
+                </div>
+                <div class="card-content">
+                    <form id="putForm">
+                        <div class="form-group">
+                            <label class="form-label" for="putKey">Key</label>
+                            <input type="text" id="putKey" class="form-input" placeholder="Enter cache key" required>
+                            <div class="helper-text">Unique identifier for the cache entry</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="putValue">Value (JSON)</label>
+                            <textarea id="putValue" class="form-input form-textarea" placeholder='{"message": "Hello World", "timestamp": "2024-01-01"}' required></textarea>
+                            <div id="putValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter valid JSON data</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Store Cache</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('putValue')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('putValue')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="putResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="putResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retrieve Cache Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Retrieve Cache</h2>
+                    <p class="card-subtitle">Get a cache entry by key</p>
+                </div>
+                <div class="card-content">
+                    <form id="getForm">
+                        <div class="form-group">
+                            <label class="form-label" for="getKey">Key</label>
+                            <input type="text" id="getKey" class="form-input" placeholder="Enter cache key to retrieve" required>
+                            <div class="helper-text">Key of the cache entry to retrieve</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Retrieve Cache</button>
+                        </div>
+                    </form>
+                    <div id="getResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Retrieved Data:</div>
+                        <div id="getResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Cache Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Delete Cache</h2>
+                    <p class="card-subtitle">Remove a cache entry</p>
+                </div>
+                <div class="card-content">
+                    <form id="deleteForm">
+                        <div class="form-group">
+                            <label class="form-label" for="deleteKey">Key</label>
+                            <input type="text" id="deleteKey" class="form-input" placeholder="Enter cache key to delete" required>
+                            <div class="helper-text">Key of the cache entry to remove</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Delete Cache</button>
+                        </div>
+                    </form>
+                    <div id="deleteResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="deleteResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check cache service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cache Analytics -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Cache Hits</h2>
+                    <p class="card-subtitle">View cache usage statistics and most accessed keys</p>
+                </div>
+                <div class="card-content">
+                    <div class="analytics-controls">
+                        <div class="analytics-info">
+                            <span id="analyticsCount">Loading...</span> entries tracked
+                        </div>
+                        <button class="analytics-refresh" onclick="loadAnalytics()">
+                            Refresh Data
+                        </button>
+                    </div>
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-column="key" onclick="sortTable('key')">
+                                    Cache Key
+                                </th>
+                                <th class="sortable" data-column="hits" onclick="sortTable('hits')">
+                                    Hits
+                                </th>
+                                <th class="sortable" data-column="lastHit" onclick="sortTable('lastHit')">
+                                    Last Hit
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsTableBody">
+                            <tr>
+                                <td colspan="3" class="no-data">Loading analytics data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Cache service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Value', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('putValue').addEventListener('input', () => validateJSON('putValue'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                putValue: {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "metadata": {
+                        "created": "2024-01-01T00:00:00Z",
+                        "tags": ["user", "active"]
+                    }
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('putForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('putKey').value;
+            const value = document.getElementById('putValue').value;
+            
+            if (!validateJSON('putValue')) {
+                showAlert('Please enter valid JSON before storing data', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('putForm', true);
+                const parsedValue = JSON.parse(value);
+                const result = await makeRequest(`/services/caching/api/put/${encodeURIComponent(key)}`, 'POST', parsedValue);
+                showResponse('putResponse', 'putResponseContent', result);
+                showAlert(`Cache entry stored successfully with key: ${key}`);
+                loadAnalytics();
+            } catch (error) {
+                showAlert('Error storing cache entry: ' + error.message, 'error');
+                showResponse('putResponse', 'putResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('putForm', false);
+            }
+        });
+
+        document.getElementById('getForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('getKey').value;
+            
+            try {
+                setLoading('getForm', true);
+                const result = await makeRequest(`/services/caching/api/get/${encodeURIComponent(key)}`);
+                showResponse('getResponse', 'getResponseContent', result);
+                showAlert(`Cache entry retrieved successfully for key: ${key}`);
+                loadAnalytics();
+            } catch (error) {
+                showAlert('Error retrieving cache entry: ' + error.message, 'error');
+                showResponse('getResponse', 'getResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('getForm', false);
+            }
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const key = document.getElementById('deleteKey').value;
+            
+            if (!confirm(`Are you sure you want to delete the cache entry with key: ${key}?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('deleteForm', true);
+                const result = await makeRequest(`/services/caching/api/delete/${encodeURIComponent(key)}`, 'DELETE');
+                showResponse('deleteResponse', 'deleteResponseContent', result);
+                showAlert(`Cache entry deleted successfully for key: ${key}`);
+                loadAnalytics();
+            } catch (error) {
+                showAlert('Error deleting cache entry: ' + error.message, 'error');
+                showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('deleteForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/caching/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Analytics functionality
+        let analyticsData = [];
+        let currentSort = { column: 'hits', direction: 'desc' };
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/services/caching/api/list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    analyticsData = result.data;
+                    updateAnalyticsTable();
+                    document.getElementById('analyticsCount').textContent = result.total || analyticsData.length;
+                } else {
+                    showAnalyticsError(result.error || 'Failed to load analytics data');
+                }
+            } catch (error) {
+                showAnalyticsError('Network error: ' + error.message);
+            }
+        }
+
+        function updateAnalyticsTable() {
+            const tbody = document.getElementById('analyticsTableBody');
+            
+            if (!analyticsData || analyticsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-data">No cache operations recorded yet. Start using the cache to see analytics data here.</td></tr>';
+                return;
+            }
+
+            // Sort data
+            const sortedData = [...analyticsData].sort((a, b) => {
+                let valueA, valueB;
+                
+                switch (currentSort.column) {
+                    case 'key':
+                        valueA = a.key.toLowerCase();
+                        valueB = b.key.toLowerCase();
+                        break;
+                    case 'hits':
+                        valueA = a.hits;
+                        valueB = b.hits;
+                        break;
+                    case 'lastHit':
+                        valueA = new Date(a.lastHit);
+                        valueB = new Date(b.lastHit);
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                } else {
+                    return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+                }
+            });
+
+            // Generate table rows
+            tbody.innerHTML = sortedData.map(entry => `
+                <tr>
+                    <td class="key-cell">${escapeHtml(entry.key)}</td>
+                    <td class="hits-cell">${entry.hits}</td>
+                    <td class="date-cell">${formatDate(entry.lastHit)}</td>
+                </tr>
+            `).join('');
+
+            // Update sort indicators
+            updateSortIndicators();
+        }
+
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = column === 'hits' ? 'desc' : 'asc';
+            }
+            updateAnalyticsTable();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('.analytics-table th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            const currentTh = document.querySelector(`[data-column="${currentSort.column}"]`);
+            if (currentTh) {
+                currentTh.classList.add(`sort-${currentSort.direction}`);
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showAnalyticsError(message) {
+            const tbody = document.getElementById('analyticsTableBody');
+            tbody.innerHTML = `<tr><td colspan="3" class="no-data" style="color: var(--error-color);">Error: ${escapeHtml(message)}</td></tr>`;
+            document.getElementById('analyticsCount').textContent = '0';
+        }
+
+        // Load analytics on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalytics();
+            setInterval(loadAnalytics, 30000);
+        });
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Cache API',
+                description: 'REST API for cache operations with API key authentication',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/caching/api', description: 'Cache API' }
+            ],
+            components: {
+                securitySchemes: {
+                    ApiKeyAuth: {
+                        type: 'apiKey',
+                        in: 'header',
+                        name: 'x-api-key',
+                        description: 'API key for authentication. Can also be provided via Authorization header (Bearer token) or api_key query parameter.'
+                    },
+                    BearerAuth: {
+                        type: 'http',
+                        scheme: 'bearer',
+                        description: 'API key provided as Bearer token in Authorization header'
+                    }
+                }
+            },
+            security: [
+                { ApiKeyAuth: [] },
+                { BearerAuth: [] }
+            ],
+            paths: {
+                '/put/{key}': {
+                    post: {
+                        summary: 'Store cache entry',
+                        description: 'Store a cache entry with the specified key',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to store the cache entry under'
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "message": "Hello World", "timestamp": "2024-01-01" }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Cache entry stored successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized - Invalid or missing API key',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string', example: 'Unauthorized' },
+                                                message: { type: 'string', example: 'API key is required' },
+                                                code: { type: 'string', example: 'MISSING_API_KEY' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/get/{key}': {
+                    get: {
+                        summary: 'Retrieve cache entry',
+                        description: 'Retrieve a cache entry by key',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to retrieve the cache entry for'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Cache entry retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'object' },
+                                        example: { "message": "Hello World", "timestamp": "2024-01-01" }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized - Invalid or missing API key',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string', example: 'Unauthorized' },
+                                                message: { type: 'string', example: 'API key is required' },
+                                                code: { type: 'string', example: 'MISSING_API_KEY' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/delete/{key}': {
+                    delete: {
+                        summary: 'Delete cache entry',
+                        description: 'Delete a cache entry by key',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'key',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'The key to delete the cache entry for'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Cache entry deleted successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized - Invalid or missing API key',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string', example: 'Unauthorized' },
+                                                message: { type: 'string', example: 'API key is required' },
+                                                code: { type: 'string', example: 'MISSING_API_KEY' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the cache service is running (No API key required)',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'caching api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/list': {
+                    get: {
+                        summary: 'Cache analytics',
+                        description: 'Retrieve cache usage statistics and analytics',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Analytics data retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: { 
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            key: { type: 'string', example: 'user:123' },
+                                                            hits: { type: 'number', example: 42 },
+                                                            lastHit: { type: 'string', example: '2024-01-01T12:00:00Z' }
+                                                        }
+                                                    }
+                                                },
+                                                total: { type: 'number', example: 10 }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized - Invalid or missing API key',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string', example: 'Unauthorized' },
+                                                message: { type: 'string', example: 'API key is required' },
+                                                code: { type: 'string', example: 'MISSING_API_KEY' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'application/json': { 
+                                        schema: { 
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'Internal server error' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

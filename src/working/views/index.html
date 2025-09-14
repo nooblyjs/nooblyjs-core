@@ -1,0 +1,386 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Background Tasks</div>
+            </div>
+            <a href="/services/ai/" class="nav-item">AI Service</a>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item active">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Background Task Management</h1>
+                <p class="page-subtitle">Run, stop, and monitor background tasks</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Run Task Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Run Task</h2>
+                    <p class="card-subtitle">Run a new background task</p>
+                </div>
+                <div class="card-content">
+                    <form id="runForm">
+                        <div class="form-group">
+                            <label class="form-label" for="runTask">Task (JSON)</label>
+                            <textarea id="runTask" class="form-input form-textarea" placeholder='{"task": "/path/to/your/task.js", "data": { "param1": "value1" }}' required></textarea>
+                            <div id="runValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter a valid JSON object for the task, including the path to the task file and any data to pass.</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Run Task</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('runTask')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('runTask')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="runResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="runResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stop Task Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Stop Task</h2>
+                    <p class="card-subtitle">Stop a running background task</p>
+                </div>
+                <div class="card-content">
+                    <form id="stopForm">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Stop Task</button>
+                        </div>
+                    </form>
+                    <div id="stopResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="stopResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check working service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Working service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Task', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('runTask').addEventListener('input', () => validateJSON('runTask'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                runTask: {
+                    "task": "./tasks/image-processor.js",
+                    "data": {
+                        "source": "/uploads/image.jpg",
+                        "operations": ["resize", "watermark"]
+                    }
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('runForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const task = document.getElementById('runTask').value;
+            
+            if (!validateJSON('runTask')) {
+                showAlert('Please enter a valid JSON task', 'error');
+                return;
+            }
+            
+            try {
+                setLoading('runForm', true);
+                const parsedTask = JSON.parse(task);
+                const result = await makeRequest(`/services/working/api/run`, 'POST', parsedTask);
+                showResponse('runResponse', 'runResponseContent', result);
+                showAlert(`Task started successfully`);
+            } catch (error) {
+                showAlert('Error starting task: ' + error.message, 'error');
+                showResponse('runResponse', 'runResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('runForm', false);
+            }
+        });
+
+        document.getElementById('stopForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!confirm(`Are you sure you want to stop the running task?`)) {
+                return;
+            }
+            
+            try {
+                setLoading('stopForm', true);
+                const result = await makeRequest(`/services/working/api/stop`);
+                showResponse('stopResponse', 'stopResponseContent', result);
+                showAlert(`Task stopped successfully`);
+            } catch (error) {
+                showAlert('Error stopping task: ' + error.message, 'error');
+                showResponse('stopResponse', 'stopResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('stopForm', false);
+            }
+        });
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/working/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Working API',
+                description: 'REST API for background task operations',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/working/api', description: 'Working API' }
+            ],
+            paths: {
+                '/run': {
+                    post: {
+                        summary: 'Run a background task',
+                        description: 'Runs a new background task',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { type: 'object' },
+                                    example: { "task": "/path/to/task.js", "data": {} }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Task started successfully',
+                                content: {
+                                    'application/json': { schema: { type: 'object', properties: { pid: { type: 'number' } } } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/stop': {
+                    get: {
+                        summary: 'Stop the background task',
+                        description: 'Stops the currently running background task',
+                        responses: {
+                            '200': {
+                                description: 'Task stopped successfully',
+                                content: {
+                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'text/plain': { schema: { type: 'string' } }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the working service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'working api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+###
+### NooblyJS Core - Notifying API Tests
+###
+### These tests demonstrate the Notifying service API endpoints with API key authentication.
+### The Notifying service provides pub/sub messaging and notification capabilities.
+###
+
+@baseUrl = http://localhost:3000
+@apiKey = your-api-key-here
+
+### Check Notifying API Status (No API key required)
+GET {{baseUrl}}/services/notifying/api/status
+
+###
+
+### Test without API key (should return 401 Unauthorized)
+POST {{baseUrl}}/services/notifying/api/topic
+Content-Type: application/json
+
+{
+    "topic": "unauthorized-test",
+    "message": "This should fail"
+}
+
+###
+
+### CREATE TOPIC - Create notification topic with x-api-key header
+POST {{baseUrl}}/services/notifying/api/topic
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "topic": "user-notifications",
+    "description": "User activity notifications",
+    "retention": "7-days"
+}
+
+###
+
+### SUBSCRIBE - Subscribe to topic with Bearer token
+POST {{baseUrl}}/services/notifying/api/subscribe/topic/user-notifications
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "callbackUrl": "https://example.com/webhooks/notifications",
+    "filters": ["login", "logout"],
+    "format": "json"
+}
+
+###
+
+### NOTIFY - Send notification to topic with ApiKey header
+POST {{baseUrl}}/services/notifying/api/notify/topic/user-notifications
+Content-Type: application/json
+Authorization: ApiKey {{apiKey}}
+
+{
+    "message": "User john-doe has logged in",
+    "type": "login",
+    "userId": "john-doe",
+    "timestamp": "{{$datetime iso8601}}",
+    "metadata": {
+        "ipAddress": "192.168.1.100",
+        "userAgent": "Mozilla/5.0"
+    }
+}
+
+###
+
+### UNSUBSCRIBE - Unsubscribe from topic with query parameter
+POST {{baseUrl}}/services/notifying/api/unsubscribe/topic/user-notifications?api_key={{apiKey}}
+Content-Type: application/json
+
+{
+    "callbackUrl": "https://example.com/webhooks/notifications"
+}
+
+###
