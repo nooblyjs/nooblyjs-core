@@ -261,6 +261,20 @@ class ServiceRegistry {
   }
 
   /**
+   * Get the authentication service
+   * @param {string} providerType - 'memory', 'passport', or 'google'
+   * @param {Object} options - Provider-specific options
+   * @param {string} options.clientID - Google OAuth client ID (for google provider)
+   * @param {string} options.clientSecret - Google OAuth client secret (for google provider)
+   * @param {string} options.callbackURL - OAuth callback URL (for google provider)
+   * @param {boolean} options.createDefaultAdmin - Create default admin user (for memory provider)
+   * @returns {Object} Auth service instance
+   */
+  authservice(providerType = 'memory', options = {}) {
+    return this.getService('authservice', providerType, options);
+  }
+
+  /**
    * Get the event emitter for inter-service communication
    * @returns {EventEmitter} The global event emitter
    */

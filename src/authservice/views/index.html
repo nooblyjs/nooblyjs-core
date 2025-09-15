@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Management - Noobly JS Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Authentication</div>
+            </div>
+            <a href="/services/authservice/" class="nav-item active">Authentication</a>
+            <a href="/services/aiservice/" class="nav-item">AI Service</a>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Authentication Management</h1>
+                <p class="page-subtitle">Manage users, roles, and authentication sessions</p>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- User Registration Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">User Registration</h2>
+                    <p class="card-subtitle">Create a new user account</p>
+                </div>
+                <div class="card-content">
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label class="form-label" for="regUsername">Username</label>
+                            <input type="text" id="regUsername" class="form-input" placeholder="Enter username" required>
+                            <div class="helper-text">Unique username for the account</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regEmail">Email Address</label>
+                            <input type="email" id="regEmail" class="form-input" placeholder="user@example.com" required>
+                            <div class="helper-text">Email address for the user</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regPassword">Password</label>
+                            <input type="password" id="regPassword" class="form-input" placeholder="Enter secure password" required>
+                            <div class="helper-text">Password must be at least 6 characters</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regRole">Role</label>
+                            <select id="regRole" class="form-input">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="guest">Guest</option>
+                            </select>
+                            <div class="helper-text">User role and permissions level</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Register User</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearForm('registerForm')">Clear Form</button>
+                        </div>
+                    </form>
+                    <div id="registerResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Registration Response:</div>
+                        <div id="registerResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Authentication Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">User Login</h2>
+                    <p class="card-subtitle">Authenticate user and create session</p>
+                </div>
+                <div class="card-content">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label class="form-label" for="loginUsername">Username</label>
+                            <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" required>
+                            <div class="helper-text">Username to authenticate</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
+                            <div class="helper-text">User password</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="button" class="btn btn-secondary" onclick="fillDefaultAdmin()">Use Admin</button>
+                            <button type="button" class="btn btn-secondary" onclick="fillDefaultUser()">Use User</button>
+                        </div>
+                    </form>
+                    <div id="loginResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Authentication Result:</div>
+                        <div id="loginResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Session Management</h2>
+                    <p class="card-subtitle">Validate or invalidate user sessions</p>
+                </div>
+                <div class="card-content">
+                    <form id="sessionForm">
+                        <div class="form-group">
+                            <label class="form-label" for="sessionToken">Session Token</label>
+                            <input type="text" id="sessionToken" class="form-input" placeholder="Enter session token">
+                            <div class="helper-text">Session token from login response</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary" onclick="validateSession()">Validate Session</button>
+                            <button type="button" class="btn btn-error" onclick="logoutSession()">Logout Session</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearSessionToken()">Clear Token</button>
+                        </div>
+                    </form>
+                    <div id="sessionResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Session Status:</div>
+                        <div id="sessionResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">User Management</h2>
+                    <p class="card-subtitle">View, update, and delete user accounts</p>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="form-label" for="userUsername">Username</label>
+                        <input type="text" id="userUsername" class="form-input" placeholder="Enter username to manage">
+                        <div class="helper-text">Username of the account to manage</div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="getUser()">Get User</button>
+                        <button type="button" class="btn btn-primary" onclick="getAllUsers()">List All Users</button>
+                        <button type="button" class="btn btn-error" onclick="deleteUser()">Delete User</button>
+                    </div>
+                    <div id="userResponse" class="response-container" style="display: none;">
+                        <div class="response-title">User Information:</div>
+                        <div id="userResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Role Management</h2>
+                    <p class="card-subtitle">Assign roles and view role memberships</p>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="form-label" for="roleUsername">Username</label>
+                        <input type="text" id="roleUsername" class="form-input" placeholder="Enter username">
+                        <div class="helper-text">Username to assign role to</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="assignRole">Role</label>
+                        <select id="assignRole" class="form-input">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                        <div class="helper-text">Role to assign to the user</div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="assignRole()">Assign Role</button>
+                        <button type="button" class="btn btn-secondary" onclick="listRoles()">List All Roles</button>
+                        <button type="button" class="btn btn-secondary" onclick="getUsersInRole()">Users in Role</button>
+                    </div>
+                    <div id="roleResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Role Management:</div>
+                        <div id="roleResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check authentication service status and statistics</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                        <button type="button" class="btn btn-secondary" onclick="refreshAll()">Refresh All Data</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Authentication service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        function clearForm(formId) {
+            document.getElementById(formId).reset();
+        }
+
+        function fillDefaultAdmin() {
+            document.getElementById('loginUsername').value = 'admin';
+            document.getElementById('loginPassword').value = 'admin123';
+        }
+
+        function fillDefaultUser() {
+            document.getElementById('loginUsername').value = 'user';
+            document.getElementById('loginPassword').value = 'user123';
+        }
+
+        function clearSessionToken() {
+            document.getElementById('sessionToken').value = '';
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userData = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                role: document.getElementById('regRole').value
+            };
+
+            try {
+                setLoading('registerForm', true);
+                const result = await makeRequest('/services/authservice/api/register', 'POST', userData);
+                showResponse('registerResponse', 'registerResponseContent', result);
+                showAlert('User registered successfully!');
+                clearForm('registerForm');
+            } catch (error) {
+                showAlert('Error registering user: ' + error.message, 'error');
+                showResponse('registerResponse', 'registerResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('registerForm', false);
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const loginData = {
+                username: document.getElementById('loginUsername').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                setLoading('loginForm', true);
+                const result = await makeRequest('/services/authservice/api/login', 'POST', loginData);
+                showResponse('loginResponse', 'loginResponseContent', result);
+                if (result.data && result.data.session) {
+                    document.getElementById('sessionToken').value = result.data.session.token;
+                    showAlert(`Login successful! Session expires: ${new Date(result.data.session.expiresAt).toLocaleString()}`);
+                } else {
+                    showAlert('Login successful!');
+                }
+                clearForm('loginForm');
+            } catch (error) {
+                showAlert('Error during login: ' + error.message, 'error');
+                showResponse('loginResponse', 'loginResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('loginForm', false);
+            }
+        });
+
+        async function validateSession() {
+            const token = document.getElementById('sessionToken').value;
+            if (!token) {
+                showAlert('Please enter a session token', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest('/services/authservice/api/validate', 'POST', { token });
+                showResponse('sessionResponse', 'sessionResponseContent', result);
+                if (result.data) {
+                    showAlert(`Session valid! User: ${result.data.username}, Role: ${result.data.role}`);
+                } else {
+                    showAlert('Session validated successfully!');
+                }
+            } catch (error) {
+                showAlert('Error validating session: ' + error.message, 'error');
+                showResponse('sessionResponse', 'sessionResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function logoutSession() {
+            const token = document.getElementById('sessionToken').value;
+            if (!token) {
+                showAlert('No session token to logout', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest('/services/authservice/api/logout', 'POST', { token });
+                showResponse('sessionResponse', 'sessionResponseContent', result);
+                document.getElementById('sessionToken').value = '';
+                showAlert('Logged out successfully!');
+            } catch (error) {
+                showAlert('Error during logout: ' + error.message, 'error');
+                showResponse('sessionResponse', 'sessionResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function getUser() {
+            const username = document.getElementById('userUsername').value;
+            if (!username) {
+                showAlert('Please enter a username', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest(`/services/authservice/api/users/${encodeURIComponent(username)}`);
+                showResponse('userResponse', 'userResponseContent', result);
+                showAlert(`User found: ${username}`);
+            } catch (error) {
+                showAlert('Error retrieving user: ' + error.message, 'error');
+                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function getAllUsers() {
+            try {
+                const result = await makeRequest('/services/authservice/api/users');
+                showResponse('userResponse', 'userResponseContent', result);
+                const count = result.data ? result.data.length : 0;
+                showAlert(`Retrieved ${count} users`);
+            } catch (error) {
+                showAlert('Error retrieving users: ' + error.message, 'error');
+                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function deleteUser() {
+            const username = document.getElementById('userUsername').value;
+            if (!username) {
+                showAlert('Please enter a username to delete', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+                return;
+            }
+
+            try {
+                const result = await makeRequest(`/services/authservice/api/users/${encodeURIComponent(username)}`, 'DELETE');
+                showResponse('userResponse', 'userResponseContent', result);
+                showAlert(`User "${username}" deleted successfully`);
+                document.getElementById('userUsername').value = '';
+            } catch (error) {
+                showAlert('Error deleting user: ' + error.message, 'error');
+                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function assignRole() {
+            const username = document.getElementById('roleUsername').value;
+            const role = document.getElementById('assignRole').value;
+
+            if (!username) {
+                showAlert('Please enter a username', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest(`/services/authservice/api/users/${encodeURIComponent(username)}/role`, 'POST', { role });
+                showResponse('roleResponse', 'roleResponseContent', result);
+                showAlert(`Role "${role}" assigned to user "${username}"`);
+            } catch (error) {
+                showAlert('Error assigning role: ' + error.message, 'error');
+                showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function listRoles() {
+            try {
+                const result = await makeRequest('/services/authservice/api/roles');
+                showResponse('roleResponse', 'roleResponseContent', result);
+                const count = result.data ? result.data.length : 0;
+                showAlert(`Found ${count} roles`);
+            } catch (error) {
+                showAlert('Error retrieving roles: ' + error.message, 'error');
+                showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function getUsersInRole() {
+            const role = document.getElementById('assignRole').value;
+
+            try {
+                const result = await makeRequest(`/services/authservice/api/roles/${encodeURIComponent(role)}/users`);
+                showResponse('roleResponse', 'roleResponseContent', result);
+                const count = result.data ? result.data.length : 0;
+                showAlert(`Found ${count} users in "${role}" role`);
+            } catch (error) {
+                showAlert('Error retrieving users in role: ' + error.message, 'error');
+                showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/authservice/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function refreshAll() {
+            try {
+                await Promise.all([
+                    checkStatus(),
+                    getAllUsers(),
+                    listRoles()
+                ]);
+                showAlert('All data refreshed successfully');
+            } catch (error) {
+                showAlert('Some operations failed during refresh', 'error');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+        });
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Authentication API',
+                description: 'REST API for authentication and user management with session-based authentication',
+                version: '1.0.0'
+            },
+            servers: [
+                { url: '/services/authservice/api', description: 'Authentication API' }
+            ],
+            components: {
+                securitySchemes: {
+                    ApiKeyAuth: {
+                        type: 'apiKey',
+                        in: 'header',
+                        name: 'x-api-key',
+                        description: 'API key for authentication. Can also be provided via Authorization header (Bearer token) or api_key query parameter.'
+                    },
+                    BearerAuth: {
+                        type: 'http',
+                        scheme: 'bearer',
+                        description: 'API key provided as Bearer token in Authorization header'
+                    }
+                },
+                schemas: {
+                    UserRegistration: {
+                        type: 'object',
+                        required: ['username', 'email', 'password'],
+                        properties: {
+                            username: { type: 'string', example: 'johndoe' },
+                            email: { type: 'string', format: 'email', example: 'john@example.com' },
+                            password: { type: 'string', minLength: 6, example: 'secretpassword' },
+                            role: { type: 'string', enum: ['admin', 'user', 'guest'], default: 'user', example: 'user' }
+                        }
+                    },
+                    LoginCredentials: {
+                        type: 'object',
+                        required: ['username', 'password'],
+                        properties: {
+                            username: { type: 'string', example: 'johndoe' },
+                            password: { type: 'string', example: 'secretpassword' }
+                        }
+                    },
+                    User: {
+                        type: 'object',
+                        properties: {
+                            id: { type: 'string', example: 'usr_123456789' },
+                            username: { type: 'string', example: 'johndoe' },
+                            email: { type: 'string', format: 'email', example: 'john@example.com' },
+                            role: { type: 'string', example: 'user' },
+                            isActive: { type: 'boolean', example: true },
+                            createdAt: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
+                            lastLogin: { type: 'string', format: 'date-time', nullable: true, example: '2023-01-15T10:30:00.000Z' }
+                        }
+                    }
+                }
+            },
+            security: [
+                { ApiKeyAuth: [] },
+                { BearerAuth: [] }
+            ],
+            paths: {
+                '/register': {
+                    post: {
+                        summary: 'Register new user',
+                        description: 'Create a new user account',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { $ref: '#/components/schemas/UserRegistration' }
+                                }
+                            }
+                        },
+                        responses: {
+                            '201': {
+                                description: 'User created successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'User created successfully' },
+                                                data: { $ref: '#/components/schemas/User' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '400': {
+                                description: 'Bad request - validation error',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'Username already exists' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized - Invalid or missing API key',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string', example: 'Unauthorized' },
+                                                message: { type: 'string', example: 'API key is required' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/login': {
+                    post: {
+                        summary: 'User login',
+                        description: 'Authenticate user and create session',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: { $ref: '#/components/schemas/LoginCredentials' }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Login successful',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'Login successful' },
+                                                data: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        user: { $ref: '#/components/schemas/User' },
+                                                        session: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                token: { type: 'string', example: 'sess_abc123def456' },
+                                                                expiresAt: { type: 'string', format: 'date-time', example: '2023-01-16T10:30:00.000Z' }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Invalid credentials',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'Invalid credentials' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/logout': {
+                    post: {
+                        summary: 'User logout',
+                        description: 'Invalidate user session',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            token: { type: 'string', description: 'Session token to invalidate' }
+                                        },
+                                        required: ['token']
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Logout successful',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'Logout successful' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/validate': {
+                    post: {
+                        summary: 'Validate session',
+                        description: 'Validate if a session token is still active',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            token: { type: 'string', description: 'Session token to validate' }
+                                        },
+                                        required: ['token']
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Session valid',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'Session valid' },
+                                                data: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        token: { type: 'string', example: 'sess_abc123def456' },
+                                                        username: { type: 'string', example: 'johndoe' },
+                                                        role: { type: 'string', example: 'user' },
+                                                        expiresAt: { type: 'string', format: 'date-time', example: '2023-01-16T10:30:00.000Z' }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Invalid or expired session',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'Invalid session' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/users': {
+                    get: {
+                        summary: 'List all users',
+                        description: 'Retrieve a list of all users (admin access required)',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Users retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: {
+                                                    type: 'array',
+                                                    items: { $ref: '#/components/schemas/User' }
+                                                },
+                                                total: { type: 'integer', example: 10 }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '401': {
+                                description: 'Unauthorized',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'Unauthorized' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/users/{username}': {
+                    get: {
+                        summary: 'Get user by username',
+                        description: 'Retrieve user information for the specified username',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'username',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Username to retrieve'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'User found',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: { $ref: '#/components/schemas/User' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '404': {
+                                description: 'User not found',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'User not found' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    delete: {
+                        summary: 'Delete user',
+                        description: 'Delete a user account',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'username',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Username to delete'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'User deleted successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'User deleted successfully' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '404': {
+                                description: 'User not found',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'User not found' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/users/{username}/role': {
+                    post: {
+                        summary: 'Assign role to user',
+                        description: 'Assign a role to the specified user',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'username',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Username to assign role to'
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            role: { type: 'string', enum: ['admin', 'user', 'guest'], description: 'Role to assign' }
+                                        },
+                                        required: ['role']
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': {
+                                description: 'Role assigned successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                message: { type: 'string', example: 'Role assigned successfully' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '404': {
+                                description: 'User not found',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: false },
+                                                error: { type: 'string', example: 'User not found' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/roles': {
+                    get: {
+                        summary: 'List all roles',
+                        description: 'Retrieve a list of all available roles',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Roles retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: {
+                                                    type: 'array',
+                                                    items: { type: 'string' },
+                                                    example: ['admin', 'user', 'guest']
+                                                },
+                                                total: { type: 'integer', example: 3 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/roles/{role}/users': {
+                    get: {
+                        summary: 'Get users in role',
+                        description: 'Retrieve all users assigned to the specified role',
+                        security: [
+                            { ApiKeyAuth: [] },
+                            { BearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'role',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Role name'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Users in role retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: {
+                                                    type: 'array',
+                                                    items: { $ref: '#/components/schemas/User' }
+                                                },
+                                                total: { type: 'integer', example: 5 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the authentication service is running (No API key required)',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                success: { type: 'boolean', example: true },
+                                                data: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        service: { type: 'string', example: 'auth' },
+                                                        provider: { type: 'string', example: 'memory' },
+                                                        users: { type: 'integer', example: 42 },
+                                                        activeSessions: { type: 'integer', example: 15 },
+                                                        roles: { type: 'integer', example: 3 },
+                                                        uptime: { type: 'number', example: 3600.5 }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+    </script>
+</body>
+</html>

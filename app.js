@@ -21,6 +21,7 @@ const config = require('dotenv').config();
 /** @type {express.Application} Express application instance */
 const app = express();
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 
 /**
  * Initialize the service registry with the Express app.
@@ -47,6 +48,9 @@ const workflow = serviceRegistry.workflow('memory');
 const aiservice = serviceRegistry.aiservice('claude', {
   apiKey: process.env.aiapikey
 });
+const authservice = serviceRegistry.authservice('memory', {
+  createDefaultAdmin: true
+});
 
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));
@@ -67,6 +71,7 @@ loadExampleNotifying(notifying);
 loadExampleWorker(worker);
 loadExampleWorflow(workflow);
 loadExampleAiService(aiservice);
+loadExampleAuthService(authservice);
 
 const PORT = process.env.PORT || 3001;
 app.use('/', express.static(__dirname + '/public'));
@@ -198,5 +203,34 @@ async function loadExampleAiService(aiservice) {
     console.log('Token Usage:', response.usage);
   } catch (error) {
     console.error('AI Service Error:', error.message);
+  }
+}
+
+/**
+ * Demonstrate authentication service.
+ * Shows user creation, authentication, and session management.
+ */
+async function loadExampleAuthService(authservice) {
+  try {
+    console.log('Testing Authentication service...');
+
+    // The service should already have default admin and user accounts
+    const status = await authservice.getStatus();
+    console.log('Auth Service Status:', status);
+
+    // Try to authenticate with default admin user
+    const loginResult = await authservice.authenticateUser('admin', 'admin123');
+    console.log('Admin login successful:', loginResult.user.username, 'Role:', loginResult.user.role);
+
+    // Validate the session
+    const session = await authservice.validateSession(loginResult.session.token);
+    console.log('Session validation successful for:', session.username);
+
+    // List all users
+    const users = await authservice.listUsers();
+    console.log('Total users:', users.length);
+
+  } catch (error) {
+    console.error('Auth Service Error:', error.message);
   }
 }

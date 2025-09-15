@@ -48,7 +48,7 @@ class AIClaude extends AIServiceBase {
    * @return {Promise<Object>} Response with content and usage data.
    */
   async prompt(prompt, options = {}) {
-    if (!othis.enabled ) {
+    if (!this.enabled ) {
       console.error('Claude API key is required');
       return "";
     }

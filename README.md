@@ -77,6 +77,22 @@ The following RESTful APIs are exposed via the various service modules:
 - `GET    /api/working/stop` — Stop the running task.
 - `GET    /api/working/status` — Get worker status.
 
+### Authentication
+- `POST   /api/authservice/register` — Register a new user account.
+- `POST   /api/authservice/login` — Authenticate user and create session.
+- `POST   /api/authservice/logout` — Logout user and invalidate session.
+- `POST   /api/authservice/validate` — Validate session token.
+- `GET    /api/authservice/users` — List all users (admin only).
+- `GET    /api/authservice/users/:username` — Get specific user info.
+- `PUT    /api/authservice/users/:username` — Update user information.
+- `DELETE /api/authservice/users/:username` — Delete user account.
+- `POST   /api/authservice/users/:username/role` — Assign role to user.
+- `GET    /api/authservice/roles` — List all available roles.
+- `GET    /api/authservice/roles/:role/users` — Get users in specific role.
+- `GET    /api/authservice/status` — Get authentication service status.
+- `GET    /api/authservice/google` — Initiate Google OAuth flow.
+- `GET    /api/authservice/google/callback` — Handle Google OAuth callback.
+
 ---
 
 Each API is designed to be stateless and can be integrated independently. For more details on request/response formats and provider configuration, see the documentation in the `docs/` folder.
@@ -167,6 +183,15 @@ Each API is designed to be stateless and can be integrated independently. For mo
 
 **Features:** Script execution, worker management, task lifecycle management
 
+### 🔐 Authentication Service
+**Purpose:** User authentication and authorization
+**Providers:**
+- `memory` - In-memory user storage with default admin/user accounts
+- `passport` - Passport.js local strategy integration
+- `google` - Google OAuth 2.0 authentication
+
+**Features:** User registration/login, session management, role-based access control, password hashing, token validation, OAuth integration
+
 ## Installation
 
 Install **nooblyjs-core** via npm:
@@ -190,6 +215,7 @@ serviceRegistry.initialize(app);
 const cache = serviceRegistry.cache('redis', { host: 'localhost', port: 6379 });
 const logger = serviceRegistry.logger('file', { filename: 'app.log' });
 const queue = serviceRegistry.queue('memory');
+const auth = serviceRegistry.authservice('memory', { createDefaultAdmin: true });
 
 // Use the services
 await cache.put('user:123', { name: 'John', role: 'admin' });
@@ -198,6 +224,10 @@ const user = await cache.get('user:123');
 logger.info('User retrieved from cache', user);
 
 queue.enqueue({ task: 'sendEmail', userId: 123 });
+
+// Authenticate users
+const loginResult = await auth.authenticateUser('admin', 'admin123');
+const session = loginResult.session;
 
 app.listen(3000, () => {
   logger.info('Server running on port 3000');
