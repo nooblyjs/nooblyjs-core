@@ -1,8 +1,0 @@
-node_modules
-temp
-.cache
-.data
-.logs
-.files
-.config
-.env

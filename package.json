@@ -31,11 +31,10 @@
     "url": "https://github.com/nooblyjs/nooblyjs-core.git"
   },
   "scripts": {
-    "clean": "rimraf dist/*; rimraf jsdocs/*;",
-    "dev:web": "npm run clean; nodemon --watch ./src ./app.js",
+    "start": "node ./app.js",
+    "dev:web": "nodemon --watch ./src ./app.js",
     "test": "jest",
-    "test-load": "node ./tests-load/",
-    "build": "jsdoc -c jsdoc.json; npm version minor; babel src -d dist; npm pack --pack-destination='package'"
+    "test-load": "node ./tests-load/"
   },
   "jest": {
     "modulePaths": [
@@ -46,13 +45,7 @@
     "detectOpenHandles": true
   },
   "devDependencies": {
-    "@babel/cli": "^7.28.0",
-    "@babel/core": "^7.28.0",
-    "@babel/preset-env": "^7.28.0",
-    "gts": "^6.0.2",
-    "jest": "^30.0.3",
-    "jsdoc": "^4.0.4",
-    "supertest": "^7.1.4"
+    "jest": "^30.0.3"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.81",

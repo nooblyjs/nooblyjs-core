@@ -28,7 +28,9 @@ class AIClaude extends AIServiceBase {
     super(options, eventEmitter);
     
     if (!options.apiKey) {
-      throw new Error('Claude API key is required');
+      this.enabled = false
+      console.error('Claude API key is required');
+      return;
     }
     
     this.model_ = options.model || 'claude-3-5-sonnet-20241022';
@@ -46,6 +48,10 @@ class AIClaude extends AIServiceBase {
    * @return {Promise<Object>} Response with content and usage data.
    */
   async prompt(prompt, options = {}) {
+    if (!othis.enabled ) {
+      console.error('Claude API key is required');
+      return "";
+    }
     try {
       const response = await this.client_.messages.create({
         model: this.model_,
