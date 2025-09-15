@@ -6,7 +6,11 @@
     },
     "hero": {
       "title": "Noobly JS",
-      "subtitle": "Not Just Another Accelerator Framework",
+      "subtitle": "Not Just Another Accelerator Framework - Your AI-Powered Development Assistant",
+      "image": {
+        "src": "robot-hero-main.jpg",
+        "alt": "NooblyJS Robot Assistant - Your AI-Powered Development Companion"
+      },
       "buttons": [
         {
           "text": "Get Started",
@@ -22,19 +26,19 @@
     },
     "features": [
       {
-        "icon": "🚀",
-        "title": "Fast & Lightweight",
-        "description": "Built for performance with minimal overhead and maximum efficiency. Experience lightning-fast development cycles."
+        "icon": "🤖",
+        "title": "AI-Enhanced Development",
+        "description": "Built with intelligent automation and AI-powered assistance. Experience lightning-fast development cycles with your robot companion."
       },
       {
         "icon": "🔧",
-        "title": "Modular Architecture",
-        "description": "Use only what you need with our flexible, plugin-based system. Build exactly what your project requires."
+        "title": "Modular Robot Architecture",
+        "description": "Use only what you need with our flexible, plugin-based system. Build exactly what your project requires with robotic precision."
       },
       {
         "icon": "💡",
-        "title": "Developer First",
-        "description": "Intuitive APIs and excellent documentation for a smooth development experience. Built by developers, for developers."
+        "title": "Smart Developer Experience",
+        "description": "Intuitive APIs and excellent documentation for a smooth development experience. Built by robots, for humans."
       }
     ],
     "stats": [
@@ -135,12 +139,19 @@
           "title": "Working Service",
           "href": "working.html",
           "description": "Background task execution engine for processing intensive operations asynchronously."
+        },
+        {
+          "badge": "🔐 Security",
+          "badgeType": "yellow",
+          "title": "Authentication Service",
+          "href": "/services/authservice",
+          "description": "Secure user authentication and authorization with multiple providers including Passport.js and OAuth."
         }
       ]
     },
     "testimonial": {
-      "text": "Noobly JS has revolutionized our development process. What used to take weeks now takes days. The framework's intuitive design and powerful features make it an indispensable tool for any serious developer.",
-      "author": "— Sarah Chen, Lead Developer at TechCorp"
+      "text": "Noobly JS and its robot companion have revolutionized our development process. What used to take weeks now takes days. The framework's intelligent automation and powerful features make it an indispensable tool for any serious developer.",
+      "author": "— Sarah Chen, Lead Developer at RoboTech Corp"
     },
     "footer": {
       "about": {

@@ -1,49 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* CSS Variables for shadcn theme */
+/* CSS Variables for Robot-inspired theme */
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 211 31% 13%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 211 31% 13%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
+  --popover-foreground: 211 31% 13%;
+  --primary: 46 82% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 50 100% 95%;
+  --secondary-foreground: 211 31% 13%;
+  --muted: 50 100% 95%;
+  --muted-foreground: 211 12% 47%;
+  --accent: 46 82% 55%;
+  --accent-foreground: 211 31% 13%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
+  --border: 50 50% 90%;
+  --input: 50 50% 90%;
+  --ring: 46 82% 55%;
+  --radius: 0.75rem;
+  --robot-yellow: 46 82% 55%;
+  --robot-blue: 46 82% 55%;
+  --robot-light-blue: 50 100% 95%;
+  --robot-gray: 210 9% 96%;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
+  --background: 211 31% 13%;
+  --foreground: 0 0% 98%;
+  --card: 211 25% 18%;
+  --card-foreground: 0 0% 98%;
+  --popover: 211 25% 18%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 46 82% 55%;
+  --primary-foreground: 211 31% 13%;
+  --secondary: 211 25% 25%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 211 25% 25%;
+  --muted-foreground: 211 12% 65%;
+  --accent: 46 82% 55%;
+  --accent-foreground: 211 31% 13%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 94.1%;
+  --border: 211 25% 25%;
+  --input: 211 25% 25%;
+  --ring: 46 82% 55%;
+  --robot-yellow: 46 82% 55%;
+  --robot-blue: 46 82% 55%;
+  --robot-light-blue: 211 25% 25%;
+  --robot-gray: 211 25% 30%;
 }
 
 /* Base styles */
@@ -170,8 +178,14 @@ body {
 }
 
 .badge-default {
-  background-color: hsl(var(--primary));
+  background-color: hsl(var(--robot-blue));
   color: hsl(var(--primary-foreground));
+}
+
+.badge-yellow {
+  background-color: hsl(var(--robot-yellow));
+  color: hsl(var(--foreground));
+  font-weight: 600;
 }
 
 .badge-secondary {
@@ -217,14 +231,18 @@ body {
 .logo-icon {
   width: 2rem;
   height: 2rem;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+  background-image: url('robot-hero.jpg');
+  background-size: cover;
+  background-position: center;
   border-radius: calc(var(--radius));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: hsl(var(--primary-foreground));
+  color: transparent;
   font-weight: 700;
   font-size: 0.875rem;
+  border: 2px solid hsl(var(--robot-blue));
+  box-shadow: 0 2px 8px hsl(var(--robot-blue) / 0.3);
 }
 
 .nav-menu {
@@ -293,41 +311,76 @@ body {
 
 /* Hero section */
 .hero {
-  padding: 6rem 0;
-  background: linear-gradient(135deg, 
-    hsl(var(--background)) 0%, 
-    hsl(var(--muted) / 0.5) 100%);
+  padding: 8rem 0 6rem;
+  background: linear-gradient(135deg,
+    hsl(var(--robot-light-blue) / 0.2) 0%,
+    hsl(var(--background)) 40%,
+    hsl(var(--robot-yellow) / 0.05) 100%);
+  position: relative;
+  overflow: hidden;
 }
 
 .hero-content {
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
-.hero h1 {
-  font-size: 4rem;
+.hero-text {
+  text-align: left;
+}
+
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.robot-hero-img {
+  max-width: 100%;
+  height: auto;
+  max-height: 500px;
+  filter: drop-shadow(0 20px 40px hsl(var(--robot-blue) / 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.hero-text h1 {
+  font-size: 3.5rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--muted-foreground)));
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--robot-blue)));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
 
-.subtitle {
-  font-size: 1.5rem;
+.hero-text .subtitle {
+  font-size: 1.25rem;
   color: hsl(var(--muted-foreground));
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   font-weight: 400;
+  line-height: 1.6;
 }
 
 .hero-buttons {
   display: flex;
   gap: 1rem;
-  justify-content: center;
-  margin-bottom: 4rem;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
 }
 
@@ -337,6 +390,11 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 4rem;
+  grid-column: 1 / -1;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 2rem;
 }
 
 .feature {
@@ -594,14 +652,17 @@ body {
 .footer-logo-icon {
   width: 1.5rem;
   height: 1.5rem;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+  background-image: url('robot-hero.jpg');
+  background-size: cover;
+  background-position: center;
   border-radius: calc(var(--radius) / 2);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: hsl(var(--primary-foreground));
+  color: transparent;
   font-weight: 700;
   font-size: 0.75rem;
+  border: 1px solid hsl(var(--robot-blue));
 }
 
 .footer-copyright {
@@ -711,17 +772,35 @@ body {
     display: block;
   }
 
-  .hero h1 {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+
+  .hero-text {
+    text-align: center;
+    order: 2;
+  }
+
+  .hero-image {
+    order: 1;
+  }
+
+  .hero-text h1 {
     font-size: 2.5rem;
   }
 
-  .subtitle {
-    font-size: 1.25rem;
+  .hero-text .subtitle {
+    font-size: 1.1rem;
   }
 
   .hero-buttons {
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
+  }
+
+  .robot-hero-img {
+    max-height: 300px;
   }
 
   .features {

@@ -41,8 +41,13 @@ module.exports = (options, eventEmitter, ai) => {
   if (options['express-app']) {
     const app = options['express-app'];
 
-    // Serve static files from the views directory for caching service
-    app.use('/services/ai', express.static(path.join(__dirname)));
+    // Serve static files from the views directory for AI service
+    app.use('/services/aiservice', express.static(path.join(__dirname)));
+
+    // Serve the main AI interface at the service root
+    app.get('/services/aiservice/', (req, res) => {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    });
 
     eventEmitter.emit('ai:loading view', {
       folder: path.join(__dirname),

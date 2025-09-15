@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Loading...</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <link rel="apple-touch-icon" href="favicon.jpg">
 </head>
 <body>
     <!-- Header -->
@@ -34,16 +36,22 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1 id="hero-title">Loading...</h1>
-            <p class="subtitle" id="hero-subtitle">Loading...</p>
-            
-            <div class="hero-buttons" id="hero-buttons">
-                <!-- Buttons will be loaded from JSON -->
+            <div class="hero-text">
+                <h1 id="hero-title">Loading...</h1>
+                <p class="subtitle" id="hero-subtitle">Loading...</p>
+
+                <div class="hero-buttons" id="hero-buttons">
+                    <!-- Buttons will be loaded from JSON -->
+                </div>
             </div>
-            
-            <div class="features" id="features">
-                <!-- Features will be loaded from JSON -->
+
+            <div class="hero-image">
+                <img src="robot-hero-main.jpg" alt="NooblyJS Robot Assistant" class="robot-hero-img">
             </div>
+        </div>
+
+        <div class="features" id="features">
+            <!-- Features will be loaded from JSON -->
         </div>
     </section>
 
@@ -183,8 +191,17 @@
             document.getElementById('hero-title').textContent = data.hero.title;
             document.getElementById('hero-subtitle').textContent = data.hero.subtitle;
 
+            // Hero image
+            if (data.hero.image) {
+                const heroImage = document.querySelector('.robot-hero-img');
+                if (heroImage) {
+                    heroImage.src = data.hero.image.src;
+                    heroImage.alt = data.hero.image.alt;
+                }
+            }
+
             const heroButtons = document.getElementById('hero-buttons');
-            heroButtons.innerHTML = data.hero.buttons.map(btn => 
+            heroButtons.innerHTML = data.hero.buttons.map(btn =>
                 `<a href="${btn.href}" class="btn btn-${btn.type} btn-lg">${btn.text}</a>`
             ).join('');
 
