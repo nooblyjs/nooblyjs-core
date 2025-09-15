@@ -296,10 +296,17 @@ const taskHandlers = {
   }
 };
 
-// Register task handlers
-Object.entries(taskHandlers).forEach(([taskName, handler]) => {
-  memoryWorker.define(taskName, handler);
-});
+// Note: The working service doesn't support inline task handlers
+// It expects external script files to be executed in worker threads
+//
+// Register task handlers - NOT SUPPORTED by basic working service
+// Object.entries(taskHandlers).forEach(([taskName, handler]) => {
+//   memoryWorker.define(taskName, handler); // This method doesn't exist
+// });
+
+console.log('⚠️  The working service only supports execution of external script files');
+console.log('   Each task must be a separate .js file that can be run in a worker thread');
+console.log('   Inline task handlers are not supported by the basic working service');
 
 // API endpoints for background task management
 
@@ -316,16 +323,23 @@ app.post('/tasks/:taskType', async (req, res) => {
       });
     }
 
-    const task = await memoryWorker.add(taskType, data, {
-      priority: options.priority || 0,
-      delay: options.delay || 0,
-      attempts: options.attempts || 3,
-      timeout: options.timeout || 30000,
-      ...options
-    });
+    // Basic working service doesn't have 'add' method, use 'start'
+    // This would need an external script file to work:
+    // await memoryWorker.start('/path/to/task-script.js', data, (status, result) => {
+    //   console.log('Task status:', status, result);
+    // });
+
+    // Mock response since advanced task features aren't available
+    const task = {
+      id: `task_${Date.now()}`,
+      type: taskType,
+      status: 'not_supported',
+      message: 'Basic working service only supports external script execution'
+    };
 
     res.json({
-      success: true,
+      success: false,
+      message: 'Basic working service doesn\'t support inline task handlers',
       task: {
         id: task.id,
         type: taskType,
@@ -345,7 +359,8 @@ app.post('/tasks/:taskType', async (req, res) => {
 app.get('/tasks/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
-    const task = await memoryWorker.getTask(taskId);
+    // Basic working service doesn't have 'getTask' method
+    const task = null; // Mock null result
 
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
@@ -380,10 +395,13 @@ app.get('/tasks/:taskId', async (req, res) => {
 app.get('/tasks', async (req, res) => {
   try {
     const { status = 'active', limit = 20, offset = 0 } = req.query;
-    const tasks = await memoryWorker.getTasks(status, {
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
+    // Basic working service doesn't have 'getTasks' method
+    const tasks = []; // Mock empty list
+    // Original call would have been:
+    // const tasks = await memoryWorker.getTasks(status, {
+    //   limit: parseInt(limit),
+    //   offset: parseInt(offset)
+    // });
 
     const taskList = tasks.map(task => ({
       id: task.id,
@@ -416,7 +434,8 @@ app.get('/tasks', async (req, res) => {
 app.delete('/tasks/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
-    const success = await memoryWorker.removeTask(taskId);
+    // Basic working service doesn't have 'removeTask' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Task not found or cannot be cancelled' });
@@ -436,7 +455,8 @@ app.delete('/tasks/:taskId', async (req, res) => {
 app.post('/tasks/:taskId/retry', async (req, res) => {
   try {
     const { taskId } = req.params;
-    const success = await memoryWorker.retryTask(taskId);
+    // Basic working service doesn't have 'retryTask' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Task not found or cannot be retried' });
@@ -455,7 +475,8 @@ app.post('/tasks/:taskId/retry', async (req, res) => {
 // Get worker statistics
 app.get('/workers/stats', async (req, res) => {
   try {
-    const stats = await memoryWorker.getStats();
+    // Basic working service doesn't have 'getStats' method
+    const stats = { running: 0, completed: 0, failed: 0, pending: 0 }; // Mock stats
 
     res.json({
       stats: {
@@ -532,7 +553,8 @@ app.post('/tasks/bulk', async (req, res) => {
           continue;
         }
 
-        const task = await memoryWorker.add(taskData.type, taskData.data, taskData.options || {});
+        // Basic working service would need external script files
+        // const task = await memoryWorker.start('/path/to/script.js', taskData.data, callback);
         results.push({
           success: true,
           task: {
@@ -634,19 +656,27 @@ globalEventEmitter.on('task:failed', (data) => {
 async function createSampleTasks() {
   try {
     // Image processing task
-    await memoryWorker.add('process-image', {
-      imageUrl: 'https://example.com/sample.jpg',
-      operations: ['resize', 'compress'],
-      quality: 85
-    });
+    // Basic working service would need external script files
+    // await memoryWorker.start('/path/to/process-image.js', {
+    //   imageUrl: 'https://example.com/sample.jpg',
+    //   operations: ['resize', 'compress'],
+    //   quality: 85
+    // }, (status, result) => {
+    //   console.log('Image processing:', status, result);
+    // });
+    console.log('Image processing task would run here with proper script file');
 
     // Data export task
-    await memoryWorker.add('export-data', {
-      format: 'csv',
-      query: 'SELECT * FROM users',
-      userId: 'demo-user',
-      includeHeaders: true
-    }, { delay: 5000 }); // Delay by 5 seconds
+    // Basic working service would need external script files
+    // await memoryWorker.start('/path/to/export-data.js', {
+    //   format: 'csv',
+    //   query: 'SELECT * FROM users',
+    //   userId: 'demo-user',
+    //   includeHeaders: true
+    // }, (status, result) => {
+    //   console.log('Export task:', status, result);
+    // });
+    console.log('Data export task would run here with proper script file');
 
     console.log('Sample tasks added to queue');
   } catch (error) {

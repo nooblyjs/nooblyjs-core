@@ -25,18 +25,18 @@ serviceRegistry.initialize(app, globalEventEmitter, {
 });
 
 // Example 1: Using memory datastore (default)
-const memoryDatastore = serviceRegistry.dataserve('memory', {
+const memoryDatastore = serviceRegistry.dataServe('memory', {
   // Optional configuration
 });
 
 // Example 2: Using file-based datastore
-const fileDatastore = serviceRegistry.dataserve('file', {
+const fileDatastore = serviceRegistry.dataServe('file', {
   dataPath: './data'
 });
 
 // Example 3: Using MongoDB datastore (requires MongoDB connection)
 /*
-const mongoDatastore = serviceRegistry.dataserve('mongodb', {
+const mongoDatastore = serviceRegistry.dataServe('mongodb', {
   connectionString: 'mongodb://localhost:27017/nooblyjs'
 });
 */
@@ -44,6 +44,10 @@ const mongoDatastore = serviceRegistry.dataserve('mongodb', {
 // Sample data setup
 async function setupSampleData() {
   try {
+    // Create containers first
+    await memoryDatastore.createContainer('users');
+    await memoryDatastore.createContainer('products');
+
     // Users container
     const users = [
       { name: 'John Doe', email: 'john@example.com', role: 'admin', active: true },
@@ -53,7 +57,7 @@ async function setupSampleData() {
     ];
 
     for (const user of users) {
-      await memoryDatastore.put('users', user);
+      await memoryDatastore.add('users', user);
     }
 
     // Products container
@@ -65,7 +69,7 @@ async function setupSampleData() {
     ];
 
     for (const product of products) {
-      await memoryDatastore.put('products', product);
+      await memoryDatastore.add('products', product);
     }
 
     console.log('Sample data loaded successfully');
@@ -78,7 +82,7 @@ async function setupSampleData() {
 app.get('/users', async (req, res) => {
   try {
     const { role, active } = req.query;
-    let users = await memoryDatastore.list('users');
+    let users = await memoryDatastore.find('users', '');
 
     // Apply filters
     if (role) {
@@ -114,11 +118,11 @@ app.post('/users', async (req, res) => {
     userData.active = userData.active !== false;
     userData.createdAt = new Date().toISOString();
 
-    const result = await memoryDatastore.put('users', userData);
+    const result = await memoryDatastore.add('users', userData);
 
     res.status(201).json({
       success: true,
-      id: result.id,
+      id: result,
       user: userData
     });
   } catch (error) {
@@ -129,7 +133,7 @@ app.post('/users', async (req, res) => {
 app.get('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await memoryDatastore.get('users', id);
+    const user = await memoryDatastore.getByUuid('users', id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -146,16 +150,18 @@ app.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const existingUser = await memoryDatastore.get('users', id);
+    const existingUser = await memoryDatastore.getByUuid('users', id);
     if (!existingUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const updatedUser = { ...existingUser, ...updates, updatedAt: new Date().toISOString() };
-    await memoryDatastore.put('users', updatedUser, id);
+    await memoryDatastore.remove('users', id);
+    const newId = await memoryDatastore.add('users', updatedUser);
 
     res.json({
       success: true,
+      id: newId,
       user: updatedUser
     });
   } catch (error) {
@@ -166,7 +172,7 @@ app.put('/users/:id', async (req, res) => {
 app.delete('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await memoryDatastore.delete('users', id);
+    await memoryDatastore.remove('users', id);
 
     res.json({
       success: true,
@@ -262,11 +268,11 @@ app.post('/bulk/users', async (req, res) => {
     const results = [];
     for (const user of users) {
       try {
-        const result = await memoryDatastore.put('users', {
+        const result = await memoryDatastore.add('users', {
           ...user,
           createdAt: new Date().toISOString()
         });
-        results.push({ success: true, id: result.id, user });
+        results.push({ success: true, id: result, user });
       } catch (error) {
         results.push({ success: false, error: error.message, user });
       }

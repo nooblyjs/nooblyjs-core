@@ -25,7 +25,7 @@ serviceRegistry.initialize(app, globalEventEmitter, {
 });
 
 // Example 1: Using console logger (default)
-const consoleLogger = serviceRegistry.logging('console', {
+const consoleLogger = serviceRegistry.logger('console', {
   level: 'info',
   format: 'json', // or 'simple'
   timestamp: true,
@@ -33,7 +33,7 @@ const consoleLogger = serviceRegistry.logging('console', {
 });
 
 // Example 2: Using file logger
-const fileLogger = serviceRegistry.logging('file', {
+const fileLogger = serviceRegistry.logger('file', {
   level: 'debug',
   filename: './logs/application.log',
   maxsize: 10 * 1024 * 1024, // 10MB
@@ -42,7 +42,7 @@ const fileLogger = serviceRegistry.logging('file', {
 });
 
 // Example 3: Using Winston with custom transport
-const winstonLogger = serviceRegistry.logging('winston', {
+const winstonLogger = serviceRegistry.logger('winston', {
   level: 'info',
   transports: [
     {
@@ -65,7 +65,7 @@ const winstonLogger = serviceRegistry.logging('winston', {
 
 // Example 4: Using remote logging (e.g., to a logging service)
 /*
-const remoteLogger = serviceRegistry.logging('remote', {
+const remoteLogger = serviceRegistry.logger('remote', {
   endpoint: 'https://your-logging-service.com/api/logs',
   apiKey: 'your-api-key',
   batch: true,

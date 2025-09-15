@@ -365,15 +365,23 @@ const workflowTemplates = {
   }
 };
 
-// Register step handlers
-Object.entries(stepHandlers).forEach(([stepName, handler]) => {
-  memoryWorkflow.defineStep(stepName, handler);
-});
+// Note: The workflow service doesn't support inline step handlers
+// It expects file paths to worker scripts that will be executed in separate threads
+//
+// Register step handlers - NOT SUPPORTED by basic workflow service
+// Object.entries(stepHandlers).forEach(([stepName, handler]) => {
+//   memoryWorkflow.defineStep(stepName, handler); // This method doesn't exist
+// });
 
-// Register workflow templates
-Object.entries(workflowTemplates).forEach(([templateName, template]) => {
-  memoryWorkflow.defineWorkflow(templateName, template);
-});
+// Register workflow templates - NEEDS FILE PATHS, NOT INLINE FUNCTIONS
+// The workflow service expects arrays of file paths to step scripts
+// Object.entries(workflowTemplates).forEach(([templateName, template]) => {
+//   memoryWorkflow.defineWorkflow(templateName, template);
+// });
+
+console.log('⚠️  The workflow service only supports file-based step execution');
+console.log('   Each step must be a separate .js file that can be run in a worker thread');
+console.log('   Inline step handlers are not supported by the basic workflow service');
 
 // API endpoints for workflow management
 
@@ -390,18 +398,27 @@ app.post('/workflows/:templateName', async (req, res) => {
       });
     }
 
-    const workflow = await memoryWorkflow.start(templateName, input, {
-      priority: options.priority || 0,
-      timeout: options.timeout || 300000, // 5 minutes
-      ...options
-    });
+    // Basic workflow service doesn't have 'start' method, use 'runWorkflow'
+    // This would need actual step files to work:
+    // const workflow = await memoryWorkflow.runWorkflow(templateName, input, (status) => {
+    //   console.log('Workflow step:', status);
+    // });
+
+    // Mock response since advanced workflow features aren't available
+    const workflow = {
+      id: `workflow_${Date.now()}`,
+      template: templateName,
+      status: 'not_supported',
+      message: 'Basic workflow service only supports file-based steps'
+    };
 
     res.json({
-      success: true,
+      success: false,
+      message: 'Basic workflow service doesn\'t support inline step handlers',
       workflow: {
         id: workflow.id,
         template: templateName,
-        status: 'running',
+        status: workflow.status,
         input: input,
         startedAt: new Date().toISOString(),
         options: options
@@ -417,7 +434,8 @@ app.post('/workflows/:templateName', async (req, res) => {
 app.get('/workflows/:workflowId', async (req, res) => {
   try {
     const { workflowId } = req.params;
-    const workflow = await memoryWorkflow.getWorkflow(workflowId);
+    // Basic workflow service doesn't have 'getWorkflow' method
+    const workflow = null; // Mock null result
 
     if (!workflow) {
       return res.status(404).json({ error: 'Workflow not found' });
@@ -452,12 +470,15 @@ app.get('/workflows', async (req, res) => {
   try {
     const { status, template, limit = 20, offset = 0 } = req.query;
 
-    const workflows = await memoryWorkflow.listWorkflows({
-      status: status,
-      template: template,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
+    // Basic workflow service doesn't have 'listWorkflows' method
+    const workflows = []; // Mock empty list
+    // Original call would have been:
+    // const workflows = await memoryWorkflow.listWorkflows({
+    //   status: status,
+    //   template: template,
+    //   limit: parseInt(limit),
+    //   offset: parseInt(offset)
+    // });
 
     const workflowList = workflows.map(workflow => ({
       id: workflow.id,
@@ -487,7 +508,8 @@ app.get('/workflows', async (req, res) => {
 app.delete('/workflows/:workflowId', async (req, res) => {
   try {
     const { workflowId } = req.params;
-    const success = await memoryWorkflow.cancelWorkflow(workflowId);
+    // Basic workflow service doesn't have 'cancelWorkflow' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Workflow not found or cannot be cancelled' });
@@ -509,7 +531,8 @@ app.post('/workflows/:workflowId/retry', async (req, res) => {
     const { workflowId } = req.params;
     const { fromStep } = req.body;
 
-    const success = await memoryWorkflow.retryWorkflow(workflowId, { fromStep });
+    // Basic workflow service doesn't have 'retryWorkflow' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Workflow not found or cannot be retried' });
@@ -530,7 +553,8 @@ app.post('/workflows/:workflowId/retry', async (req, res) => {
 app.post('/workflows/:workflowId/pause', async (req, res) => {
   try {
     const { workflowId } = req.params;
-    const success = await memoryWorkflow.pauseWorkflow(workflowId);
+    // Basic workflow service doesn't have 'pauseWorkflow' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Workflow not found or cannot be paused' });
@@ -550,7 +574,8 @@ app.post('/workflows/:workflowId/pause', async (req, res) => {
 app.post('/workflows/:workflowId/resume', async (req, res) => {
   try {
     const { workflowId } = req.params;
-    const success = await memoryWorkflow.resumeWorkflow(workflowId);
+    // Basic workflow service doesn't have 'resumeWorkflow' method
+    const success = false; // Mock failure
 
     if (!success) {
       return res.status(404).json({ error: 'Workflow not found or cannot be resumed' });
@@ -590,7 +615,8 @@ app.get('/templates', (req, res) => {
 // Get workflow statistics
 app.get('/workflows/stats', async (req, res) => {
   try {
-    const stats = await memoryWorkflow.getStats();
+    // Basic workflow service doesn't have 'getStats' method
+    const stats = { total: 0, active: 0, completed: 0, failed: 0 }; // Mock stats
 
     // Calculate additional stats from execution history
     const totalExecutions = workflowExecutions.length;
@@ -696,43 +722,55 @@ async function createSampleWorkflows() {
     console.log('🔄 Creating sample workflows...');
 
     // User onboarding workflow
-    await memoryWorkflow.start('user-onboarding', {
-      userData: {
-        userId: 'user_123',
-        email: 'user@example.com',
-        name: 'John Doe',
-        preferences: {
-          newsletter: true,
-          notifications: true
-        }
-      }
-    });
+    // Basic workflow service would need actual step files to work
+    // await memoryWorkflow.runWorkflow('user-onboarding', {
+    //   userData: {
+    //     userId: 'user_123',
+    //     email: 'user@example.com',
+    //     name: 'John Doe',
+    //     preferences: {
+    //       newsletter: true,
+    //       notifications: true
+    //     }
+    //   }
+    // }, (status) => {
+    //   console.log('User onboarding step:', status);
+    // });
+    console.log('User onboarding workflow would run here with proper step files');
 
     // Order processing workflow
     setTimeout(async () => {
-      await memoryWorkflow.start('order-processing', {
-        orderId: 'order_456',
-        customerEmail: 'customer@example.com',
-        payment: {
-          amount: 99.99,
-          currency: 'USD',
-          paymentMethod: 'credit_card'
-        },
-        items: [
-          { id: 'item1', name: 'Widget', price: 49.99, quantity: 1, currentStock: 100 },
-          { id: 'item2', name: 'Gadget', price: 50.00, quantity: 1, currentStock: 50 }
-        ]
-      });
+      // Basic workflow service would need actual step files to work
+      // await memoryWorkflow.runWorkflow('order-processing', {
+      //   orderId: 'order_456',
+      //   customerEmail: 'customer@example.com',
+      //   payment: {
+      //     amount: 99.99,
+      //     currency: 'USD',
+      //     paymentMethod: 'credit_card'
+      //   },
+      //   items: [
+      //     { id: 'item1', name: 'Widget', price: 49.99, quantity: 1, currentStock: 100 },
+      //     { id: 'item2', name: 'Gadget', price: 50.00, quantity: 1, currentStock: 50 }
+      //   ]
+      // }, (status) => {
+      //   console.log('Order processing step:', status);
+      // });
+      console.log('Order processing workflow would run here with proper step files');
     }, 3000);
 
     // Approval workflow
     setTimeout(async () => {
-      await memoryWorkflow.start('approval-workflow', {
-        userId: 'user_789',
-        requestorEmail: 'requester@example.com',
-        amount: 1500,
-        reason: 'Equipment purchase'
-      });
+      // Basic workflow service would need actual step files to work
+      // await memoryWorkflow.runWorkflow('approval-workflow', {
+      //   userId: 'user_789',
+      //   requestorEmail: 'requester@example.com',
+      //   amount: 1500,
+      //   reason: 'Equipment purchase'
+      // }, (status) => {
+      //   console.log('Approval workflow step:', status);
+      // });
+      console.log('Approval workflow would run here with proper step files');
     }, 6000);
 
     console.log('✅ Sample workflows created');

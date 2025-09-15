@@ -56,14 +56,10 @@ const metricsMiddleware = (req, res, next) => {
   const start = Date.now();
 
   // Count requests
-  memoryMetrics.increment('http_requests_total', {
-    method: req.method,
-    route: req.route?.path || req.path,
-    status: 'pending'
-  });
+  memoryMetrics.add('http_requests_total', 1);
 
   // Track concurrent requests
-  memoryMetrics.increment('http_requests_concurrent');
+  memoryMetrics.add('http_requests_concurrent', 1);
 
   // Override res.end to measure response time
   const originalEnd = res.end;
@@ -71,28 +67,17 @@ const metricsMiddleware = (req, res, next) => {
     const duration = Date.now() - start;
 
     // Record response time
-    memoryMetrics.histogram('http_request_duration_ms', duration, {
-      method: req.method,
-      route: req.route?.path || req.path,
-      status: res.statusCode
-    });
+    memoryMetrics.add('http_request_duration_ms', duration);
 
     // Update request counter with final status
-    memoryMetrics.increment('http_requests_total', {
-      method: req.method,
-      route: req.route?.path || req.path,
-      status: res.statusCode
-    });
+    memoryMetrics.add('http_requests_total', 1);
 
-    // Decrement concurrent requests
-    memoryMetrics.decrement('http_requests_concurrent');
+    // Decrement concurrent requests (simulate by adding negative value)
+    memoryMetrics.add('http_requests_concurrent', -1);
 
     // Track response sizes
     const responseSize = parseInt(res.get('Content-Length')) || 0;
-    memoryMetrics.histogram('http_response_size_bytes', responseSize, {
-      method: req.method,
-      route: req.route?.path || req.path
-    });
+    memoryMetrics.add('http_response_size_bytes', responseSize);
 
     originalEnd.call(res, chunk, encoding);
   };
@@ -109,15 +94,12 @@ app.get('/users', (req, res) => {
   const userCount = Math.floor(Math.random() * 1000) + 1;
 
   // Track business metrics
-  memoryMetrics.gauge('active_users_count', userCount);
-  memoryMetrics.increment('user_list_requests');
+  memoryMetrics.add('active_users_count', userCount);
+  memoryMetrics.add('user_list_requests', 1);
 
   // Simulate database query time
   const dbQueryTime = Math.random() * 100 + 10;
-  memoryMetrics.histogram('database_query_duration_ms', dbQueryTime, {
-    query_type: 'user_list',
-    table: 'users'
-  });
+  memoryMetrics.add('database_query_duration_ms', dbQueryTime);
 
   res.json({
     users: Array.from({ length: userCount }, (_, i) => ({
@@ -132,29 +114,26 @@ app.get('/users', (req, res) => {
 
 app.post('/users', (req, res) => {
   // Track user creation
-  memoryMetrics.increment('users_created_total');
-  memoryMetrics.increment('database_operations_total', {
-    operation: 'create',
-    table: 'users'
-  });
+  memoryMetrics.add('users_created_total', 1);
+  memoryMetrics.add('database_operations_total', 1);
 
   // Simulate processing time
   const processingTime = Math.random() * 200 + 50;
-  memoryMetrics.histogram('user_creation_duration_ms', processingTime);
+  memoryMetrics.add('user_creation_duration_ms', processingTime);
 
   setTimeout(() => {
     // Track success/failure
     const success = Math.random() > 0.1; // 90% success rate
 
     if (success) {
-      memoryMetrics.increment('users_created_success');
+      memoryMetrics.add('users_created_success', 1);
       res.status(201).json({
         success: true,
         user: { id: Date.now(), ...req.body },
         processingTime: processingTime
       });
     } else {
-      memoryMetrics.increment('users_created_errors');
+      memoryMetrics.add('users_created_errors', 1);
       res.status(500).json({
         success: false,
         error: 'User creation failed',
@@ -169,12 +148,12 @@ app.get('/slow-endpoint', async (req, res) => {
   const operationStart = Date.now();
 
   // Track slow operations
-  memoryMetrics.increment('slow_operations_started');
+  memoryMetrics.add('slow_operations_started', 1);
 
   try {
     // Simulate CPU-intensive work
     const workload = parseInt(req.query.workload) || 1000;
-    memoryMetrics.histogram('workload_size', workload);
+    memoryMetrics.add('workload_size', workload);
 
     await new Promise(resolve => {
       let count = 0;
@@ -190,12 +169,12 @@ app.get('/slow-endpoint', async (req, res) => {
     const duration = Date.now() - operationStart;
 
     // Record performance metrics
-    memoryMetrics.histogram('slow_operation_duration_ms', duration);
-    memoryMetrics.increment('slow_operations_completed');
+    memoryMetrics.add('slow_operation_duration_ms', duration);
+    memoryMetrics.add('slow_operations_completed', 1);
 
     // Track performance thresholds
     if (duration > 5000) {
-      memoryMetrics.increment('slow_operations_exceeded_sla');
+      memoryMetrics.add('slow_operations_exceeded_sla', 1);
     }
 
     res.json({
@@ -206,7 +185,7 @@ app.get('/slow-endpoint', async (req, res) => {
     });
 
   } catch (error) {
-    memoryMetrics.increment('slow_operations_failed');
+    memoryMetrics.add('slow_operations_failed', 1);
     res.status(500).json({ error: error.message });
   }
 });
@@ -215,17 +194,17 @@ app.get('/slow-endpoint', async (req, res) => {
 app.get('/resource-usage', (req, res) => {
   // CPU usage (simulated)
   const cpuUsage = Math.random() * 100;
-  memoryMetrics.gauge('cpu_usage_percent', cpuUsage);
+  memoryMetrics.add('cpu_usage_percent', cpuUsage);
 
   // Memory usage
   const memUsage = process.memoryUsage();
-  memoryMetrics.gauge('memory_heap_used_bytes', memUsage.heapUsed);
-  memoryMetrics.gauge('memory_heap_total_bytes', memUsage.heapTotal);
-  memoryMetrics.gauge('memory_rss_bytes', memUsage.rss);
+  memoryMetrics.add('memory_heap_used_bytes', memUsage.heapUsed);
+  memoryMetrics.add('memory_heap_total_bytes', memUsage.heapTotal);
+  memoryMetrics.add('memory_rss_bytes', memUsage.rss);
 
   // Event loop lag (simulated)
   const eventLoopLag = Math.random() * 10;
-  memoryMetrics.gauge('event_loop_lag_ms', eventLoopLag);
+  memoryMetrics.add('event_loop_lag_ms', eventLoopLag);
 
   res.json({
     cpu: `${cpuUsage.toFixed(2)}%`,
@@ -252,13 +231,13 @@ app.post('/metrics/custom', (req, res) => {
 
     switch (type.toLowerCase()) {
       case 'counter':
-        memoryMetrics.increment(name, labels, value);
+        memoryMetrics.add(name, value || 1);
         break;
       case 'gauge':
-        memoryMetrics.gauge(name, value, labels);
+        memoryMetrics.add(name, value);
         break;
       case 'histogram':
-        memoryMetrics.histogram(name, value, labels);
+        memoryMetrics.add(name, value);
         break;
       default:
         return res.status(400).json({ error: 'Unsupported metric type' });
@@ -324,8 +303,8 @@ app.get('/health', (req, res) => {
   };
 
   // Track health checks
-  memoryMetrics.increment('health_checks_total');
-  memoryMetrics.gauge('application_uptime_seconds', process.uptime());
+  memoryMetrics.add('health_checks_total', 1);
+  memoryMetrics.add('application_uptime_seconds', process.uptime());
 
   res.json(healthCheck);
 });
@@ -355,13 +334,13 @@ globalEventEmitter.on('metrics:threshold-exceeded', (data) => {
 setInterval(() => {
   // Collect system metrics periodically
   const memUsage = process.memoryUsage();
-  memoryMetrics.gauge('system_memory_heap_used', memUsage.heapUsed);
-  memoryMetrics.gauge('system_memory_heap_total', memUsage.heapTotal);
-  memoryMetrics.gauge('system_uptime_seconds', process.uptime());
+  memoryMetrics.add('system_memory_heap_used', memUsage.heapUsed);
+  memoryMetrics.add('system_memory_heap_total', memUsage.heapTotal);
+  memoryMetrics.add('system_uptime_seconds', process.uptime());
 
   // Simulate some business metrics
-  memoryMetrics.gauge('active_connections', Math.floor(Math.random() * 100));
-  memoryMetrics.increment('background_tasks_processed');
+  memoryMetrics.add('active_connections', Math.floor(Math.random() * 100));
+  memoryMetrics.add('background_tasks_processed', 1);
 
 }, 30000); // Every 30 seconds
 
@@ -369,8 +348,8 @@ setInterval(() => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   // Track application start
-  memoryMetrics.increment('application_starts_total');
-  memoryMetrics.gauge('application_start_timestamp', Date.now());
+  memoryMetrics.add('application_starts_total', 1);
+  memoryMetrics.add('application_start_timestamp', Date.now());
 
   console.log(`\n📊 Measuring Service Demo running on port ${PORT}\n`);
   console.log('Available endpoints:');

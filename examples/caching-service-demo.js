@@ -25,14 +25,14 @@ serviceRegistry.initialize(app, globalEventEmitter, {
 });
 
 // Example 1: Using memory cache (default)
-const memoryCache = serviceRegistry.caching('memory', {
+const memoryCache = serviceRegistry.cache('memory', {
   ttl: 3600, // Time to live in seconds (1 hour)
   maxKeys: 1000 // Maximum number of keys to store
 });
 
 // Example 2: Using Redis cache (requires Redis server)
 /*
-const redisCache = serviceRegistry.caching('redis', {
+const redisCache = serviceRegistry.cache('redis', {
   host: 'localhost',
   port: 6379,
   // password: 'your-redis-password',
@@ -41,7 +41,7 @@ const redisCache = serviceRegistry.caching('redis', {
 */
 
 // Example 3: Using file-based cache
-const fileCache = serviceRegistry.caching('file', {
+const fileCache = serviceRegistry.cache('file', {
   cachePath: './cache',
   ttl: 3600
 });

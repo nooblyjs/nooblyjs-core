@@ -80,9 +80,11 @@ async function indexSampleData() {
   try {
     console.log('📚 Indexing sample data...');
 
-    // Index users
+    // Add users to search index
     for (const user of sampleData.users) {
-      await memorySearch.index('users', user.id, {
+      await memorySearch.add(`users_${user.id}`, {
+        id: user.id,
+        type: 'user',
         name: user.name,
         email: user.email,
         role: user.role,
@@ -92,9 +94,11 @@ async function indexSampleData() {
       });
     }
 
-    // Index products
+    // Add products to search index
     for (const product of sampleData.products) {
-      await memorySearch.index('products', product.id, {
+      await memorySearch.add(`products_${product.id}`, {
+        id: product.id,
+        type: 'product',
         name: product.name,
         category: product.category,
         brand: product.brand,
@@ -104,9 +108,11 @@ async function indexSampleData() {
       });
     }
 
-    // Index articles
+    // Add articles to search index
     for (const article of sampleData.articles) {
-      await memorySearch.index('articles', article.id, {
+      await memorySearch.add(`articles_${article.id}`, {
+        id: article.id,
+        type: 'article',
         title: article.title,
         author: article.author,
         category: article.category,
@@ -294,7 +300,7 @@ app.post('/index/:indexName/:id', async (req, res) => {
     const { indexName, id } = req.params;
     const document = req.body;
 
-    await memorySearch.index(indexName, id, document);
+    await memorySearch.add(`${indexName}_${id}`, { id, type: indexName, ...document });
 
     res.json({
       success: true,
