@@ -13,6 +13,7 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const { v4: uuidv4 } = require('uuid');
 const serviceRegistry = require('./index');
 const { EventEmitter } = require('events');
@@ -21,6 +22,17 @@ const config = require('dotenv').config();
 const app = express();
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Configure sessions for Passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'nooblyjs-session-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true if using HTTPS
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter);
@@ -37,10 +49,11 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 
-const aiservice = serviceRegistry.aiservice('claude', {
-  apiKey: process.env.aiapikey
-});
+// const aiservice = serviceRegistry.aiservice('claude', {
+//   apiKey: process.env.aiapikey
+// });
 const authservice = serviceRegistry.authservice('memory', {
+  'express-app': app,
   createDefaultAdmin: true
 });
 

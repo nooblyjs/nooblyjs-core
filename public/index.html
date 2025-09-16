@@ -418,6 +418,97 @@
         if (savedTheme === 'dark') {
             document.body.classList.add('dark');
         }
+
+        // Authentication state management
+        function checkAuthState() {
+            const authToken = localStorage.getItem('authToken');
+            const currentUser = localStorage.getItem('currentUser');
+
+            if (authToken && currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    updateUIForAuthenticatedUser(user);
+                } catch (error) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                }
+            }
+        }
+
+        function updateUIForAuthenticatedUser(user) {
+            // Update navigation links
+            const navMenu = document.getElementById('nav-menu');
+            const mobileNavMenu = document.getElementById('mobile-nav-menu');
+
+            if (navMenu && mobileNavMenu) {
+                // Replace login/register with dashboard/logout
+                const authLinks = `
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="#" class="nav-link" onclick="logout()">Logout (${user.username})</a>
+                `;
+
+                const mobileAuthLinks = `
+                    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+                    <a href="#" class="mobile-nav-link" onclick="logout()">Logout (${user.username})</a>
+                `;
+
+                // Remove login/register and add dashboard/logout
+                navMenu.innerHTML = navMenu.innerHTML
+                    .replace(/<a[^>]*href="login\.html"[^>]*>.*?<\/a>/, authLinks.split('\n')[1].trim())
+                    .replace(/<a[^>]*href="register\.html"[^>]*>.*?<\/a>/, authLinks.split('\n')[2].trim());
+
+                mobileNavMenu.innerHTML = mobileNavMenu.innerHTML
+                    .replace(/<a[^>]*href="login\.html"[^>]*>.*?<\/a>/, mobileAuthLinks.split('\n')[1].trim())
+                    .replace(/<a[^>]*href="register\.html"[^>]*>.*?<\/a>/, mobileAuthLinks.split('\n')[2].trim());
+
+                // Update hero buttons
+                const heroButtons = document.getElementById('hero-buttons');
+                if (heroButtons) {
+                    heroButtons.innerHTML = `
+                        <a href="dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                        <a href="documentation.html" class="btn btn-outline btn-lg">Documentation</a>
+                    `;
+                }
+            }
+        }
+
+        function logout() {
+            const authToken = localStorage.getItem('authToken');
+
+            // Call logout API
+            if (authToken) {
+                fetch('/services/authservice/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: authToken })
+                }).catch(error => {
+                    console.error('Logout error:', error);
+                });
+            }
+
+            // Clear local storage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+
+            // Reload page to update UI
+            window.location.reload();
+        }
+
+        // Check auth state after content loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkAuthState, 100); // Wait for content to load first
+        });
+    </script>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4QK5BHJYZM"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-4QK5BHJYZM');
     </script>
 </body>
 </html>
