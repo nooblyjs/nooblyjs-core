@@ -176,15 +176,63 @@ class WorkflowService {
 }
 
 /**
- * Creates a workflow service instance with the specified configuration.
+ * Creates a workflow service instance with the specified configuration and dependency injection.
  * Automatically configures routes and views for the workflow service.
  * @param {string} type - The workflow provider type (currently only supports 'memory')
  * @param {Object} options - Provider-specific configuration options
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
+ * @param {Object} options.dependencies.queueing - Queueing service instance
+ * @param {Object} options.dependencies.scheduling - Scheduling service instance
+ * @param {Object} options.dependencies.measuring - Measuring service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {WorkflowService} Workflow service instance
  */
 function createWorkflowService(type, options, eventEmitter) {
+  const { dependencies = {}, ...providerOptions } = options;
+  const logger = dependencies.logging;
+  const queueing = dependencies.queueing;
+  const scheduling = dependencies.scheduling;
+  const measuring = dependencies.measuring;
+
   const workflow = new WorkflowService(eventEmitter);
+
+  // Inject dependencies into workflow service
+  if (logger) {
+    workflow.logger = logger;
+    workflow.log = (level, message, meta = {}) => {
+      if (typeof logger[level] === 'function') {
+        logger[level](`[WORKFLOW:${type.toUpperCase()}] ${message}`, meta);
+      }
+    };
+
+    // Log workflow service initialization
+    workflow.log('info', 'Workflow service initialized', {
+      provider: type,
+      hasLogging: true,
+      hasQueueing: !!queueing,
+      hasScheduling: !!scheduling,
+      hasMeasuring: !!measuring
+    });
+  }
+
+  // Inject queueing dependency for async workflow execution
+  if (queueing) {
+    workflow.queueing = queueing;
+  }
+
+  // Inject scheduling dependency for timed workflows
+  if (scheduling) {
+    workflow.scheduling = scheduling;
+  }
+
+  // Inject measuring dependency for performance metrics
+  if (measuring) {
+    workflow.measuring = measuring;
+  }
+
+  // Store all dependencies for potential use by workflow steps
+  workflow.dependencies = dependencies;
 
   // Initialize routes and views for the workflow service
   Routes(options, eventEmitter, workflow);

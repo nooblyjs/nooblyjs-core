@@ -9,11 +9,7 @@
 
 'use strict';
 
-const InMemoryDataServeProvider = require('./providers/dataserve');
-const FileDataRingProvider = require('./providers/dataservefiles');
-const SimpleDbDataRingProvider = require('./providers/dataserveSimpleDB');
-const MongoDBDataServeProvider = require('./providers/dataserveMongoDB');
-const DocumentDBDataServeProvider = require('./providers/dataserveDocumentDB');
+// Lazy load providers to avoid loading AWS SDK when not needed
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -30,33 +26,45 @@ function getNestedValue(obj, path) {
 }
 
 /**
- * Creates a data service instance with the specified provider.
+ * Creates a data service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the data service.
  * @param {string} type - The data provider type ('memory', 'file', 'simpledb', 'mongodb', 'documentdb')
  * @param {Object} options - Provider-specific configuration options
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
+ * @param {Object} options.dependencies.filing - Filing service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {Object} Data service wrapper with provider and methods
  */
 function createDataserveService(type, options, eventEmitter) {
+  const { dependencies = {}, ...providerOptions } = options;
+  const logger = dependencies.logging;
+  const filing = dependencies.filing;
+
   let provider;
 
-  // Create data service instance based on provider type
+  // Create data service instance based on provider type (lazy load to avoid unnecessary AWS SDK imports)
   switch (type) {
     case 'file':
-      provider = new FileDataRingProvider(options, eventEmitter);
+      const FileDataRingProvider = require('./providers/dataservefiles');
+      provider = new FileDataRingProvider(providerOptions, eventEmitter);
       break;
     case 'simpledb':
-      provider = new SimpleDbDataRingProvider(options, eventEmitter);
+      const SimpleDbDataRingProvider = require('./providers/dataserveSimpleDB');
+      provider = new SimpleDbDataRingProvider(providerOptions, eventEmitter);
       break;
     case 'mongodb':
-      provider = new MongoDBDataServeProvider(options, eventEmitter);
+      const MongoDBDataServeProvider = require('./providers/dataserveMongoDB');
+      provider = new MongoDBDataServeProvider(providerOptions, eventEmitter);
       break;
     case 'documentdb':
-      provider = new DocumentDBDataServeProvider(options, eventEmitter);
+      const DocumentDBDataServeProvider = require('./providers/dataserveDocumentDB');
+      provider = new DocumentDBDataServeProvider(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:
-      provider = new InMemoryDataServeProvider(options, eventEmitter);
+      const InMemoryDataServeProvider = require('./providers/dataserve');
+      provider = new InMemoryDataServeProvider(providerOptions, eventEmitter);
       break;
   }
 
@@ -65,6 +73,7 @@ function createDataserveService(type, options, eventEmitter) {
   // Create service object
   const service = {
     provider: provider,
+    dependencies: dependencies,
     createContainer: (...args) => provider.createContainer(...args),
     add: (...args) => provider.add(...args),
     remove: (...args) => provider.remove(...args),
@@ -140,11 +149,33 @@ function createDataserveService(type, options, eventEmitter) {
       }
     }
   };
-  
+
+  // Inject logging dependency into dataserve service
+  if (logger) {
+    service.logger = logger;
+    service.log = (level, message, meta = {}) => {
+      if (typeof logger[level] === 'function') {
+        logger[level](`[DATASERVE:${type.toUpperCase()}] ${message}`, meta);
+      }
+    };
+
+    // Log dataserve service initialization
+    service.log('info', 'DataServe service initialized', {
+      provider: type,
+      hasLogging: true,
+      hasFiling: !!filing
+    });
+  }
+
+  // Inject filing dependency if available
+  if (filing) {
+    service.filing = filing;
+  }
+
   // Initialize routes and views for the data service with the complete service object
   Routes(options, eventEmitter, service);
   Views(options, eventEmitter, service);
-  
+
   return service;
 }
 

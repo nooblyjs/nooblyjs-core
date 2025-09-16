@@ -14,8 +14,10 @@ const {
 class ServiceRegistry {
   constructor() {
     this.services = new Map();
+    this.serviceDependencies = new Map();
     this.initialized = false;
     this.eventEmitter = new EventEmitter();
+    this.dependenciesInitialized = false;
   }
 
   /**
@@ -35,6 +37,9 @@ class ServiceRegistry {
       'express-app': expressApp,
       ...globalOptions,
     };
+
+    // Initialize service dependencies
+    this.initializeServiceDependencies();
 
     // Setup API key authentication if configured
     if (globalOptions.apiKeys && globalOptions.apiKeys.length > 0) {
@@ -83,7 +88,52 @@ class ServiceRegistry {
   }
 
   /**
-   * Gets or creates a service instance (singleton pattern)
+   * Initialize service dependency definitions according to the architecture hierarchy
+   * Level 0: Foundation Services (No Dependencies)
+   * Level 1: Infrastructure Services (Use Foundation)
+   * Level 2: Business Logic Services (Use Infrastructure)
+   * Level 3: Application Services (Use Business Logic)
+   * Level 4: Integration Services (Use Application)
+   */
+  initializeServiceDependencies() {
+    if (this.dependenciesInitialized) {
+      return;
+    }
+
+    // Level 0 services (Foundation - No dependencies)
+    this.serviceDependencies.set('logging', []);
+    this.serviceDependencies.set('filing', []);
+    this.serviceDependencies.set('measuring', []);
+
+    // Level 1 services (Infrastructure - Use foundation services)
+    this.serviceDependencies.set('caching', ['logging']);
+    this.serviceDependencies.set('dataserve', ['logging', 'filing']);
+    this.serviceDependencies.set('working', ['logging']);
+
+    // Level 2 services (Business Logic - Use infrastructure services)
+    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
+    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataserve']);
+
+    // Level 3 services (Application - Use business logic services)
+    this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring']);
+    this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
+    this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataserve']);
+
+    // Level 4 services (Integration - Use application services)
+    this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
+
+    this.dependenciesInitialized = true;
+
+    // Emit event for dependency system initialization
+    this.eventEmitter.emit('dependencies:initialized', {
+      message: 'Service dependency hierarchy initialized',
+      dependencies: Object.fromEntries(this.serviceDependencies)
+    });
+  }
+
+  /**
+   * Gets or creates a service instance (singleton pattern with dependency injection)
    * @param {string} serviceName - Name of the service
    * @param {string} providerType - Type of provider to use
    * @param {Object} options - Service-specific options
@@ -102,9 +152,13 @@ class ServiceRegistry {
       return this.services.get(serviceKey);
     }
 
+    // Get dependencies for this service
+    const dependencies = this.resolveDependencies(serviceName, providerType);
+
     const mergedOptions = {
       ...this.globalOptions,
       ...options,
+      dependencies
     };
 
     let service;
@@ -118,7 +172,118 @@ class ServiceRegistry {
     }
 
     this.services.set(serviceKey, service);
+
+    // Emit event for service creation with dependencies
+    this.eventEmitter.emit('service:created', {
+      serviceName,
+      providerType,
+      dependenciesCount: Object.keys(dependencies).length,
+      dependencyNames: Object.keys(dependencies)
+    });
+
     return service;
+  }
+
+  /**
+   * Get the default provider type for a specific service
+   * @param {string} serviceName - Name of the service
+   * @returns {string} Default provider type for the service
+   */
+  getDefaultProviderType(serviceName) {
+    const defaultProviders = {
+      'logging': 'console',
+      'filing': 'local',
+      'measuring': 'memory',
+      'caching': 'memory',
+      'dataserve': 'memory',
+      'working': 'memory',
+      'queueing': 'memory',
+      'scheduling': 'memory',
+      'searching': 'memory',
+      'workflow': 'memory',
+      'notifying': 'memory',
+      'authservice': 'memory',
+      'aiservice': 'claude'
+    };
+
+    return defaultProviders[serviceName] || 'memory';
+  }
+
+  /**
+   * Resolve dependencies for a service by creating dependent services first
+   * @param {string} serviceName - Name of the service
+   * @param {string} requestedProviderType - Provider type requested for the main service
+   * @returns {Object} Object containing dependency service instances
+   */
+  resolveDependencies(serviceName, requestedProviderType = 'memory') {
+    const dependencies = {};
+    const requiredDependencies = this.serviceDependencies.get(serviceName) || [];
+
+    for (const depServiceName of requiredDependencies) {
+      const depProviderType = this.getDefaultProviderType(depServiceName);
+      const depServiceKey = `${depServiceName}:${depProviderType}`;
+
+      // Check if dependency is already created
+      if (this.services.has(depServiceKey)) {
+        dependencies[depServiceName] = this.services.get(depServiceKey);
+      } else {
+        // Recursively create dependency with appropriate provider type
+        dependencies[depServiceName] = this.getService(depServiceName, depProviderType);
+      }
+    }
+
+    return dependencies;
+  }
+
+  /**
+   * Get service initialization order using topological sort
+   * This ensures dependencies are initialized before services that depend on them
+   * @returns {Array<string>} Array of service names in initialization order
+   */
+  getServiceInitializationOrder() {
+    const visited = new Set();
+    const visiting = new Set();
+    const order = [];
+
+    const visit = (serviceName) => {
+      if (visiting.has(serviceName)) {
+        throw new Error(`Circular dependency detected involving service: ${serviceName}`);
+      }
+
+      if (!visited.has(serviceName)) {
+        visiting.add(serviceName);
+
+        const dependencies = this.serviceDependencies.get(serviceName) || [];
+        for (const dependency of dependencies) {
+          visit(dependency);
+        }
+
+        visiting.delete(serviceName);
+        visited.add(serviceName);
+        order.push(serviceName);
+      }
+    };
+
+    // Visit all services
+    for (const serviceName of this.serviceDependencies.keys()) {
+      visit(serviceName);
+    }
+
+    return order;
+  }
+
+  /**
+   * Validates that the dependency graph has no circular dependencies
+   * @returns {boolean} True if dependency graph is valid
+   * @throws {Error} If circular dependencies are detected
+   */
+  validateDependencies() {
+    try {
+      this.getServiceInitializationOrder();
+      return true;
+    } catch (error) {
+      throw new Error(`Dependency validation failed: ${error.message}`);
+    }
   }
 
   /**

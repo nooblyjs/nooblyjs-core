@@ -1,6 +1,10 @@
 /**
  * @fileoverview AWS SimpleDB DataServe provider for cloud-based storage of JSON objects
  * using Amazon SimpleDB with domain-based organization.
+ *
+ * @deprecated AWS SimpleDB is deprecated and not available in AWS SDK v3.
+ * This provider will not work with AWS SDK v3. Consider using AWS DynamoDB instead.
+ *
  * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
@@ -30,6 +34,11 @@ class SimpleDbDataRingProvider {
     if (!options || !options.region) {
       throw new Error('SimpleDbDataRingProvider requires region in options.');
     }
+
+    console.warn(
+      '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      'Consider migrating to DynamoDB which supports AWS SDK v3.'
+    );
 
     AWS.config.update({
       region: options.region,
