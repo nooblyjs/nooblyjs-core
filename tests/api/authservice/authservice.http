@@ -1,0 +1,419 @@
+###
+### NooblyJS Core - Authentication Service API Tests
+###
+### These tests demonstrate the Authentication service API endpoints with different providers.
+### Make sure your server is running with API keys configured before testing.
+###
+### Example server setup with Auth service:
+### const serviceRegistry = new ServiceRegistry();
+### serviceRegistry.registerService('authservice', 'memory', { sessionSecret: 'your-secret' });
+###
+
+@baseUrl = http://localhost:3000
+@apiKey = your-api-key-here
+
+### Check the Auth Service API status endpoint (No API key required)
+GET {{baseUrl}}/services/authservice/api/status
+
+###
+
+### Test without API key (should return 401 Unauthorized)
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "password123"
+}
+
+###
+
+### REGISTER - Create a new user account
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "john_doe",
+    "password": "SecurePass123!",
+    "email": "john@example.com",
+    "name": "John Doe",
+    "profile": {
+        "age": 30,
+        "department": "Engineering",
+        "role": "Developer"
+    }
+}
+
+###
+
+### REGISTER - Create another user for testing
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "username": "jane_smith",
+    "password": "AnotherSecurePass456!",
+    "email": "jane@example.com",
+    "name": "Jane Smith",
+    "profile": {
+        "age": 28,
+        "department": "Design",
+        "role": "UI/UX Designer"
+    }
+}
+
+###
+
+### REGISTER - Admin user
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+Authorization: ApiKey {{apiKey}}
+
+{
+    "username": "admin",
+    "password": "AdminPass789!",
+    "email": "admin@example.com",
+    "name": "System Administrator",
+    "role": "admin",
+    "permissions": ["read", "write", "delete", "admin"]
+}
+
+###
+
+### LOGIN - Authenticate with username and password
+POST {{baseUrl}}/services/authservice/api/login
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "john_doe",
+    "password": "SecurePass123!"
+}
+
+###
+
+### LOGIN - Authenticate with email and password
+POST {{baseUrl}}/services/authservice/api/login
+Content-Type: application/json
+api-key: {{apiKey}}
+
+{
+    "email": "jane@example.com",
+    "password": "AnotherSecurePass456!"
+}
+
+###
+
+### LOGIN - Invalid credentials (should fail)
+POST {{baseUrl}}/services/authservice/api/login
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "john_doe",
+    "password": "wrongpassword"
+}
+
+###
+
+### GET USER - Retrieve user profile by username
+GET {{baseUrl}}/services/authservice/api/user/john_doe
+x-api-key: {{apiKey}}
+
+###
+
+### GET USER - Retrieve user profile by email
+GET {{baseUrl}}/services/authservice/api/user?email=jane@example.com
+Authorization: Bearer {{apiKey}}
+
+###
+
+### GET USER - Try to get non-existent user
+GET {{baseUrl}}/services/authservice/api/user/non_existent_user
+x-api-key: {{apiKey}}
+
+###
+
+### GET ALL USERS - List all registered users (admin only)
+GET {{baseUrl}}/services/authservice/api/users
+x-api-key: {{apiKey}}
+
+###
+
+### UPDATE USER - Update user profile
+PUT {{baseUrl}}/services/authservice/api/user/john_doe
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "name": "John Doe Jr.",
+    "profile": {
+        "age": 31,
+        "department": "Engineering",
+        "role": "Senior Developer",
+        "skills": ["JavaScript", "Node.js", "React"]
+    },
+    "lastUpdated": "{{$datetime iso8601}}"
+}
+
+###
+
+### CHANGE PASSWORD - Update user password
+POST {{baseUrl}}/services/authservice/api/user/john_doe/password
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "currentPassword": "SecurePass123!",
+    "newPassword": "NewSecurePass123!",
+    "confirmPassword": "NewSecurePass123!"
+}
+
+###
+
+### VALIDATE TOKEN - Check if session/token is valid
+POST {{baseUrl}}/services/authservice/api/validate
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "token": "session-token-here",
+    "sessionId": "session-id-here"
+}
+
+###
+
+### REFRESH TOKEN - Get new access token
+POST {{baseUrl}}/services/authservice/api/refresh
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "refreshToken": "refresh-token-here",
+    "sessionId": "session-id-here"
+}
+
+###
+
+### LOGOUT - End user session
+POST {{baseUrl}}/services/authservice/api/logout
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "john_doe",
+    "sessionId": "session-id-here"
+}
+
+###
+
+### LOGOUT ALL - End all user sessions
+POST {{baseUrl}}/services/authservice/api/logout/all
+Content-Type: application/json
+Authorization: ApiKey {{apiKey}}
+
+{
+    "username": "john_doe"
+}
+
+###
+
+### GET SESSIONS - List active sessions for user
+GET {{baseUrl}}/services/authservice/api/user/john_doe/sessions
+x-api-key: {{apiKey}}
+
+###
+
+### REVOKE SESSION - Revoke specific session
+DELETE {{baseUrl}}/services/authservice/api/sessions/session-id-here
+x-api-key: {{apiKey}}
+
+###
+
+### RESET PASSWORD REQUEST - Request password reset
+POST {{baseUrl}}/services/authservice/api/reset-password
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "email": "john@example.com",
+    "resetUrl": "https://example.com/reset"
+}
+
+###
+
+### RESET PASSWORD - Complete password reset
+POST {{baseUrl}}/services/authservice/api/reset-password/confirm
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "resetToken": "reset-token-here",
+    "newPassword": "NewResetPassword123!",
+    "confirmPassword": "NewResetPassword123!"
+}
+
+###
+
+### VERIFY EMAIL - Send email verification
+POST {{baseUrl}}/services/authservice/api/verify-email
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "username": "john_doe",
+    "verificationUrl": "https://example.com/verify"
+}
+
+###
+
+### VERIFY EMAIL CONFIRM - Confirm email verification
+POST {{baseUrl}}/services/authservice/api/verify-email/confirm
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "verificationToken": "verification-token-here",
+    "username": "john_doe"
+}
+
+###
+
+### GET PERMISSIONS - Get user permissions
+GET {{baseUrl}}/services/authservice/api/user/john_doe/permissions
+x-api-key: {{apiKey}}
+
+###
+
+### SET PERMISSIONS - Update user permissions (admin only)
+PUT {{baseUrl}}/services/authservice/api/user/john_doe/permissions
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "permissions": ["read", "write"],
+    "role": "developer"
+}
+
+###
+
+### CHECK PERMISSION - Check if user has specific permission
+GET {{baseUrl}}/services/authservice/api/user/john_doe/permissions/write
+x-api-key: {{apiKey}}
+
+###
+
+### GOOGLE OAUTH - Initiate Google OAuth flow
+GET {{baseUrl}}/services/authservice/api/auth/google
+x-api-key: {{apiKey}}
+
+###
+
+### GOOGLE OAUTH CALLBACK - Handle Google OAuth callback
+GET {{baseUrl}}/services/authservice/api/auth/google/callback?code=auth-code-here&state=state-here
+x-api-key: {{apiKey}}
+
+###
+
+### DELETE USER - Remove user account (admin only)
+DELETE {{baseUrl}}/services/authservice/api/user/jane_smith
+x-api-key: {{apiKey}}
+
+###
+
+### BULK OPERATIONS - Register multiple users
+POST {{baseUrl}}/services/authservice/api/users/bulk
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "users": [
+        {
+            "username": "user1",
+            "password": "Password123!",
+            "email": "user1@example.com",
+            "name": "User One"
+        },
+        {
+            "username": "user2",
+            "password": "Password456!",
+            "email": "user2@example.com",
+            "name": "User Two"
+        }
+    ]
+}
+
+###
+
+### SEARCH USERS - Search users by criteria
+GET {{baseUrl}}/services/authservice/api/users/search?name=John&department=Engineering
+x-api-key: {{apiKey}}
+
+###
+
+### GET AUTH CONFIG - Get authentication configuration
+GET {{baseUrl}}/services/authservice/api/config
+Authorization: Bearer {{apiKey}}
+
+###
+
+### UPDATE AUTH CONFIG - Update authentication settings
+POST {{baseUrl}}/services/authservice/api/config
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "passwordPolicy": {
+        "minLength": 8,
+        "requireSpecialChars": true,
+        "requireNumbers": true,
+        "requireUppercase": true
+    },
+    "sessionTimeout": 3600,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 900,
+    "requireEmailVerification": true
+}
+
+###
+
+### Test error handling - Duplicate username
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "john_doe",
+    "password": "AnotherPassword123!",
+    "email": "john2@example.com"
+}
+
+###
+
+### Test error handling - Invalid email format
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "newuser",
+    "password": "Password123!",
+    "email": "invalid-email"
+}
+
+###
+
+### Test error handling - Weak password
+POST {{baseUrl}}/services/authservice/api/register
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "username": "weakpassuser",
+    "password": "123",
+    "email": "weak@example.com"
+}
+
+###

@@ -1,0 +1,294 @@
+###
+### NooblyJS Core - AI Service API Tests
+###
+### These tests demonstrate the AI service API endpoints with different providers.
+### Make sure your server is running with API keys configured before testing.
+###
+### Example server setup with AI service:
+### const serviceRegistry = new ServiceRegistry();
+### serviceRegistry.registerService('aiservice', 'claude', { apiKey: 'your-claude-api-key' });
+###
+
+@baseUrl = http://localhost:3000
+@apiKey = your-api-key-here
+
+### Check the AI Service API status endpoint (No API key required)
+GET {{baseUrl}}/services/aiservice/api/status
+
+###
+
+### Test without API key (should return 401 Unauthorized)
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+
+{
+    "message": "This request should fail without API key",
+    "provider": "claude"
+}
+
+###
+
+### CHAT - Send a simple chat message to Claude
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "message": "Hello! Can you help me write a simple JavaScript function?",
+    "provider": "claude",
+    "model": "claude-3-sonnet-20240229",
+    "max_tokens": 1000
+}
+
+###
+
+### CHAT - Send a chat message to OpenAI/ChatGPT
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "message": "Explain the concept of async/await in JavaScript",
+    "provider": "chatgpt",
+    "model": "gpt-3.5-turbo",
+    "max_tokens": 500,
+    "temperature": 0.7
+}
+
+###
+
+### CHAT - Send a chat message to Ollama
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+Authorization: ApiKey {{apiKey}}
+
+{
+    "message": "What is the difference between let, const, and var in JavaScript?",
+    "provider": "ollama",
+    "model": "llama2",
+    "max_tokens": 800
+}
+
+###
+
+### CONVERSATION - Start a conversation with context
+POST {{baseUrl}}/services/aiservice/api/conversation
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "messages": [
+        {"role": "system", "content": "You are a helpful coding assistant."},
+        {"role": "user", "content": "I need help with React hooks."},
+        {"role": "assistant", "content": "I'd be happy to help with React hooks! What specific aspect would you like to learn about?"},
+        {"role": "user", "content": "How do I use useState with objects?"}
+    ],
+    "provider": "claude",
+    "model": "claude-3-sonnet-20240229",
+    "max_tokens": 1000
+}
+
+###
+
+### STREAM - Stream a response from AI
+POST {{baseUrl}}/services/aiservice/api/stream
+Content-Type: application/json
+api-key: {{apiKey}}
+
+{
+    "message": "Write a detailed explanation of how JavaScript closures work with examples",
+    "provider": "chatgpt",
+    "model": "gpt-4",
+    "stream": true,
+    "max_tokens": 1500
+}
+
+###
+
+### COMPLETION - Text completion request
+POST {{baseUrl}}/services/aiservice/api/complete
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "prompt": "Complete this function:\n\nfunction fibonacci(n) {\n  if (n <= 1) {\n    return n;\n  }\n  // Complete this implementation",
+    "provider": "claude",
+    "model": "claude-3-haiku-20240307",
+    "max_tokens": 500,
+    "temperature": 0.3
+}
+
+###
+
+### ANALYZE - Code analysis request
+POST {{baseUrl}}/services/aiservice/api/analyze
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+    "code": "const users = [];\n\nfunction addUser(name, email) {\n  users.push({ name, email, id: users.length });\n}\n\nfunction getUser(id) {\n  return users.find(u => u.id === id);\n}",
+    "language": "javascript",
+    "provider": "chatgpt",
+    "analysis_type": ["security", "performance", "best_practices"]
+}
+
+###
+
+### BATCH - Multiple requests in batch
+POST {{baseUrl}}/services/aiservice/api/batch
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "requests": [
+        {
+            "id": "req1",
+            "message": "What is Node.js?",
+            "provider": "claude",
+            "max_tokens": 300
+        },
+        {
+            "id": "req2",
+            "message": "What is Express.js?",
+            "provider": "chatgpt",
+            "max_tokens": 300
+        },
+        {
+            "id": "req3",
+            "message": "What is the difference between Node.js and Express.js?",
+            "provider": "ollama",
+            "max_tokens": 400
+        }
+    ]
+}
+
+###
+
+### GET - Retrieve conversation history
+GET {{baseUrl}}/services/aiservice/api/conversations/{{$guid}}
+x-api-key: {{apiKey}}
+
+###
+
+### GET - List all conversations
+GET {{baseUrl}}/services/aiservice/api/conversations
+Authorization: Bearer {{apiKey}}
+
+###
+
+### GET - Get AI service configuration
+GET {{baseUrl}}/services/aiservice/api/config
+x-api-key: {{apiKey}}
+
+###
+
+### POST - Update AI service configuration
+POST {{baseUrl}}/services/aiservice/api/config
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "defaultProvider": "claude",
+    "defaultModel": "claude-3-sonnet-20240229",
+    "defaultMaxTokens": 1000,
+    "enableCaching": true,
+    "cacheTimeout": 3600,
+    "rateLimiting": {
+        "enabled": true,
+        "requestsPerMinute": 60
+    }
+}
+
+###
+
+### GET - Get provider capabilities
+GET {{baseUrl}}/services/aiservice/api/providers/claude/capabilities
+x-api-key: {{apiKey}}
+
+###
+
+### GET - List available models for a provider
+GET {{baseUrl}}/services/aiservice/api/providers/chatgpt/models
+Authorization: ApiKey {{apiKey}}
+
+###
+
+### DELETE - Delete a conversation
+DELETE {{baseUrl}}/services/aiservice/api/conversations/{{$guid}}
+x-api-key: {{apiKey}}
+
+###
+
+### POST - Fine-tune request (if supported)
+POST {{baseUrl}}/services/aiservice/api/finetune
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "provider": "chatgpt",
+    "base_model": "gpt-3.5-turbo",
+    "training_data": [
+        {"prompt": "What is NooblyJS?", "completion": "NooblyJS is a modular Node.js backend framework."},
+        {"prompt": "How does NooblyJS caching work?", "completion": "NooblyJS provides pluggable caching with memory, Redis, and Memcached providers."}
+    ],
+    "name": "nooblyjs-assistant"
+}
+
+###
+
+### GET - Check fine-tuning status
+GET {{baseUrl}}/services/aiservice/api/finetune/{{$guid}}/status
+x-api-key: {{apiKey}}
+
+###
+
+### Test error handling - Invalid provider
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "message": "This should fail with invalid provider",
+    "provider": "invalid-provider"
+}
+
+###
+
+### Test error handling - Missing message
+POST {{baseUrl}}/services/aiservice/api/chat
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "provider": "claude"
+}
+
+###
+
+### Test with workflow integration - Complex AI pipeline
+POST {{baseUrl}}/services/aiservice/api/workflow
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "name": "code-review-pipeline",
+    "steps": [
+        {
+            "name": "analyze-code",
+            "provider": "claude",
+            "message": "Analyze this code for issues: function test() { var x = 1; console.log(x); }"
+        },
+        {
+            "name": "suggest-improvements",
+            "provider": "chatgpt",
+            "message": "Based on the previous analysis, suggest specific improvements"
+        },
+        {
+            "name": "generate-tests",
+            "provider": "claude",
+            "message": "Generate unit tests for the improved code"
+        }
+    ]
+}
+
+###
