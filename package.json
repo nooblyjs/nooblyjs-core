@@ -34,7 +34,8 @@
     "start": "node ./app.js",
     "dev:web": "nodemon --watch ./src ./app.js",
     "test": "jest",
-    "test-load": "node ./tests-load/"
+    "test-load": "node ./tests-load/",
+    "kill": "kill -9 $(lsof -t -i:3001)"
   },
   "jest": {
     "modulePaths": [
@@ -50,11 +51,10 @@
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.81",
     "@anthropic-ai/sdk": "^0.60.0",
+    "@aws-sdk/client-s3": "^3.614.0",
     "@google-cloud/storage": "^7.17.0",
     "@google/gemini-cli": "^0.1.22",
-    "@aws-sdk/client-s3": "^3.614.0",
     "aws-sdk": "^2.1620.0",
-    "tslib": "^2.6.2",
     "body-parser": "^1.20.2",
     "dotenv": "^17.2.1",
     "express": "^4.19.2",
@@ -74,6 +74,8 @@
     "redis": "^5.5.6",
     "rimraf": "^6.0.1",
     "simple-git": "^3.28.0",
+    "supertest": "^7.1.4",
+    "tslib": "^2.6.2",
     "uuid": "^11.1.0"
   }
 }

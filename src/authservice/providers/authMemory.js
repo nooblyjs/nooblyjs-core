@@ -27,7 +27,9 @@ class AuthMemory extends AuthBase {
 
     // Create default admin user if specified in options
     if (options.createDefaultAdmin !== false) {
-      this.initializeDefaultUsers_();
+      this.initializeDefaultUsers_().catch(error => {
+        console.error('Error initializing default users:', error);
+      });
     }
 
     if (this.eventEmitter_) {

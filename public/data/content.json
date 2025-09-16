@@ -13,13 +13,18 @@
       },
       "buttons": [
         {
-          "text": "Get Started",
-          "href": "documentation.html",
+          "text": "Login",
+          "href": "login.html",
           "type": "primary"
         },
         {
-          "text": "Learn More",
-          "href": "contact.html",
+          "text": "Register",
+          "href": "register.html",
+          "type": "outline"
+        },
+        {
+          "text": "Documentation",
+          "href": "documentation.html",
           "type": "outline"
         }
       ]
@@ -474,18 +479,22 @@
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "/services" }
+        { "text": "Services", "href": "/services" },
+        { "text": "Login", "href": "login.html" },
+        { "text": "Register", "href": "register.html" }
       ]
     },
     "mobileMenu": {
       "links": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" }
+        { "text": "Contact", "href": "contact.html" },
+        { "text": "Login", "href": "login.html" },
+        { "text": "Register", "href": "register.html" }
       ],
       "cta": {
-        "text": "Get Started",
-        "href": "cache.html"
+        "text": "Login",
+        "href": "login.html"
       }
     },
     "footer": {
