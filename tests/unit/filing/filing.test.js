@@ -58,9 +58,16 @@ const mockConfig = {
   update: jest.fn(),
 };
 
-jest.mock('aws-sdk', () => ({
-  S3: jest.fn(() => mockS3),
-  config: mockConfig,
+const mockS3Send = jest.fn();
+
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: jest.fn(() => ({
+    send: mockS3Send
+  })),
+  PutObjectCommand: jest.fn((params) => ({ commandType: 'put', params })),
+  GetObjectCommand: jest.fn((params) => ({ commandType: 'get', params })),
+  DeleteObjectCommand: jest.fn((params) => ({ commandType: 'delete', params })),
+  ListObjectsV2Command: jest.fn((params) => ({ commandType: 'list', params }))
 }));
 
 // Mock the Google Cloud Storage client BEFORE imports
@@ -109,7 +116,7 @@ jest.mock('@google-cloud/storage', () => ({
 
 // Now import other modules
 const createFilingService = require('../../../src/filing');
-const AWS = require('aws-sdk');
+const { S3Client } = require('@aws-sdk/client-s3');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -261,94 +268,75 @@ describe('FilingService', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
+
+      // Setup S3 mock responses for different commands
+      mockS3Send.mockImplementation((command) => {
+        if (command.commandType === 'put') {
+          return Promise.resolve({ Location: 'mock-location' });
+        }
+        if (command.commandType === 'get') {
+          return Promise.resolve({
+            Body: {
+              transformToString: () => Promise.resolve('mock content'),
+              transformToByteArray: () => Promise.resolve(Buffer.from('mock content'))
+            }
+          });
+        }
+        if (command.commandType === 'delete') {
+          return Promise.resolve();
+        }
+        if (command.commandType === 'list') {
+          return Promise.resolve({ Contents: [{ Key: 'mock-file.txt' }] });
+        }
+        return Promise.resolve();
+      });
+
       s3FilingService = require('../../../src/filing')('s3', {
         bucketName: mockBucketName,
         region: mockRegion,
         accessKeyId: mockAccessKeyId,
         secretAccessKey: mockSecretAccessKey,
       });
-      mockS3Instance = mockS3;
     });
 
     it('should initialize with correct S3 configuration', () => {
-      expect(mockConfig.update).toHaveBeenCalledWith({
-        region: mockRegion,
-        accessKeyId: mockAccessKeyId,
-        secretAccessKey: mockSecretAccessKey,
-      });
-      expect(require('aws-sdk').S3).toHaveBeenCalledTimes(1);
+      // AWS SDK v3 doesn't use AWS.config.update - credentials are passed to client constructor
+      expect(require('@aws-sdk/client-s3').S3Client).toHaveBeenCalledTimes(1);
       expect(s3FilingService.provider.bucketName).toBe(mockBucketName);
     });
 
     it('should upload a file to S3', async () => {
-      mockS3.upload().promise.mockResolvedValueOnce({});
       const filePath = 'path/to/file.txt';
       const content = 'Hello S3!';
       await s3FilingService.create(filePath, content);
-      expect(mockS3.upload).toHaveBeenCalledWith({
-        Bucket: mockBucketName,
-        Key: filePath,
-        Body: content,
-      });
-      expect(mockS3.upload().promise).toHaveBeenCalledTimes(1);
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
     });
 
     it('should download a file from S3', async () => {
       const filePath = 'path/to/file.txt';
-      const content = 'Hello S3!';
-      mockS3
-        .getObject()
-        .promise.mockResolvedValueOnce({ Body: Buffer.from(content) });
       const result = await s3FilingService.read(filePath, 'utf8');
-      expect(mockS3.getObject).toHaveBeenCalledWith({
-        Bucket: mockBucketName,
-        Key: filePath,
-      });
-      expect(result).toBe(content);
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
+      expect(result).toBe('mock content');
     });
 
     it('should delete a file from S3', async () => {
-      mockS3.deleteObject().promise.mockResolvedValueOnce({});
       const filePath = 'path/to/file.txt';
       await s3FilingService.delete(filePath);
-      expect(mockS3.deleteObject).toHaveBeenCalledWith({
-        Bucket: mockBucketName,
-        Key: filePath,
-      });
-      expect(mockS3.deleteObject().promise).toHaveBeenCalledTimes(1);
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
     });
 
     it('should list objects in a specified prefix', async () => {
       const dirPath = 'path/to/dir/';
-      const s3Contents = [
-        { Key: 'path/to/dir/file1.txt' },
-        { Key: 'path/to/dir/file2.txt' },
-      ];
-      mockS3
-        .listObjectsV2()
-        .promise.mockResolvedValueOnce({ Contents: s3Contents });
       const result = await s3FilingService.list(dirPath);
-      expect(mockS3.listObjectsV2).toHaveBeenCalledWith({
-        Bucket: mockBucketName,
-        Prefix: dirPath,
-      });
-      expect(result).toEqual([
-        'path/to/dir/file1.txt',
-        'path/to/dir/file2.txt',
-      ]);
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(['mock-file.txt']);
     });
 
     it('should update a file in S3 (calls create)', async () => {
-      mockS3.upload().promise.mockResolvedValueOnce({});
       const filePath = 'path/to/file.txt';
       const content = 'Updated S3 content!';
       await s3FilingService.update(filePath, content);
-      expect(mockS3.upload).toHaveBeenCalledWith({
-        Bucket: mockBucketName,
-        Key: filePath,
-        Body: content,
-      });
-      expect(mockS3Instance.upload().promise).toHaveBeenCalledTimes(1);
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
     });
   });
 

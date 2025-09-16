@@ -10,12 +10,7 @@
 
 'use strict';
 
-const LocalFilingProvider = require('./providers/filingLocal');
-const FtpFilingProvider = require('./providers/filingFtp');
-const S3FilingProvider = require('./providers/filingS3');
-const GitFilingProvider = require('./providers/filingGit');
-const GCPFilingProvider = require('./providers/filingGCP');
-const SyncFilingProvider = require('./providers/filingSyncProvider');
+// Lazy load providers to avoid loading AWS SDK when not needed
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -339,21 +334,26 @@ class FilingService {
 function createFilingService(type = 'local', options, eventEmitter) {
   let provider;
 
-  // Create filing provider instance based on type
+  // Create filing provider instance based on type (lazy load to avoid unnecessary AWS SDK imports)
   switch (type) {
     case 'local':
+      const LocalFilingProvider = require('./providers/filingLocal');
       provider = new LocalFilingProvider(options, eventEmitter);
       break;
     case 'ftp':
+      const FtpFilingProvider = require('./providers/filingFtp');
       provider = new FtpFilingProvider(options, eventEmitter);
       break;
     case 's3':
+      const S3FilingProvider = require('./providers/filingS3');
       provider = new S3FilingProvider(options, eventEmitter);
       break;
     case 'git':
+      const GitFilingProvider = require('./providers/filingGit');
       provider = new GitFilingProvider(options, eventEmitter);
       break;
     case 'gcp':
+      const GCPFilingProvider = require('./providers/filingGCP');
       provider = new GCPFilingProvider(options, eventEmitter);
       break;
     case 'sync':
@@ -368,19 +368,24 @@ function createFilingService(type = 'local', options, eventEmitter) {
       
       switch (options.remoteType) {
         case 'local':
-          remoteProvider = new LocalFilingProvider(remoteOptions, eventEmitter);
+          const LocalFilingProvider2 = require('./providers/filingLocal');
+          remoteProvider = new LocalFilingProvider2(remoteOptions, eventEmitter);
           break;
         case 'ftp':
-          remoteProvider = new FtpFilingProvider(remoteOptions, eventEmitter);
+          const FtpFilingProvider2 = require('./providers/filingFtp');
+          remoteProvider = new FtpFilingProvider2(remoteOptions, eventEmitter);
           break;
         case 's3':
-          remoteProvider = new S3FilingProvider(remoteOptions, eventEmitter);
+          const S3FilingProvider2 = require('./providers/filingS3');
+          remoteProvider = new S3FilingProvider2(remoteOptions, eventEmitter);
           break;
         case 'git':
-          remoteProvider = new GitFilingProvider(remoteOptions, eventEmitter);
+          const GitFilingProvider2 = require('./providers/filingGit');
+          remoteProvider = new GitFilingProvider2(remoteOptions, eventEmitter);
           break;
         case 'gcp':
-          remoteProvider = new GCPFilingProvider(remoteOptions, eventEmitter);
+          const GCPFilingProvider2 = require('./providers/filingGCP');
+          remoteProvider = new GCPFilingProvider2(remoteOptions, eventEmitter);
           break;
         default:
           throw new Error(`Unsupported remote filing provider type: ${options.remoteType}`);
@@ -391,6 +396,7 @@ function createFilingService(type = 'local', options, eventEmitter) {
         ...options,
         remoteProvider
       };
+      const SyncFilingProvider = require('./providers/filingSyncProvider');
       provider = new SyncFilingProvider(syncOptions, eventEmitter);
       break;
     default:

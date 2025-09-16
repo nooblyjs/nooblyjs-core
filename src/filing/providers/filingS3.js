@@ -8,7 +8,7 @@
 
 'use strict';
 
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
 /**
  * A class that implements an AWS S3-based file storage provider.
@@ -35,13 +35,20 @@ class S3FilingProvider {
 
     /** @private @const {string} */
     this.bucketName = options.bucketName;
-    AWS.config.update({
+
+    const clientConfig = {
       region: options.region,
-      accessKeyId: options.accessKeyId,
-      secretAccessKey: options.secretAccessKey,
-    });
-    /** @private @const {AWS.S3} */
-    this.s3 = new AWS.S3();
+    };
+
+    if (options.accessKeyId && options.secretAccessKey) {
+      clientConfig.credentials = {
+        accessKeyId: options.accessKeyId,
+        secretAccessKey: options.secretAccessKey,
+      };
+    }
+
+    /** @private @const {S3Client} */
+    this.s3 = new S3Client(clientConfig);
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
   }
@@ -53,13 +60,13 @@ class S3FilingProvider {
    * @returns {Promise<void>}
    */
   async create(filePath, content) {
-    const params = {
+    const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
       Body: content,
-    };
+    });
     try {
-      await this.s3.upload(params).promise();
+      await this.s3.send(command);
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:create', {
           filePath,
@@ -82,13 +89,13 @@ class S3FilingProvider {
    * @returns {Promise<Buffer|string>}
    */
   async read(filePath, encoding) {
-    const params = {
+    const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
-    };
+    });
     try {
-      const data = await this.s3.getObject(params).promise();
-      const content = encoding ? data.Body.toString(encoding) : data.Body;
+      const data = await this.s3.send(command);
+      const content = encoding ? await data.Body.transformToString(encoding) : await data.Body.transformToByteArray();
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:read', {
           filePath,
@@ -112,12 +119,12 @@ class S3FilingProvider {
    * @returns {Promise<void>}
    */
   async delete(filePath) {
-    const params = {
+    const command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
-    };
+    });
     try {
-      await this.s3.deleteObject(params).promise();
+      await this.s3.send(command);
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:delete', { filePath });
     } catch (error) {
@@ -136,12 +143,12 @@ class S3FilingProvider {
    * @returns {Promise<Array<string>>}
    */
   async list(dirPath) {
-    const params = {
+    const command = new ListObjectsV2Command({
       Bucket: this.bucketName,
       Prefix: dirPath,
-    };
+    });
     try {
-      const data = await this.s3.listObjectsV2(params).promise();
+      const data = await this.s3.send(command);
       const files = data.Contents ? data.Contents.map((item) => item.Key) : [];
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:list', { dirPath, files });
@@ -164,13 +171,13 @@ class S3FilingProvider {
    */
   async update(filePath, content) {
     // For S3, update is essentially create (put) as it overwrites if exists
-    const params = {
+    const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
       Body: content,
-    };
+    });
     try {
-      await this.s3.upload(params).promise();
+      await this.s3.send(command);
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:update', {
           filePath,

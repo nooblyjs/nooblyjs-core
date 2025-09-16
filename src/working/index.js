@@ -20,17 +20,41 @@ const Views = require('./views');
 let instance = null;
 
 /**
- * Returns the singleton instance of the worker service.
+ * Returns the singleton instance of the worker service with dependency injection.
  * Automatically configures routes and views for the working service.
  * @param {string} type - The worker service type
  * @param {Object} options - Configuration options for the worker service
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {WorkerProvider} The singleton worker service instance
  */
 function getWorkerInstance(type, options, eventEmitter) {
+  const { dependencies = {}, ...providerOptions } = options;
+  const logger = dependencies.logging;
+
   // Create singleton instance if it doesn't exist
   if (!instance) {
-    instance = new WorkerProvider(options, eventEmitter);
+    instance = new WorkerProvider(providerOptions, eventEmitter);
+
+    // Inject logging dependency into working service
+    if (logger) {
+      instance.logger = logger;
+      instance.log = (level, message, meta = {}) => {
+        if (typeof logger[level] === 'function') {
+          logger[level](`[WORKING:${type.toUpperCase()}] ${message}`, meta);
+        }
+      };
+
+      // Log working service initialization
+      instance.log('info', 'Working service initialized', {
+        provider: type,
+        hasLogging: true
+      });
+    }
+
+    // Store dependencies for potential use by provider
+    instance.dependencies = dependencies;
 
     // Initialize routes and views for the working service
     Routes(options, eventEmitter, instance);

@@ -18,33 +18,57 @@ const Routes = require('./routes');
 const Views = require('./views');
 
 /**
- * Creates a cache service instance with the specified provider.
+ * Creates a cache service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the cache service.
  * @param {string} type - The cache provider type ('memory', 'redis', 'memcached', 'file')
  * @param {Object} options - Provider-specific configuration options
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {Cache|CacheRedis|CacheMemcached|CacheFile} Cache service instance with specified provider
  * @throws {Error} When unsupported cache type is provided
  */
 function createCache(type, options, eventEmitter) {
+  const { dependencies = {}, ...providerOptions } = options;
+  const logger = dependencies.logging;
+
   let cache;
 
   // Create cache instance based on provider type
   switch (type) {
     case 'redis':
-      cache = new CacheRedis(options, eventEmitter);
+      cache = new CacheRedis(providerOptions, eventEmitter);
       break;
     case 'memcached':
-      cache = new CacheMemcached(options, eventEmitter);
+      cache = new CacheMemcached(providerOptions, eventEmitter);
       break;
     case 'file':
-      cache = new CacheFile(options, eventEmitter);
+      cache = new CacheFile(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:
-      cache = new Cache(options, eventEmitter);
+      cache = new Cache(providerOptions, eventEmitter);
       break;
   }
+
+  // Inject logging dependency into cache service
+  if (logger) {
+    cache.logger = logger;
+    cache.log = (level, message, meta = {}) => {
+      if (typeof logger[level] === 'function') {
+        logger[level](`[CACHE:${type.toUpperCase()}] ${message}`, meta);
+      }
+    };
+
+    // Log cache service initialization
+    cache.log('info', 'Cache service initialized', {
+      provider: type,
+      hasLogging: true
+    });
+  }
+
+  // Store dependencies for potential use by provider
+  cache.dependencies = dependencies;
 
   // Initialize routes and views for the cache service
   Routes(options, eventEmitter, cache);
