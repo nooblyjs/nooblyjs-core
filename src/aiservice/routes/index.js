@@ -29,8 +29,14 @@ module.exports = (options, eventEmitter, aiService) => {
      * Returns the operational status of the AI service.
      */
     app.get('/services/aiservice/api/status', (req, res) => {
-      eventEmitter.emit('api-ai-status', 'ai api running');
-      res.status(200).json({ status: 'ai api running', provider: aiService.constructor.name });
+      const status = aiService.enabled !== false ? 'ai api running' : 'ai api disabled - no api key';
+      eventEmitter.emit('api-ai-status', status);
+      res.status(200).json({
+        status: status,
+        provider: aiService.constructor.name,
+        enabled: aiService.enabled !== false,
+        hasApiKey: !!aiService.client_
+      });
     });
 
     /**
@@ -39,8 +45,16 @@ module.exports = (options, eventEmitter, aiService) => {
      */
     app.post('/services/aiservice/api/prompt', async (req, res) => {
       try {
+        // Check if AI service is enabled
+        if (aiService.enabled === false) {
+          return res.status(503).json({
+            error: 'AI service is disabled - API key not configured',
+            enabled: false
+          });
+        }
+
         const { prompt, options = {} } = req.body;
-        
+
         if (!prompt || typeof prompt !== 'string') {
           return res.status(400).json({ error: 'Prompt is required and must be a string' });
         }

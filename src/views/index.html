@@ -1,43 +1,148 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noobly JS Service Registry</title>
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for professional look */
+        :root {
+            --custom-primary: #0066cc;
+            --custom-secondary: #6c757d;
+            --custom-success: #198754;
+            --custom-danger: #dc3545;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #dee2e6;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .logo {
+            color: var(--custom-primary);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: #f8f9fa;
+            color: var(--custom-primary);
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background-color: var(--custom-primary);
+            color: white;
+            border-left-color: #0052a3;
+        }
+
+        .service-card {
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.running {
+            background-color: var(--custom-success);
+        }
+
+        .status-indicator.stopped {
+            background-color: var(--custom-danger);
+        }
+
+        .main-content {
+            background-color: white;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar">
-            <div class="logo">
-                <h1>Noobly JS</h1>
-                <div class="subtitle">Service Registry</div>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar d-flex flex-column p-0" style="width: 280px; min-height: 100vh;">
+            <div class="logo p-4">
+                <h4 class="fw-bold mb-1">Noobly JS</h4>
+                <small class="text-muted">Service Registry</small>
             </div>
-            <a href="/services/" class="nav-item active">Home</a>
-            <a href="/services/aiservice/" class="nav-item">AI Service</a>
-            <a href="/services/authservice/" class="nav-item">Authentication</a>
-            <a href="/services/caching/" class="nav-item">Cache Management</a>
-            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
-            <a href="/services/filing/" class="nav-item">File Management</a>
-            <a href="/services/logging/" class="nav-item">Logging</a>
-            <a href="/services/measuring/" class="nav-item">Measuring</a>
-            <a href="/services/notifying/" class="nav-item">Notifications</a>
-            <a href="/services/queueing/" class="nav-item">Queue Management</a>
-            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
-            <a href="/services/searching/" class="nav-item">Search</a>
-            <a href="/services/working/" class="nav-item">Background Tasks</a>
-            <a href="/services/workflow/" class="nav-item">Workflows</a>
+
+            <div class="flex-grow-1">
+                <a href="/services/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark active">
+                    🏠 Home
+                </a>
+                <a href="/services/aiservice/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🤖 AI Service
+                </a>
+                <a href="/services/authservice/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🔐 Authentication
+                </a>
+                <a href="/services/caching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🗄️ Cache Management
+                </a>
+                <a href="/services/dataserve/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    📊 Data Serve
+                </a>
+                <a href="/services/filing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    📁 File Management
+                </a>
+                <a href="/services/logging/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    📝 Logging
+                </a>
+                <a href="/services/measuring/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    📈 Measuring
+                </a>
+                <a href="/services/notifying/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🔔 Notifications
+                </a>
+                <a href="/services/queueing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🚀 Queue Management
+                </a>
+                <a href="/services/scheduling/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    ⏰ Scheduling
+                </a>
+                <a href="/services/searching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🔍 Search
+                </a>
+                <a href="/services/working/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    ⚙️ Background Tasks
+                </a>
+                <a href="/services/workflow/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
+                    🔄 Workflows
+                </a>
+            </div>
+
+            <div class="p-4 border-top">
+                <a href="/" class="btn btn-outline-primary w-100">← Back to Home</a>
+            </div>
         </nav>
 
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Service Registry</h1>
-                <p class="page-subtitle">A dashboard of all available services and their current status.</p>
+        <!-- Main Content -->
+        <main class="main-content flex-grow-1 p-4">
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold text-primary mb-2">Service Registry</h1>
+                <p class="lead text-muted">A dashboard of all available services and their current status.</p>
             </div>
 
-            <div class="service-list" id="service-list">
+            <div class="row" id="service-list">
                 <!-- Services will be dynamically added here -->
             </div>
         </main>
@@ -45,47 +150,72 @@
 
     <script>
         const services = [
-            'aiservice',
-            'authservice',
-            'caching',
-            'dataserve',
-            'filing',
-            'logging',
-            'measuring',
-            'notifying',
-            'queueing',
-            'scheduling',
-            'searching',
-            'workflow',
-            'working'
+            { name: 'aiservice', icon: '🤖', title: 'AI Service' },
+            { name: 'authservice', icon: '🔐', title: 'Authentication' },
+            { name: 'caching', icon: '🗄️', title: 'Cache Management' },
+            { name: 'dataserve', icon: '📊', title: 'Data Serve' },
+            { name: 'filing', icon: '📁', title: 'File Management' },
+            { name: 'logging', icon: '📝', title: 'Logging' },
+            { name: 'measuring', icon: '📈', title: 'Measuring' },
+            { name: 'notifying', icon: '🔔', title: 'Notifications' },
+            { name: 'queueing', icon: '🚀', title: 'Queue Management' },
+            { name: 'scheduling', icon: '⏰', title: 'Scheduling' },
+            { name: 'searching', icon: '🔍', title: 'Search' },
+            { name: 'workflow', icon: '🔄', title: 'Workflows' },
+            { name: 'working', icon: '⚙️', title: 'Background Tasks' }
         ];
 
         const serviceList = document.getElementById('service-list');
 
         services.forEach(service => {
-            const serviceCard = document.createElement('div');
-            serviceCard.className = 'service-card';
+            const serviceCol = document.createElement('div');
+            serviceCol.className = 'col-lg-4 col-md-6 mb-4';
 
-            const serviceName = document.createElement('div');
-            serviceName.className = 'service-name';
-            serviceName.textContent = service.charAt(0).toUpperCase() + service.slice(1);
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'card service-card h-100 shadow-sm';
+
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body d-flex align-items-center';
+
+            const serviceIcon = document.createElement('div');
+            serviceIcon.className = 'me-3';
+            serviceIcon.style.fontSize = '2rem';
+            serviceIcon.textContent = service.icon;
+
+            const serviceInfo = document.createElement('div');
+            serviceInfo.className = 'flex-grow-1';
+
+            const serviceName = document.createElement('h5');
+            serviceName.className = 'card-title mb-1';
+            serviceName.innerHTML = `<a href="/services/${service.name}/" class="text-decoration-none text-dark">${service.title}</a>`;
 
             const serviceStatus = document.createElement('div');
-            serviceStatus.className = 'service-status';
+            serviceStatus.className = 'd-flex align-items-center';
 
-            const statusIndicator = document.createElement('div');
-            statusIndicator.className = 'status-indicator';
-            statusIndicator.id = `status-${service}`;
+            const statusIndicator = document.createElement('span');
+            statusIndicator.className = 'status-indicator me-2';
+            statusIndicator.id = `status-${service.name}`;
+
+            const statusText = document.createElement('small');
+            statusText.className = 'text-muted';
+            statusText.id = `status-text-${service.name}`;
+            statusText.textContent = 'Checking...';
 
             serviceStatus.appendChild(statusIndicator);
+            serviceStatus.appendChild(statusText);
 
-            serviceCard.appendChild(serviceName);
-            serviceCard.appendChild(serviceStatus);
+            serviceInfo.appendChild(serviceName);
+            serviceInfo.appendChild(serviceStatus);
 
-            serviceList.appendChild(serviceCard);
+            cardBody.appendChild(serviceIcon);
+            cardBody.appendChild(serviceInfo);
+
+            serviceCard.appendChild(cardBody);
+            serviceCol.appendChild(serviceCard);
+            serviceList.appendChild(serviceCol);
 
             // Fetch status
-            fetch(`/services/${service}/api/status`)
+            fetch(`/services/${service.name}/api/status`)
                 .then(response => {
                     if (response.ok) {
                         return response.json();
@@ -94,19 +224,30 @@
                     }
                 })
                 .then(data => {
-                    const indicator = document.getElementById(`status-${service}`);
+                    const indicator = document.getElementById(`status-${service.name}`);
+                    const statusText = document.getElementById(`status-text-${service.name}`);
                     if (data) {
                         indicator.classList.add('running');
+                        statusText.textContent = 'Running';
+                        statusText.className = 'small text-success';
                     } else {
                         indicator.classList.add('stopped');
+                        statusText.textContent = 'Stopped';
+                        statusText.className = 'small text-danger';
                     }
                 })
                 .catch(error => {
-                    const indicator = document.getElementById(`status-${service}`);
+                    const indicator = document.getElementById(`status-${service.name}`);
+                    const statusText = document.getElementById(`status-text-${service.name}`);
                     indicator.classList.add('stopped');
-                    console.error(`Error fetching status for ${service}:`, error);
+                    statusText.textContent = 'Error';
+                    statusText.className = 'small text-danger';
+                    console.error(`Error fetching status for ${service.name}:`, error);
                 });
         });
     </script>
+
+    <!-- Bootstrap 5 JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

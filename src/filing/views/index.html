@@ -5,8 +5,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Management - Noobly JS Admin</title>
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css">
-    <link rel="stylesheet" href="/services/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for professional look */
+        :root {
+            --custom-primary: #0066cc;
+            --custom-secondary: #6c757d;
+            --custom-success: #198754;
+            --custom-danger: #dc3545;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #dee2e6;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .logo {
+            color: var(--custom-primary);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: #f8f9fa;
+            color: var(--custom-primary);
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background-color: var(--custom-primary);
+            color: white;
+            border-left-color: #0052a3;
+        }
+
+        .main-content {
+            background-color: white;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">

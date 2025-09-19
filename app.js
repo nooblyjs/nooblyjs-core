@@ -49,9 +49,16 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 
-// const aiservice = serviceRegistry.aiservice('claude', {
-//   apiKey: process.env.aiapikey
-// });
+// Initialize AI service with graceful handling of missing API key
+try {
+  const aiservice = serviceRegistry.aiservice('claude', {
+    apiKey: process.env.aiapikey || null,
+    'express-app': app
+  });
+} catch (error) {
+  // AI service will handle missing API key gracefully
+  console.log('AI service initialized without API key - some features will be disabled');
+}
 const authservice = serviceRegistry.authservice('memory', {
   'express-app': app,
   createDefaultAdmin: true
