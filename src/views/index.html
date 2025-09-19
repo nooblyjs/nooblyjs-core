@@ -132,6 +132,13 @@
             </div>
 
             <div class="p-4 border-top">
+                <div id="user-info" class="mb-3 text-center">
+                    <small class="text-muted">Logged in as:</small><br>
+                    <strong id="username-display">Loading...</strong>
+                </div>
+                <button id="logout-btn" class="btn btn-outline-danger w-100 mb-2">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
                 <a href="/" class="btn btn-outline-primary w-100"><i class="bi bi-arrow-left"></i> Back to Home</a>
             </div>
         </nav>
@@ -246,6 +253,44 @@
                     console.error(`Error fetching status for ${service.name}:`, error);
                 });
         });
+
+        // Initialize user info and logout functionality
+        function initializeAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            const authToken = localStorage.getItem('authToken');
+
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    document.getElementById('username-display').textContent = user.username || 'Unknown';
+                } catch (e) {
+                    document.getElementById('username-display').textContent = 'Unknown';
+                }
+            }
+
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    try {
+                        await fetch('/services/authservice/api/logout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token })
+                        });
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                }
+
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login.html';
+            });
+        }
+
+        // Initialize authentication when page loads
+        initializeAuth();
     </script>
 
     <!-- Bootstrap 5 JavaScript Bundle with Popper -->

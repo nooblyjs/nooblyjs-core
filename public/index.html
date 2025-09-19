@@ -468,41 +468,56 @@
             const currentUser = localStorage.getItem('currentUser');
 
             if (authToken && currentUser) {
-                try {
-                    const user = JSON.parse(currentUser);
-                    updateUIForAuthenticatedUser(user);
-                } catch (error) {
+                // Validate token with server
+                fetch('/services/authservice/api/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: authToken })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        try {
+                            const user = JSON.parse(currentUser);
+                            updateUIForAuthenticatedUser(user);
+                        } catch (error) {
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('currentUser');
+                        }
+                    } else {
+                        // Token is invalid, clear storage
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+                    }
+                })
+                .catch(error => {
+                    // Error validating token, clear storage
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('currentUser');
-                }
+                });
             }
         }
 
         function updateUIForAuthenticatedUser(user) {
             // Update navigation links
             const navMenu = document.getElementById('nav-menu');
-            const mobileNavMenu = document.getElementById('mobile-nav-menu');
 
-            if (navMenu && mobileNavMenu) {
-                // Replace login/register with dashboard/logout
-                const authLinks = `
-                    <a href="/services" class="nav-link">Dashboard</a>
-                    <a href="#" class="nav-link" onclick="logout()">Logout (${user.username})</a>
+            if (navMenu) {
+                // Replace login with dashboard and logout
+                const authLinksHtml = `
+                    <li class="nav-item">
+                        <a href="/services" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="logout()">Logout (${user.username})</a>
+                    </li>
                 `;
 
-                const mobileAuthLinks = `
-                    <a href="/services" class="mobile-nav-link">Dashboard</a>
-                    <a href="#" class="mobile-nav-link" onclick="logout()">Logout (${user.username})</a>
-                `;
-
-                // Remove login/register and add dashboard/logout
+                // Remove login link and add dashboard/logout
                 navMenu.innerHTML = navMenu.innerHTML
-                    .replace(/<a[^>]*href="login\.html"[^>]*>.*?<\/a>/, authLinks.split('\n')[1].trim())
-                    .replace(/<a[^>]*href="register\.html"[^>]*>.*?<\/a>/, authLinks.split('\n')[2].trim());
-
-                mobileNavMenu.innerHTML = mobileNavMenu.innerHTML
-                    .replace(/<a[^>]*href="login\.html"[^>]*>.*?<\/a>/, mobileAuthLinks.split('\n')[1].trim())
-                    .replace(/<a[^>]*href="register\.html"[^>]*>.*?<\/a>/, mobileAuthLinks.split('\n')[2].trim());
+                    .replace(/<li[^>]*>\s*<a[^>]*href="login\.html"[^>]*>.*?<\/a>\s*<\/li>/g, authLinksHtml);
 
                 // Update hero buttons
                 const heroButtons = document.getElementById('hero-buttons');

@@ -72,8 +72,14 @@
 
                             <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
                             <div id="success-message" class="alert alert-success d-none" role="alert"></div>
+                            <div id="checking-auth" class="text-center d-none">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted">Checking authentication...</p>
+                            </div>
 
-                            <form id="login-form">
+                            <form id="login-form" class="d-none">
                                 <div class="mb-3">
                                     <label for="username" class="form-label fw-semibold">Username</label>
                                     <input type="text" id="username" name="username" class="form-control" required>
@@ -89,7 +95,7 @@
                                 </button>
                             </form>
 
-                            <div class="text-center">
+                            <div id="login-actions" class="text-center d-none">
                                 <div class="mb-3">
                                     <p class="mb-2 text-muted">Don't have an account?</p>
                                     <a href="/register.html" class="btn btn-outline-primary w-100">Create New Account</a>
@@ -157,9 +163,13 @@
 
                     showSuccess('Login successful! Redirecting...');
 
-                    // Redirect to dashboard or home page
+                    // Get return URL from query parameters or default to services
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const returnUrl = urlParams.get('returnUrl') || '/services';
+
+                    // Redirect to the return URL or services page
                     setTimeout(() => {
-                        window.location.href = '/services';
+                        window.location.href = returnUrl;
                     }, 1500);
                 } else {
                     showError(result.error || 'Login failed');
@@ -174,30 +184,62 @@
         });
 
         // Check if user is already logged in
-        const authToken = localStorage.getItem('authToken');
-        if (authToken) {
-            // Validate token
-            fetch('/services/authservice/api/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token: authToken })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    window.location.href = '/services';
-                } else {
+        function checkExistingAuth() {
+            const authToken = localStorage.getItem('authToken');
+            const checkingDiv = document.getElementById('checking-auth');
+            const loginForm = document.getElementById('login-form');
+            const loginActions = document.getElementById('login-actions');
+
+            if (authToken) {
+                // Show checking authentication message
+                checkingDiv.classList.remove('d-none');
+
+                // Validate token
+                fetch('/services/authservice/api/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: authToken })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // Get return URL from query parameters or default to services
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const returnUrl = urlParams.get('returnUrl') || '/services';
+
+                        showSuccess('Already logged in! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = returnUrl;
+                        }, 1000);
+                    } else {
+                        // Invalid token, clean up and show login form
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+                        showLoginForm();
+                    }
+                })
+                .catch(() => {
+                    // Error validating token, clean up and show login form
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('currentUser');
-                }
-            })
-            .catch(() => {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUser');
-            });
+                    showLoginForm();
+                });
+            } else {
+                // No token, show login form immediately
+                showLoginForm();
+            }
+
+            function showLoginForm() {
+                checkingDiv.classList.add('d-none');
+                loginForm.classList.remove('d-none');
+                loginActions.classList.remove('d-none');
+            }
         }
+
+        // Initialize authentication check when page loads
+        checkExistingAuth();
     </script>
 
     <!-- Bootstrap 5 JavaScript Bundle with Popper -->

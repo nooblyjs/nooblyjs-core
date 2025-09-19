@@ -10,6 +10,7 @@ const {
   createApiKeyAuthMiddleware,
   generateApiKey,
 } = require('./src/middleware/apiKeyAuth');
+const { createServicesAuthMiddleware } = require('./src/middleware/servicesAuth');
 
 class ServiceRegistry {
   constructor() {
@@ -67,16 +68,26 @@ class ServiceRegistry {
       });
     }
 
-    // Serve static files from the views directory for caching service
-    expressApp.use(
-      '/services/',
-      express.static(path.join(__dirname, 'src/views')),
-    );
+    // Initialize services auth middleware
+    this.servicesAuthMiddleware = createServicesAuthMiddleware(this);
 
-    // Serve the service registry landing page
-    this.expressApp.get('/services/', (req, res) => {
+    // Serve the service registry landing page (protected) - MUST come before static middleware
+    this.expressApp.get('/services/', this.servicesAuthMiddleware, (req, res) => {
       res.sendFile(path.join(__dirname, 'src/views', 'index.html'));
     });
+
+    // Serve static files from the views directory for caching service (excluding index.html)
+    expressApp.use(
+      '/services/',
+      (req, res, next) => {
+        // Exclude index.html from static serving since it's handled by the protected route above
+        if (req.path === '/' || req.path === '/index.html') {
+          return next();
+        }
+        next();
+      },
+      express.static(path.join(__dirname, 'src/views')),
+    );
 
     // Serve the service registry landing page
     this.expressApp.get('/services/documentation', (req, res) => {
