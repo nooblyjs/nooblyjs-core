@@ -239,7 +239,7 @@ describe('API Key Authentication Middleware', () => {
         '/services/caching/status',
         '/services/dataserve/status',
         '/services/logging/views/index.html',
-        '/public/assets/style.css'
+        '/public/assets/styles.css'
       ];
       
       excludedPaths.forEach(path => {
