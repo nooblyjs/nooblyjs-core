@@ -18,11 +18,6 @@
           "type": "primary"
         },
         {
-          "text": "Register",
-          "href": "register.html",
-          "type": "outline"
-        },
-        {
           "text": "Documentation",
           "href": "documentation.html",
           "type": "outline"
@@ -480,8 +475,7 @@
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
         { "text": "Services", "href": "/services" },
-        { "text": "Login", "href": "login.html" },
-        { "text": "Register", "href": "register.html" }
+        { "text": "Login", "href": "login.html" }
       ]
     },
     "mobileMenu": {
@@ -489,8 +483,7 @@
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
-        { "text": "Login", "href": "login.html" },
-        { "text": "Register", "href": "register.html" }
+        { "text": "Login", "href": "login.html" }
       ],
       "cta": {
         "text": "Login",

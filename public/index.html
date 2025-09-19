@@ -4,145 +4,196 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Loading...</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="favicon.jpg">
     <link rel="apple-touch-icon" href="favicon.jpg">
+    <style>
+        /* Custom CSS for professional look */
+        :root {
+            --custom-primary: #0066cc;
+            --custom-secondary: #6c757d;
+            --custom-warning: #ffc107;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 80px 0 60px;
+        }
+        .robot-hero-img {
+            filter: drop-shadow(0 20px 40px rgba(0, 102, 204, 0.2));
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--custom-primary);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--custom-primary);
+        }
+        .tech-badge {
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--custom-primary);
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .navbar-brand img {
+            border: 2px solid var(--custom-primary);
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="header" id="header">
-        <div class="header-container">
-            <a href="index.html" class="logo">
-                <div class="logo-icon" id="logo-icon">NJS</div>
-                <span id="logo-text">Noobly JS</span>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top" id="header">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="robot-hero.jpg" alt="Logo" width="32" height="32" class="rounded me-2" id="logo-icon">
+                <span id="logo-text" class="fw-semibold">Noobly JS</span>
             </a>
-            
-            <nav class="nav-menu" id="nav-menu">
-                <!-- Navigation links will be loaded from JSON -->
-            </nav>
-            
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                ☰
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" id="mobileMenuToggle">
+                <span class="navbar-toggler-icon"></span>
             </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="nav-menu">
+                    <!-- Navigation links will be loaded from JSON -->
+                </ul>
+            </div>
         </div>
-        
-        <div class="mobile-menu" id="mobileMenu">
-            <nav class="mobile-nav-menu" id="mobile-nav-menu">
-                <!-- Mobile navigation links will be loaded from JSON -->
-            </nav>
-        </div>
-    </header>
+    </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-text">
-                <h1 id="hero-title">Loading...</h1>
-                <p class="subtitle" id="hero-subtitle">Loading...</p>
-
-                <div class="hero-buttons" id="hero-buttons">
-                    <!-- Buttons will be loaded from JSON -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 id="hero-title" class="display-4 fw-bold mb-4">Loading...</h1>
+                    <p id="hero-subtitle" class="lead text-muted mb-4">Loading...</p>
+                    <div id="hero-buttons" class="d-flex gap-3 flex-wrap">
+                        <!-- Buttons will be loaded from JSON -->
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="robot-hero-main.jpg" alt="NooblyJS Robot Assistant" class="img-fluid robot-hero-img">
                 </div>
             </div>
 
-            <div class="hero-image">
-                <img src="robot-hero-main.jpg" alt="NooblyJS Robot Assistant" class="robot-hero-img">
+            <div class="row mt-5" id="features">
+                <!-- Features will be loaded from JSON -->
             </div>
-        </div>
-
-        <div class="features" id="features">
-            <!-- Features will be loaded from JSON -->
         </div>
     </section>
 
     <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="stats-container" id="stats-container">
-            <!-- Stats will be loaded from JSON -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row" id="stats-container">
+                <!-- Stats will be loaded from JSON -->
+            </div>
         </div>
     </section>
 
     <!-- Services Section -->
-    <section class="services-section" style="padding: 4rem 0;">
+    <section class="py-5">
         <div class="container">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h2 id="services-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: hsl(var(--foreground));">Loading...</h2>
-                <p id="services-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            <div class="text-center mb-5">
+                <h2 id="services-title" class="display-5 fw-bold mb-3">Loading...</h2>
+                <p id="services-description" class="lead text-muted">Loading...</p>
             </div>
-            
-            <div class="service-grid" id="service-grid">
+
+            <div class="row" id="service-grid">
                 <!-- Services will be loaded from JSON -->
             </div>
         </div>
     </section>
 
     <!-- Testimonial Section -->
-    <section class="testimonial-section">
+    <section class="py-5">
         <div class="container">
-            <div class="testimonial-card card">
-                <div class="card-content">
-                    <p class="testimonial-text" id="testimonial-text">
-                        Loading...
-                    </p>
-                    <p class="testimonial-author" id="testimonial-author">Loading...</p>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center p-5">
+                            <p id="testimonial-text" class="lead fst-italic mb-4">
+                                Loading...
+                            </p>
+                            <p id="testimonial-author" class="text-muted fw-semibold">Loading...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3 id="footer-about-title">Loading...</h3>
-                    <p id="footer-about-description">Loading...</p>
-                    <div class="tech-stack" id="tech-stack">
+    <footer class="footer py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 id="footer-about-title" class="fw-bold mb-3">Loading...</h5>
+                    <p id="footer-about-description" class="text-muted small">Loading...</p>
+                    <div id="tech-stack" class="d-flex flex-wrap gap-1">
                         <!-- Tech stack badges will be loaded from JSON -->
                     </div>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul class="footer-links" id="footer-quick-links">
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Quick Links</h5>
+                    <ul id="footer-quick-links" class="list-unstyled">
                         <!-- Links will be loaded from JSON -->
                     </ul>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Resources</h3>
-                    <ul class="footer-links" id="footer-resources">
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Resources</h5>
+                    <ul id="footer-resources" class="list-unstyled">
                         <!-- Resources will be loaded from JSON -->
                     </ul>
                 </div>
-                
-                <div class="footer-section">
-                    <h3 id="newsletter-title">Loading...</h3>
-                    <p id="newsletter-description">Loading...</p>
-                    <div class="newsletter-form">
-                        <input type="email" id="newsletter-placeholder" class="newsletter-input">
-                        <button class="newsletter-btn">Subscribe</button>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 id="newsletter-title" class="fw-bold mb-3">Loading...</h5>
+                    <p id="newsletter-description" class="text-muted small">Loading...</p>
+                    <div class="input-group mb-3">
+                        <input type="email" id="newsletter-placeholder" class="form-control" placeholder="Enter email">
+                        <button class="btn btn-primary newsletter-btn" type="button">Subscribe</button>
                     </div>
-                    <div class="social-links">
-                        <a href="#" class="social-link">📧</a>
-                        <a href="#" class="social-link">📱</a>
-                        <a href="#" class="social-link">🐙</a>
-                        <a href="#" class="social-link">💬</a>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-outline-secondary btn-sm">📧</a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm">📱</a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm">🐙</a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm">💬</a>
                     </div>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-left">
-                    <a href="index.html" class="footer-logo">
-                        <div class="footer-logo-icon" id="footer-logo-icon">NJS</div>
-                        <span id="footer-logo-text">Noobly JS</span>
-                    </a>
-                    <span class="footer-copyright" id="footer-copyright">Loading...</span>
+
+            <hr class="my-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="index.html" class="text-decoration-none d-flex align-items-center">
+                            <img src="robot-hero.jpg" alt="Logo" width="24" height="24" class="rounded me-2" id="footer-logo-icon">
+                            <span id="footer-logo-text" class="fw-semibold text-dark">Noobly JS</span>
+                        </a>
+                        <span id="footer-copyright" class="text-muted small">Loading...</span>
+                    </div>
                 </div>
-                
-                <div class="footer-bottom-right" id="footer-legal-links">
-                    <!-- Legal links will be loaded from JSON -->
+
+                <div class="col-md-6 text-md-end">
+                    <div id="footer-legal-links" class="d-flex gap-3 justify-content-md-end">
+                        <!-- Legal links will be loaded from JSON -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,18 +225,19 @@
             // Navigation
             const logoIcon = document.getElementById('logo-icon');
             const logoText = document.getElementById('logo-text');
-            logoIcon.textContent = common.navigation.logo.icon;
+            if (logoIcon.tagName === 'IMG') {
+                logoIcon.alt = common.navigation.logo.icon;
+            } else {
+                logoIcon.textContent = common.navigation.logo.icon;
+            }
             logoText.textContent = common.navigation.logo.text;
 
             const navMenu = document.getElementById('nav-menu');
-            navMenu.innerHTML = common.navigation.links.map(link => 
-                `<a href="${link.href}" class="nav-link ${link.href === 'index.html' ? 'active' : ''}">${link.text}</a>`
+            navMenu.innerHTML = common.navigation.links.map(link =>
+                `<li class="nav-item">
+                    <a href="${link.href}" class="nav-link ${link.href === 'index.html' ? 'active' : ''}">${link.text}</a>
+                </li>`
             ).join('');
-
-            const mobileNavMenu = document.getElementById('mobile-nav-menu');
-            mobileNavMenu.innerHTML = common.mobileMenu.links.map(link => 
-                `<a href="${link.href}" class="mobile-nav-link">${link.text}</a>`
-            ).join('') + `<a href="${common.mobileMenu.cta.href}" class="btn btn-primary">${common.mobileMenu.cta.text}</a>`;
 
             // Hero section
             document.getElementById('hero-title').textContent = data.hero.title;
@@ -208,11 +260,13 @@
             // Features
             const features = document.getElementById('features');
             features.innerHTML = data.features.map(feature => `
-                <div class="feature card">
-                    <div class="card-content">
-                        <div class="feature-icon">${feature.icon}</div>
-                        <h3>${feature.title}</h3>
-                        <p>${feature.description}</p>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">${feature.icon}</div>
+                            <h5 class="card-title">${feature.title}</h5>
+                            <p class="card-text text-muted">${feature.description}</p>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -220,9 +274,13 @@
             // Stats
             const statsContainer = document.getElementById('stats-container');
             statsContainer.innerHTML = data.stats.map(stat => `
-                <div class="stat-card card">
-                    <span class="stat-number">${stat.number}</span>
-                    <span class="stat-label">${stat.label}</span>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 text-center shadow-sm">
+                        <div class="card-body">
+                            <div class="stat-number">${stat.number}</div>
+                            <p class="card-text text-muted">${stat.label}</p>
+                        </div>
+                    </div>
                 </div>
             `).join('');
 
@@ -232,11 +290,15 @@
 
             const serviceGrid = document.getElementById('service-grid');
             serviceGrid.innerHTML = data.services.items.map(service => `
-                <div class="service-card card">
-                    <div class="card-content">
-                        <div class="badge badge-${service.badgeType}" style="margin-bottom: 1rem;">${service.badge}</div>
-                        <h3><a href="${service.href}" style="text-decoration: none; color: hsl(var(--foreground));">${service.title}</a></h3>
-                        <p>${service.description}</p>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <span class="badge bg-primary mb-3">${service.badge}</span>
+                            <h5 class="card-title">
+                                <a href="${service.href}" class="text-decoration-none text-dark">${service.title}</a>
+                            </h5>
+                            <p class="card-text text-muted">${service.description}</p>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -250,74 +312,54 @@
             document.getElementById('footer-about-description').textContent = data.footer.about.description;
 
             const techStack = document.getElementById('tech-stack');
-            techStack.innerHTML = data.footer.about.techStack.map(tech => 
-                `<span class="tech-badge badge badge-outline">${tech}</span>`
+            techStack.innerHTML = data.footer.about.techStack.map(tech =>
+                `<span class="badge tech-badge rounded-pill">${tech}</span>`
             ).join('');
 
             const footerQuickLinks = document.getElementById('footer-quick-links');
-            footerQuickLinks.innerHTML = data.footer.quickLinks.map(link => 
-                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            footerQuickLinks.innerHTML = data.footer.quickLinks.map(link =>
+                `<li><a href="${link.href}" class="text-decoration-none text-muted small">${link.text}</a></li>`
             ).join('');
 
             const footerResources = document.getElementById('footer-resources');
-            footerResources.innerHTML = data.footer.resources.map(link => 
-                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            footerResources.innerHTML = data.footer.resources.map(link =>
+                `<li><a href="${link.href}" class="text-decoration-none text-muted small">${link.text}</a></li>`
             ).join('');
 
             document.getElementById('newsletter-title').textContent = data.footer.newsletter.title;
             document.getElementById('newsletter-description').textContent = data.footer.newsletter.description;
             document.getElementById('newsletter-placeholder').placeholder = data.footer.newsletter.placeholder;
 
-            document.getElementById('footer-logo-icon').textContent = common.footer.logo.icon;
+            const footerLogoIcon = document.getElementById('footer-logo-icon');
+            if (footerLogoIcon.tagName === 'IMG') {
+                footerLogoIcon.alt = common.footer.logo.icon;
+            } else {
+                footerLogoIcon.textContent = common.footer.logo.icon;
+            }
             document.getElementById('footer-logo-text').textContent = common.footer.logo.text;
             document.getElementById('footer-copyright').textContent = common.footer.copyright;
 
             const footerLegalLinks = document.getElementById('footer-legal-links');
-            footerLegalLinks.innerHTML = common.footer.legalLinks.map(link => 
-                `<a href="${link.href}" class="footer-bottom-link">${link.text}</a>`
+            footerLegalLinks.innerHTML = common.footer.legalLinks.map(link =>
+                `<a href="${link.href}" class="text-decoration-none text-muted small me-3">${link.text}</a>`
             ).join('');
         }
 
         // Load content when page loads
         document.addEventListener('DOMContentLoaded', loadContent);
 
-        // Header scroll effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('header');
-            if (window.scrollY > 50) {
-                header.style.backgroundColor = 'hsl(var(--background) / 0.8)';
-                header.style.backdropFilter = 'blur(12px)';
-            } else {
-                header.style.backgroundColor = 'hsl(var(--background) / 0.95)';
-                header.style.backdropFilter = 'blur(8px)';
-            }
-        });
+        // Header scroll effect (removed custom styles as Bootstrap handles this better)
 
-        // Mobile menu toggle
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const mobileMenu = document.getElementById('mobileMenu');
-
-        mobileMenuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
-            mobileMenuToggle.textContent = mobileMenu.classList.contains('active') ? '✕' : '☰';
-        });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!mobileMenuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-                mobileMenu.classList.remove('active');
-                mobileMenuToggle.textContent = '☰';
-            }
-        });
+        // Mobile menu functionality is now handled by Bootstrap's collapse component
 
         // Newsletter subscription
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('newsletter-btn')) {
                 e.preventDefault();
-                const email = document.querySelector('.newsletter-input').value;
+                const email = document.querySelector('#newsletter-placeholder').value;
                 if (email) {
                     alert('Thank you for subscribing! (This is a demo)');
-                    document.querySelector('.newsletter-input').value = '';
+                    document.querySelector('#newsletter-placeholder').value = '';
                 } else {
                     alert('Please enter a valid email address.');
                 }
@@ -501,9 +543,13 @@
             setTimeout(checkAuthState, 100); // Wait for content to load first
         });
     </script>
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4QK5BHJYZM"></script>
-        <script>
+
+    <!-- Bootstrap 5 JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4QK5BHJYZM"></script>
+    <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());

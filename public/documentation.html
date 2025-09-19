@@ -4,138 +4,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Loading...</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="favicon.jpg">
     <link rel="apple-touch-icon" href="favicon.jpg">
+    <style>
+        /* Custom CSS for professional look */
+        :root {
+            --custom-primary: #0066cc;
+            --custom-secondary: #6c757d;
+            --custom-warning: #ffc107;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 80px 0 60px;
+        }
+        .tech-badge {
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--custom-primary);
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="header" id="header">
-        <div class="header-container">
-            <a href="index.html" class="logo">
-                <div class="logo-icon" id="logo-icon">NJS</div>
-                <span id="logo-text">Noobly JS</span>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top" id="header">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="robot-hero.jpg" alt="Logo" width="32" height="32" class="rounded me-2" id="logo-icon">
+                <span id="logo-text" class="fw-semibold">Noobly JS</span>
             </a>
-            
-            <nav class="nav-menu" id="nav-menu">
-                <!-- Navigation links will be loaded from JSON -->
-            </nav>
-            
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" id="mobileMenuToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="nav-menu">
+                    <!-- Navigation links will be loaded from JSON -->
+                </ul>
+            </div>
         </div>
-        
-        <div class="mobile-menu" id="mobileMenu">
-            <nav class="mobile-nav-menu" id="mobile-nav-menu">
-                <!-- Mobile navigation links will be loaded from JSON -->
-            </nav>
-        </div>
-    </header>
+    </nav>
 
     <!-- Documentation Hero Section -->
-    <section class="service-hero">
-        <div class="service-content">
-            <div class="badge badge-default" id="hero-badge" style="margin-bottom: 1rem;">📚 Documentation</div>
-            <h1 class="service-title" id="hero-title">Loading...</h1>
-            <p class="service-description" id="hero-description">Loading...</p>
-            
-            <div id="hero-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-                <!-- Buttons will be loaded from JSON -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-primary mb-3" id="hero-badge">📚 Documentation</span>
+                    <h1 class="display-4 fw-bold mb-4" id="hero-title">Loading...</h1>
+                    <p class="lead text-muted mb-4" id="hero-description">Loading...</p>
+                    <div id="hero-buttons" class="d-flex gap-3 flex-wrap justify-content-center">
+                        <!-- Buttons will be loaded from JSON -->
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Quick Start Section -->
-    <section id="quick-start" style="padding: 2rem 0;">
+    <section id="quick-start" class="py-5">
         <div class="container">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h2 id="quickstart-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
-                <p id="quickstart-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            <div class="text-center mb-5">
+                <h2 id="quickstart-title" class="display-5 fw-bold mb-3">Loading...</h2>
+                <p id="quickstart-description" class="lead text-muted">Loading...</p>
             </div>
 
-            <div class="service-grid" id="quickstart-steps">
+            <div class="row" id="quickstart-steps">
                 <!-- Quick start steps will be loaded from JSON -->
             </div>
         </div>
     </section>
 
     <!-- Services Documentation -->
-    <section style="padding: 2rem 0; background-color: hsl(var(--muted) / 0.3);">
+    <section class="py-5 bg-light">
         <div class="container">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h2 id="services-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
-                <p id="services-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            <div class="text-center mb-5">
+                <h2 id="services-title" class="display-5 fw-bold mb-3">Loading...</h2>
+                <p id="services-description" class="lead text-muted">Loading...</p>
             </div>
 
-            <div class="service-grid" id="services-grid">
+            <div class="row" id="services-grid">
                 <!-- Services will be loaded from JSON -->
             </div>
 
-            <div style="text-align: center; margin-top: 2rem;">
-                <a href="cache.html" class="btn btn-primary">Explore All Services</a>
+            <div class="text-center mt-4">
+                <a href="cache.html" class="btn btn-primary btn-lg">Explore All Services</a>
             </div>
         </div>
     </section>
 
     <!-- API Reference Section -->
-    <section id="api-reference" style="padding: 2rem 0;">
+    <section id="api-reference" class="py-5">
         <div class="container">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h2 id="api-title" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Loading...</h2>
-                <p id="api-description" style="font-size: 1.25rem; color: hsl(var(--muted-foreground));">Loading...</p>
+            <div class="text-center mb-5">
+                <h2 id="api-title" class="display-5 fw-bold mb-3">Loading...</h2>
+                <p id="api-description" class="lead text-muted">Loading...</p>
             </div>
 
-            <div class="card">
-                <div class="card-content">
-                    <h3 id="core-framework-title">Loading...</h3>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 id="core-framework-title" class="card-title">Loading...</h3>
                     <div class="code-block" id="core-framework-code">
                         Loading...
                     </div>
                 </div>
             </div>
 
-            <div style="margin-top: 2rem;">
-                <div class="service-grid" id="api-sections">
-                    <!-- API sections will be loaded from JSON -->
-                </div>
+            <div class="row" id="api-sections">
+                <!-- API sections will be loaded from JSON -->
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3 id="footer-about-title">Loading...</h3>
-                    <p id="footer-about-description">Loading...</p>
+    <footer class="footer py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 id="footer-about-title" class="fw-bold mb-3">Loading...</h5>
+                    <p id="footer-about-description" class="text-muted small">Loading...</p>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul class="footer-links" id="footer-quick-links">
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Quick Links</h5>
+                    <ul id="footer-quick-links" class="list-unstyled">
                         <!-- Links will be loaded from JSON -->
                     </ul>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Resources</h3>
-                    <ul class="footer-links" id="footer-resources">
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Resources</h5>
+                    <ul id="footer-resources" class="list-unstyled">
                         <!-- Resources will be loaded from JSON -->
                     </ul>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-left">
-                    <a href="index.html" class="footer-logo">
-                        <div class="footer-logo-icon" id="footer-logo-icon">NJS</div>
-                        <span id="footer-logo-text">Noobly JS</span>
-                    </a>
-                    <span class="footer-copyright" id="footer-copyright">Loading...</span>
+
+            <hr class="my-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="index.html" class="text-decoration-none d-flex align-items-center">
+                            <img src="robot-hero.jpg" alt="Logo" width="24" height="24" class="rounded me-2" id="footer-logo-icon">
+                            <span id="footer-logo-text" class="fw-semibold text-dark">Noobly JS</span>
+                        </a>
+                        <span id="footer-copyright" class="text-muted small">Loading...</span>
+                    </div>
                 </div>
-                
-                <div class="footer-bottom-right" id="footer-legal-links">
-                    <!-- Legal links will be loaded from JSON -->
+
+                <div class="col-md-6 text-md-end">
+                    <div id="footer-legal-links" class="d-flex gap-3 justify-content-md-end">
+                        <!-- Legal links will be loaded from JSON -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -167,18 +203,19 @@
             // Navigation
             const logoIcon = document.getElementById('logo-icon');
             const logoText = document.getElementById('logo-text');
-            logoIcon.textContent = common.navigation.logo.icon;
+            if (logoIcon.tagName === 'IMG') {
+                logoIcon.alt = common.navigation.logo.icon;
+            } else {
+                logoIcon.textContent = common.navigation.logo.icon;
+            }
             logoText.textContent = common.navigation.logo.text;
 
             const navMenu = document.getElementById('nav-menu');
-            navMenu.innerHTML = common.navigation.links.map(link => 
-                `<a href="${link.href}" class="nav-link ${link.href === 'documentation.html' ? 'active' : ''}">${link.text}</a>`
+            navMenu.innerHTML = common.navigation.links.map(link =>
+                `<li class="nav-item">
+                    <a href="${link.href}" class="nav-link ${link.href === 'documentation.html' ? 'active' : ''}">${link.text}</a>
+                </li>`
             ).join('');
-
-            const mobileNavMenu = document.getElementById('mobile-nav-menu');
-            mobileNavMenu.innerHTML = common.mobileMenu.links.map(link => 
-                `<a href="${link.href}" class="mobile-nav-link">${link.text}</a>`
-            ).join('') + `<a href="${common.mobileMenu.cta.href}" class="btn btn-primary">${common.mobileMenu.cta.text}</a>`;
 
             // Hero section
             document.getElementById('hero-badge').textContent = data.hero.badge;
@@ -196,11 +233,13 @@
 
             const quickstartSteps = document.getElementById('quickstart-steps');
             quickstartSteps.innerHTML = data.quickStart.steps.map(step => `
-                <div class="service-card card">
-                    <div class="card-content">
-                        <h3>${step.title}</h3>
-                        <p style="margin-bottom: 1rem;">${step.description}</p>
-                        <div class="code-block">${step.code}</div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">${step.title}</h5>
+                            <p class="card-text text-muted mb-3">${step.description}</p>
+                            <div class="code-block">${step.code}</div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -211,12 +250,16 @@
 
             const servicesGrid = document.getElementById('services-grid');
             servicesGrid.innerHTML = data.services.items.map(service => `
-                <div class="service-card card">
-                    <div class="card-content">
-                        <div class="badge badge-${service.badgeType}" style="margin-bottom: 1rem;">${service.badge}</div>
-                        <h3><a href="${service.href}" style="text-decoration: none; color: hsl(var(--foreground));">${service.title}</a></h3>
-                        <p>${service.description}</p>
-                        <div class="code-block" style="margin-top: 1rem; font-size: 0.75rem;">${service.code}</div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <span class="badge bg-primary mb-3">${service.badge}</span>
+                            <h5 class="card-title">
+                                <a href="${service.href}" class="text-decoration-none text-dark">${service.title}</a>
+                            </h5>
+                            <p class="card-text text-muted">${service.description}</p>
+                            <div class="code-block small">${service.code}</div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -229,11 +272,13 @@
 
             const apiSections = document.getElementById('api-sections');
             apiSections.innerHTML = data.apiReference.sections.map(section => `
-                <div class="card">
-                    <div class="card-content">
-                        <h4>${section.title}</h4>
-                        <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">${section.description}</p>
-                        <a href="${section.href}" class="btn btn-outline btn-sm">View ${section.title}</a>
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">${section.title}</h5>
+                            <p class="card-text text-muted mb-3">${section.description}</p>
+                            <a href="${section.href}" class="btn btn-outline-primary btn-sm">View ${section.title}</a>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -243,43 +288,34 @@
             document.getElementById('footer-about-description').textContent = data.footer.about.description;
 
             const footerQuickLinks = document.getElementById('footer-quick-links');
-            footerQuickLinks.innerHTML = data.footer.quickLinks.map(link => 
-                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            footerQuickLinks.innerHTML = data.footer.quickLinks.map(link =>
+                `<li><a href="${link.href}" class="text-decoration-none text-muted small">${link.text}</a></li>`
             ).join('');
 
             const footerResources = document.getElementById('footer-resources');
-            footerResources.innerHTML = data.footer.resources.map(link => 
-                `<li><a href="${link.href}" class="footer-link">${link.text}</a></li>`
+            footerResources.innerHTML = data.footer.resources.map(link =>
+                `<li><a href="${link.href}" class="text-decoration-none text-muted small">${link.text}</a></li>`
             ).join('');
 
-            document.getElementById('footer-logo-icon').textContent = common.footer.logo.icon;
+            const footerLogoIcon = document.getElementById('footer-logo-icon');
+            if (footerLogoIcon.tagName === 'IMG') {
+                footerLogoIcon.alt = common.footer.logo.icon;
+            } else {
+                footerLogoIcon.textContent = common.footer.logo.icon;
+            }
             document.getElementById('footer-logo-text').textContent = common.footer.logo.text;
             document.getElementById('footer-copyright').textContent = common.footer.copyright;
 
             const footerLegalLinks = document.getElementById('footer-legal-links');
-            footerLegalLinks.innerHTML = common.footer.legalLinks.map(link => 
-                `<a href="${link.href}" class="footer-bottom-link">${link.text}</a>`
+            footerLegalLinks.innerHTML = common.footer.legalLinks.map(link =>
+                `<a href="${link.href}" class="text-decoration-none text-muted small me-3">${link.text}</a>`
             ).join('');
         }
 
         // Load content when page loads
         document.addEventListener('DOMContentLoaded', loadContent);
 
-        // Mobile menu toggle
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const mobileMenu = document.getElementById('mobileMenu');
-
-        mobileMenuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
-            mobileMenuToggle.textContent = mobileMenu.classList.contains('active') ? '✕' : '☰';
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!mobileMenuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-                mobileMenu.classList.remove('active');
-                mobileMenuToggle.textContent = '☰';
-            }
-        });
+        // Mobile menu functionality is now handled by Bootstrap's collapse component
 
         // Smooth scrolling for anchor links
         document.addEventListener('click', function(e) {
@@ -309,5 +345,8 @@
             }
         }, true);
     </script>
+
+    <!-- Bootstrap 5 JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
