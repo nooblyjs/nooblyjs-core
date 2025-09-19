@@ -518,3 +518,8 @@ body {
     opacity: 0.6;
     pointer-events: none;
 }
+
+/* Bootstrap Icons styling */
+.bi {
+    color: silver;
+}

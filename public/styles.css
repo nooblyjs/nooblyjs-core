@@ -341,7 +341,7 @@ body {
 }
 
 .robot-hero-img {
-  max-width: 100%;
+  max-width: 50%;
   height: auto;
   max-height: 500px;
   filter: drop-shadow(0 20px 40px hsl(var(--robot-blue) / 0.2));
@@ -865,4 +865,9 @@ body {
 .newsletter-input:focus {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
+}
+
+/* Bootstrap Icons styling */
+.bi {
+  color: silver;
 }

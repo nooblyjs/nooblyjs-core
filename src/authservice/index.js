@@ -12,6 +12,7 @@
 const AuthPassport = require('./providers/authPassport');
 const AuthGoogle = require('./providers/authGoogle');
 const AuthMemory = require('./providers/authMemory');
+const AuthFile = require('./providers/authFile');
 
 const Routes = require('./routes');
 const Views = require('./views');
@@ -19,10 +20,10 @@ const Views = require('./views');
 /**
  * Creates an authentication service instance with the specified provider.
  * Automatically configures routes and views for the auth service.
- * @param {string} type - The auth provider type ('passport', 'google', 'memory')
+ * @param {string} type - The auth provider type ('passport', 'google', 'memory', 'file')
  * @param {Object} options - Provider-specific configuration options
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {AuthPassport|AuthGoogle|AuthMemory} Auth service instance with specified provider
+ * @return {AuthPassport|AuthGoogle|AuthMemory|AuthFile} Auth service instance with specified provider
  * @throws {Error} When unsupported auth type is provided
  */
 function createAuth(type, options, eventEmitter) {
@@ -35,6 +36,9 @@ function createAuth(type, options, eventEmitter) {
       break;
     case 'google':
       auth = new AuthGoogle(options, eventEmitter);
+      break;
+    case 'file':
+      auth = new AuthFile(options, eventEmitter);
       break;
     case 'memory':
     default:

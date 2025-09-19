@@ -59,9 +59,9 @@ try {
   // AI service will handle missing API key gracefully
   console.log('AI service initialized without API key - some features will be disabled');
 }
-const authservice = serviceRegistry.authservice('memory', {
+const authservice = serviceRegistry.authservice('file', {
   'express-app': app,
-  createDefaultAdmin: true
+  dataDir: './data/auth'
 });
 
 cache.put('currentdate', new Date());

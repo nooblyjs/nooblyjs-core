@@ -213,7 +213,7 @@ class ServiceRegistry {
       'searching': 'memory',
       'workflow': 'memory',
       'notifying': 'memory',
-      'authservice': 'memory',
+      'authservice': 'file',
       'aiservice': 'claude'
     };
 
@@ -438,15 +438,16 @@ class ServiceRegistry {
 
   /**
    * Get the authentication service
-   * @param {string} providerType - 'memory', 'passport', or 'google'
+   * @param {string} providerType - 'file', 'memory', 'passport', or 'google'
    * @param {Object} options - Provider-specific options
+   * @param {string} options.dataDir - Directory for user data files (for file provider)
    * @param {string} options.clientID - Google OAuth client ID (for google provider)
    * @param {string} options.clientSecret - Google OAuth client secret (for google provider)
    * @param {string} options.callbackURL - OAuth callback URL (for google provider)
    * @param {boolean} options.createDefaultAdmin - Create default admin user (for memory provider)
    * @returns {Object} Auth service instance
    */
-  authservice(providerType = 'memory', options = {}) {
+  authservice(providerType = 'file', options = {}) {
     return this.getService('authservice', providerType, options);
   }
 
