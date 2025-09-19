@@ -155,11 +155,11 @@
                     localStorage.setItem('authToken', result.data.session.token);
                     localStorage.setItem('currentUser', JSON.stringify(result.data.user));
 
-                    showSuccess('<i class="bi bi-check-circle-fill"></i> Login successful! Redirecting...');
+                    showSuccess('Login successful! Redirecting...');
 
                     // Redirect to dashboard or home page
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
+                        window.location.href = '/services';
                     }, 1500);
                 } else {
                     showError(result.error || 'Login failed');
@@ -187,7 +187,7 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/services';
                 } else {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('currentUser');

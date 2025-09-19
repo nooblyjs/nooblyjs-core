@@ -67,7 +67,7 @@
           "badge": "⚡ Performance",
           "badgeType": "default",
           "title": "Caching Service",
-          "href": "cache.html",
+          "href": "/services",
           "description": "High-performance caching with Redis, Memcached, and in-memory providers for lightning-fast data access."
         },
         {
@@ -232,7 +232,7 @@
           "badge": "⚡ Performance",
           "badgeType": "default",
           "title": "Caching Service",
-          "href": "cache.html",
+          "href": "/services",
           "description": "High-performance caching with Redis, Memcached, and in-memory providers.",
           "code": "const cache = app.service('cache');\nawait cache.set('key', 'value');"
         },
@@ -312,7 +312,7 @@
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "cache.html" }
+        { "text": "Services", "href": "/services" }
       ],
       "resources": [
         { "text": "Quick Start", "href": "#quick-start" },
@@ -447,7 +447,7 @@
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "cache.html" }
+        { "text": "Services", "href": "/services" }
       ],
       "community": [
         { "text": "GitHub", "href": "#" },

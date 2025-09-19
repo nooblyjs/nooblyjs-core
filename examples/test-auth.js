@@ -52,7 +52,7 @@ try {
     console.log(`  Home: http://localhost:${PORT}/`);
     console.log(`  Login: http://localhost:${PORT}/login.html`);
     console.log(`  Register: http://localhost:${PORT}/register.html`);
-    console.log(`  Dashboard: http://localhost:${PORT}/dashboard.html`);
+    console.log(`  Dashboard: http://localhost:${PORT}/services`);
     console.log(`  Auth API: http://localhost:${PORT}/services/authservice/api/status`);
   });
 

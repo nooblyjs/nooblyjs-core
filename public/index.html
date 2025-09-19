@@ -486,12 +486,12 @@
             if (navMenu && mobileNavMenu) {
                 // Replace login/register with dashboard/logout
                 const authLinks = `
-                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="/services" class="nav-link">Dashboard</a>
                     <a href="#" class="nav-link" onclick="logout()">Logout (${user.username})</a>
                 `;
 
                 const mobileAuthLinks = `
-                    <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+                    <a href="/services" class="mobile-nav-link">Dashboard</a>
                     <a href="#" class="mobile-nav-link" onclick="logout()">Logout (${user.username})</a>
                 `;
 
@@ -508,7 +508,7 @@
                 const heroButtons = document.getElementById('hero-buttons');
                 if (heroButtons) {
                     heroButtons.innerHTML = `
-                        <a href="dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                        <a href="/services" class="btn btn-primary btn-lg">Go to Dashboard</a>
                         <a href="documentation.html" class="btn btn-outline btn-lg">Documentation</a>
                     `;
                 }
