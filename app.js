@@ -68,7 +68,7 @@ cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));
 queue.enqueue(new Date());
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 app.use('/', express.static(__dirname + '/public'));
 app.listen(PORT, () => {
   log.info(`Server is running on port ${PORT}`);
