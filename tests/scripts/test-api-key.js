@@ -35,7 +35,7 @@ const server = app.listen(0, async () => {
   // Test cases
   const tests = [
     {
-      name: '❌ Request without API key should fail',
+      name: '[ ] Request without API key should fail',
       path: '/services/caching/api/put/test',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,7 +43,7 @@ const server = app.listen(0, async () => {
       expectedStatus: 401
     },
     {
-      name: '❌ Request with invalid API key should fail',
+      name: '[ ] Request with invalid API key should fail',
       path: '/services/caching/api/put/test',
       method: 'POST',
       headers: { 
@@ -54,7 +54,7 @@ const server = app.listen(0, async () => {
       expectedStatus: 401
     },
     {
-      name: '✅ Request with valid API key in header should succeed',
+      name: '[x] Request with valid API key in header should succeed',
       path: '/services/caching/api/put/test',
       method: 'POST',
       headers: { 
@@ -65,7 +65,7 @@ const server = app.listen(0, async () => {
       expectedStatus: 200
     },
     {
-      name: '✅ Request with Bearer token should succeed',
+      name: '[x] Request with Bearer token should succeed',
       path: '/services/caching/api/put/test2',
       method: 'POST',
       headers: { 
@@ -76,14 +76,14 @@ const server = app.listen(0, async () => {
       expectedStatus: 200
     },
     {
-      name: '✅ Status endpoint should work without API key',
+      name: '[x] Status endpoint should work without API key',
       path: '/services/caching/api/status',
       method: 'GET',
       headers: {},
       expectedStatus: 200
     },
     {
-      name: '✅ Retrieve with valid API key should work',
+      name: '[x] Retrieve with valid API key should work',
       path: '/services/caching/api/get/test',
       method: 'GET',
       headers: { 'x-api-key': validApiKey },
@@ -114,7 +114,7 @@ const server = app.listen(0, async () => {
   console.log(`\n📊 Test Results: ${passed} passed, ${failed} failed`);
   
   if (failed === 0) {
-    console.log('🎉 All tests passed! API key authentication is working correctly.');
+    console.log('[+] All tests passed! API key authentication is working correctly.');
   } else {
     console.log('⚠️  Some tests failed. Please check the implementation.');
   }

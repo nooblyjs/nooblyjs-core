@@ -190,8 +190,8 @@ function displayLoadTestResults(results) {
   const successful = results.filter(r => !r.error);
   const failed = results.filter(r => r.error);
 
-  console.log(`\n✅ Successful Tests: ${successful.length}`);
-  console.log(`❌ Failed Tests: ${failed.length}`);
+  console.log(`\n[x] Successful Tests: ${successful.length}`);
+  console.log(`[ ] Failed Tests: ${failed.length}`);
 
   // Display successful results
   if (successful.length > 0) {
@@ -220,7 +220,7 @@ function displayLoadTestResults(results) {
   if (failed.length > 0) {
     console.log('\n--- Failed Tests ---');
     failed.forEach((result) => {
-      console.log(`❌ ${result.service}: ${result.error}`);
+      console.log(`[ ] ${result.service}: ${result.error}`);
     });
   }
 

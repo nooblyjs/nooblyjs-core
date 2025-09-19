@@ -699,11 +699,11 @@ globalEventEmitter.on('workflow:started', (data) => {
 });
 
 globalEventEmitter.on('workflow:step-completed', (data) => {
-  console.log(`✅ Step completed: ${data.stepName} in workflow ${data.workflowId}`);
+  console.log(`[x] Step completed: ${data.stepName} in workflow ${data.workflowId}`);
 });
 
 globalEventEmitter.on('workflow:step-failed', (data) => {
-  console.log(`❌ Step failed: ${data.stepName} in workflow ${data.workflowId} - ${data.error}`);
+  console.log(`[ ] Step failed: ${data.stepName} in workflow ${data.workflowId} - ${data.error}`);
 });
 
 globalEventEmitter.on('workflow:completed', (data) => {
@@ -773,9 +773,9 @@ async function createSampleWorkflows() {
       console.log('Approval workflow would run here with proper step files');
     }, 6000);
 
-    console.log('✅ Sample workflows created');
+    console.log('[x] Sample workflows created');
   } catch (error) {
-    console.error('❌ Error creating sample workflows:', error);
+    console.error('[ ] Error creating sample workflows:', error);
   }
 }
 

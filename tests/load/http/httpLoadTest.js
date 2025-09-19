@@ -39,7 +39,7 @@ async function runHttpLoadTest(config) {
 
   console.log(`🚀 Starting HTTP Load Tests`);
   console.log(`   Base URL: ${baseUrl}`);
-  console.log(`   API Key: ${apiKey ? '✅ Provided' : '❌ Not provided (public endpoints only)'}`);
+  console.log(`   API Key: ${apiKey ? '[x] Provided' : '[ ] Not provided (public endpoints only)'}`);
   console.log(`   Iterations: ${iterations} per service`);
   console.log(`   Concurrency: ${concurrency} concurrent requests`);
 
@@ -58,7 +58,7 @@ async function runHttpLoadTest(config) {
       // Brief pause between services
       await sleep(100);
     } catch (error) {
-      console.error(`❌ ${service.name} service test failed:`, error.message);
+      console.error(`[ ] ${service.name} service test failed:`, error.message);
       results.push({
         service: service.name,
         error: error.message,
@@ -131,7 +131,7 @@ async function runServiceLoadTest(baseUrl, serviceConfig, iterations, concurrenc
   results.duration = results.totalDuration;
   results.iterations = results.successCount; // Only count successful iterations
 
-  console.log(`   ✅ ${results.successCount} successful, ❌ ${results.errorCount} failed`);
+  console.log(`   [x] ${results.successCount} successful, [ ] ${results.errorCount} failed`);
   console.log(`   📈 Success rate: ${(results.successRate * 100).toFixed(1)}%`);
   console.log(`   ⚡ Avg latency: ${results.avgLatency.toFixed(2)}ms`);
   

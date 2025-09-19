@@ -578,7 +578,7 @@ globalEventEmitter.on('notification:sent', (data) => {
 });
 
 globalEventEmitter.on('notification:failed', (data) => {
-  console.log(`❌ Notification failed via ${data.channel}: ${data.error}`);
+  console.log(`[ ] Notification failed via ${data.channel}: ${data.error}`);
 });
 
 // Start server

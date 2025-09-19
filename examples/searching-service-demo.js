@@ -122,9 +122,9 @@ async function indexSampleData() {
       });
     }
 
-    console.log('✅ Sample data indexed successfully');
+    console.log('[x] Sample data indexed successfully');
   } catch (error) {
-    console.error('❌ Error indexing sample data:', error);
+    console.error('[ ] Error indexing sample data:', error);
   }
 }
 

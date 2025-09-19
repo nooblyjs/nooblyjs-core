@@ -55,7 +55,7 @@ describe('DocumentDB DataServe', () => {
       // Try to create a test container to verify connection
       await dataserve.createContainer('connection_test');
       documentDBAvailable = true;
-      console.log('✅ DocumentDB is available for testing');
+      console.log('[x] DocumentDB is available for testing');
     } catch (error) {
       console.warn('⚠️  DocumentDB not available for testing:', error.message);
       console.warn('   Make sure DocumentDB is running on port 10260 for full test coverage');

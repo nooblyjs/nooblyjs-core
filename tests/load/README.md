@@ -181,18 +181,13 @@ Configuration: {
 --- Running HTTP API Load Tests ---
 🚀 Starting HTTP Load Tests
    Base URL: http://localhost:3000
-   API Key: ✅ Provided
-   Iterations: 500 per service
-   Concurrency: 10 concurrent requests
-
-📊 Testing caching service...
-   ✅ 500 successful, ❌ 0 failed
+API Key: [x] Provided
    📈 Success rate: 100.0%
    ⚡ Avg latency: 25.34ms
 
 === LOAD TEST RESULTS SUMMARY ===
-✅ Successful Tests: 11
-❌ Failed Tests: 0
+[x] Successful Tests: 11
+[ ] Failed Tests: 0
 
 --- Performance Results ---
 caching         (http-api):    500 ops in   2534ms |    197 ops/sec | 5.07ms avg

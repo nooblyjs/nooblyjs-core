@@ -2950,7 +2950,7 @@ const eventEmitter = serviceRegistry.getEventEmitter();
 
 // Monitor authentication events
 eventEmitter.on('api-auth-success', (data) => {
-  console.log('✅ Successful auth:', {
+  console.log('[x] Successful auth:', {
     ip: data.ip,
     path: data.path,
     method: data.method,
@@ -2959,7 +2959,7 @@ eventEmitter.on('api-auth-success', (data) => {
 });
 
 eventEmitter.on('api-auth-failure', (data) => {
-  console.log('❌ Failed auth:', {
+  console.log('[ ] Failed auth:', {
     reason: data.reason,
     ip: data.ip,
     path: data.path,
@@ -3831,11 +3831,11 @@ describe('Service Integration', () => {
 #### 1. "ServiceRegistry must be initialized before getting services"
 
 ```javascript
-// ❌ Wrong: Getting service before initialization
+// [ ] Wrong: Getting service before initialization
 const cache = serviceRegistry.cache('redis');
 serviceRegistry.initialize(app);
 
-// ✅ Correct: Initialize first
+// [x] Correct: Initialize first
 serviceRegistry.initialize(app);
 const cache = serviceRegistry.cache('redis');
 ```

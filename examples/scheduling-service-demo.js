@@ -228,9 +228,9 @@ async function setupScheduledJobs() {
     // Note: This would need an external script file to work properly
     // await cronScheduler.start('demo-task', '/path/to/demo-script.js', 300); // 300 seconds = 5 minutes
 
-    console.log('✅ Basic scheduling setup completed (advanced features commented out)');
+    console.log('[x] Basic scheduling setup completed (advanced features commented out)');
   } catch (error) {
-    console.error('❌ Error setting up scheduled jobs:', error);
+    console.error('[ ] Error setting up scheduled jobs:', error);
   }
 }
 
@@ -505,11 +505,11 @@ globalEventEmitter.on('scheduler:job-started', (data) => {
 });
 
 globalEventEmitter.on('scheduler:job-completed', (data) => {
-  console.log(`✅ Job completed: ${data.name} in ${data.duration}ms`);
+  console.log(`[x] Job completed: ${data.name} in ${data.duration}ms`);
 });
 
 globalEventEmitter.on('scheduler:job-failed', (data) => {
-  console.log(`❌ Job failed: ${data.name} - ${data.error}`);
+  console.log(`[ ] Job failed: ${data.name} - ${data.error}`);
 });
 
 // Start server and set up scheduled jobs

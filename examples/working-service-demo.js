@@ -643,12 +643,12 @@ globalEventEmitter.on('task:progress', (data) => {
 });
 
 globalEventEmitter.on('task:completed', (data) => {
-  console.log(`✅ Task completed: ${data.type} (ID: ${data.id})`);
+  console.log(`[x] Task completed: ${data.type} (ID: ${data.id})`);
   trackExecution(data.type, data.id, data.result, data.duration);
 });
 
 globalEventEmitter.on('task:failed', (data) => {
-  console.log(`❌ Task failed: ${data.type} (ID: ${data.id}) - ${data.error}`);
+  console.log(`[ ] Task failed: ${data.type} (ID: ${data.id}) - ${data.error}`);
   trackExecution(data.type, data.id, null, data.duration, new Error(data.error));
 });
 

@@ -103,8 +103,8 @@ function demonstrateEnhancedCache() {
     });
   }
 
-  console.log('   ✅ Cache operations with automatic logging');
-  console.log(`   ✅ Retrieved value: ${JSON.stringify(value)}`);
+  console.log('   [x] Cache operations with automatic logging');
+  console.log(`   [x] Retrieved value: ${JSON.stringify(value)}`);
   console.log();
 }
 
@@ -136,9 +136,9 @@ async function demonstrateEnhancedDataServe() {
     });
   }
 
-  console.log('   ✅ DataServe operations with automatic logging');
-  console.log(`   ✅ User ID: ${userId}`);
-  console.log(`   ✅ Filing service available: ${!!dataServe.filing}`);
+  console.log('   [x] DataServe operations with automatic logging');
+  console.log(`   [x] User ID: ${userId}`);
+  console.log(`   [x] Filing service available: ${!!dataServe.filing}`);
   console.log();
 }
 
@@ -174,9 +174,9 @@ function demonstrateEnhancedQueue() {
     });
   }
 
-  console.log('   ✅ Queue operations with automatic logging');
-  console.log(`   ✅ Cache service available: ${!!queue.cache}`);
-  console.log(`   ✅ DataStore service available: ${!!queue.dataStore}`);
+  console.log('   [x] Queue operations with automatic logging');
+  console.log(`   [x] Cache service available: ${!!queue.cache}`);
+  console.log(`   [x] DataStore service available: ${!!queue.dataStore}`);
   console.log();
 }
 
@@ -209,10 +209,10 @@ function demonstrateEnhancedWorkflow() {
     });
   }
 
-  console.log('   ✅ Workflow definition with automatic logging');
-  console.log(`   ✅ Queueing service available: ${!!workflow.queueing}`);
-  console.log(`   ✅ Scheduling service available: ${!!workflow.scheduling}`);
-  console.log(`   ✅ Measuring service available: ${!!workflow.measuring}`);
+  console.log('   [x] Workflow definition with automatic logging');
+  console.log(`   [x] Queueing service available: ${!!workflow.queueing}`);
+  console.log(`   [x] Scheduling service available: ${!!workflow.scheduling}`);
+  console.log(`   [x] Measuring service available: ${!!workflow.measuring}`);
   console.log();
 }
 
@@ -237,10 +237,10 @@ function demonstrateEnhancedAIService() {
     });
   }
 
-  console.log('   ✅ AI service with automatic logging');
-  console.log(`   ✅ Cache service available: ${!!aiservice.cache}`);
-  console.log(`   ✅ Workflow service available: ${!!aiservice.workflow}`);
-  console.log(`   ✅ Queueing service available: ${!!aiservice.queueing}`);
+  console.log('   [x] AI service with automatic logging');
+  console.log(`   [x] Cache service available: ${!!aiservice.cache}`);
+  console.log(`   [x] Workflow service available: ${!!aiservice.workflow}`);
+  console.log(`   [x] Queueing service available: ${!!aiservice.queueing}`);
   console.log();
 }
 
@@ -276,14 +276,14 @@ async function runEnhancedApplication() {
 
     console.log('✨ All enhanced service demonstrations completed successfully!');
     console.log('\n🔍 Key Benefits of Dependency Injection:');
-    console.log('   ✅ Automatic logging in all services');
-    console.log('   ✅ Service composition and reusability');
-    console.log('   ✅ Proper initialization order');
-    console.log('   ✅ Consistent service interfaces');
-    console.log('   ✅ Enhanced observability and debugging');
+    console.log('   [x] Automatic logging in all services');
+    console.log('   [x] Service composition and reusability');
+    console.log('   [x] Proper initialization order');
+    console.log('   [x] Consistent service interfaces');
+    console.log('   [x] Enhanced observability and debugging');
 
   } catch (error) {
-    console.error('❌ Enhanced application error:', error.message);
+    console.error('[ ] Enhanced application error:', error.message);
   }
 }
 

@@ -75,7 +75,7 @@ serviceRegistry.getEventEmitter().on('api-auth-setup', (data) => {
 });
 
 serviceRegistry.getEventEmitter().on('api-auth-success', (data) => {
-  console.log('✅ API authentication successful:', {
+  console.log('[x] API authentication successful:', {
     ip: data.ip,
     path: data.path,
     method: data.method
@@ -83,7 +83,7 @@ serviceRegistry.getEventEmitter().on('api-auth-success', (data) => {
 });
 
 serviceRegistry.getEventEmitter().on('api-auth-failure', (data) => {
-  console.log('❌ API authentication failed:', {
+  console.log('[ ] API authentication failed:', {
     reason: data.reason,
     ip: data.ip,
     path: data.path,

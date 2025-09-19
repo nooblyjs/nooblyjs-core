@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noobly JS Service Registry</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         /* Custom CSS for professional look */
         :root {
@@ -87,51 +88,51 @@
 
             <div class="flex-grow-1">
                 <a href="/services/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark active">
-                    🏠 Home
+                    <i class="bi bi-house-door-fill"></i> Home
                 </a>
                 <a href="/services/aiservice/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🤖 AI Service
+                    <i class="bi bi-robot"></i> AI Service
                 </a>
                 <a href="/services/authservice/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🔐 Authentication
+                    <i class="bi bi-lock-fill"></i> Authentication
                 </a>
                 <a href="/services/caching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🗄️ Cache Management
+                    <i class="bi bi-server"></i> Cache Management
                 </a>
                 <a href="/services/dataserve/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    📊 Data Serve
+                    <i class="bi bi-bar-chart-line-fill"></i> Data Serve
                 </a>
                 <a href="/services/filing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    📁 File Management
+                    <i class="bi bi-folder-fill"></i> File Management
                 </a>
                 <a href="/services/logging/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    📝 Logging
+                    <i class="bi bi-journal-text"></i> Logging
                 </a>
                 <a href="/services/measuring/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    📈 Measuring
+                    <i class="bi bi-graph-up"></i> Measuring
                 </a>
                 <a href="/services/notifying/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🔔 Notifications
+                    <i class="bi bi-bell-fill"></i> Notifications
                 </a>
                 <a href="/services/queueing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🚀 Queue Management
+                    <i class="bi bi-rocket-takeoff-fill"></i> Queue Management
                 </a>
                 <a href="/services/scheduling/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    ⏰ Scheduling
+                    <i class="bi bi-alarm-fill"></i> Scheduling
                 </a>
                 <a href="/services/searching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🔍 Search
+                    <i class="bi bi-search"></i> Search
                 </a>
                 <a href="/services/working/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    ⚙️ Background Tasks
+                    <i class="bi bi-gear-fill"></i> Background Tasks
                 </a>
                 <a href="/services/workflow/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    🔄 Workflows
+                    <i class="bi bi-arrow-repeat"></i> Workflows
                 </a>
             </div>
 
             <div class="p-4 border-top">
-                <a href="/" class="btn btn-outline-primary w-100">← Back to Home</a>
+                <a href="/" class="btn btn-outline-primary w-100"><i class="bi bi-arrow-left"></i> Back to Home</a>
             </div>
         </nav>
 
@@ -150,19 +151,19 @@
 
     <script>
         const services = [
-            { name: 'aiservice', icon: '🤖', title: 'AI Service' },
-            { name: 'authservice', icon: '🔐', title: 'Authentication' },
-            { name: 'caching', icon: '🗄️', title: 'Cache Management' },
-            { name: 'dataserve', icon: '📊', title: 'Data Serve' },
-            { name: 'filing', icon: '📁', title: 'File Management' },
-            { name: 'logging', icon: '📝', title: 'Logging' },
-            { name: 'measuring', icon: '📈', title: 'Measuring' },
-            { name: 'notifying', icon: '🔔', title: 'Notifications' },
-            { name: 'queueing', icon: '🚀', title: 'Queue Management' },
-            { name: 'scheduling', icon: '⏰', title: 'Scheduling' },
-            { name: 'searching', icon: '🔍', title: 'Search' },
-            { name: 'workflow', icon: '🔄', title: 'Workflows' },
-            { name: 'working', icon: '⚙️', title: 'Background Tasks' }
+            { name: 'aiservice', icon: '<i class="bi bi-robot"></i>', title: 'AI Service' },
+            { name: 'authservice', icon: '<i class="bi bi-lock-fill"></i>', title: 'Authentication' },
+            { name: 'caching', icon: '<i class="bi bi-server"></i>', title: 'Cache Management' },
+            { name: 'dataserve', icon: '<i class="bi bi-bar-chart-line-fill"></i>', title: 'Data Serve' },
+            { name: 'filing', icon: '<i class="bi bi-folder-fill"></i>', title: 'File Management' },
+            { name: 'logging', icon: '<i class="bi bi-journal-text"></i>', title: 'Logging' },
+            { name: 'measuring', icon: '<i class="bi bi-graph-up"></i>', title: 'Measuring' },
+            { name: 'notifying', icon: '<i class="bi bi-bell-fill"></i>', title: 'Notifications' },
+            { name: 'queueing', icon: '<i class="bi bi-rocket-takeoff-fill"></i>', title: 'Queue Management' },
+            { name: 'scheduling', icon: '<i class="bi bi-alarm-fill"></i>', title: 'Scheduling' },
+            { name: 'searching', icon: '<i class="bi bi-search"></i>', title: 'Search' },
+            { name: 'workflow', icon: '<i class="bi bi-arrow-repeat"></i>', title: 'Workflows' },
+            { name: 'working', icon: '<i class="bi bi-gear-fill"></i>', title: 'Background Tasks' }
         ];
 
         const serviceList = document.getElementById('service-list');
@@ -180,7 +181,7 @@
             const serviceIcon = document.createElement('div');
             serviceIcon.className = 'me-3';
             serviceIcon.style.fontSize = '2rem';
-            serviceIcon.textContent = service.icon;
+            serviceIcon.innerHTML = service.icon;
 
             const serviceInfo = document.createElement('div');
             serviceInfo.className = 'flex-grow-1';

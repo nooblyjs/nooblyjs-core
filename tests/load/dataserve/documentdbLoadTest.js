@@ -50,10 +50,10 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     
     // Test connection by trying to create a container
     await dataserve.createContainer('connection_test');
-    console.log('✅ DocumentDB connection established');
+    console.log('[x] DocumentDB connection established');
     
   } catch (error) {
-    console.error('❌ DocumentDB connection failed:', error.message);
+    console.error('[ ] DocumentDB connection failed:', error.message);
     if (error.message.includes('ECONNREFUSED') || error.message.includes('timeout')) {
       return {
         service: 'dataserve',
@@ -235,7 +235,7 @@ async function runComprehensiveDocumentDBLoadTest(baseIterations = 200) {
   const standardResult = await runDocumentDBLoadTest(baseIterations, { testName: 'standard' });
   
   if (standardResult.error) {
-    console.log('❌ DocumentDB not available - skipping remaining tests');
+    console.log('[ ] DocumentDB not available - skipping remaining tests');
     console.log('💡', standardResult.message);
     return [standardResult];
   }
@@ -257,7 +257,7 @@ async function runComprehensiveDocumentDBLoadTest(baseIterations = 200) {
   testResults.forEach((result, index) => {
     const testName = result.testName || `test-${index + 1}`;
     if (result.error) {
-      console.log(`${testName}: ❌ ${result.error}`);
+      console.log(`${testName}: [ ] ${result.error}`);
     } else {
       console.log(`${testName}: ${result.operationsPerSecond.toFixed(2)} ops/sec (${result.duration}ms total)`);
     }
