@@ -33,12 +33,22 @@ module.exports = (options, _eventEmitter, _auth) => {
     const app = options['express-app'];
 
     // Serve static files for the auth service views
-    app.use('/services/authservice',
+    app.use('/services/authservice/views',
       express.static(path.join(__dirname)));
 
     // Serve the main auth interface at the service root
     app.get('/services/authservice/', (req, res) => {
       res.sendFile(path.join(__dirname, 'index.html'));
+    });
+
+    // Serve login page
+    app.get('/services/authservice/views/login.html', (req, res) => {
+      res.sendFile(path.join(__dirname, 'login.html'));
+    });
+
+    // Serve register page
+    app.get('/services/authservice/views/register.html', (req, res) => {
+      res.sendFile(path.join(__dirname, 'register.html'));
     });
 
   }

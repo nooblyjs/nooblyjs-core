@@ -32,8 +32,16 @@ class ServiceRegistry {
       return this;
     }
 
+    // Assign the express app
     this.expressApp = expressApp;
+
+    // Assign the Event Emitter
+    if (!eventEmitter) {
+      eventEmitter = new EventEmitter();
+    } 
     this.eventEmitter = eventEmitter;
+    
+    // Assign the passed global options
     this.globalOptions = {
       'express-app': expressApp,
       ...globalOptions,
@@ -107,6 +115,7 @@ class ServiceRegistry {
    * Level 4: Integration Services (Use Application)
    */
   initializeServiceDependencies() {
+
     if (this.dependenciesInitialized) {
       return;
     }

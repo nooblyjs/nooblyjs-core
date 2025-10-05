@@ -102,7 +102,7 @@ function createServicesAuthMiddleware(serviceRegistry) {
             <script>
               const authToken = localStorage.getItem('authToken');
               if (!authToken) {
-                window.location.href = '/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
+                window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
               } else {
                 // Validate token with server
                 fetch('/services/authservice/api/validate', {
@@ -118,13 +118,13 @@ function createServicesAuthMiddleware(serviceRegistry) {
                   } else {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('currentUser');
-                    window.location.href = '/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
                   }
                 })
                 .catch(() => {
                   localStorage.removeItem('authToken');
                   localStorage.removeItem('currentUser');
-                  window.location.href = '/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
+                  window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
                 });
               }
             </script>
