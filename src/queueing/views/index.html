@@ -50,14 +50,28 @@
             margin-top: 0.25rem;
         }
 
+        .nav-section-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            margin-top: 0.5rem;
+        }
+
         .nav-item {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 0.75rem 1rem;
             color: #212529;
             text-decoration: none;
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
             border-bottom: 1px solid #f8f9fa;
+            position: relative;
         }
 
         .nav-item:hover {
@@ -70,6 +84,26 @@
             background-color: var(--custom-primary);
             color: white;
             border-left-color: #0052a3;
+        }
+
+        .nav-item.offline {
+            opacity: 0.6;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: auto;
+        }
+
+        .status-dot.online {
+            background-color: var(--custom-success);
+        }
+
+        .status-dot.offline {
+            background-color: var(--custom-danger);
         }
 
         .main-content {
@@ -591,25 +625,8 @@
 </head>
 <body>
     <div class="app-container">
-        <nav class="sidebar">
-            <div class="logo">
-                <h1>Noobly JS</h1>
-                <div class="subtitle">Queue Management</div>
-            </div>
-            <a href="/services/" class="nav-item">Home</a>
-            <a href="/services/ai/" class="nav-item">AI Service</a>
-            <a href="/services/authservice/" class="nav-item">Authentication</a>
-            <a href="/services/caching/" class="nav-item">Cache Management</a>
-            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
-            <a href="/services/filing/" class="nav-item">File Management</a>
-            <a href="/services/logging/" class="nav-item">Logging</a>
-            <a href="/services/measuring/" class="nav-item">Measuring</a>
-            <a href="/services/notifying/" class="nav-item">Notifications</a>
-            <a href="/services/queueing/" class="nav-item active">Queue Management</a>
-            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
-            <a href="/services/searching/" class="nav-item">Search</a>
-            <a href="/services/working/" class="nav-item">Background Tasks</a>
-            <a href="/services/workflow/" class="nav-item">Workflows</a>
+        <nav class="sidebar" id="navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
         </nav>
 
         <main class="main-content">
@@ -722,6 +739,10 @@
     </div>
 
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="/services/js/navigation.js"></script>
+    <script>
+        NooblyNavigation.renderNavigation('navigation-sidebar', 'queueing');
+    </script>
     <script>
         // JSON validation
         function validateJSON(elementId) {
