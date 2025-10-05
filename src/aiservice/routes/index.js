@@ -25,10 +25,10 @@ module.exports = (options, eventEmitter, aiService) => {
     const authMiddleware = options.authMiddleware;
 
     /**
-     * GET /services/aiservice/api/status
+     * GET /services/ai/api/status
      * Returns the operational status of the AI service.
      */
-    app.get('/services/aiservice/api/status', (req, res) => {
+    app.get('/services/ai/api/status', (req, res) => {
       const status = aiService.enabled !== false ? 'ai api running' : 'ai api disabled - no api key';
       eventEmitter.emit('api-ai-status', status);
       res.status(200).json({
@@ -40,10 +40,10 @@ module.exports = (options, eventEmitter, aiService) => {
     });
 
     /**
-     * POST /services/aiservice/api/prompt
+     * POST /services/ai/api/prompt
      * Sends a prompt to the AI service and returns the response.
      */
-    app.post('/services/aiservice/api/prompt', async (req, res) => {
+    app.post('/services/ai/api/prompt', async (req, res) => {
       try {
         // Check if AI service is enabled
         if (aiService.enabled === false) {
@@ -69,10 +69,10 @@ module.exports = (options, eventEmitter, aiService) => {
     });
 
     /**
-     * GET /services/aiservice/api/analytics
+     * GET /services/ai/api/analytics
      * Returns analytics data for the AI service.
      */
-    app.get('/services/aiservice/api/analytics', (req, res) => {
+    app.get('/services/ai/api/analytics', (req, res) => {
       try {
         const analytics = aiService.getAnalytics();
         eventEmitter.emit('api-ai-analytics', analytics);
@@ -84,10 +84,10 @@ module.exports = (options, eventEmitter, aiService) => {
     });
 
     /**
-     * GET /services/aiservice/api/models
+     * GET /services/ai/api/models
      * Returns available models (for Ollama provider).
      */
-    app.get('/services/aiservice/api/models', async (req, res) => {
+    app.get('/services/ai/api/models', async (req, res) => {
       try {
         if (typeof aiService.listModels === 'function') {
           const models = await aiService.listModels();
@@ -106,10 +106,10 @@ module.exports = (options, eventEmitter, aiService) => {
     });
 
     /**
-     * GET /services/aiservice/api/health
+     * GET /services/ai/api/health
      * Health check endpoint (for Ollama provider).
      */
-    app.get('/services/aiservice/api/health', async (req, res) => {
+    app.get('/services/ai/api/health', async (req, res) => {
       try {
         if (typeof aiService.isRunning === 'function') {
           const isRunning = await aiService.isRunning();

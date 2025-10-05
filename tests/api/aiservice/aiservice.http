@@ -13,12 +13,12 @@
 @apiKey = your-api-key-here
 
 ### Check the AI Service API status endpoint (No API key required)
-GET {{baseUrl}}/services/aiservice/api/status
+GET {{baseUrl}}/services/ai/api/status
 
 ###
 
 ### Test without API key (should return 401 Unauthorized)
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 
 {
@@ -29,7 +29,7 @@ Content-Type: application/json
 ###
 
 ### CHAT - Send a simple chat message to Claude
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -43,7 +43,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### CHAT - Send a chat message to OpenAI/ChatGPT
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 Authorization: Bearer {{apiKey}}
 
@@ -58,7 +58,7 @@ Authorization: Bearer {{apiKey}}
 ###
 
 ### CHAT - Send a chat message to Ollama
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 Authorization: ApiKey {{apiKey}}
 
@@ -72,7 +72,7 @@ Authorization: ApiKey {{apiKey}}
 ###
 
 ### CONVERSATION - Start a conversation with context
-POST {{baseUrl}}/services/aiservice/api/conversation
+POST {{baseUrl}}/services/ai/api/conversation
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -91,7 +91,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### STREAM - Stream a response from AI
-POST {{baseUrl}}/services/aiservice/api/stream
+POST {{baseUrl}}/services/ai/api/stream
 Content-Type: application/json
 api-key: {{apiKey}}
 
@@ -106,7 +106,7 @@ api-key: {{apiKey}}
 ###
 
 ### COMPLETION - Text completion request
-POST {{baseUrl}}/services/aiservice/api/complete
+POST {{baseUrl}}/services/ai/api/complete
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -121,7 +121,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### ANALYZE - Code analysis request
-POST {{baseUrl}}/services/aiservice/api/analyze
+POST {{baseUrl}}/services/ai/api/analyze
 Content-Type: application/json
 Authorization: Bearer {{apiKey}}
 
@@ -135,7 +135,7 @@ Authorization: Bearer {{apiKey}}
 ###
 
 ### BATCH - Multiple requests in batch
-POST {{baseUrl}}/services/aiservice/api/batch
+POST {{baseUrl}}/services/ai/api/batch
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -165,25 +165,25 @@ x-api-key: {{apiKey}}
 ###
 
 ### GET - Retrieve conversation history
-GET {{baseUrl}}/services/aiservice/api/conversations/{{$guid}}
+GET {{baseUrl}}/services/ai/api/conversations/{{$guid}}
 x-api-key: {{apiKey}}
 
 ###
 
 ### GET - List all conversations
-GET {{baseUrl}}/services/aiservice/api/conversations
+GET {{baseUrl}}/services/ai/api/conversations
 Authorization: Bearer {{apiKey}}
 
 ###
 
 ### GET - Get AI service configuration
-GET {{baseUrl}}/services/aiservice/api/config
+GET {{baseUrl}}/services/ai/api/config
 x-api-key: {{apiKey}}
 
 ###
 
 ### POST - Update AI service configuration
-POST {{baseUrl}}/services/aiservice/api/config
+POST {{baseUrl}}/services/ai/api/config
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -202,25 +202,25 @@ x-api-key: {{apiKey}}
 ###
 
 ### GET - Get provider capabilities
-GET {{baseUrl}}/services/aiservice/api/providers/claude/capabilities
+GET {{baseUrl}}/services/ai/api/providers/claude/capabilities
 x-api-key: {{apiKey}}
 
 ###
 
 ### GET - List available models for a provider
-GET {{baseUrl}}/services/aiservice/api/providers/chatgpt/models
+GET {{baseUrl}}/services/ai/api/providers/chatgpt/models
 Authorization: ApiKey {{apiKey}}
 
 ###
 
 ### DELETE - Delete a conversation
-DELETE {{baseUrl}}/services/aiservice/api/conversations/{{$guid}}
+DELETE {{baseUrl}}/services/ai/api/conversations/{{$guid}}
 x-api-key: {{apiKey}}
 
 ###
 
 ### POST - Fine-tune request (if supported)
-POST {{baseUrl}}/services/aiservice/api/finetune
+POST {{baseUrl}}/services/ai/api/finetune
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -237,13 +237,13 @@ x-api-key: {{apiKey}}
 ###
 
 ### GET - Check fine-tuning status
-GET {{baseUrl}}/services/aiservice/api/finetune/{{$guid}}/status
+GET {{baseUrl}}/services/ai/api/finetune/{{$guid}}/status
 x-api-key: {{apiKey}}
 
 ###
 
 ### Test error handling - Invalid provider
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -255,7 +255,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### Test error handling - Missing message
-POST {{baseUrl}}/services/aiservice/api/chat
+POST {{baseUrl}}/services/ai/api/chat
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -266,7 +266,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### Test with workflow integration - Complex AI pipeline
-POST {{baseUrl}}/services/aiservice/api/workflow
+POST {{baseUrl}}/services/ai/api/workflow
 Content-Type: application/json
 x-api-key: {{apiKey}}
 

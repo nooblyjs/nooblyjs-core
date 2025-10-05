@@ -787,7 +787,7 @@
                 <div class="subtitle">AI Service</div>
             </div>
             <a href="/services/" class="nav-item">Home</a>
-            <a href="/services/aiservice/" class="nav-item active">AI Service</a>
+            <a href="/services/ai/" class="nav-item active">AI Service</a>
             <a href="/services/authservice/" class="nav-item">Authentication</a>
             <a href="/services/caching/" class="nav-item">Cache Management</a>
             <a href="/services/dataserve/" class="nav-item">Data Serve</a>
@@ -1227,7 +1227,7 @@
         // Check AI service status and enable/disable UI accordingly
         async function checkServiceStatus() {
             try {
-                const result = await makeRequest('/services/aiservice/api/status');
+                const result = await makeRequest('/services/ai/api/status');
                 const submitBtn = document.getElementById('submitBtn');
                 const promptTextarea = document.getElementById('prompt');
 

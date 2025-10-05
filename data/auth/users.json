@@ -8,5 +8,15 @@
     "createdAt": "2025-09-19T13:45:46.930Z",
     "lastLogin": null,
     "isActive": true
+  },
+  "stephenrbooysen@gmail.com": {
+    "id": "ubv6h51romgd6921q",
+    "username": "stephenrbooysen@gmail.com",
+    "email": "stephenrbooysen@gmail.com",
+    "password": "daf5fcfbaf58837078387d0ad0ad400380f75920ee8532705ca795513dd39434",
+    "role": "user",
+    "createdAt": "2025-10-05T03:58:08.031Z",
+    "lastLogin": null,
+    "isActive": true
   }
 }

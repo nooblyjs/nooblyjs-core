@@ -24,22 +24,28 @@ serviceRegistry.initialize(app, globalEventEmitter, {
   // requireApiKey: false
 });
 
-// Example 1: Using Claude AI (requires ANTHROPIC_API_KEY env variable)
+// Example 1: Using Claude AI
+// API key MUST be provided in constructor options
 const claudeAI = serviceRegistry.aiservice('claude', {
-  // apiKey: 'your-anthropic-api-key', // Optional if ANTHROPIC_API_KEY env var is set
-  model: 'claude-3-haiku-20240307' // Optional, defaults to claude-3-haiku-20240307
+  apiKey: process.env.ANTHROPIC_API_KEY || 'your-anthropic-api-key',
+  model: 'claude-3-5-sonnet-20241022', // Optional, defaults to claude-3-5-sonnet-20241022
+  tokensStorePath: './.data/ai-tokens-claude.json' // Optional, defaults to ./.data/ai-tokens.json
 });
 
-// Example 2: Using OpenAI ChatGPT (requires OPENAI_API_KEY env variable)
+// Example 2: Using OpenAI ChatGPT
+// API key MUST be provided in constructor options
 const chatGPT = serviceRegistry.aiservice('chatgpt', {
-  // apiKey: 'your-openai-api-key', // Optional if OPENAI_API_KEY env var is set
-  model: 'gpt-3.5-turbo' // Optional, defaults to gpt-3.5-turbo
+  apiKey: process.env.OPENAI_API_KEY || 'your-openai-api-key',
+  model: 'gpt-3.5-turbo', // Optional, defaults to gpt-3.5-turbo
+  tokensStorePath: './.data/ai-tokens-chatgpt.json' // Optional
 });
 
 // Example 3: Using Ollama (local model server)
+// No API key required for local Ollama
 const ollama = serviceRegistry.aiservice('ollama', {
-  baseURL: 'http://localhost:11434', // Default Ollama URL
-  model: 'llama2' // You need to have this model downloaded
+  baseUrl: 'http://localhost:11434', // Optional, defaults to http://localhost:11434
+  model: 'llama3.2', // Optional, defaults to llama3.2
+  tokensStorePath: './.data/ai-tokens-ollama.json' // Optional
 });
 
 // Example custom routes using AI service
@@ -168,17 +174,19 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n🤖 AI Service Demo running on port ${PORT}\n`);
   console.log('Available endpoints:');
-  console.log('- AI Interface: http://localhost:3000/services/aiservice/');
-  console.log('- Swagger API Docs: http://localhost:3000/services/aiservice/swagger');
-  console.log('- Service Status: http://localhost:3000/services/aiservice/api/status');
+  console.log('- AI Interface: http://localhost:3000/services/ai/');
+  console.log('- Swagger API Docs: http://localhost:3000/services/ai/swagger');
+  console.log('- Service Status: http://localhost:3000/services/ai/api/status');
   console.log('- Ask Claude: POST http://localhost:3000/ask-claude');
   console.log('- Ask ChatGPT: POST http://localhost:3000/ask-chatgpt');
   console.log('- Ask Ollama: POST http://localhost:3000/ask-ollama');
   console.log('- Batch Process: POST http://localhost:3000/batch-process');
   console.log('\nExample request body:');
   console.log('{ "prompt": "Explain quantum computing in simple terms", "maxTokens": 500, "temperature": 0.7 }');
-  console.log('\nEnvironment variables needed:');
-  console.log('- ANTHROPIC_API_KEY (for Claude)');
-  console.log('- OPENAI_API_KEY (for ChatGPT)');
-  console.log('- Ollama server running on localhost:11434 (for Ollama)');
+  console.log('\nConfiguration:');
+  console.log('- Claude: Requires apiKey in options or ANTHROPIC_API_KEY env var');
+  console.log('- ChatGPT: Requires apiKey in options or OPENAI_API_KEY env var');
+  console.log('- Ollama: Requires Ollama server running on localhost:11434');
+  console.log('\nConnection info must be passed in constructor options.');
+  console.log('Token usage data is stored in local JSON files (./.data/ai-tokens-*.json)');
 });

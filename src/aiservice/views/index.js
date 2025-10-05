@@ -42,10 +42,10 @@ module.exports = (options, eventEmitter, ai) => {
     const app = options['express-app'];
 
     // Serve static files from the views directory for AI service
-    app.use('/services/aiservice', express.static(path.join(__dirname)));
+    app.use('/services/ai', express.static(path.join(__dirname)));
 
     // Serve the main AI interface at the service root
-    app.get('/services/aiservice/', (req, res) => {
+    app.get('/services/ai', (req, res) => {
       res.sendFile(path.join(__dirname, 'index.html'));
     });
 
