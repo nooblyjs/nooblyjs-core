@@ -88,9 +88,9 @@ await dataStore.put('users', userData);
 ```
 
 **Services:**
-- **Queueing** - Uses caching for queue state, dataserve for persistence, logging for operations
+- **Queueing** - Uses caching for queue state, dataservice for persistence, logging for operations
 - **Scheduling** - Uses logging, measuring for performance metrics, queueing for job distribution
-- **Searching** - Uses caching for search results, dataserve for indexing, logging for queries
+- **Searching** - Uses caching for search results, dataservice for indexing, logging for queries
 
 **Example Usage:**
 ```javascript
@@ -98,7 +98,7 @@ await dataStore.put('users', userData);
 class EnhancedQueue {
   constructor(options, eventEmitter, services) {
     this.cache = services.cache;
-    this.dataStore = services.dataServe;
+    this.dataStore = services.dataService;
     this.logger = services.logger;
   }
 
@@ -148,7 +148,7 @@ class EnhancedQueue {
 **Services:**
 - **Workflow** - Uses queueing for step execution, scheduling for timed workflows, logging/measuring
 - **Notifying** - Uses queueing for async delivery, scheduling for delayed notifications
-- **AuthService** - Uses caching for sessions, dataserve for user storage
+- **AuthService** - Uses caching for sessions, dataservice for user storage
 
 ---
 
@@ -195,18 +195,18 @@ class ServiceRegistry {
 
     // Level 1 services
     this.serviceDependencies.set('caching', ['logging']);
-    this.serviceDependencies.set('dataserve', ['logging', 'filing']);
+    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
     this.serviceDependencies.set('working', ['logging']);
 
     // Level 2 services
-    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
-    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
 
     // Level 3 services
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring']);
     this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
-    this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
 
     // Level 4 services
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
@@ -318,8 +318,8 @@ function createEnhancedService(serviceName) {
       service.cache = dependencies.cache;
     }
 
-    if (dependencies.dataServe) {
-      service.dataStore = dependencies.dataServe;
+    if (dependencies.dataService) {
+      service.dataStore = dependencies.dataService;
     }
 
     return service;
@@ -372,7 +372,7 @@ module.exports = {
         host: 'localhost',
         port: 6379,
         // Enhanced with persistence and caching
-        useDependencies: ['logging', 'caching', 'dataserve'],
+        useDependencies: ['logging', 'caching', 'dataservice'],
         features: {
           persistence: true,
           caching: true,
@@ -403,7 +403,7 @@ class EnhancedQueueService {
     this.dependencies = dependencies;
     this.logger = dependencies.logging;
     this.cache = dependencies.caching;
-    this.dataStore = dependencies.dataserve;
+    this.dataStore = dependencies.dataservice;
   }
 
   async enqueue(item, options = {}) {
@@ -523,8 +523,8 @@ class EnhancedQueueService {
 
   // Dead letter queue functionality
   async moveToDeadLetterQueue(jobId, error) {
-    if (this.dependencies.dataserve) {
-      await this.dependencies.dataserve.add('dead_letter_queue', {
+    if (this.dependencies.dataservice) {
+      await this.dependencies.dataservice.add('dead_letter_queue', {
         originalJobId: jobId,
         error: error.message,
         movedAt: new Date()

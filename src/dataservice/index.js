@@ -1,5 +1,5 @@
 /**
- * @fileoverview DataServe Service Factory
+ * @fileoverview DataService Factory
  * Factory module for creating data service instances with multiple provider support.
  * Supports in-memory, file-based, and SimpleDB backends with routing and views.
  * @author NooblyJS Team
@@ -36,7 +36,7 @@ function getNestedValue(obj, path) {
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {Object} Data service wrapper with provider and methods
  */
-function createDataserveService(type, options, eventEmitter) {
+function createDataserviceService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;
   const logger = dependencies.logging;
   const filing = dependencies.filing;
@@ -46,25 +46,25 @@ function createDataserveService(type, options, eventEmitter) {
   // Create data service instance based on provider type (lazy load to avoid unnecessary AWS SDK imports)
   switch (type) {
     case 'file':
-      const FileDataRingProvider = require('./providers/dataservefiles');
+      const FileDataRingProvider = require('./providers/dataservicefiles');
       provider = new FileDataRingProvider(providerOptions, eventEmitter);
       break;
     case 'simpledb':
-      const SimpleDbDataRingProvider = require('./providers/dataserveSimpleDB');
+      const SimpleDbDataRingProvider = require('./providers/dataserviceSimpleDB');
       provider = new SimpleDbDataRingProvider(providerOptions, eventEmitter);
       break;
     case 'mongodb':
-      const MongoDBDataServeProvider = require('./providers/dataserveMongoDB');
-      provider = new MongoDBDataServeProvider(providerOptions, eventEmitter);
+      const MongoDBDataServiceProvider = require('./providers/dataserviceMongoDB');
+      provider = new MongoDBDataServiceProvider(providerOptions, eventEmitter);
       break;
     case 'documentdb':
-      const DocumentDBDataServeProvider = require('./providers/dataserveDocumentDB');
-      provider = new DocumentDBDataServeProvider(providerOptions, eventEmitter);
+      const DocumentDBDataServiceProvider = require('./providers/dataserviceDocumentDB');
+      provider = new DocumentDBDataServiceProvider(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:
-      const InMemoryDataServeProvider = require('./providers/dataserve');
-      provider = new InMemoryDataServeProvider(providerOptions, eventEmitter);
+      const InMemoryDataServiceProvider = require('./providers/dataservice');
+      provider = new InMemoryDataServiceProvider(providerOptions, eventEmitter);
       break;
   }
 
@@ -150,17 +150,17 @@ function createDataserveService(type, options, eventEmitter) {
     }
   };
 
-  // Inject logging dependency into dataserve service
+  // Inject logging dependency into dataservice service
   if (logger) {
     service.logger = logger;
     service.log = (level, message, meta = {}) => {
       if (typeof logger[level] === 'function') {
-        logger[level](`[DATASERVE:${type.toUpperCase()}] ${message}`, meta);
+        logger[level](`[DATASERVICE:${type.toUpperCase()}] ${message}`, meta);
       }
     };
 
-    // Log dataserve service initialization
-    service.log('info', 'DataServe service initialized', {
+    // Log dataservice service initialization
+    service.log('info', 'DataService service initialized', {
       provider: type,
       hasLogging: true,
       hasFiling: !!filing
@@ -179,4 +179,4 @@ function createDataserveService(type, options, eventEmitter) {
   return service;
 }
 
-module.exports = createDataserveService;
+module.exports = createDataserviceService;

@@ -73,9 +73,9 @@ Each service includes both public status endpoints and authenticated API endpoin
 - `GET /services/caching/api/get/loadtest-key` (authenticated)
 
 #### Dataserve Service
-- `GET /services/dataserve/api/status` (public)
-- `POST /services/dataserve/api/put/loadtest-key` (authenticated)
-- `GET /services/dataserve/api/get/loadtest-key` (authenticated)
+- `GET /services/dataservice/api/status` (public)
+- `POST /services/dataservice/api/put/loadtest-key` (authenticated)
+- `GET /services/dataservice/api/get/loadtest-key` (authenticated)
 
 #### Filing Service
 - `GET /services/filing/api/status` (public)
@@ -191,7 +191,7 @@ API Key: [x] Provided
 
 --- Performance Results ---
 caching         (http-api):    500 ops in   2534ms |    197 ops/sec | 5.07ms avg
-dataserve       (http-api):    500 ops in   2891ms |    173 ops/sec | 5.78ms avg
+dataservice       (http-api):    500 ops in   2891ms |    173 ops/sec | 5.78ms avg
 logging         (http-api):    500 ops in   1234ms |    405 ops/sec | 2.47ms avg
 
 --- Overall Statistics ---
@@ -228,7 +228,7 @@ Modify the HTTP load test configuration to test specific services:
 // Comment out services you don't want to test
 const services = [
   cachingService,
-  // dataserveService,  // Commented out
+  // dataserviceService,  // Commented out
   loggingService,
   // ... other services
 ];
@@ -284,7 +284,7 @@ tests/load/
 │   └── httpLoadTest.js        # HTTP API load testing framework
 ├── caching/
 │   └── loadTest.js            # Caching service provider tests
-├── dataserve/
+├── dataservice/
 │   └── loadTest.js            # Dataserve service provider tests
 ├── filing/
 │   └── loadTest.js            # Filing service provider tests

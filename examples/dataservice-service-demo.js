@@ -1,6 +1,6 @@
 /**
- * @fileoverview Data Serve Service Demo
- * Example showing how to use the NooblyJS Data Serve Service
+ * @fileoverview Data Service Demo
+ * Example showing how to use the NooblyJS Data Service
  * @author NooblyJS Team
  * @version 1.0.0
  */
@@ -25,18 +25,18 @@ serviceRegistry.initialize(app, globalEventEmitter, {
 });
 
 // Example 1: Using memory datastore (default)
-const memoryDatastore = serviceRegistry.dataServe('memory', {
+const memoryDatastore = serviceRegistry.dataService('memory', {
   // Optional configuration
 });
 
 // Example 2: Using file-based datastore
-const fileDatastore = serviceRegistry.dataServe('file', {
+const fileDatastore = serviceRegistry.dataService('file', {
   dataPath: './data'
 });
 
 // Example 3: Using MongoDB datastore (requires MongoDB connection)
 /*
-const mongoDatastore = serviceRegistry.dataServe('mongodb', {
+const mongoDatastore = serviceRegistry.dataService('mongodb', {
   connectionString: 'mongodb://localhost:27017/nooblyjs'
 });
 */
@@ -285,30 +285,30 @@ app.post('/bulk/users', async (req, res) => {
 });
 
 // Event listeners
-globalEventEmitter.on('dataserve:put', (data) => {
+globalEventEmitter.on('api-dataservice-put', (data) => {
   console.log(`Data stored in container '${data.container}' with ID: ${data.id}`);
 });
 
-globalEventEmitter.on('dataserve:get', (data) => {
+globalEventEmitter.on('api-dataservice-get', (data) => {
   console.log(`Data retrieved from container '${data.container}' with ID: ${data.id}`);
 });
 
-globalEventEmitter.on('dataserve:delete', (data) => {
+globalEventEmitter.on('api-dataservice-delete', (data) => {
   console.log(`Data deleted from container '${data.container}' with ID: ${data.id}`);
 });
 
-globalEventEmitter.on('dataserve:search', (data) => {
+globalEventEmitter.on('api-dataservice-search', (data) => {
   console.log(`Search performed on container '${data.container}': ${data.results.length} results`);
 });
 
 // Start server and load sample data
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
-  console.log(`\n🗃️ Data Serve Service Demo running on port ${PORT}\n`);
+  console.log(`\n🗃️ Data Service Demo running on port ${PORT}\n`);
   console.log('Available endpoints:');
-  console.log('- Data Serve Interface: http://localhost:3000/services/dataserve/');
-  console.log('- Swagger API Docs: http://localhost:3000/services/dataserve/swagger');
-  console.log('- Service Status: http://localhost:3000/services/dataserve/api/status');
+  console.log('- Data Service Interface: http://localhost:3000/services/dataservice/');
+  console.log('- Swagger API Docs: http://localhost:3000/services/dataservice/swagger');
+  console.log('- Service Status: http://localhost:3000/services/dataservice/api/status');
   console.log('- List Users: GET http://localhost:3000/users');
   console.log('- Create User: POST http://localhost:3000/users');
   console.log('- Get User: GET http://localhost:3000/users/{id}');

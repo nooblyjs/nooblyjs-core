@@ -1,5 +1,5 @@
 /**
- * @fileoverview AWS SimpleDB DataServe provider for cloud-based storage of JSON objects
+ * @fileoverview AWS SimpleDB DataService provider for cloud-based storage of JSON objects
  * using Amazon SimpleDB with domain-based organization.
  *
  * @deprecated AWS SimpleDB is deprecated and not available in AWS SDK v3.
@@ -62,7 +62,7 @@ class SimpleDbDataRingProvider {
     };
     await this.sdb.createDomain(params).promise();
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:createContainer', { domainName });
+      this.eventEmitter_.emit('api-dataservice-createContainer', { domainName });
   }
 
   /**
@@ -86,7 +86,7 @@ class SimpleDbDataRingProvider {
     };
     await this.sdb.putAttributes(params).promise();
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:add', {
+      this.eventEmitter_.emit('api-dataservice-add', {
         domainName,
         itemName,
         jsonObject,
@@ -108,7 +108,7 @@ class SimpleDbDataRingProvider {
     try {
       await this.sdb.deleteAttributes(params).promise();
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('dataserve:remove', { domainName, objectKey });
+        this.eventEmitter_.emit('api-dataservice-remove', { domainName, objectKey });
       return true;
     } catch (error) {
       // If the item doesn't exist, deleteAttributes might still succeed or throw a specific error.
@@ -139,7 +139,7 @@ class SimpleDbDataRingProvider {
     const data = await this.sdb.select(params).promise();
     if (!data.Items) {
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('dataserve:find', {
+        this.eventEmitter_.emit('api-dataservice-find', {
           domainName,
           searchTerm,
           results: [],
@@ -155,7 +155,7 @@ class SimpleDbDataRingProvider {
       return obj;
     });
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:find', {
+      this.eventEmitter_.emit('api-dataservice-find', {
         domainName,
         searchTerm,
         results,

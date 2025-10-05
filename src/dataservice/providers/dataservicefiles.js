@@ -1,5 +1,5 @@
 /**
- * @fileoverview File-based DataServe provider for persistent storage of JSON objects
+ * @fileoverview File-based DataService provider for persistent storage of JSON objects
  * using the file system with container-based organization.
  * @author NooblyJS Team
  * @version 1.0.14
@@ -21,7 +21,7 @@ class FileDataRingProvider {
   /**
    * Initializes the file-based data storage provider.
    * @param {Object} options Configuration options for the provider.
-   * @param {string=} options.baseDir Base directory for storing data files (defaults to './dataserve_data').
+   * @param {string=} options.baseDir Base directory for storing data files (defaults to './dataservice_data').
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options, eventEmitter) {
@@ -103,7 +103,7 @@ class FileDataRingProvider {
         await this._writeContainerData(containerName, {});
         this.containers.set(containerName, containerFilePath);
         if (this.eventEmitter_)
-          this.eventEmitter_.emit('dataserve:createContainer', {
+          this.eventEmitter_.emit('api-dataservice-createContainer', {
             containerName,
           });
       } else {
@@ -125,7 +125,7 @@ class FileDataRingProvider {
     data[objectKey] = jsonObject;
     await this._writeContainerData(containerName, data);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:add', {
+      this.eventEmitter_.emit('api-dataservice-add', {
         containerName,
         objectKey,
         jsonObject,
@@ -145,7 +145,7 @@ class FileDataRingProvider {
       delete data[objectKey];
       await this._writeContainerData(containerName, data);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('dataserve:remove', {
+        this.eventEmitter_.emit('api-dataservice-remove', {
           containerName,
           objectKey,
         });
@@ -193,7 +193,7 @@ class FileDataRingProvider {
       }
     }
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:find', {
+      this.eventEmitter_.emit('api-dataservice-find', {
         containerName,
         searchTerm,
         results,

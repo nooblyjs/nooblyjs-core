@@ -30,7 +30,7 @@ serviceRegistry.initialize(app, {
 
 // Your services will now require API keys for /services/*/api/* routes
 const cache = serviceRegistry.cache('memory');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 
 app.listen(3000);
 ```
@@ -188,7 +188,7 @@ serviceRegistry.initialize(app);
 When API key authentication is enabled, the following endpoints require authentication:
 
 - `/services/caching/api/*` - All caching API endpoints
-- `/services/dataserve/api/*` - All data serving API endpoints  
+- `/services/dataservice/api/*` - All data serving API endpoints  
 - `/services/filing/api/*` - All filing API endpoints
 - `/services/logging/api/*` - All logging API endpoints
 - `/services/measuring/api/*` - All measuring API endpoints

@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Serve Management - Noobly JS Admin</title>
+    <title>Data Service Management - Noobly JS Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/css/navigation.css">
     <style>
         /* Custom CSS for professional look */
         :root {
@@ -630,7 +631,7 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Data Serve Management</h1>
+                <h1 class="page-title">Data Service Management</h1>
                 <p class="page-subtitle">Store and retrieve JSON data in containers using UUIDs</p>
             </div>
 
@@ -849,7 +850,7 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Data Serve service</p>
+                    <p class="card-subtitle">Interactive API documentation for Data Service service</p>
                 </div>
                 <div class="card-content">
                     <div id="swagger-ui"></div>
@@ -861,7 +862,7 @@
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'dataserve');
+        NooblyNavigation.renderNavigation('navigation-sidebar', 'dataservice');
     </script>
     <script>
         // JSON validation
@@ -1032,7 +1033,7 @@
             try {
                 setLoading('putForm', true);
                 const parsedValue = JSON.parse(value);
-                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}`, 'POST', parsedValue);
+                const result = await makeRequest(`/services/dataservice/api/${encodeURIComponent(container)}`, 'POST', parsedValue);
                 showResponse('putResponse', 'putResponseContent', result);
                 showAlert(`Data stored successfully in container: ${container}. UUID: ${result.id}`);
             } catch (error) {
@@ -1051,7 +1052,7 @@
             
             try {
                 setLoading('getForm', true);
-                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`);
+                const result = await makeRequest(`/services/dataservice/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`);
                 showResponse('getResponse', 'getResponseContent', result);
                 showAlert(`Data retrieved successfully from container: ${container}, UUID: ${uuid}`);
             } catch (error) {
@@ -1074,7 +1075,7 @@
             
             try {
                 setLoading('deleteForm', true);
-                const result = await makeRequest(`/services/dataserve/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`, 'DELETE');
+                const result = await makeRequest(`/services/dataservice/api/${encodeURIComponent(container)}/${encodeURIComponent(uuid)}`, 'DELETE');
                 showResponse('deleteResponse', 'deleteResponseContent', result);
                 showAlert(`Data deleted successfully from container: ${container}, UUID: ${uuid}`);
             } catch (error) {
@@ -1087,7 +1088,7 @@
 
         async function checkStatus() {
             try {
-                const result = await makeRequest('/services/dataserve/api/status');
+                const result = await makeRequest('/services/dataservice/api/status');
                 showResponse('statusResponse', 'statusResponseContent', result);
                 showAlert('Status checked successfully');
             } catch (error) {
@@ -1105,7 +1106,7 @@
             
             try {
                 setLoading('jsonFindForm', true);
-                const result = await makeRequest(`/services/dataserve/api/jsonFind/${encodeURIComponent(container)}`, 'POST', { predicate });
+                const result = await makeRequest(`/services/dataservice/api/jsonFind/${encodeURIComponent(container)}`, 'POST', { predicate });
                 showResponse('jsonFindResponse', 'jsonFindResponseContent', result);
                 showAlert(`Found ${result.length || 0} matching objects`);
             } catch (error) {
@@ -1125,7 +1126,7 @@
             
             try {
                 setLoading('jsonFindByPathForm', true);
-                const result = await makeRequest(`/services/dataserve/api/jsonFindByPath/${encodeURIComponent(container)}/${encodeURIComponent(path)}/${encodeURIComponent(value)}`);
+                const result = await makeRequest(`/services/dataservice/api/jsonFindByPath/${encodeURIComponent(container)}/${encodeURIComponent(path)}/${encodeURIComponent(value)}`);
                 showResponse('jsonFindByPathResponse', 'jsonFindByPathResponseContent', result);
                 showAlert(`Found ${result.length || 0} matching objects`);
             } catch (error) {
@@ -1150,7 +1151,7 @@
             try {
                 setLoading('jsonFindByCriteriaForm', true);
                 const criteria = JSON.parse(criteriaText);
-                const result = await makeRequest(`/services/dataserve/api/jsonFindByCriteria/${encodeURIComponent(container)}`, 'POST', criteria);
+                const result = await makeRequest(`/services/dataservice/api/jsonFindByCriteria/${encodeURIComponent(container)}`, 'POST', criteria);
                 showResponse('jsonFindByCriteriaResponse', 'jsonFindByCriteriaResponseContent', result);
                 showAlert(`Found ${result.length || 0} matching objects`);
             } catch (error) {
@@ -1165,12 +1166,12 @@
         const spec = {
             openapi: '3.0.0',
             info: {
-                title: 'Data Serve API',
+                title: 'Data Service API',
                 description: 'REST API for data storage and retrieval operations',
                 version: '1.0.0'
             },
             servers: [
-                { url: '/services/dataserve/api', description: 'Data Serve API' }
+                { url: '/services/dataservice/api', description: 'Data Service API' }
             ],
             paths: {
                 '/{container}': {
@@ -1422,7 +1423,7 @@
                                 description: 'Service is running',
                                 content: {
                                     'application/json': {
-                                        schema: { type: 'string', example: 'dataserve api running' }
+                                        schema: { type: 'string', example: 'dataservice api running' }
                                     }
                                 }
                             }

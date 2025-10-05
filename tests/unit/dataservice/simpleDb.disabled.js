@@ -73,7 +73,7 @@ describe('SimpleDbDataRingProvider', () => {
       });
       expect(mockSdbInstance.createDomain().promise).toHaveBeenCalledTimes(1);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'dataserve:createContainer',
+        'dataservice:createContainer',
         { domainName: mockDomainName },
       );
     });
@@ -95,7 +95,7 @@ describe('SimpleDbDataRingProvider', () => {
       });
       expect(mockSdbInstance.putAttributes().promise).toHaveBeenCalledTimes(1);
       expect(typeof itemName).toBe('string');
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:add', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataservice:add', {
         domainName: mockDomainName,
         itemName: itemName,
         jsonObject: jsonObject,
@@ -117,7 +117,7 @@ describe('SimpleDbDataRingProvider', () => {
         1,
       );
       expect(result).toBe(true);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:remove', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataservice:remove', {
         domainName: mockDomainName,
         objectKey: objectKey,
       });
@@ -131,7 +131,7 @@ describe('SimpleDbDataRingProvider', () => {
       const result = await simpleDbProvider.remove(mockDomainName, objectKey);
       expect(result).toBe(false);
       expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
-        'dataserve:remove',
+        'dataservice:remove',
         expect.any(Object),
       );
     });
@@ -172,7 +172,7 @@ describe('SimpleDbDataRingProvider', () => {
         { itemName: 'item1', name: 'Laptop', category: 'Electronics' },
         { itemName: 'item2', name: 'Keyboard', category: 'Electronics' },
       ]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataservice:find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: results,
@@ -184,7 +184,7 @@ describe('SimpleDbDataRingProvider', () => {
       const searchTerm = 'NonExistent';
       const results = await simpleDbProvider.find(mockDomainName, searchTerm);
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataservice:find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: [],
@@ -196,7 +196,7 @@ describe('SimpleDbDataRingProvider', () => {
       const searchTerm = 'NonExistent';
       const results = await simpleDbProvider.find(mockDomainName, searchTerm);
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataservice:find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: [],

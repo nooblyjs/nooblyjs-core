@@ -52,7 +52,7 @@ serviceRegistry.initialize(app);
 // Get services
 const cache = serviceRegistry.cache('memory');
 const logger = serviceRegistry.logger('console');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 
 // Use services programmatically
 await cache.put('user:123', { name: 'John', email: 'john@example.com' });
@@ -124,7 +124,7 @@ await cache.put('key', 'value');
 | Service | Purpose | Providers | API Endpoints |
 |---------|---------|-----------|---------------|
 | **caching** | High-performance caching | memory, redis, memcached | `/services/caching/api/*` |
-| **dataserve** | Database-style JSON document storage with UUIDs | memory, simpledb, file | `/services/dataserve/api/*` |
+| **dataservice** | Database-style JSON document storage with UUIDs | memory, simpledb, file | `/services/dataservice/api/*` |
 | **filing** | File management | local, ftp, s3, git, sync | `/services/filing/api/*` |
 | **logging** | Application logging | console, file | `/services/logging/api/*` |
 | **measuring** | Metrics collection | memory | `/services/measuring/api/*` |
@@ -234,15 +234,15 @@ GET /services/caching/api/status
 # Response: "caching api running"
 ```
 
-### DataServe API
+### DataService API
 
-The DataServe API provides **container-based persistent storage** that works like a database - you insert JSON documents into containers and receive UUIDs for retrieval and management. It supports advanced JSON search capabilities for complex queries.
+The DataService API provides **container-based persistent storage** that works like a database - you insert JSON documents into containers and receive UUIDs for retrieval and management. It supports advanced JSON search capabilities for complex queries.
 
 #### Database-Style Storage
 
 ```bash
 # Insert data into a container and receive a UUID
-POST /services/dataserve/api/users
+POST /services/dataservice/api/users
 Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
@@ -265,7 +265,7 @@ x-api-key: YOUR_API_KEY
 }
 
 # Retrieve data using the UUID
-GET /services/dataserve/api/users/9c8a6a28-f6af-4386-8aba-b8caad5bcfa6
+GET /services/dataservice/api/users/9c8a6a28-f6af-4386-8aba-b8caad5bcfa6
 x-api-key: YOUR_API_KEY
 
 # Response: Original data
@@ -283,13 +283,13 @@ x-api-key: YOUR_API_KEY
 }
 
 # Delete data using the UUID
-DELETE /services/dataserve/api/users/9c8a6a28-f6af-4386-8aba-b8caad5bcfa6
+DELETE /services/dataservice/api/users/9c8a6a28-f6af-4386-8aba-b8caad5bcfa6
 x-api-key: YOUR_API_KEY
 
 # Response: "OK" or "Not found"
 
 # Store configuration data in config container
-POST /services/dataserve/api/config
+POST /services/dataservice/api/config
 Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
@@ -310,12 +310,12 @@ x-api-key: YOUR_API_KEY
 
 #### JSON Search API
 
-The DataServe API includes powerful JSON search capabilities for querying stored data:
+The DataService API includes powerful JSON search capabilities for querying stored data:
 
 **1. Custom Predicate Search** - Use JavaScript expressions to find objects:
 
 ```bash
-POST /services/dataserve/api/jsonFind/users
+POST /services/dataservice/api/jsonFind/users
 Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
@@ -342,11 +342,11 @@ x-api-key: YOUR_API_KEY
 
 ```bash
 # Find all users in the engineering department
-GET /services/dataserve/api/jsonFindByPath/users/profile.department/engineering
+GET /services/dataservice/api/jsonFindByPath/users/profile.department/engineering
 x-api-key: YOUR_API_KEY
 
 # Find users with specific role
-GET /services/dataserve/api/jsonFindByPath/users/profile.role/senior-developer
+GET /services/dataservice/api/jsonFindByPath/users/profile.role/senior-developer
 x-api-key: YOUR_API_KEY
 
 # Response: Array of users matching the criteria
@@ -373,7 +373,7 @@ x-api-key: YOUR_API_KEY
 **3. Multi-Criteria Search** - Search using multiple conditions:
 
 ```bash
-POST /services/dataserve/api/jsonFindByCriteria/users
+POST /services/dataservice/api/jsonFindByCriteria/users
 Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
@@ -400,7 +400,7 @@ x-api-key: YOUR_API_KEY
 
 #### Important Note
 
-The DataServe API requires containers for all operations. There are no legacy key-only endpoints - all operations must specify a container. This ensures proper data organization and allows for better scalability and data isolation.
+The DataService API requires containers for all operations. There are no legacy key-only endpoints - all operations must specify a container. This ensures proper data organization and allows for better scalability and data isolation.
 
 ### Filing API
 
@@ -506,7 +506,7 @@ All APIs return consistent error responses:
 ```javascript
 // Memory-based services (development/testing)
 const cache = serviceRegistry.cache('memory');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 const logger = serviceRegistry.logger('console');
 
 // Production services with external providers
@@ -517,7 +517,7 @@ const cache = serviceRegistry.cache('redis', {
   keyPrefix: 'myapp:'
 });
 
-const dataServe = serviceRegistry.dataServe('simpledb', {
+const dataService = serviceRegistry.dataService('simpledb', {
   domain: 'myapp-data',
   region: 'us-east-1'
 });
@@ -729,10 +729,10 @@ warmCache();
 #### Database-Style Data Management
 
 ```javascript
-const dataServe = serviceRegistry.dataServe('memory'); // or 'file', 'simpledb'
+const dataService = serviceRegistry.dataService('memory'); // or 'file', 'simpledb'
 
 // Insert data into containers and get UUIDs back
-const userUuid = await dataServe.add('users', {
+const userUuid = await dataService.add('users', {
   id: 123,
   name: 'John Doe',
   email: 'john@example.com',
@@ -746,7 +746,7 @@ const userUuid = await dataServe.add('users', {
 });
 // userUuid = "9c8a6a28-f6af-4386-8aba-b8caad5bcfa6"
 
-const productUuid = await dataServe.add('products', {
+const productUuid = await dataService.add('products', {
   id: 456,
   name: 'Premium Widget',
   category: 'electronics',
@@ -756,51 +756,51 @@ const productUuid = await dataServe.add('products', {
 // productUuid = "7b1d3e8f-2a4c-4b5d-9e8f-1a2b3c4d5e6f"
 
 // Retrieve data using UUIDs
-const user = await dataServe.getByUuid('users', userUuid);
-const product = await dataServe.getByUuid('products', productUuid);
+const user = await dataService.getByUuid('users', userUuid);
+const product = await dataService.getByUuid('products', productUuid);
 
 // Delete data using UUIDs
-await dataServe.remove('users', userUuid);
+await dataService.remove('users', userUuid);
 
 // JSON Search Operations
 // 1. Custom predicate search - like Array.find()
-const activeEngineers = await dataServe.jsonFind('users', 
+const activeEngineers = await dataService.jsonFind('users', 
   user => user.status === 'active' && user.profile.department === 'engineering'
 );
 
 // 2. Path-based search - find by nested property
-const seniorDevelopers = await dataServe.jsonFindByPath('users', 'profile.role', 'senior-developer');
+const seniorDevelopers = await dataService.jsonFindByPath('users', 'profile.role', 'senior-developer');
 
 // 3. Multi-criteria search - match multiple conditions
-const activeSeniorEngineers = await dataServe.jsonFindByCriteria('users', {
+const activeSeniorEngineers = await dataService.jsonFindByCriteria('users', {
   'status': 'active',
   'profile.department': 'engineering',
   'profile.role': 'senior-developer'
 });
 
 // Complex search examples
-const remoteWorkers = await dataServe.jsonFind('users',
+const remoteWorkers = await dataService.jsonFind('users',
   user => user.profile.location === 'remote' && user.status === 'active'
 );
 
-const expensiveElectronics = await dataServe.jsonFind('products',
+const expensiveElectronics = await dataService.jsonFind('products',
   product => product.category === 'electronics' && product.price > 100
 );
 
 // Create containers explicitly when needed
 try {
-  await dataServe.createContainer('config');
+  await dataService.createContainer('config');
 } catch (err) {
   // Container may already exist
 }
-const configUuid = await dataServe.add('config', appConfiguration);
+const configUuid = await dataService.add('config', appConfiguration);
 ```
 
-#### Real-World DataServe Examples
+#### Real-World DataService Examples
 
 **1. User Management System**
 ```javascript
-const dataServe = serviceRegistry.dataServe('file', {
+const dataService = serviceRegistry.dataService('file', {
   baseDir: './data/containers'
 });
 
@@ -813,7 +813,7 @@ const userManager = {
     }
 
     // Check if user already exists
-    const existingUsers = await dataServe.jsonFindByPath('users', 'email', userData.email);
+    const existingUsers = await dataService.jsonFindByPath('users', 'email', userData.email);
     if (existingUsers.length > 0) {
       throw new Error('User with this email already exists');
     }
@@ -833,7 +833,7 @@ const userManager = {
     };
 
     // Store user and return UUID
-    const userUuid = await dataServe.add('users', user);
+    const userUuid = await dataService.add('users', user);
     console.log(`User created with UUID: ${userUuid}`);
 
     return { uuid: userUuid, user };
@@ -841,7 +841,7 @@ const userManager = {
 
   async updateUser(uuid, updates) {
     // Get existing user
-    const user = await dataServe.getByUuid('users', uuid);
+    const user = await dataService.getByUuid('users', uuid);
     if (!user) {
       throw new Error('User not found');
     }
@@ -854,24 +854,24 @@ const userManager = {
     };
 
     // Remove and re-add (update operation)
-    await dataServe.remove('users', uuid);
-    const newUuid = await dataServe.add('users', updatedUser);
+    await dataService.remove('users', uuid);
+    const newUuid = await dataService.add('users', updatedUser);
 
     return { uuid: newUuid, user: updatedUser };
   },
 
   async findUsersByDepartment(department) {
-    return await dataServe.jsonFindByPath('users', 'profile.department', department);
+    return await dataService.jsonFindByPath('users', 'profile.department', department);
   },
 
   async findActiveUsers() {
-    return await dataServe.jsonFindByCriteria('users', {
+    return await dataService.jsonFindByCriteria('users', {
       'status': 'active'
     });
   },
 
   async findUsersByRole(role) {
-    return await dataServe.jsonFind('users', user => {
+    return await dataService.jsonFind('users', user => {
       return user.profile && user.profile.roles && user.profile.roles.includes(role);
     });
   }
@@ -917,7 +917,7 @@ const contentManager = {
       }
     };
 
-    const articleUuid = await dataServe.add('articles', article);
+    const articleUuid = await dataService.add('articles', article);
 
     // Create category mapping if provided
     if (articleData.category) {
@@ -928,7 +928,7 @@ const contentManager = {
   },
 
   async publishArticle(uuid) {
-    const article = await dataServe.getByUuid('articles', uuid);
+    const article = await dataService.getByUuid('articles', uuid);
     if (!article) {
       throw new Error('Article not found');
     }
@@ -937,8 +937,8 @@ const contentManager = {
     article.publishedAt = new Date().toISOString();
     article.updatedAt = new Date().toISOString();
 
-    await dataServe.remove('articles', uuid);
-    const newUuid = await dataServe.add('articles', article);
+    await dataService.remove('articles', uuid);
+    const newUuid = await dataService.add('articles', article);
 
     return { uuid: newUuid, article };
   },
@@ -946,7 +946,7 @@ const contentManager = {
   async addToCategory(articleUuid, categoryName) {
     // Create or update category container
     try {
-      await dataServe.createContainer('categories');
+      await dataService.createContainer('categories');
     } catch (err) {
       // Container exists
     }
@@ -957,15 +957,15 @@ const contentManager = {
       addedAt: new Date().toISOString()
     };
 
-    await dataServe.add('categories', categoryData);
+    await dataService.add('categories', categoryData);
   },
 
   async getArticlesByCategory(categoryName) {
-    const categoryEntries = await dataServe.jsonFindByPath('categories', 'name', categoryName);
+    const categoryEntries = await dataService.jsonFindByPath('categories', 'name', categoryName);
     const articles = [];
 
     for (const entry of categoryEntries) {
-      const article = await dataServe.getByUuid('articles', entry.articleUuid);
+      const article = await dataService.getByUuid('articles', entry.articleUuid);
       if (article) {
         articles.push(article);
       }
@@ -975,7 +975,7 @@ const contentManager = {
   },
 
   async searchPublishedArticles(searchTerm) {
-    return await dataServe.jsonFind('articles', article => {
+    return await dataService.jsonFind('articles', article => {
       if (!article.published) return false;
 
       const searchFields = [
@@ -990,7 +990,7 @@ const contentManager = {
   },
 
   async getPopularArticles(limit = 10) {
-    const allArticles = await dataServe.jsonFind('articles', article => article.published);
+    const allArticles = await dataService.jsonFind('articles', article => article.published);
     return allArticles
       .sort((a, b) => b.viewCount - a.viewCount)
       .slice(0, limit);
@@ -1035,7 +1035,7 @@ const productManager = {
       status: 'active'
     };
 
-    const productUuid = await dataServe.add('products', product);
+    const productUuid = await dataService.add('products', product);
 
     // Index by category
     if (product.category) {
@@ -1046,7 +1046,7 @@ const productManager = {
   },
 
   async updateInventory(productUuid, quantityChange) {
-    const product = await dataServe.getByUuid('products', productUuid);
+    const product = await dataService.getByUuid('products', productUuid);
     if (!product) {
       throw new Error('Product not found');
     }
@@ -1055,11 +1055,11 @@ const productManager = {
     product.inventory.available = product.inventory.quantity - product.inventory.reserved;
     product.updatedAt = new Date().toISOString();
 
-    await dataServe.remove('products', productUuid);
-    const newUuid = await dataServe.add('products', product);
+    await dataService.remove('products', productUuid);
+    const newUuid = await dataService.add('products', product);
 
     // Log inventory change
-    await dataServe.add('inventory_logs', {
+    await dataService.add('inventory_logs', {
       productUuid: newUuid,
       productId: product.id,
       change: quantityChange,
@@ -1073,12 +1073,12 @@ const productManager = {
 
   async indexByCategory(productUuid, category) {
     try {
-      await dataServe.createContainer('product_categories');
+      await dataService.createContainer('product_categories');
     } catch (err) {
       // Container exists
     }
 
-    await dataServe.add('product_categories', {
+    await dataService.add('product_categories', {
       category: category,
       productUuid: productUuid,
       indexedAt: new Date().toISOString()
@@ -1086,11 +1086,11 @@ const productManager = {
   },
 
   async getProductsByCategory(category) {
-    const categoryEntries = await dataServe.jsonFindByPath('product_categories', 'category', category);
+    const categoryEntries = await dataService.jsonFindByPath('product_categories', 'category', category);
     const products = [];
 
     for (const entry of categoryEntries) {
-      const product = await dataServe.getByUuid('products', entry.productUuid);
+      const product = await dataService.getByUuid('products', entry.productUuid);
       if (product && product.status === 'active') {
         products.push(product);
       }
@@ -1100,7 +1100,7 @@ const productManager = {
   },
 
   async findProductsInPriceRange(minPrice, maxPrice) {
-    return await dataServe.jsonFind('products', product => {
+    return await dataService.jsonFind('products', product => {
       if (product.status !== 'active') return false;
       const price = product.pricing.salePrice || product.pricing.basePrice;
       return price >= minPrice && price <= maxPrice;
@@ -1108,13 +1108,13 @@ const productManager = {
   },
 
   async getLowStockProducts(threshold = 10) {
-    return await dataServe.jsonFind('products', product => {
+    return await dataService.jsonFind('products', product => {
       return product.status === 'active' && product.inventory.available <= threshold;
     });
   },
 
   async searchProducts(query) {
-    return await dataServe.jsonFind('products', product => {
+    return await dataService.jsonFind('products', product => {
       if (product.status !== 'active') return false;
 
       const searchableText = [
@@ -1172,15 +1172,15 @@ const configManager = {
     if (existing) {
       existing.archived = true;
       existing.archivedAt = new Date().toISOString();
-      await dataServe.add('config_archive', existing);
+      await dataService.add('config_archive', existing);
     }
 
-    const configUuid = await dataServe.add('app_config', configEntry);
+    const configUuid = await dataService.add('app_config', configEntry);
     return { uuid: configUuid, config: configEntry };
   },
 
   async getConfig(configKey, defaultValue = null) {
-    const configs = await dataServe.jsonFindByCriteria('app_config', {
+    const configs = await dataService.jsonFindByCriteria('app_config', {
       'key': configKey,
       'environment': process.env.NODE_ENV || 'development'
     });
@@ -1195,7 +1195,7 @@ const configManager = {
   },
 
   async getAllConfigs() {
-    const configs = await dataServe.jsonFindByPath('app_config', 'environment', process.env.NODE_ENV || 'development');
+    const configs = await dataService.jsonFindByPath('app_config', 'environment', process.env.NODE_ENV || 'development');
     const configMap = {};
 
     configs.forEach(config => {
@@ -1208,12 +1208,12 @@ const configManager = {
   },
 
   async getConfigHistory(configKey) {
-    const current = await dataServe.jsonFindByCriteria('app_config', {
+    const current = await dataService.jsonFindByCriteria('app_config', {
       'key': configKey,
       'environment': process.env.NODE_ENV || 'development'
     });
 
-    const archived = await dataServe.jsonFindByPath('config_archive', 'key', configKey);
+    const archived = await dataService.jsonFindByPath('config_archive', 'key', configKey);
 
     return [...current, ...archived].sort((a, b) => b.version - a.version);
   }
@@ -1282,7 +1282,7 @@ const documentManager = {
       // Upload file
       await filing.create(filePath, fileStream);
 
-      // Store document metadata in DataServe
+      // Store document metadata in DataService
       const documentRecord = {
         userId: userId,
         originalName: file.originalname,
@@ -1295,7 +1295,7 @@ const documentManager = {
         status: 'active'
       };
 
-      const documentUuid = await dataServe.add('documents', documentRecord);
+      const documentUuid = await dataService.add('documents', documentRecord);
 
       return {
         uuid: documentUuid,
@@ -1309,7 +1309,7 @@ const documentManager = {
 
   async downloadDocument(documentUuid) {
     // Get document metadata
-    const document = await dataServe.getByUuid('documents', documentUuid);
+    const document = await dataService.getByUuid('documents', documentUuid);
     if (!document) {
       throw new Error('Document not found');
     }
@@ -1336,7 +1336,7 @@ const documentManager = {
   },
 
   async deleteDocument(documentUuid) {
-    const document = await dataServe.getByUuid('documents', documentUuid);
+    const document = await dataService.getByUuid('documents', documentUuid);
     if (!document) {
       throw new Error('Document not found');
     }
@@ -1350,8 +1350,8 @@ const documentManager = {
       document.deletedAt = new Date().toISOString();
 
       // Update document record
-      await dataServe.remove('documents', documentUuid);
-      await dataServe.add('documents', document);
+      await dataService.remove('documents', documentUuid);
+      await dataService.add('documents', document);
 
       return { success: true, message: 'Document deleted successfully' };
     } catch (error) {
@@ -1360,7 +1360,7 @@ const documentManager = {
   },
 
   async getUserDocuments(userId) {
-    return await dataServe.jsonFindByCriteria('documents', {
+    return await dataService.jsonFindByCriteria('documents', {
       'userId': userId,
       'status': 'active'
     });
@@ -1372,7 +1372,7 @@ const documentManager = {
       criteria.userId = userId;
     }
 
-    const documents = await dataServe.jsonFindByCriteria('documents', criteria);
+    const documents = await dataService.jsonFindByCriteria('documents', criteria);
 
     return documents.filter(doc => {
       const searchableText = [
@@ -1466,7 +1466,7 @@ const imageGallery = {
         status: 'active'
       };
 
-      const imageUuid = await dataServe.add('images', imageRecord);
+      const imageUuid = await dataService.add('images', imageRecord);
 
       return {
         uuid: imageUuid,
@@ -1478,7 +1478,7 @@ const imageGallery = {
   },
 
   async getImageThumbnail(imageUuid) {
-    const image = await dataServe.getByUuid('images', imageUuid);
+    const image = await dataService.getByUuid('images', imageUuid);
     if (!image || image.status !== 'active') {
       throw new Error('Image not found');
     }
@@ -1488,7 +1488,7 @@ const imageGallery = {
   },
 
   async getFullImage(imageUuid) {
-    const image = await dataServe.getByUuid('images', imageUuid);
+    const image = await dataService.getByUuid('images', imageUuid);
     if (!image || image.status !== 'active') {
       throw new Error('Image not found');
     }
@@ -1498,7 +1498,7 @@ const imageGallery = {
   },
 
   async getAlbumImages(userId, albumId) {
-    return await dataServe.jsonFindByCriteria('images', {
+    return await dataService.jsonFindByCriteria('images', {
       'userId': userId,
       'albumId': albumId,
       'status': 'active'
@@ -1515,7 +1515,7 @@ const imageGallery = {
       status: 'active'
     };
 
-    const albumUuid = await dataServe.add('albums', album);
+    const albumUuid = await dataService.add('albums', album);
     return { uuid: albumUuid, album: album };
   }
 };
@@ -1552,7 +1552,7 @@ const cloudFileManager = {
         status: 'uploaded'
       };
 
-      const fileUuid = await dataServe.add('cloud_files', fileRecord);
+      const fileUuid = await dataService.add('cloud_files', fileRecord);
 
       return { uuid: fileUuid, cloudPath: cloudPath };
     } catch (error) {
@@ -1614,7 +1614,7 @@ const syncResults = await cloudFileManager.syncDirectory('./reports', 'reports/2
 const versioningFileManager = {
   async uploadVersionedFile(filePath, content, userId, comment = '') {
     // Get existing versions
-    const existingVersions = await dataServe.jsonFindByPath('file_versions', 'filePath', filePath);
+    const existingVersions = await dataService.jsonFindByPath('file_versions', 'filePath', filePath);
     const nextVersion = existingVersions.length + 1;
 
     const versionedPath = `${filePath}.v${nextVersion}`;
@@ -1637,7 +1637,7 @@ const versioningFileManager = {
         size: typeof content === 'string' ? Buffer.byteLength(content) : content.length || 0
       };
 
-      const versionUuid = await dataServe.add('file_versions', versionRecord);
+      const versionUuid = await dataService.add('file_versions', versionRecord);
 
       // Update current file pointer
       await filing.create(filePath, require('stream').Readable.from(content));
@@ -1653,7 +1653,7 @@ const versioningFileManager = {
   },
 
   async getFileVersion(filePath, version) {
-    const versionRecord = await dataServe.jsonFindByCriteria('file_versions', {
+    const versionRecord = await dataService.jsonFindByCriteria('file_versions', {
       'filePath': filePath,
       'version': version
     });
@@ -1672,7 +1672,7 @@ const versioningFileManager = {
   },
 
   async getFileHistory(filePath) {
-    const versions = await dataServe.jsonFindByPath('file_versions', 'filePath', filePath);
+    const versions = await dataService.jsonFindByPath('file_versions', 'filePath', filePath);
     return versions.sort((a, b) => b.version - a.version);
   },
 
@@ -2024,7 +2024,7 @@ const systemMonitoring = {
     });
 
     // Store security event for analysis
-    dataServe.add('security_events', {
+    dataService.add('security_events', {
       ...event,
       investigationStatus: 'pending',
       createdAt: new Date().toISOString()
@@ -2242,13 +2242,13 @@ const imageProcessor = {
 
   async handleImageResizeComplete(result) {
     // Update image record with resized versions
-    const imageRecord = await dataServe.getByUuid('images', result.imageId);
+    const imageRecord = await dataService.getByUuid('images', result.imageId);
     if (imageRecord) {
       imageRecord.variants = result.variants;
       imageRecord.processingStatus = 'resize_complete';
 
-      await dataServe.remove('images', result.imageId);
-      await dataServe.add('images', imageRecord);
+      await dataService.remove('images', result.imageId);
+      await dataService.add('images', imageRecord);
 
       // Notify user that image is processed
       notifying.notify('user_notifications', {
@@ -2262,7 +2262,7 @@ const imageProcessor = {
 
   async handleMetadataExtraction(result) {
     // Store extracted metadata
-    await dataServe.add('image_metadata', {
+    await dataService.add('image_metadata', {
       imageId: result.imageId,
       metadata: result.metadata,
       extractedAt: new Date().toISOString()
@@ -2271,13 +2271,13 @@ const imageProcessor = {
 
   async handleAITagging(result) {
     // Store AI-generated tags
-    const imageRecord = await dataServe.getByUuid('images', result.imageId);
+    const imageRecord = await dataService.getByUuid('images', result.imageId);
     if (imageRecord) {
       imageRecord.aiTags = result.tags;
       imageRecord.confidence = result.confidence;
 
-      await dataServe.remove('images', result.imageId);
-      await dataServe.add('images', imageRecord);
+      await dataService.remove('images', result.imageId);
+      await dataService.add('images', imageRecord);
     }
   }
 };
@@ -2328,7 +2328,7 @@ const cache = serviceRegistry.cache(process.env.CACHE_PROVIDER || 'memory', {
   port: parseInt(process.env.REDIS_PORT) || 6379
 });
 
-const dataServe = serviceRegistry.dataServe(process.env.DATA_PROVIDER || 'memory');
+const dataService = serviceRegistry.dataService(process.env.DATA_PROVIDER || 'memory');
 const filing = serviceRegistry.filing(process.env.FILE_PROVIDER || 'local', {
   baseDir: './uploads'
 });
@@ -2871,7 +2871,7 @@ Each service provides its own web interface:
 
 ```
 http://localhost:3000/services/caching/views/     # Caching service UI
-http://localhost:3000/services/dataserve/views/   # Data service UI  
+http://localhost:3000/services/dataservice/views/   # Data service UI  
 http://localhost:3000/services/filing/views/      # File management UI
 http://localhost:3000/services/workflow/views/    # Workflow designer
 ```
@@ -3050,7 +3050,7 @@ const cache = serviceRegistry.cache('memory', {
 });
 ```
 
-### DataServe Service
+### DataService Service
 
 **Purpose**: Container-based persistent data storage with JSON search capabilities - works like a database
 
@@ -3062,26 +3062,26 @@ const cache = serviceRegistry.cache('memory', {
 **Core Methods**:
 ```javascript
 // Database-style operations with UUIDs
-await dataServe.createContainer(containerName);    // Create container
-const uuid = await dataServe.add(container, data); // Insert data, get UUID
-const data = await dataServe.getByUuid(container, uuid); // Retrieve by UUID
-await dataServe.remove(container, uuid);           // Delete by UUID
+await dataService.createContainer(containerName);    // Create container
+const uuid = await dataService.add(container, data); // Insert data, get UUID
+const data = await dataService.getByUuid(container, uuid); // Retrieve by UUID
+await dataService.remove(container, uuid);           // Delete by UUID
 
 // Container and search operations
-await dataServe.find(container, searchTerm);       // Find objects containing term
-const status = dataServe.status;                   // Service status
+await dataService.find(container, searchTerm);       // Find objects containing term
+const status = dataService.status;                   // Service status
 ```
 
 **JSON Search Methods**:
 ```javascript
 // Custom predicate search (like Array.find)
-const results = await dataServe.jsonFind(container, obj => obj.status === 'active');
+const results = await dataService.jsonFind(container, obj => obj.status === 'active');
 
 // Path-based search (nested property matching)
-const results = await dataServe.jsonFindByPath(container, 'profile.department', 'engineering');
+const results = await dataService.jsonFindByPath(container, 'profile.department', 'engineering');
 
 // Multi-criteria search (multiple conditions)
-const results = await dataServe.jsonFindByCriteria(container, {
+const results = await dataService.jsonFindByCriteria(container, {
   'status': 'active',
   'profile.role': 'senior-developer',
   'profile.department': 'engineering'
@@ -3091,12 +3091,12 @@ const results = await dataServe.jsonFindByCriteria(container, {
 **Configuration Examples**:
 ```javascript
 // File-based provider with custom directory
-const dataServe = serviceRegistry.dataServe('file', {
+const dataService = serviceRegistry.dataService('file', {
   baseDir: './data/containers'
 });
 
 // SimpleDB provider configuration
-const dataServe = serviceRegistry.dataServe('simpledb', {
+const dataService = serviceRegistry.dataService('simpledb', {
   domain: 'myapp-containers',
   region: 'us-east-1'
 });
@@ -3270,7 +3270,7 @@ module.exports = {
     }
   },
   
-  dataServe: {
+  dataService: {
     provider: process.env.DATA_PROVIDER || 'memory',
     simpledb: {
       domain: process.env.SIMPLEDB_DOMAIN,
@@ -3324,9 +3324,9 @@ const cache = serviceRegistry.cache(
   config.cache[config.cache.provider]
 );
 
-const dataServe = serviceRegistry.dataServe(
-  config.dataServe.provider,
-  config.dataServe[config.dataServe.provider]
+const dataService = serviceRegistry.dataService(
+  config.dataService.provider,
+  config.dataService[config.dataService.provider]
 );
 
 const filing = serviceRegistry.filing(
@@ -3664,11 +3664,11 @@ describe('Service Integration', () => {
    // Business logic with database-style data storage
    eventEmitter.on('user-registered', async (userData) => {
      // Store user and get UUID
-     const userUuid = await dataServe.add('users', userData);
+     const userUuid = await dataService.add('users', userData);
      await cache.put(`user:${userData.id}`, userData);
      
      // Store in analytics container for reporting
-     const analyticsUuid = await dataServe.add('analytics', {
+     const analyticsUuid = await dataService.add('analytics', {
        userId: userData.id,
        userUuid: userUuid,
        timestamp: new Date().toISOString(),
@@ -3702,7 +3702,7 @@ describe('Service Integration', () => {
      // Fallback to persistent storage using UUID
      const userUuid = userUuidMapping.get(id);
      if (userUuid) {
-       user = await dataServe.getByUuid('users', userUuid);
+       user = await dataService.getByUuid('users', userUuid);
        if (user) {
          // Cache for future requests
          await cache.put(cacheKey, user, 1800); // 30 min
@@ -3714,7 +3714,7 @@ describe('Service Integration', () => {
      user = await db.user.findById(id);
      if (user) {
        // Store in persistent storage and get UUID
-       const uuid = await dataServe.add('users', user);
+       const uuid = await dataService.add('users', user);
        userUuidMapping.set(id, uuid);
        
        // Cache for future requests
@@ -3733,7 +3733,7 @@ describe('Service Integration', () => {
      if (engineers) return engineers;
      
      // Search using JSON query
-     engineers = await dataServe.jsonFindByCriteria('users', {
+     engineers = await dataService.jsonFindByCriteria('users', {
        'status': 'active',
        'profile.department': 'engineering'
      });

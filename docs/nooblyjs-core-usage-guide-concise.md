@@ -21,7 +21,7 @@ serviceRegistry.initialize(app);
 // Get services
 const cache = serviceRegistry.cache('memory');
 const logger = serviceRegistry.logger('console');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 
 app.listen(3000);
 ```
@@ -50,7 +50,7 @@ serviceRegistry.initialize(app, {
 |---------|-----------|---------|
 | **aiservice** | claude, chatgpt, ollama | LLM integration with token tracking |
 | **caching** | memory, redis, memcached | High-performance caching |
-| **dataserve** | memory, simpledb, file | JSON document storage with UUIDs |
+| **dataservice** | memory, simpledb, file | JSON document storage with UUIDs |
 | **filing** | local, ftp, s3, git, sync | File management |
 | **logging** | console, file | Application logging |
 | **measuring** | memory | Metrics collection |
@@ -101,31 +101,31 @@ GET /services/caching/api/list
 GET /services/caching/api/status
 ```
 
-### DataServe API
+### DataService API
 
 Database-style storage with UUIDs and JSON search.
 
 ```bash
 # Insert into container (returns UUID)
-POST /services/dataserve/api/:container
+POST /services/dataservice/api/:container
 {"name": "John", "status": "active"}
 # Response: {"id": "uuid-here"}
 
 # Retrieve by UUID
-GET /services/dataserve/api/:container/:uuid
+GET /services/dataservice/api/:container/:uuid
 
 # Delete by UUID
-DELETE /services/dataserve/api/:container/:uuid
+DELETE /services/dataservice/api/:container/:uuid
 
 # JSON Search - Custom predicate
-POST /services/dataserve/api/jsonFind/:container
+POST /services/dataservice/api/jsonFind/:container
 {"predicate": "obj.status === 'active'"}
 
 # JSON Search - By path
-GET /services/dataserve/api/jsonFindByPath/:container/:path/:value
+GET /services/dataservice/api/jsonFindByPath/:container/:path/:value
 
 # JSON Search - Multi-criteria
-POST /services/dataserve/api/jsonFindByCriteria/:container
+POST /services/dataservice/api/jsonFindByCriteria/:container
 {"status": "active", "profile.role": "developer"}
 ```
 
@@ -219,7 +219,7 @@ GET /services/ai/api/status
 ```javascript
 // Memory providers (dev/testing)
 const cache = serviceRegistry.cache('memory');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 
 // Production providers
 const cache = serviceRegistry.cache('redis', {
@@ -229,7 +229,7 @@ const cache = serviceRegistry.cache('redis', {
   keyPrefix: 'myapp:'
 });
 
-const dataServe = serviceRegistry.dataServe('simpledb', {
+const dataService = serviceRegistry.dataService('simpledb', {
   domain: 'myapp-data',
   region: 'us-east-1'
 });
@@ -284,36 +284,36 @@ async function checkRateLimit(clientId, limit = 100, windowSec = 3600) {
 }
 ```
 
-### DataServe Patterns
+### DataService Patterns
 
 **Database-Style Operations:**
 ```javascript
 // Insert and get UUID
-const userUuid = await dataServe.add('users', {
+const userUuid = await dataService.add('users', {
   name: 'John',
   email: 'john@example.com',
   profile: {department: 'engineering', role: 'developer'}
 });
 
 // Retrieve by UUID
-const user = await dataServe.getByUuid('users', userUuid);
+const user = await dataService.getByUuid('users', userUuid);
 
 // Delete by UUID
-await dataServe.remove('users', userUuid);
+await dataService.remove('users', userUuid);
 ```
 
 **JSON Search:**
 ```javascript
 // Custom predicate
-const activeEngineers = await dataServe.jsonFind('users',
+const activeEngineers = await dataService.jsonFind('users',
   user => user.status === 'active' && user.profile.department === 'engineering'
 );
 
 // Path-based
-const developers = await dataServe.jsonFindByPath('users', 'profile.role', 'developer');
+const developers = await dataService.jsonFindByPath('users', 'profile.role', 'developer');
 
 // Multi-criteria
-const results = await dataServe.jsonFindByCriteria('users', {
+const results = await dataService.jsonFindByCriteria('users', {
   'status': 'active',
   'profile.department': 'engineering'
 });
@@ -323,7 +323,7 @@ const results = await dataServe.jsonFindByCriteria('users', {
 ```javascript
 async function createUser(userData) {
   // Check existing
-  const existing = await dataServe.jsonFindByPath('users', 'email', userData.email);
+  const existing = await dataService.jsonFindByPath('users', 'email', userData.email);
   if (existing.length > 0) throw new Error('User exists');
 
   // Create user
@@ -334,12 +334,12 @@ async function createUser(userData) {
     status: 'active'
   };
 
-  const uuid = await dataServe.add('users', user);
+  const uuid = await dataService.add('users', user);
   return {uuid, user};
 }
 
 async function findUsersByDepartment(dept) {
-  return await dataServe.jsonFindByPath('users', 'profile.department', dept);
+  return await dataService.jsonFindByPath('users', 'profile.department', dept);
 }
 ```
 
@@ -383,12 +383,12 @@ async function uploadDocument(userId, file, metadata = {}) {
     metadata
   };
 
-  const uuid = await dataServe.add('documents', record);
+  const uuid = await dataService.add('documents', record);
   return {uuid, filePath, document: record};
 }
 
 async function downloadDocument(docUuid) {
-  const doc = await dataServe.getByUuid('documents', docUuid);
+  const doc = await dataService.getByUuid('documents', docUuid);
   if (!doc) throw new Error('Document not found');
 
   const stream = await filing.read(doc.filePath);

@@ -266,12 +266,12 @@ describe('ServiceRegistry', () => {
       expect(fileLogger).toBeDefined();
     });
     
-    it('should create dataserve services', () => {
+    it('should create dataservice services', () => {
       const dataServe = serviceRegistry.dataServe('memory');
       expect(dataServe).toBeDefined();
       
-      const fileDataServe = serviceRegistry.dataServe('file');
-      expect(fileDataServe).toBeDefined();
+      const fileDataService = serviceRegistry.dataServe('file');
+      expect(fileDataService).toBeDefined();
     });
     
     it('should create filing services', () => {

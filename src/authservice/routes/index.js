@@ -120,12 +120,21 @@ module.exports = (options, eventEmitter, auth) => {
       '/services/authservice/api/validate',
       asyncHandler(async (req, res) => {
         const { token } = req.body;
-        const session = await auth.validateSession(token);
-        res.status(200).json({
-          success: true,
-          message: 'Session valid',
-          data: session
-        });
+
+        try {
+          const session = await auth.validateSession(token);
+          res.status(200).json({
+            success: true,
+            message: 'Session valid',
+            data: session
+          });
+        } catch (error) {
+          // Return success: false for invalid/expired sessions
+          res.status(200).json({
+            success: false,
+            message: error.message || 'Session invalid'
+          });
+        }
       })
     );
 

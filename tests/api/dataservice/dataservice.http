@@ -1,8 +1,8 @@
 ###
-### NooblyJS Core - DataServe API Tests
+### NooblyJS Core - DataService API Tests
 ### 
-### These tests demonstrate the DataServe service API endpoints with API key authentication.
-### DataServe provides persistent key-value storage with various backend options.
+### These tests demonstrate the DataService service API endpoints with API key authentication.
+### DataService provides persistent key-value storage with various backend options.
 ###
 ### Make sure your server is running with API keys configured before testing.
 ###
@@ -10,13 +10,13 @@
 @baseUrl = http://localhost:3000
 @apiKey = your-api-key-here
 
-### Check DataServe API Status (No API key required)
-GET {{baseUrl}}/services/dataserve/api/status
+### Check DataService API Status (No API key required)
+GET {{baseUrl}}/services/dataservice/api/status
 
 ###
 
 ### Test without API key (should return 401 Unauthorized)
-POST {{baseUrl}}/services/dataserve/api/put/unauthorized-test
+POST {{baseUrl}}/services/dataservice/api/put/unauthorized-test
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 ###
 
 ### PUT - Store user data with x-api-key header
-POST {{baseUrl}}/services/dataserve/api/put/user:john-doe
+POST {{baseUrl}}/services/dataservice/api/put/user:john-doe
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -51,7 +51,7 @@ x-api-key: {{apiKey}}
 ###
 
 ### PUT - Store product data with Bearer token
-POST {{baseUrl}}/services/dataserve/api/put/product:laptop-001
+POST {{baseUrl}}/services/dataservice/api/put/product:laptop-001
 Content-Type: application/json
 Authorization: Bearer {{apiKey}}
 
@@ -77,7 +77,7 @@ Authorization: Bearer {{apiKey}}
 ###
 
 ### PUT - Store configuration data with ApiKey header
-POST {{baseUrl}}/services/dataserve/api/put/config:app-settings
+POST {{baseUrl}}/services/dataservice/api/put/config:app-settings
 Content-Type: application/json
 Authorization: ApiKey {{apiKey}}
 
@@ -104,7 +104,7 @@ Authorization: ApiKey {{apiKey}}
 ###
 
 ### PUT - Store session data with query parameter
-POST {{baseUrl}}/services/dataserve/api/put/session:abc123?api_key={{apiKey}}
+POST {{baseUrl}}/services/dataservice/api/put/session:abc123?api_key={{apiKey}}
 Content-Type: application/json
 
 {
@@ -123,7 +123,7 @@ Content-Type: application/json
 ###
 
 ### PUT - Store analytics data with api-key header
-POST {{baseUrl}}/services/dataserve/api/put/analytics:daily-stats
+POST {{baseUrl}}/services/dataservice/api/put/analytics:daily-stats
 Content-Type: application/json
 api-key: {{apiKey}}
 
@@ -150,31 +150,31 @@ api-key: {{apiKey}}
 ###
 
 ### GET - Retrieve user data
-GET {{baseUrl}}/services/dataserve/api/get/user:john-doe
+GET {{baseUrl}}/services/dataservice/api/get/user:john-doe
 x-api-key: {{apiKey}}
 
 ###
 
 ### GET - Retrieve product data
-GET {{baseUrl}}/services/dataserve/api/get/product:laptop-001
+GET {{baseUrl}}/services/dataservice/api/get/product:laptop-001
 Authorization: Bearer {{apiKey}}
 
 ###
 
 ### GET - Retrieve configuration
-GET {{baseUrl}}/services/dataserve/api/get/config:app-settings
+GET {{baseUrl}}/services/dataservice/api/get/config:app-settings
 Authorization: ApiKey {{apiKey}}
 
 ###
 
 ### GET - Try to retrieve non-existent data
-GET {{baseUrl}}/services/dataserve/api/get/nonexistent:key
+GET {{baseUrl}}/services/dataservice/api/get/nonexistent:key
 x-api-key: {{apiKey}}
 
 ###
 
 ### PUT - Update existing user data (partial update)
-POST {{baseUrl}}/services/dataserve/api/put/user:john-doe
+POST {{baseUrl}}/services/dataservice/api/put/user:john-doe
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -199,38 +199,38 @@ x-api-key: {{apiKey}}
 ###
 
 ### GET - Retrieve updated user data
-GET {{baseUrl}}/services/dataserve/api/get/user:john-doe
+GET {{baseUrl}}/services/dataservice/api/get/user:john-doe
 x-api-key: {{apiKey}}
 
 ###
 
 ### DELETE - Remove session data
-DELETE {{baseUrl}}/services/dataserve/api/delete/session:abc123
+DELETE {{baseUrl}}/services/dataservice/api/delete/session:abc123
 x-api-key: {{apiKey}}
 
 ###
 
 ### DELETE - Remove product data
-DELETE {{baseUrl}}/services/dataserve/api/delete/product:laptop-001
+DELETE {{baseUrl}}/services/dataservice/api/delete/product:laptop-001
 Authorization: Bearer {{apiKey}}
 
 ###
 
 ### DELETE - Try to delete non-existent data
-DELETE {{baseUrl}}/services/dataserve/api/delete/nonexistent:key
+DELETE {{baseUrl}}/services/dataservice/api/delete/nonexistent:key
 x-api-key: {{apiKey}}
 
 ###
 
 ### GET - Verify deletion (should return not found)
-GET {{baseUrl}}/services/dataserve/api/get/session:abc123
+GET {{baseUrl}}/services/dataservice/api/get/session:abc123
 x-api-key: {{apiKey}}
 
 ###
 
 ### Bulk Operations Test Sequence
 ### 1. Store multiple related records
-POST {{baseUrl}}/services/dataserve/api/put/order:2024-001
+POST {{baseUrl}}/services/dataservice/api/put/order:2024-001
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -247,7 +247,7 @@ x-api-key: {{apiKey}}
 }
 
 ### 2. Store customer order history
-POST {{baseUrl}}/services/dataserve/api/put/customer:john-doe:orders
+POST {{baseUrl}}/services/dataservice/api/put/customer:john-doe:orders
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -260,15 +260,15 @@ x-api-key: {{apiKey}}
 }
 
 ### 3. Retrieve order details
-GET {{baseUrl}}/services/dataserve/api/get/order:2024-001
+GET {{baseUrl}}/services/dataservice/api/get/order:2024-001
 x-api-key: {{apiKey}}
 
 ### 4. Retrieve customer order history
-GET {{baseUrl}}/services/dataserve/api/get/customer:john-doe:orders
+GET {{baseUrl}}/services/dataservice/api/get/customer:john-doe:orders
 x-api-key: {{apiKey}}
 
 ### 5. Update order status
-POST {{baseUrl}}/services/dataserve/api/put/order:2024-001
+POST {{baseUrl}}/services/dataservice/api/put/order:2024-001
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
@@ -287,12 +287,12 @@ x-api-key: {{apiKey}}
 }
 
 ### 6. Cleanup - Remove test data
-DELETE {{baseUrl}}/services/dataserve/api/delete/order:2024-001
+DELETE {{baseUrl}}/services/dataservice/api/delete/order:2024-001
 x-api-key: {{apiKey}}
 
 ###
 
-DELETE {{baseUrl}}/services/dataserve/api/delete/customer:john-doe:orders
+DELETE {{baseUrl}}/services/dataservice/api/delete/customer:john-doe:orders
 x-api-key: {{apiKey}}
 
 ###

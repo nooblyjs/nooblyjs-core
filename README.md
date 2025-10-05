@@ -27,10 +27,10 @@ The following RESTful APIs are exposed via the various service modules:
 - `GET    /api/caching/status` — Get cache service status.
 
 ### Data Serving
-- `POST   /api/dataserve/put/:key` — Store a value in the data store.
-- `GET    /api/dataserve/get/:key` — Retrieve a value from the data store.
-- `DELETE /api/dataserve/delete/:key` — Remove a value from the data store.
-- `GET    /api/dataserve/status` — Get data service status.
+- `POST   /api/dataservice/put/:key` — Store a value in the data store.
+- `GET    /api/dataservice/get/:key` — Retrieve a value from the data store.
+- `DELETE /api/dataservice/delete/:key` — Remove a value from the data store.
+- `GET    /api/dataservice/status` — Get data service status.
 
 ### Filing (File Management)
 - `POST   /api/filing/upload/:key` — Upload a file.

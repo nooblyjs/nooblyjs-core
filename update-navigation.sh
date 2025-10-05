@@ -5,7 +5,7 @@
 SERVICES=(
     "aiservice:ai"
     "authservice:authservice"
-    "dataserve:dataserve"
+    "dataservice:dataservice"
     "filing:filing"
     "logging:logging"
     "measuring:measuring"

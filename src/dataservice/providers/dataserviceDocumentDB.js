@@ -1,5 +1,5 @@
 /**
- * @fileoverview DocumentDB DataServe provider for storing and searching JSON objects
+ * @fileoverview DocumentDB DataService provider for storing and searching JSON objects
  * with container-based organization using DocumentDB collections and event emission support.
  * Compatible with MongoDB-compatible DocumentDB implementations.
  * @author NooblyJS Team
@@ -18,7 +18,7 @@ const { v4: uuidv4 } = require('uuid');
  * Compatible with MongoDB-compatible DocumentDB implementations including open-source DocumentDB.
  * @class
  */
-class DocumentDBDataServeProvider {
+class DocumentDBDataServiceProvider {
   /**
    * Initializes the DocumentDB data storage provider.
    * @param {Object=} options Configuration options for DocumentDB connection.
@@ -129,7 +129,7 @@ class DocumentDBDataServeProvider {
       this.db_ = this.client_.db(this.databaseName_);
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:connected', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:connected', {
           host: this.host_,
           port: this.port_,
           database: this.databaseName_,
@@ -138,7 +138,7 @@ class DocumentDBDataServeProvider {
       }
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'connect',
           error: error.message
         });
@@ -192,14 +192,14 @@ class DocumentDBDataServeProvider {
         }
         
         this.initializedContainers_.add(containerName);
-        
+
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:createContainer', { containerName });
+          this.eventEmitter_.emit('api-dataservice-createContainer', { containerName });
         }
       }
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'createContainer',
           containerName,
           error: error.message
@@ -233,18 +233,18 @@ class DocumentDBDataServeProvider {
       const result = await collection.insertOne(documentToInsert);
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:add', {
+        this.eventEmitter_.emit('api-dataservice-add', {
           containerName,
           objectKey,
           jsonObject: documentToInsert,
           documentdbId: result.insertedId
         });
       }
-      
+
       return objectKey;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'add',
           containerName,
           error: error.message
@@ -272,20 +272,20 @@ class DocumentDBDataServeProvider {
         const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = result;
         
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:getByUuid', {
+          this.eventEmitter_.emit('api-dataservice-getByUuid', {
             containerName,
             objectKey,
             obj: cleanObject
           });
         }
-        
+
         return cleanObject;
       }
-      
+
       return null;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'getByUuid',
           containerName,
           objectKey,
@@ -310,15 +310,15 @@ class DocumentDBDataServeProvider {
       const result = await collection.deleteOne({ uuid: objectKey });
       
       const removed = result.deletedCount > 0;
-      
+
       if (removed && this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:remove', { containerName, objectKey });
+        this.eventEmitter_.emit('api-dataservice-remove', { containerName, objectKey });
       }
-      
+
       return removed;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'remove',
           containerName,
           objectKey,
@@ -391,17 +391,17 @@ class DocumentDBDataServeProvider {
       }
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:find', {
+        this.eventEmitter_.emit('api-dataservice-find', {
           containerName,
           searchTerm,
           results
         });
       }
-      
+
       return results;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'find',
           containerName,
           searchTerm,
@@ -432,15 +432,15 @@ class DocumentDBDataServeProvider {
     try {
       const collection = this.getCollection_(containerName);
       const count = await collection.countDocuments();
-      
+
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:count', { containerName, count });
+        this.eventEmitter_.emit('api-dataservice-count', { containerName, count });
       }
-      
+
       return count;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'count',
           containerName,
           error: error.message
@@ -474,19 +474,19 @@ class DocumentDBDataServeProvider {
       );
       
       const updated = result.modifiedCount > 0;
-      
+
       if (updated && this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:update', {
+        this.eventEmitter_.emit('api-dataservice-update', {
           containerName,
           objectKey,
           jsonObject: updateDoc
         });
       }
-      
+
       return updated;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:documentdb:error', {
+        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
           operation: 'update',
           containerName,
           objectKey,
@@ -507,13 +507,13 @@ class DocumentDBDataServeProvider {
         await this.client_.close();
         this.client_ = null;
         this.db_ = null;
-        
+
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:documentdb:disconnected');
+          this.eventEmitter_.emit('api-dataservice-documentdb:disconnected');
         }
       } catch (error) {
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:documentdb:error', {
+          this.eventEmitter_.emit('api-dataservice-documentdb:error', {
             operation: 'close',
             error: error.message
           });
@@ -546,4 +546,4 @@ class DocumentDBDataServeProvider {
   }
 }
 
-module.exports = DocumentDBDataServeProvider;
+module.exports = DocumentDBDataServiceProvider;

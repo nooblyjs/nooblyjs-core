@@ -127,18 +127,18 @@ class ServiceRegistry {
 
     // Level 1 services (Infrastructure - Use foundation services)
     this.serviceDependencies.set('caching', ['logging']);
-    this.serviceDependencies.set('dataserve', ['logging', 'filing']);
+    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
     this.serviceDependencies.set('working', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
-    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
-    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
 
     // Level 3 services (Application - Use business logic services)
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring']);
     this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
-    this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataserve']);
+    this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
 
     // Level 4 services (Integration - Use application services)
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
@@ -215,7 +215,7 @@ class ServiceRegistry {
       'filing': 'local',
       'measuring': 'memory',
       'caching': 'memory',
-      'dataserve': 'memory',
+      'dataservice': 'memory',
       'working': 'memory',
       'queueing': 'memory',
       'scheduling': 'memory',
@@ -327,7 +327,7 @@ class ServiceRegistry {
   }
 
   /**
-   * Get the data serving service
+   * Get the data service
    * @param {string} providerType - 'memory', 'simpledb', 'file', 'mongodb', or 'documentdb'
    * @param {Object} options - Provider-specific options
    * @param {string} options.connectionString - MongoDB/DocumentDB connection string (for mongodb/documentdb provider)
@@ -337,10 +337,10 @@ class ServiceRegistry {
    * @param {string} options.username - Username for authentication (for documentdb provider)
    * @param {string} options.password - Password for authentication (for documentdb provider)
    * @param {boolean} options.ssl - Enable SSL connection (for documentdb provider)
-   * @returns {Object} DataServe service instance
+   * @returns {Object} DataService instance
    */
-  dataServe(providerType = 'memory', options = {}) {
-    return this.getService('dataserve', providerType, options);
+  dataService(providerType = 'memory', options = {}) {
+    return this.getService('dataservice', providerType, options);
   }
 
   /**
@@ -456,7 +456,17 @@ class ServiceRegistry {
    * @param {boolean} options.createDefaultAdmin - Create default admin user (for memory provider)
    * @returns {Object} Auth service instance
    */
-  authservice(providerType = 'memory', options = {}) {
+  authservice(providerType, options = {}) {
+    // If no provider type specified, return the first existing authservice instance
+    if (!providerType) {
+      for (const [key, service] of this.services.entries()) {
+        if (key.startsWith('authservice:')) {
+          return service;
+        }
+      }
+      // If no instance exists, use the default provider
+      providerType = this.getDefaultProviderType('authservice');
+    }
     return this.getService('authservice', providerType, options);
   }
 

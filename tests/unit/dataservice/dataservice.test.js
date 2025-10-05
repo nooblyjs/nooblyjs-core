@@ -1,5 +1,5 @@
 /**
- * @fileoverview Unit tests for the DataServeService and its providers.
+ * @fileoverview Unit tests for the DataService and its providers.
  */
 
 // Mock the AWS SimpleDB client FIRST before any imports
@@ -25,46 +25,46 @@ const fs = require('fs').promises;
 const path = require('path');
 const EventEmitter = require('events');
 const AWS = require('aws-sdk');
-const createDataserveService = require('../../../src/dataserve');
+const createDataServiceService = require('../../../src/dataservice');
 
-describe('DataServeService', () => {
-  // Test InMemoryDataRingProvider
-  describe('InMemoryDataRingProvider', () => {
-    let dataServeService;
+describe('DataService', () => {
+  // Test InMemoryDataServiceProvider
+  describe('InMemoryDataServiceProvider', () => {
+    let dataService;
     let mockEventEmitter;
 
     beforeEach(() => {
       mockEventEmitter = new EventEmitter();
       jest.spyOn(mockEventEmitter, 'emit');
-      dataServeService = createDataserveService('memory', {}, mockEventEmitter);
+      dataService = createDataServiceService('memory', {}, mockEventEmitter);
     });
 
     it('should create a container', async () => {
-      await dataServeService.createContainer('products');
-      expect(dataServeService.provider.containers.has('products')).toBe(true);
+      await dataService.createContainer('products');
+      expect(dataService.provider.containers.has('products')).toBe(true);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'dataserve:createContainer',
+        'api-dataservice-createContainer',
         { containerName: 'products' },
       );
     });
 
     it('should throw error if container already exists', async () => {
-      await dataServeService.createContainer('products');
+      await dataService.createContainer('products');
       await expect(
-        dataServeService.createContainer('products'),
+        dataService.createContainer('products'),
       ).rejects.toThrow("Container 'products' already exists.");
     });
 
     it('should add an object to a container and return a key', async () => {
-      await dataServeService.createContainer('users');
+      await dataService.createContainer('users');
       mockEventEmitter.emit.mockClear(); // Clear previous emits
       const user = { name: 'Alice', email: 'alice@example.com' };
-      const key = await dataServeService.add('users', user);
+      const key = await dataService.add('users', user);
       expect(typeof key).toBe('string');
       expect(
-        dataServeService.provider.containers.get('users').get(key),
+        dataService.provider.containers.get('users').get(key),
       ).toEqual(user);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:add', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-add', {
         containerName: 'users',
         objectKey: key,
         jsonObject: user,
@@ -72,43 +72,43 @@ describe('DataServeService', () => {
     });
 
     it('should remove an object from a container by key', async () => {
-      await dataServeService.createContainer('users');
+      await dataService.createContainer('users');
       const user = { name: 'Bob', email: 'bob@example.com' };
-      const key = await dataServeService.add('users', user);
+      const key = await dataService.add('users', user);
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const removed = await dataServeService.remove('users', key);
+      const removed = await dataService.remove('users', key);
       expect(removed).toBe(true);
-      expect(dataServeService.provider.containers.get('users').has(key)).toBe(
+      expect(dataService.provider.containers.get('users').has(key)).toBe(
         false,
       );
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:remove', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-remove', {
         containerName: 'users',
         objectKey: key,
       });
     });
 
     it('should return false if removing non-existent object', async () => {
-      await dataServeService.createContainer('users');
-      const removed = await dataServeService.remove('users', 'nonExistentKey');
+      await dataService.createContainer('users');
+      const removed = await dataService.remove('users', 'nonExistentKey');
       expect(removed).toBe(false);
     });
 
     it('should find objects in a container by search term', async () => {
-      await dataServeService.createContainer('products');
-      await dataServeService.add('products', {
+      await dataService.createContainer('products');
+      await dataService.add('products', {
         name: 'Laptop',
         category: 'Electronics',
       });
-      await dataServeService.add('products', {
+      await dataService.add('products', {
         name: 'Keyboard',
         category: 'Electronics',
       });
-      await dataServeService.add('products', {
+      await dataService.add('products', {
         name: 'Mouse',
         category: 'Peripherals',
       });
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const results = await dataServeService.find('products', 'electronics');
+      const results = await dataService.find('products', 'electronics');
       expect(results.length).toBe(2);
       expect(results).toEqual(
         expect.arrayContaining([
@@ -116,7 +116,7 @@ describe('DataServeService', () => {
           expect.objectContaining({ name: 'Keyboard' }),
         ]),
       );
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         containerName: 'products',
         searchTerm: 'electronics',
         results,
@@ -124,15 +124,15 @@ describe('DataServeService', () => {
     });
 
     it('should return empty array if no matching objects found', async () => {
-      await dataServeService.createContainer('products');
-      await dataServeService.add('products', {
+      await dataService.createContainer('products');
+      await dataService.add('products', {
         name: 'Laptop',
         category: 'Electronics',
       });
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const results = await dataServeService.find('products', 'nonexistent');
+      const results = await dataService.find('products', 'nonexistent');
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         containerName: 'products',
         searchTerm: 'nonexistent',
         results: [],
@@ -142,15 +142,15 @@ describe('DataServeService', () => {
     it('should throw error if adding to non-existent container', async () => {
       const user = { name: 'Alice' };
       await expect(
-        dataServeService.add('nonExistentContainer', user),
+        dataService.add('nonExistentContainer', user),
       ).rejects.toThrow("Container 'nonExistentContainer' does not exist.");
     });
   });
 
   // Test FileDataRingProvider
   describe('FileDataRingProvider', () => {
-    const testBaseDir = path.join(__dirname, 'test_dataserve_data');
-    let dataServeService;
+    const testBaseDir = path.join(__dirname, 'test_dataservice_data');
+    let dataService;
     let mockEventEmitter;
 
     beforeEach(async () => {
@@ -159,7 +159,7 @@ describe('DataServeService', () => {
       await fs
         .rm(testBaseDir, { recursive: true, force: true })
         .catch(() => {}); // Clean up before each test
-      dataServeService = createDataserveService(
+      dataService = createDataServiceService(
         'file',
         { baseDir: testBaseDir },
         mockEventEmitter,
@@ -171,29 +171,29 @@ describe('DataServeService', () => {
     });
 
     it('should create a container file', async () => {
-      await dataServeService.createContainer('orders');
+      await dataService.createContainer('orders');
       const containerFilePath = path.join(testBaseDir, 'orders.json');
       await expect(fs.access(containerFilePath)).resolves.toBeUndefined();
       const content = await fs.readFile(containerFilePath, 'utf8');
       expect(content).toBe('{}');
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'dataserve:createContainer',
+        'api-dataservice-createContainer',
         { containerName: 'orders' },
       );
     });
 
     it('should throw error if container file already exists', async () => {
-      await dataServeService.createContainer('orders');
-      await expect(dataServeService.createContainer('orders')).rejects.toThrow(
+      await dataService.createContainer('orders');
+      await expect(dataService.createContainer('orders')).rejects.toThrow(
         "Container 'orders' already exists.",
       );
     });
 
     it('should add an object to a container file and return a key', async () => {
-      await dataServeService.createContainer('products');
+      await dataService.createContainer('products');
       mockEventEmitter.emit.mockClear(); // Clear previous emits
       const product = { name: 'Book', price: 20 };
-      const key = await dataServeService.add('products', product);
+      const key = await dataService.add('products', product);
       expect(typeof key).toBe('string');
       const content = await fs.readFile(
         path.join(testBaseDir, 'products.json'),
@@ -201,7 +201,7 @@ describe('DataServeService', () => {
       );
       const data = JSON.parse(content);
       expect(data[key]).toEqual(product);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:add', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-add', {
         containerName: 'products',
         objectKey: key,
         jsonObject: product,
@@ -209,11 +209,11 @@ describe('DataServeService', () => {
     });
 
     it('should remove an object from a container file by key', async () => {
-      await dataServeService.createContainer('products');
+      await dataService.createContainer('products');
       const product = { name: 'Pen', price: 1 };
-      const key = await dataServeService.add('products', product);
+      const key = await dataService.add('products', product);
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const removed = await dataServeService.remove('products', key);
+      const removed = await dataService.remove('products', key);
       expect(removed).toBe(true);
       const content = await fs.readFile(
         path.join(testBaseDir, 'products.json'),
@@ -221,15 +221,15 @@ describe('DataServeService', () => {
       );
       const data = JSON.parse(content);
       expect(data[key]).toBeUndefined();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:remove', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-remove', {
         containerName: 'products',
         objectKey: key,
       });
     });
 
     it('should return false if removing non-existent object from file', async () => {
-      await dataServeService.createContainer('products');
-      const removed = await dataServeService.remove(
+      await dataService.createContainer('products');
+      const removed = await dataService.remove(
         'products',
         'nonExistentKey',
       );
@@ -237,15 +237,15 @@ describe('DataServeService', () => {
     });
 
     it('should find objects in a container file by search term', async () => {
-      await dataServeService.createContainer('items');
-      await dataServeService.add('items', { name: 'Table', material: 'Wood' });
-      await dataServeService.add('items', {
+      await dataService.createContainer('items');
+      await dataService.add('items', { name: 'Table', material: 'Wood' });
+      await dataService.add('items', {
         name: 'Chair',
         material: 'Plastic',
       });
-      await dataServeService.add('items', { name: 'Desk', material: 'Wood' });
+      await dataService.add('items', { name: 'Desk', material: 'Wood' });
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const results = await dataServeService.find('items', 'wood');
+      const results = await dataService.find('items', 'wood');
       expect(results.length).toBe(2);
       expect(results).toEqual(
         expect.arrayContaining([
@@ -253,7 +253,7 @@ describe('DataServeService', () => {
           expect.objectContaining({ name: 'Desk' }),
         ]),
       );
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         containerName: 'items',
         searchTerm: 'wood',
         results,
@@ -261,12 +261,12 @@ describe('DataServeService', () => {
     });
 
     it('should return empty array if no matching objects found in file', async () => {
-      await dataServeService.createContainer('items');
-      await dataServeService.add('items', { name: 'Table', material: 'Wood' });
+      await dataService.createContainer('items');
+      await dataService.add('items', { name: 'Table', material: 'Wood' });
       mockEventEmitter.emit.mockClear(); // Clear previous emits
-      const results = await dataServeService.find('items', 'metal');
+      const results = await dataService.find('items', 'metal');
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         containerName: 'items',
         searchTerm: 'metal',
         results: [],
@@ -282,7 +282,7 @@ describe('DataServeService', () => {
       await fs.writeFile(containerFilePath, JSON.stringify({}, null, 2));
 
       const item = { id: 1, value: 'test' };
-      const key = await dataServeService.add('implicitContainer', item);
+      const key = await dataService.add('implicitContainer', item);
       expect(typeof key).toBe('string');
       const content = await fs.readFile(containerFilePath, 'utf8');
       const data = JSON.parse(content);
@@ -297,7 +297,7 @@ describe('DataServeService', () => {
     const mockSecretAccessKey = 'test-secret-key';
     const mockDomainName = 'test-domain';
 
-    let simpleDbDataRingService;
+    let simpleDbDataService;
     let mockSdbInstance;
     let mockEventEmitter;
 
@@ -314,7 +314,7 @@ describe('DataServeService', () => {
       mockSimpleDB.deleteAttributes.mockClear();
       mockSimpleDB.select.mockClear();
       
-      simpleDbDataRingService = createDataserveService(
+      simpleDbDataService = createDataserveService(
         'simpledb',
         {
           region: mockRegion,
@@ -323,13 +323,13 @@ describe('DataServeService', () => {
         },
         mockEventEmitter,
       );
-      mockSdbInstance = simpleDbDataRingService.provider.sdb;
+      mockSdbInstance = simpleDbDataService.provider.sdb;
     });
 
     it('should initialize with correct SimpleDB configuration', () => {
       // Verify the service was created with SimpleDB provider
-      expect(simpleDbDataRingService.provider).toBeDefined();
-      expect(simpleDbDataRingService.provider.sdb).toBeDefined();
+      expect(simpleDbDataService.provider).toBeDefined();
+      expect(simpleDbDataService.provider.sdb).toBeDefined();
       
       expect(mockConfig.update).toHaveBeenCalledWith({
         region: mockRegion,
@@ -341,13 +341,13 @@ describe('DataServeService', () => {
 
     it('should create a SimpleDB domain', async () => {
       mockPromise.mockResolvedValueOnce({});
-      await simpleDbDataRingService.createContainer(mockDomainName);
+      await simpleDbDataService.createContainer(mockDomainName);
       expect(mockSdbInstance.createDomain).toHaveBeenCalledWith({
         DomainName: mockDomainName,
       });
       expect(mockPromise).toHaveBeenCalledTimes(1);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'dataserve:createContainer',
+        'api-dataservice-createContainer',
         { domainName: mockDomainName },
       );
     });
@@ -355,7 +355,7 @@ describe('DataServeService', () => {
     it('should add a JSON object to a SimpleDB domain', async () => {
       mockPromise.mockResolvedValueOnce({});
       const jsonObject = { name: 'TestItem', value: 123 };
-      const itemName = await simpleDbDataRingService.add(
+      const itemName = await simpleDbDataService.add(
         mockDomainName,
         jsonObject,
       );
@@ -370,7 +370,7 @@ describe('DataServeService', () => {
       });
       expect(mockPromise).toHaveBeenCalledTimes(1);
       expect(typeof itemName).toBe('string');
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:add', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-add', {
         domainName: mockDomainName,
         itemName: itemName,
         jsonObject: jsonObject,
@@ -380,7 +380,7 @@ describe('DataServeService', () => {
     it('should remove a JSON object from a SimpleDB domain', async () => {
       mockPromise.mockResolvedValueOnce({});
       const objectKey = 'some-item-key';
-      const result = await simpleDbDataRingService.remove(
+      const result = await simpleDbDataService.remove(
         mockDomainName,
         objectKey,
       );
@@ -391,7 +391,7 @@ describe('DataServeService', () => {
       });
       expect(mockPromise).toHaveBeenCalledTimes(1);
       expect(result).toBe(true);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:remove', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-remove', {
         domainName: mockDomainName,
         objectKey: objectKey,
       });
@@ -400,13 +400,13 @@ describe('DataServeService', () => {
     it('should return false if deletion fails', async () => {
       mockPromise.mockRejectedValueOnce(new Error('Deletion failed'));
       const objectKey = 'some-item-key';
-      const result = await simpleDbDataRingService.remove(
+      const result = await simpleDbDataService.remove(
         mockDomainName,
         objectKey,
       );
       expect(result).toBe(false);
       expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
-        'dataserve:remove',
+        'api-dataservice-remove',
         expect.any(Object),
       );
     });
@@ -431,7 +431,7 @@ describe('DataServeService', () => {
       mockPromise.mockResolvedValueOnce({ Items: sdbItems });
 
       const searchTerm = 'Electronics';
-      const results = await simpleDbDataRingService.find(
+      const results = await simpleDbDataService.find(
         mockDomainName,
         searchTerm,
       );
@@ -446,7 +446,7 @@ describe('DataServeService', () => {
         { itemName: 'item1', name: 'Laptop', category: 'Electronics' },
         { itemName: 'item2', name: 'Keyboard', category: 'Electronics' },
       ]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: results,
@@ -456,12 +456,12 @@ describe('DataServeService', () => {
     it('should return an empty array if no items are found', async () => {
       mockPromise.mockResolvedValueOnce({ Items: [] });
       const searchTerm = 'NonExistent';
-      const results = await simpleDbDataRingService.find(
+      const results = await simpleDbDataService.find(
         mockDomainName,
         searchTerm,
       );
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: [],
@@ -471,12 +471,12 @@ describe('DataServeService', () => {
     it('should return an empty array if Items is undefined', async () => {
       mockPromise.mockResolvedValueOnce({});
       const searchTerm = 'NonExistent';
-      const results = await simpleDbDataRingService.find(
+      const results = await simpleDbDataService.find(
         mockDomainName,
         searchTerm,
       );
       expect(results).toEqual([]);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('dataserve:find', {
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('api-dataservice-find', {
         domainName: mockDomainName,
         searchTerm: searchTerm,
         results: [],

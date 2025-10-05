@@ -219,12 +219,16 @@ class AuthFile extends AuthBase {
       const data = await fs.readFile(this.sessionsFile_, 'utf8');
       const sessions = JSON.parse(data);
 
-      // Clean up expired sessions while loading
+      // Clean up expired sessions while loading and convert date strings to Date objects
       const now = new Date();
       const validSessions = {};
 
       for (const [token, session] of Object.entries(sessions)) {
-        if (new Date(session.expiresAt) > now) {
+        // Convert date strings to Date objects
+        session.createdAt = new Date(session.createdAt);
+        session.expiresAt = new Date(session.expiresAt);
+
+        if (session.expiresAt > now) {
           validSessions[token] = session;
         }
       }
@@ -300,6 +304,29 @@ class AuthFile extends AuthBase {
     const result = await super.authenticateUser(username, password);
     await this.saveSessionsToFile_();
     return result;
+  }
+
+  /**
+   * Validates a session token and persists any session cleanup to file.
+   * @param {string} token Session token.
+   * @return {Promise<Object>} Promise resolving to session object if valid.
+   * @override
+   */
+  async validateSession(token) {
+    const session = this.sessions_.get(token);
+
+    if (!session) {
+      throw new Error('Invalid session');
+    }
+
+    if (session.expiresAt < new Date()) {
+      this.sessions_.delete(token);
+      // Persist the session deletion to file
+      await this.saveSessionsToFile_();
+      throw new Error('Session expired');
+    }
+
+    return session;
   }
 
   /**

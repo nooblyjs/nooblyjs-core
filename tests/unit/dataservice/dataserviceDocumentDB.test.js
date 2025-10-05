@@ -1,7 +1,7 @@
 /**
- * @fileoverview Unit tests for the DocumentDB dataserve functionality.
+ * @fileoverview Unit tests for the DocumentDB dataservice functionality.
  * 
- * This test suite covers the DocumentDB dataserve provider, testing container creation,
+ * This test suite covers the DocumentDB dataservice provider, testing container creation,
  * object storage, retrieval, searching, and removal operations. Tests verify proper
  * DocumentDB integration and data persistence.
  * 
@@ -13,20 +13,20 @@
 'use strict';
 
 const EventEmitter = require('events');
-const createDataserve = require('../../../src/dataserve');
+const createDataService = require('../../../src/dataservice');
 
 /**
- * Test suite for DocumentDB dataserve operations.
+ * Test suite for DocumentDB dataservice operations.
  * 
- * Tests the DocumentDB dataserve functionality including container management,
+ * Tests the DocumentDB dataservice functionality including container management,
  * CRUD operations, search functionality, and error handling.
  * 
  * Note: These tests require a running DocumentDB instance at 127.0.0.1:10260
  * If DocumentDB is not available, tests will be skipped with appropriate warnings.
  */
-describe('DocumentDB DataServe', () => {
-  /** @type {Object} DocumentDB dataserve instance for testing */
-  let dataserve;
+describe('DocumentDB DataService', () => {
+  /** @type {Object} DocumentDB dataservice instance for testing */
+  let dataservice;
   /** @type {EventEmitter} Mock event emitter for testing events */
   let mockEventEmitter;
   /** @type {string} Test container name */
@@ -36,14 +36,14 @@ describe('DocumentDB DataServe', () => {
 
   /**
    * Set up test environment before all tests.
-   * Creates a DocumentDB dataserve instance with test configuration.
+   * Creates a DocumentDB dataservice instance with test configuration.
    */
   beforeAll(async () => {
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
     
     try {
-      dataserve = createDataserve('documentdb', {
+      dataservice = createDataService('documentdb', {
         host: '127.0.0.1',
         port: 10260,
         database: 'nooblyjs_test'
@@ -53,7 +53,7 @@ describe('DocumentDB DataServe', () => {
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Try to create a test container to verify connection
-      await dataserve.createContainer('connection_test');
+      await dataservice.createContainer('connection_test');
       documentDBAvailable = true;
       console.log('[x] DocumentDB is available for testing');
     } catch (error) {
@@ -68,9 +68,9 @@ describe('DocumentDB DataServe', () => {
    * Removes test data and closes DocumentDB connection.
    */
   afterAll(async () => {
-    if (dataserve && dataserve.provider && typeof dataserve.provider.close === 'function') {
+    if (dataservice && dataservice.provider && typeof dataservice.provider.close === 'function') {
       try {
-        await dataserve.provider.close();
+        await dataservice.provider.close();
       } catch (error) {
         console.warn('Cleanup warning:', error.message);
       }
@@ -118,11 +118,11 @@ describe('DocumentDB DataServe', () => {
 
     const containerName = 'test_create_container';
     
-    await dataserve.createContainer(containerName);
+    await dataservice.createContainer(containerName);
     
     // Verify container creation event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:createContainer',
+      'dataservice:createContainer',
       expect.objectContaining({ containerName })
     );
   });
@@ -148,14 +148,14 @@ describe('DocumentDB DataServe', () => {
     };
 
     // Add object
-    const objectKey = await dataserve.add(testContainer, testObject);
+    const objectKey = await dataservice.add(testContainer, testObject);
     
     expect(objectKey).toBeDefined();
     expect(typeof objectKey).toBe('string');
     
     // Verify add event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:add',
+      'dataservice:add',
       expect.objectContaining({
         containerName: testContainer,
         objectKey,
@@ -164,12 +164,12 @@ describe('DocumentDB DataServe', () => {
     );
 
     // Retrieve object
-    const retrieved = await dataserve.getByUuid(testContainer, objectKey);
+    const retrieved = await dataservice.getByUuid(testContainer, objectKey);
     
     expect(retrieved).toEqual(testObject);
     
     // Clean up
-    await dataserve.remove(testContainer, objectKey);
+    await dataservice.remove(testContainer, objectKey);
   }, 15000);
 
   /**
@@ -193,7 +193,7 @@ describe('DocumentDB DataServe', () => {
     // Add test objects
     const keys = [];
     for (const obj of testObjects) {
-      const key = await dataserve.add(testContainer, obj);
+      const key = await dataservice.add(testContainer, obj);
       keys.push(key);
     }
 
@@ -201,9 +201,9 @@ describe('DocumentDB DataServe', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Search for objects
-    const engineeringResults = await dataserve.find(testContainer, 'engineering');
-    const designerResults = await dataserve.find(testContainer, 'designer');
-    const documentDBResults = await dataserve.find(testContainer, 'DocumentDB');
+    const engineeringResults = await dataservice.find(testContainer, 'engineering');
+    const designerResults = await dataservice.find(testContainer, 'designer');
+    const documentDBResults = await dataservice.find(testContainer, 'DocumentDB');
 
     expect(engineeringResults.length).toBeGreaterThanOrEqual(2); // Alice and Charlie
     expect(designerResults.length).toBeGreaterThanOrEqual(1);    // Bob
@@ -211,7 +211,7 @@ describe('DocumentDB DataServe', () => {
 
     // Clean up
     for (const key of keys) {
-      await dataserve.remove(testContainer, key);
+      await dataservice.remove(testContainer, key);
     }
   }, 20000);
 
@@ -230,19 +230,19 @@ describe('DocumentDB DataServe', () => {
     const testObject = { name: 'TempDocumentDBUser', temp: true };
     
     // Add object
-    const objectKey = await dataserve.add(testContainer, testObject);
+    const objectKey = await dataservice.add(testContainer, testObject);
     
     // Verify object exists
-    const beforeRemoval = await dataserve.getByUuid(testContainer, objectKey);
+    const beforeRemoval = await dataservice.getByUuid(testContainer, objectKey);
     expect(beforeRemoval).toEqual(testObject);
     
     // Remove object
-    const removed = await dataserve.remove(testContainer, objectKey);
+    const removed = await dataservice.remove(testContainer, objectKey);
     expect(removed).toBe(true);
     
     // Verify remove event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:remove',
+      'dataservice:remove',
       expect.objectContaining({
         containerName: testContainer,
         objectKey
@@ -250,7 +250,7 @@ describe('DocumentDB DataServe', () => {
     );
     
     // Verify object no longer exists
-    const afterRemoval = await dataserve.getByUuid(testContainer, objectKey);
+    const afterRemoval = await dataservice.getByUuid(testContainer, objectKey);
     expect(afterRemoval).toBeNull();
   }, 15000);
 
@@ -286,19 +286,19 @@ describe('DocumentDB DataServe', () => {
       }
     };
 
-    const objectKey = await dataserve.add(testContainer, complexObject);
-    const retrieved = await dataserve.getByUuid(testContainer, objectKey);
+    const objectKey = await dataservice.add(testContainer, complexObject);
+    const retrieved = await dataservice.getByUuid(testContainer, objectKey);
     
     expect(retrieved).toEqual(complexObject);
     
     // Test searching within nested objects
-    const searchResults = await dataserve.find(testContainer, 'documentdb');
+    const searchResults = await dataservice.find(testContainer, 'documentdb');
     const foundObject = searchResults.find(obj => obj.metadata && obj.metadata.source === 'test_suite');
     expect(foundObject).toBeDefined();
     expect(foundObject.user.profile.preferences.theme).toBe('dark');
     
     // Clean up
-    await dataserve.remove(testContainer, objectKey);
+    await dataservice.remove(testContainer, objectKey);
   }, 15000);
 
   /**
@@ -316,11 +316,11 @@ describe('DocumentDB DataServe', () => {
     const fakeKey = 'non-existent-documentdb-uuid';
     
     // Try to get non-existent object
-    const result = await dataserve.getByUuid(testContainer, fakeKey);
+    const result = await dataservice.getByUuid(testContainer, fakeKey);
     expect(result).toBeNull();
     
     // Try to remove non-existent object
-    const removed = await dataserve.remove(testContainer, fakeKey);
+    const removed = await dataservice.remove(testContainer, fakeKey);
     expect(removed).toBe(false);
   });
 
@@ -345,7 +345,7 @@ describe('DocumentDB DataServe', () => {
     // Add test objects
     const keys = [];
     for (const obj of testObjects) {
-      const key = await dataserve.add(testContainer, obj);
+      const key = await dataservice.add(testContainer, obj);
       keys.push(key);
     }
 
@@ -353,12 +353,12 @@ describe('DocumentDB DataServe', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Test jsonFindByPath
-    const electronicsItems = await dataserve.jsonFindByPath(testContainer, 'category', 'electronics');
+    const electronicsItems = await dataservice.jsonFindByPath(testContainer, 'category', 'electronics');
     const documentDBItems = electronicsItems.filter(item => item.source === 'documentdb');
     expect(documentDBItems.length).toBe(2);
     
     // Test jsonFindByCriteria
-    const inStockElectronics = await dataserve.jsonFindByCriteria(testContainer, {
+    const inStockElectronics = await dataservice.jsonFindByCriteria(testContainer, {
       inStock: true,
       category: 'electronics',
       source: 'documentdb'
@@ -367,7 +367,7 @@ describe('DocumentDB DataServe', () => {
     
     // Clean up
     for (const key of keys) {
-      await dataserve.remove(testContainer, key);
+      await dataservice.remove(testContainer, key);
     }
   }, 20000);
 
@@ -377,7 +377,7 @@ describe('DocumentDB DataServe', () => {
    * Verifies that the DocumentDB provider reports correct connection information.
    */
   it('should report connection information', () => {
-    const connectionInfo = dataserve.provider.getConnectionInfo();
+    const connectionInfo = dataservice.provider.getConnectionInfo();
     
     expect(connectionInfo).toEqual({
       host: '127.0.0.1',
@@ -395,14 +395,14 @@ describe('DocumentDB DataServe', () => {
    */
   it('should build connection strings correctly', () => {
     // Test with custom connection string
-    const customDataserve = createDataserve('documentdb', {
+    const customDataService = createDataService('documentdb', {
       connectionString: 'mongodb://custom:27017/testdb?retryWrites=false'
     }, mockEventEmitter);
     
-    expect(customDataserve.provider).toBeDefined();
+    expect(customDataService.provider).toBeDefined();
     
     // Test with individual options
-    const optionsDataserve = createDataserve('documentdb', {
+    const optionsDataService = createDataService('documentdb', {
       host: 'localhost',
       port: 27017,
       database: 'testdb',
@@ -411,6 +411,6 @@ describe('DocumentDB DataServe', () => {
       ssl: true
     }, mockEventEmitter);
     
-    expect(optionsDataserve.provider).toBeDefined();
+    expect(optionsDataService.provider).toBeDefined();
   });
 });

@@ -22,7 +22,7 @@ const Views = require('./views');
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.caching - Caching service instance
- * @param {Object} options.dependencies.dataserve - DataServe service instance
+ * @param {Object} options.dependencies.dataservice - DataService service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {InMemoryQueue} Queue service instance with specified provider
  * @throws {Error} When unsupported queue type is provided
@@ -31,7 +31,7 @@ function createQueue(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;
   const logger = dependencies.logging;
   const cache = dependencies.caching;
-  const dataStore = dependencies.dataserve;
+  const dataStore = dependencies.dataservice;
 
   let queue;
 

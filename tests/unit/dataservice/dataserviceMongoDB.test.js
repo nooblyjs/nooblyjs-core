@@ -1,7 +1,7 @@
 /**
- * @fileoverview Unit tests for the MongoDB dataserve functionality.
+ * @fileoverview Unit tests for the MongoDB dataservice functionality.
  * 
- * This test suite covers the MongoDB dataserve provider, testing container creation,
+ * This test suite covers the MongoDB dataservice provider, testing container creation,
  * object storage, retrieval, searching, and removal operations. Tests verify proper
  * MongoDB integration and data persistence.
  * 
@@ -13,19 +13,19 @@
 'use strict';
 
 const EventEmitter = require('events');
-const createDataserve = require('../../../src/dataserve');
+const createDataService = require('../../../src/dataservice');
 
 /**
- * Test suite for MongoDB dataserve operations.
+ * Test suite for MongoDB dataservice operations.
  * 
- * Tests the MongoDB dataserve functionality including container management,
+ * Tests the MongoDB dataservice functionality including container management,
  * CRUD operations, search functionality, and error handling.
  * 
  * Note: These tests require a running MongoDB instance at mongodb://127.0.0.1:27017
  */
-describe('MongoDB DataServe', () => {
-  /** @type {Object} MongoDB dataserve instance for testing */
-  let dataserve;
+describe('MongoDB DataService', () => {
+  /** @type {Object} MongoDB dataservice instance for testing */
+  let dataservice;
   /** @type {EventEmitter} Mock event emitter for testing events */
   let mockEventEmitter;
   /** @type {string} Test container name */
@@ -33,13 +33,13 @@ describe('MongoDB DataServe', () => {
 
   /**
    * Set up test environment before all tests.
-   * Creates a MongoDB dataserve instance with test configuration.
+   * Creates a MongoDB dataservice instance with test configuration.
    */
   beforeAll(async () => {
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
     
-    dataserve = createDataserve('mongodb', {
+    dataservice = createDataService('mongodb', {
       database: 'nooblyjs_test',
       connectionString: 'mongodb://127.0.0.1:27017'
     }, mockEventEmitter);
@@ -53,19 +53,19 @@ describe('MongoDB DataServe', () => {
    * Removes test data and closes MongoDB connection.
    */
   afterAll(async () => {
-    if (dataserve && dataserve.provider && typeof dataserve.provider.close === 'function') {
+    if (dataservice && dataservice.provider && typeof dataservice.provider.close === 'function') {
       try {
         // Clean up test container
-        const allObjects = await dataserve.find(testContainer, '');
+        const allObjects = await dataservice.find(testContainer, '');
         for (const obj of allObjects) {
           // Find the object key by searching for it
-          const searchResults = await dataserve.find(testContainer, obj.username || 'test');
+          const searchResults = await dataservice.find(testContainer, obj.username || 'test');
           if (searchResults.length > 0) {
             // This is a simplified cleanup - in real scenarios you'd need the actual UUID
             // For now, we'll let MongoDB handle cleanup via database drop
           }
         }
-        await dataserve.provider.close();
+        await dataservice.provider.close();
       } catch (error) {
         console.warn('Cleanup warning:', error.message);
       }
@@ -79,7 +79,7 @@ describe('MongoDB DataServe', () => {
   beforeEach(async () => {
     try {
       // Create test container
-      await dataserve.createContainer(testContainer);
+      await dataservice.createContainer(testContainer);
     } catch (error) {
       // Container might already exist, which is fine
     }
@@ -95,11 +95,11 @@ describe('MongoDB DataServe', () => {
   it('should create a container successfully', async () => {
     const containerName = 'test_create_container';
     
-    await dataserve.createContainer(containerName);
+    await dataservice.createContainer(containerName);
     
     // Verify container creation event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:createContainer',
+      'dataservice:createContainer',
       expect.objectContaining({ containerName })
     );
   });
@@ -119,14 +119,14 @@ describe('MongoDB DataServe', () => {
     };
 
     // Add object
-    const objectKey = await dataserve.add(testContainer, testObject);
+    const objectKey = await dataservice.add(testContainer, testObject);
     
     expect(objectKey).toBeDefined();
     expect(typeof objectKey).toBe('string');
     
     // Verify add event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:add',
+      'dataservice:add',
       expect.objectContaining({
         containerName: testContainer,
         objectKey,
@@ -135,12 +135,12 @@ describe('MongoDB DataServe', () => {
     );
 
     // Retrieve object
-    const retrieved = await dataserve.getByUuid(testContainer, objectKey);
+    const retrieved = await dataservice.getByUuid(testContainer, objectKey);
     
     expect(retrieved).toEqual(testObject);
     
     // Clean up
-    await dataserve.remove(testContainer, objectKey);
+    await dataservice.remove(testContainer, objectKey);
   }, 10000);
 
   /**
@@ -159,14 +159,14 @@ describe('MongoDB DataServe', () => {
     // Add test objects
     const keys = [];
     for (const obj of testObjects) {
-      const key = await dataserve.add(testContainer, obj);
+      const key = await dataservice.add(testContainer, obj);
       keys.push(key);
     }
 
     // Search for objects
-    const engineeringResults = await dataserve.find(testContainer, 'engineering');
-    const designerResults = await dataserve.find(testContainer, 'designer');
-    const allResults = await dataserve.find(testContainer, '');
+    const engineeringResults = await dataservice.find(testContainer, 'engineering');
+    const designerResults = await dataservice.find(testContainer, 'designer');
+    const allResults = await dataservice.find(testContainer, '');
 
     expect(engineeringResults.length).toBe(2); // Alice and Charlie
     expect(designerResults.length).toBe(1);    // Bob
@@ -174,7 +174,7 @@ describe('MongoDB DataServe', () => {
 
     // Clean up
     for (const key of keys) {
-      await dataserve.remove(testContainer, key);
+      await dataservice.remove(testContainer, key);
     }
   }, 15000);
 
@@ -188,19 +188,19 @@ describe('MongoDB DataServe', () => {
     const testObject = { name: 'TempUser', temp: true };
     
     // Add object
-    const objectKey = await dataserve.add(testContainer, testObject);
+    const objectKey = await dataservice.add(testContainer, testObject);
     
     // Verify object exists
-    const beforeRemoval = await dataserve.getByUuid(testContainer, objectKey);
+    const beforeRemoval = await dataservice.getByUuid(testContainer, objectKey);
     expect(beforeRemoval).toEqual(testObject);
     
     // Remove object
-    const removed = await dataserve.remove(testContainer, objectKey);
+    const removed = await dataservice.remove(testContainer, objectKey);
     expect(removed).toBe(true);
     
     // Verify remove event was emitted
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'dataserve:remove',
+      'dataservice:remove',
       expect.objectContaining({
         containerName: testContainer,
         objectKey
@@ -208,7 +208,7 @@ describe('MongoDB DataServe', () => {
     );
     
     // Verify object no longer exists
-    const afterRemoval = await dataserve.getByUuid(testContainer, objectKey);
+    const afterRemoval = await dataservice.getByUuid(testContainer, objectKey);
     expect(afterRemoval).toBeNull();
   }, 10000);
 
@@ -237,18 +237,18 @@ describe('MongoDB DataServe', () => {
       }
     };
 
-    const objectKey = await dataserve.add(testContainer, complexObject);
-    const retrieved = await dataserve.getByUuid(testContainer, objectKey);
+    const objectKey = await dataservice.add(testContainer, complexObject);
+    const retrieved = await dataservice.getByUuid(testContainer, objectKey);
     
     expect(retrieved).toEqual(complexObject);
     
     // Test searching within nested objects
-    const searchResults = await dataserve.find(testContainer, 'dark');
+    const searchResults = await dataservice.find(testContainer, 'dark');
     expect(searchResults.length).toBeGreaterThan(0);
     expect(searchResults[0].user.profile.preferences.theme).toBe('dark');
     
     // Clean up
-    await dataserve.remove(testContainer, objectKey);
+    await dataservice.remove(testContainer, objectKey);
   }, 10000);
 
   /**
@@ -261,11 +261,11 @@ describe('MongoDB DataServe', () => {
     const fakeKey = 'non-existent-uuid';
     
     // Try to get non-existent object
-    const result = await dataserve.getByUuid(testContainer, fakeKey);
+    const result = await dataservice.getByUuid(testContainer, fakeKey);
     expect(result).toBeNull();
     
     // Try to remove non-existent object
-    const removed = await dataserve.remove(testContainer, fakeKey);
+    const removed = await dataservice.remove(testContainer, fakeKey);
     expect(removed).toBe(false);
   });
 
@@ -285,16 +285,16 @@ describe('MongoDB DataServe', () => {
     // Add test objects
     const keys = [];
     for (const obj of testObjects) {
-      const key = await dataserve.add(testContainer, obj);
+      const key = await dataservice.add(testContainer, obj);
       keys.push(key);
     }
 
     // Test jsonFindByPath
-    const electronicsItems = await dataserve.jsonFindByPath(testContainer, 'category', 'electronics');
+    const electronicsItems = await dataservice.jsonFindByPath(testContainer, 'category', 'electronics');
     expect(electronicsItems.length).toBe(2);
     
     // Test jsonFindByCriteria
-    const expensiveInStockItems = await dataserve.jsonFindByCriteria(testContainer, {
+    const expensiveInStockItems = await dataservice.jsonFindByCriteria(testContainer, {
       inStock: true,
       category: 'electronics'
     });
@@ -302,7 +302,7 @@ describe('MongoDB DataServe', () => {
     
     // Clean up
     for (const key of keys) {
-      await dataserve.remove(testContainer, key);
+      await dataservice.remove(testContainer, key);
     }
   }, 15000);
 
@@ -312,6 +312,6 @@ describe('MongoDB DataServe', () => {
    * Verifies that the MongoDB provider reports correct connection status.
    */
   it('should report connection status', () => {
-    expect(dataserve.provider.status).toBe('connected');
+    expect(dataservice.provider.status).toBe('connected');
   });
 });

@@ -36,7 +36,7 @@ serviceRegistry.initialize(app, eventEmitter);
  */
 const log = serviceRegistry.logger('file');
 const cache = serviceRegistry.cache('inmemory');
-const dataserve = serviceRegistry.dataServe('file');
+const dataservice = serviceRegistry.dataServe('file');
 const filing = serviceRegistry.filing('local');
 const queue = serviceRegistry.queue('memory');
 const scheduling = serviceRegistry.scheduling('memory');
@@ -63,7 +63,7 @@ filing.read("./.files/text.txt", "utf8").then(content => {
     console.error("Error reading file:", error);
   });
 
-loadExampleDataserve(dataserve);
+loadExampleDataserve(dataservice);
 loadExampleScheduling(scheduling);
 loadExampleSearching(searching);
 loadExampleMeasuring(measuring);
@@ -81,12 +81,12 @@ app.listen(PORT, () => {
 
 
 /**
-* Demonstrate dataserve service.
+* Demonstrate dataservice service.
 * Same a user object
 */
-function loadExampleDataserve(dataserve){
-  dataserve.createContainer('users');
-  var key = dataserve.add('users',{'username':'stephen','fullname':'Stephen Booysen'});
+function loadExampleDataserve(dataservice){
+  dataservice.createContainer('users');
+  var key = dataservice.add('users',{'username':'stephen','fullname':'Stephen Booysen'});
   console.log(key);
 }
 

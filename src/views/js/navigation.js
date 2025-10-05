@@ -8,7 +8,7 @@ const NooblyNavigation = {
         { name: 'ai', icon: 'bi-robot', title: 'AI Service', path: 'ai' },
         { name: 'authservice', icon: 'bi-lock-fill', title: 'Authentication', path: 'authservice' },
         { name: 'caching', icon: 'bi-server', title: 'Cache Management', path: 'caching' },
-        { name: 'dataserve', icon: 'bi-database', title: 'Data Serve', path: 'dataserve' },
+        { name: 'dataservice', icon: 'bi-database', title: 'Data Service', path: 'dataservice' },
         { name: 'filing', icon: 'bi-folder-fill', title: 'File Management', path: 'filing' },
         { name: 'logging', icon: 'bi-journal-text', title: 'Logging', path: 'logging' },
         { name: 'measuring', icon: 'bi-graph-up', title: 'Measuring', path: 'measuring' },
@@ -86,7 +86,7 @@ const NooblyNavigation = {
                 const isActive = activeService === service.name ? 'active' : '';
                 navHTML += `
                     <a href="/services/${service.path}/" class="nav-item ${isActive}">
-                        <i class="bi ${service.icon}"></i> ${service.title}
+                        ${service.title}
                         <span class="status-dot online"></span>
                     </a>
                 `;
@@ -95,16 +95,23 @@ const NooblyNavigation = {
 
         // Offline Services Section
         if (offlineServices.length > 0) {
-            navHTML += `<div class="nav-section-header">Offline Services</div>`;
+            navHTML += `
+                <div class="nav-section-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="NooblyNavigation.toggleOfflineNav()">
+                    <span>Offline Services</span>
+                    <span id="offline-toggle-icon">▼</span>
+                </div>
+                <div id="offline-nav-services" style="display: none;">
+            `;
             offlineServices.forEach(service => {
                 const isActive = activeService === service.name ? 'active' : '';
                 navHTML += `
                     <a href="/services/${service.path}/" class="nav-item ${isActive} offline">
-                        <i class="bi ${service.icon}"></i> ${service.title}
+                        ${service.title}
                         <span class="status-dot offline"></span>
                     </a>
                 `;
             });
+            navHTML += `</div>`;
         }
 
         // Logout section
@@ -115,7 +122,7 @@ const NooblyNavigation = {
                     <strong id="username-display">Loading...</strong>
                 </div>
                 <button id="logout-btn" class="btn btn-danger">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+                    Logout
                 </button>
             </div>
         `;
@@ -124,6 +131,24 @@ const NooblyNavigation = {
 
         // Initialize auth display
         this.initializeAuth();
+    },
+
+    /**
+     * Toggle offline services section in navigation
+     */
+    toggleOfflineNav() {
+        const offlineSection = document.getElementById('offline-nav-services');
+        const toggleIcon = document.getElementById('offline-toggle-icon');
+
+        if (offlineSection && toggleIcon) {
+            if (offlineSection.style.display === 'none') {
+                offlineSection.style.display = 'block';
+                toggleIcon.textContent = '▲';
+            } else {
+                offlineSection.style.display = 'none';
+                toggleIcon.textContent = '▼';
+            }
+        }
     },
 
     /**

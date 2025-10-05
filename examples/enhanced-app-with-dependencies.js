@@ -114,9 +114,9 @@ function demonstrateEnhancedCache() {
 async function demonstrateEnhancedDataServe() {
   console.log('💾 Enhanced DataServe Service Demonstration:');
 
-  // The dataserve service now has logging and filing capabilities injected
+  // The dataservice service now has logging and filing capabilities injected
   if (dataServe.log) {
-    dataServe.log('info', 'Starting dataserve demonstration');
+    dataServe.log('info', 'Starting dataservice demonstration');
   }
 
   // Create container and add data - these will be automatically logged

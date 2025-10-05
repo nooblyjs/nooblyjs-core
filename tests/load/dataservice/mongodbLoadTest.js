@@ -1,7 +1,7 @@
 /**
- * @fileoverview Load test for MongoDB dataserve service performance.
+ * @fileoverview Load test for MongoDB dataservice service performance.
  * 
- * This load test measures the performance of MongoDB dataserve operations including
+ * This load test measures the performance of MongoDB dataservice operations including
  * container creation, object addition, retrieval, searching, and removal operations.
  * Tests help identify performance bottlenecks and scalability limits.
  * 
@@ -12,18 +12,18 @@
 
 'use strict';
 
-const createDataserve = require('../../../src/dataserve');
+const createDataService = require('../../../src/dataservice');
 const EventEmitter = require('events');
 
 /**
- * Executes load test for MongoDB dataserve service performance.
+ * Executes load test for MongoDB dataservice service performance.
  * 
- * Runs a series of dataserve operations to measure performance
+ * Runs a series of dataservice operations to measure performance
  * characteristics of the MongoDB provider under load.
  * 
  * @async
  * @function runMongoDBLoadTest
- * @param {number} iterations - Number of dataserve operations to perform
+ * @param {number} iterations - Number of dataservice operations to perform
  * @param {Object} [options={}] - Configuration options for the MongoDB provider
  * @returns {Promise<Object>} Test results including service, type, iterations, and duration
  */
@@ -35,7 +35,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
     ...options
   };
   
-  const dataserve = createDataserve('mongodb', mongoOptions, eventEmitter);
+  const dataservice = createDataService('mongodb', mongoOptions, eventEmitter);
   const containerName = 'load_test_container';
   
   console.log(`Starting MongoDB DataServe Load Test for ${iterations} iterations...`);
@@ -43,7 +43,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
   
   const startTime = Date.now();
   const results = {
-    service: 'dataserve',
+    service: 'dataservice',
     type: 'mongodb',
     iterations,
     operations: {
@@ -59,7 +59,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
     // Phase 1: Create container
     console.log('Phase 1: Creating container...');
     const createStartTime = Date.now();
-    await dataserve.createContainer(containerName);
+    await dataservice.createContainer(containerName);
     results.operations.createContainer.count = 1;
     results.operations.createContainer.duration = Date.now() - createStartTime;
 
@@ -81,7 +81,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
         }
       };
       
-      const key = await dataserve.add(containerName, testObject);
+      const key = await dataservice.add(containerName, testObject);
       objectKeys.push(key);
       results.operations.add.count++;
       
@@ -99,7 +99,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
     
     for (let i = 0; i < Math.min(iterations, 100); i++) {
       const randomIndex = Math.floor(Math.random() * objectKeys.length);
-      await dataserve.getByUuid(containerName, objectKeys[randomIndex]);
+      await dataservice.getByUuid(containerName, objectKeys[randomIndex]);
       results.operations.get.count++;
     }
     
@@ -112,13 +112,13 @@ async function runMongoDBLoadTest(iterations, options = {}) {
     
     const searchTerms = ['electronics', 'books', 'test', 'TestObject1', 'tag0'];
     for (const term of searchTerms) {
-      await dataserve.find(containerName, term);
+      await dataservice.find(containerName, term);
       results.operations.find.count++;
     }
     
     // Test advanced search methods
-    await dataserve.jsonFindByPath(containerName, 'category', 'electronics');
-    await dataserve.jsonFindByCriteria(containerName, { category: 'books' });
+    await dataservice.jsonFindByPath(containerName, 'category', 'electronics');
+    await dataservice.jsonFindByCriteria(containerName, { category: 'books' });
     results.operations.find.count += 2;
     
     results.operations.find.duration = Date.now() - findStartTime;
@@ -131,7 +131,7 @@ async function runMongoDBLoadTest(iterations, options = {}) {
     
     for (let i = 0; i < removeCount; i++) {
       const keyToRemove = objectKeys[i];
-      await dataserve.remove(containerName, keyToRemove);
+      await dataservice.remove(containerName, keyToRemove);
       results.operations.remove.count++;
     }
     
@@ -161,9 +161,9 @@ async function runMongoDBLoadTest(iterations, options = {}) {
 
   } finally {
     // Clean up - close MongoDB connection
-    if (dataserve.provider && typeof dataserve.provider.close === 'function') {
+    if (dataservice.provider && typeof dataservice.provider.close === 'function') {
       try {
-        await dataserve.provider.close();
+        await dataservice.provider.close();
         console.log('MongoDB connection closed');
       } catch (error) {
         console.warn('Error closing MongoDB connection:', error.message);

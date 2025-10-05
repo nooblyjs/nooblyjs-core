@@ -1,5 +1,5 @@
 /**
- * @fileoverview MongoDB DataServe provider for storing and searching JSON objects
+ * @fileoverview MongoDB DataService provider for storing and searching JSON objects
  * with container-based organization using MongoDB collections and event emission support.
  * @author NooblyJS Team
  * @version 1.0.14
@@ -16,7 +16,7 @@ const { v4: uuidv4 } = require('uuid');
  * Provides methods for creating containers (collections) and storing, retrieving, and searching JSON objects.
  * @class
  */
-class MongoDBDataServeProvider {
+class MongoDBDataServiceProvider {
   /**
    * Initializes the MongoDB data storage provider.
    * @param {Object=} options Configuration options for MongoDB connection.
@@ -58,14 +58,14 @@ class MongoDBDataServeProvider {
       this.db_ = this.client_.db(this.databaseName_);
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:connected', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:connected', {
           connectionString: this.connectionString_,
           database: this.databaseName_
         });
       }
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'connect',
           error: error.message
         });
@@ -111,14 +111,14 @@ class MongoDBDataServeProvider {
         await collection.createIndex({ uuid: 1 }, { unique: true });
         
         this.initializedContainers_.add(containerName);
-        
+
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:createContainer', { containerName });
+          this.eventEmitter_.emit('api-dataservice-createContainer', { containerName });
         }
       }
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'createContainer',
           containerName,
           error: error.message
@@ -152,18 +152,18 @@ class MongoDBDataServeProvider {
       const result = await collection.insertOne(documentToInsert);
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:add', {
+        this.eventEmitter_.emit('api-dataservice-add', {
           containerName,
           objectKey,
           jsonObject: documentToInsert,
           mongoId: result.insertedId
         });
       }
-      
+
       return objectKey;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'add',
           containerName,
           error: error.message
@@ -191,20 +191,20 @@ class MongoDBDataServeProvider {
         const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = result;
         
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:getByUuid', {
+          this.eventEmitter_.emit('api-dataservice-getByUuid', {
             containerName,
             objectKey,
             obj: cleanObject
           });
         }
-        
+
         return cleanObject;
       }
-      
+
       return null;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'getByUuid',
           containerName,
           objectKey,
@@ -229,15 +229,15 @@ class MongoDBDataServeProvider {
       const result = await collection.deleteOne({ uuid: objectKey });
       
       const removed = result.deletedCount > 0;
-      
+
       if (removed && this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:remove', { containerName, objectKey });
+        this.eventEmitter_.emit('api-dataservice-remove', { containerName, objectKey });
       }
-      
+
       return removed;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'remove',
           containerName,
           objectKey,
@@ -310,17 +310,17 @@ class MongoDBDataServeProvider {
       }
       
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:find', {
+        this.eventEmitter_.emit('api-dataservice-find', {
           containerName,
           searchTerm,
           results
         });
       }
-      
+
       return results;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'find',
           containerName,
           searchTerm,
@@ -351,15 +351,15 @@ class MongoDBDataServeProvider {
     try {
       const collection = this.getCollection_(containerName);
       const count = await collection.countDocuments();
-      
+
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:count', { containerName, count });
+        this.eventEmitter_.emit('api-dataservice-count', { containerName, count });
       }
-      
+
       return count;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'count',
           containerName,
           error: error.message
@@ -393,19 +393,19 @@ class MongoDBDataServeProvider {
       );
       
       const updated = result.modifiedCount > 0;
-      
+
       if (updated && this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:update', {
+        this.eventEmitter_.emit('api-dataservice-update', {
           containerName,
           objectKey,
           jsonObject: updateDoc
         });
       }
-      
+
       return updated;
     } catch (error) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('dataserve:mongodb:error', {
+        this.eventEmitter_.emit('api-dataservice-mongodb:error', {
           operation: 'update',
           containerName,
           objectKey,
@@ -426,13 +426,13 @@ class MongoDBDataServeProvider {
         await this.client_.close();
         this.client_ = null;
         this.db_ = null;
-        
+
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:mongodb:disconnected');
+          this.eventEmitter_.emit('api-dataservice-mongodb:disconnected');
         }
       } catch (error) {
         if (this.eventEmitter_) {
-          this.eventEmitter_.emit('dataserve:mongodb:error', {
+          this.eventEmitter_.emit('api-dataservice-mongodb:error', {
             operation: 'close',
             error: error.message
           });
@@ -451,4 +451,4 @@ class MongoDBDataServeProvider {
   }
 }
 
-module.exports = MongoDBDataServeProvider;
+module.exports = MongoDBDataServiceProvider;

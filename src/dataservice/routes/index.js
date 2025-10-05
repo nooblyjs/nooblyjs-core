@@ -1,5 +1,5 @@
 /**
- * @fileoverview Data serving API routes for Express.js application.
+ * @fileoverview Data service API routes for Express.js application.
  * Provides RESTful endpoints for data storage and retrieval operations
  * including put, get, delete, and status monitoring.
  *
@@ -11,22 +11,22 @@
 'use strict';
 
 /**
- * Configures and registers data serving routes with the Express application.
+ * Configures and registers data service routes with the Express application.
  * Sets up endpoints for persistent data management operations.
  *
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
- * @param {Object} dataserve - The data serving provider instance
+ * @param {Object} dataservice - The data service provider instance
  * @return {void}
  */
-module.exports = (options, eventEmitter, dataserve) => {
-  if (options['express-app'] && dataserve) {
+module.exports = (options, eventEmitter, dataservice) => {
+  if (options['express-app'] && dataservice) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
 
     /**
-     * POST /services/dataserve/api/:container
+     * POST /services/dataservice/api/:container
      * Adds data to a container and returns the generated UUID.
      *
      * @param {express.Request} req - Express request object
@@ -35,26 +35,26 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataserve/api/:container', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+    app.post('/services/dataservice/api/:container', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const container = req.params.container;
       const jsonObject = req.body;
-      
+
       try {
         // Ensure container exists
-        await dataserve.createContainer(container);
+        await dataservice.createContainer(container);
       } catch (err) {
         // Container may already exist, ignore error
       }
-      
-      dataserve
+
+      dataservice
         .add(container, jsonObject)
         .then((uuid) => res.status(200).json({ id: uuid }))
         .catch((err) => res.status(500).send(err.message));
     });
 
     /**
-     * GET /services/dataserve/api/:container/:uuid
-     * Retrieves data by UUID from a specific container in the data serving system.
+     * GET /services/dataservice/api/:container/:uuid
+     * Retrieves data by UUID from a specific container in the data service system.
      *
      * @param {express.Request} req - Express request object
      * @param {string} req.params.container - The container to retrieve data from
@@ -62,18 +62,18 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataserve/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.get('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
       const container = req.params.container;
       const uuid = req.params.uuid;
-      dataserve
+      dataservice
         .getByUuid(container, uuid)
         .then((value) => res.status(200).json(value))
         .catch((err) => res.status(500).send(err.message));
     });
 
     /**
-     * DELETE /services/dataserve/api/:container/:uuid
-     * Removes data by UUID from a specific container in the data serving system.
+     * DELETE /services/dataservice/api/:container/:uuid
+     * Removes data by UUID from a specific container in the data service system.
      *
      * @param {express.Request} req - Express request object
      * @param {string} req.params.container - The container to delete data from
@@ -81,10 +81,10 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/dataserve/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.delete('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
       const container = req.params.container;
       const uuid = req.params.uuid;
-      dataserve
+      dataservice
         .remove(container, uuid)
         .then((success) => {
           if (success) {
@@ -98,7 +98,7 @@ module.exports = (options, eventEmitter, dataserve) => {
 
 
     /**
-     * POST /services/dataserve/api/jsonFind/:containerName
+     * POST /services/dataservice/api/jsonFind/:containerName
      * Searches for objects in a container using a JavaScript predicate function.
      * The request body should contain the predicate as a string.
      *
@@ -109,15 +109,15 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataserve/api/jsonFind/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.post('/services/dataservice/api/jsonFind/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
       const containerName = req.params.containerName;
       const { predicate } = req.body;
 
       try {
         // Create predicate function from string (be careful with eval in production)
         const predicateFunc = new Function('obj', `return ${predicate}`);
-        
-        dataserve
+
+        dataservice
           .jsonFind(containerName, predicateFunc)
           .then((results) => res.status(200).json(results))
           .catch((err) => res.status(500).send(err.message));
@@ -127,7 +127,7 @@ module.exports = (options, eventEmitter, dataserve) => {
     });
 
     /**
-     * GET /services/dataserve/api/jsonFindByPath/:containerName/:path/:value
+     * GET /services/dataservice/api/jsonFindByPath/:containerName/:path/:value
      * Searches for objects in a container where a specific path matches a value.
      *
      * @param {express.Request} req - Express request object
@@ -137,19 +137,19 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataserve/api/jsonFindByPath/:containerName/:path/:value', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.get('/services/dataservice/api/jsonFindByPath/:containerName/:path/:value', authMiddleware || ((req, res, next) => next()), (req, res) => {
       const containerName = req.params.containerName;
       const path = req.params.path;
       const value = req.params.value;
 
-      dataserve
+      dataservice
         .jsonFindByPath(containerName, path, value)
         .then((results) => res.status(200).json(results))
         .catch((err) => res.status(500).send(err.message));
     });
 
     /**
-     * POST /services/dataserve/api/jsonFindByCriteria/:containerName
+     * POST /services/dataservice/api/jsonFindByCriteria/:containerName
      * Searches for objects in a container using multiple criteria.
      * The request body should contain an object with path-value pairs.
      *
@@ -159,27 +159,27 @@ module.exports = (options, eventEmitter, dataserve) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataserve/api/jsonFindByCriteria/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.post('/services/dataservice/api/jsonFindByCriteria/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
       const containerName = req.params.containerName;
       const criteria = req.body;
 
-      dataserve
+      dataservice
         .jsonFindByCriteria(containerName, criteria)
         .then((results) => res.status(200).json(results))
         .catch((err) => res.status(500).send(err.message));
     });
 
     /**
-     * GET /services/dataserve/api/status
-     * Returns the operational status of the data serving service.
+     * GET /services/dataservice/api/status
+     * Returns the operational status of the data service.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataserve/api/status', (req, res) => {
-      eventEmitter.emit('api-dataserve-status', 'dataserve api running');
-      res.status(200).json('dataserve api running');
+    app.get('/services/dataservice/api/status', (req, res) => {
+      eventEmitter.emit('api-dataservice-status', 'dataservice api running');
+      res.status(200).json('dataservice api running');
     });
   }
 };

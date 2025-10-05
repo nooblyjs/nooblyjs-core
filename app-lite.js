@@ -24,7 +24,7 @@ const authservice = serviceRegistry.authservice('memory');
 // Get other services
 const cache = serviceRegistry.cache('memory');
 const logger = serviceRegistry.logger('console');
-const dataServe = serviceRegistry.dataServe('memory');
+const dataService = serviceRegistry.dataService('memory');
 
 // Redirect root to services
 app.get('/', (req, res) => {

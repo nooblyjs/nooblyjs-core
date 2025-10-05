@@ -1,7 +1,7 @@
 /**
- * @fileoverview Load test for DocumentDB dataserve service performance.
+ * @fileoverview Load test for DocumentDB dataservice service performance.
  * 
- * This load test measures the performance of DocumentDB dataserve operations including
+ * This load test measures the performance of DocumentDB dataservice operations including
  * container creation, object addition, retrieval, searching, and removal operations.
  * Tests help identify performance bottlenecks and scalability limits.
  * 
@@ -12,18 +12,18 @@
 
 'use strict';
 
-const createDataserve = require('../../../src/dataserve');
+const createDataService = require('../../../src/dataservice');
 const EventEmitter = require('events');
 
 /**
- * Executes load test for DocumentDB dataserve service performance.
+ * Executes load test for DocumentDB dataservice service performance.
  * 
- * Runs a series of dataserve operations to measure performance
+ * Runs a series of dataservice operations to measure performance
  * characteristics of the DocumentDB provider under load.
  * 
  * @async
  * @function runDocumentDBLoadTest
- * @param {number} iterations - Number of dataserve operations to perform
+ * @param {number} iterations - Number of dataservice operations to perform
  * @param {Object} [options={}] - Configuration options for the DocumentDB provider
  * @returns {Promise<Object>} Test results including service, type, iterations, and duration
  */
@@ -40,23 +40,23 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
   console.log(`Host: ${documentDBOptions.host}:${documentDBOptions.port}`);
   console.log(`Database: ${documentDBOptions.database}`);
   
-  let dataserve;
+  let dataservice;
   
   try {
-    dataserve = createDataserve('documentdb', documentDBOptions, eventEmitter);
+    dataservice = createDataService('documentdb', documentDBOptions, eventEmitter);
     
     // Wait for connection to establish
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Test connection by trying to create a container
-    await dataserve.createContainer('connection_test');
+    await dataservice.createContainer('connection_test');
     console.log('[x] DocumentDB connection established');
     
   } catch (error) {
     console.error('[ ] DocumentDB connection failed:', error.message);
     if (error.message.includes('ECONNREFUSED') || error.message.includes('timeout')) {
       return {
-        service: 'dataserve',
+        service: 'dataservice',
         type: 'documentdb',
         iterations: 0,
         duration: 0,
@@ -71,7 +71,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
   
   const startTime = Date.now();
   const results = {
-    service: 'dataserve',
+    service: 'dataservice',
     type: 'documentdb',
     iterations,
     operations: {
@@ -87,7 +87,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     // Phase 1: Create container
     console.log('Phase 1: Creating container...');
     const createStartTime = Date.now();
-    await dataserve.createContainer(containerName);
+    await dataservice.createContainer(containerName);
     results.operations.createContainer.count = 1;
     results.operations.createContainer.duration = Date.now() - createStartTime;
 
@@ -110,7 +110,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
         }
       };
       
-      const key = await dataserve.add(containerName, testObject);
+      const key = await dataservice.add(containerName, testObject);
       objectKeys.push(key);
       results.operations.add.count++;
       
@@ -133,7 +133,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     
     for (let i = 0; i < getCount; i++) {
       const randomIndex = Math.floor(Math.random() * objectKeys.length);
-      await dataserve.getByUuid(containerName, objectKeys[randomIndex]);
+      await dataservice.getByUuid(containerName, objectKeys[randomIndex]);
       results.operations.get.count++;
     }
     
@@ -146,13 +146,13 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     
     const searchTerms = ['electronics', 'books', 'documentdb-load-test', 'DocumentDBTestObject1', 'tag0'];
     for (const term of searchTerms) {
-      await dataserve.find(containerName, term);
+      await dataservice.find(containerName, term);
       results.operations.find.count++;
     }
     
     // Test advanced search methods
-    await dataserve.jsonFindByPath(containerName, 'category', 'electronics');
-    await dataserve.jsonFindByCriteria(containerName, { 
+    await dataservice.jsonFindByPath(containerName, 'category', 'electronics');
+    await dataservice.jsonFindByCriteria(containerName, { 
       category: 'books',
       'metadata.source': 'load_test'
     });
@@ -168,7 +168,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     
     for (let i = 0; i < removeCount; i++) {
       const keyToRemove = objectKeys[i];
-      await dataserve.remove(containerName, keyToRemove);
+      await dataservice.remove(containerName, keyToRemove);
       results.operations.remove.count++;
       
       if (i % 10 === 0 && i > 0) {
@@ -191,7 +191,7 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
     results.avgRemoveTime = results.operations.remove.count > 0 ? results.operations.remove.duration / results.operations.remove.count : 0;
 
     // Get connection info
-    const connectionInfo = dataserve.provider.getConnectionInfo();
+    const connectionInfo = dataservice.provider.getConnectionInfo();
     results.connectionInfo = connectionInfo;
 
     console.log('DocumentDB DataServe Load Test Results:');
@@ -207,9 +207,9 @@ async function runDocumentDBLoadTest(iterations, options = {}) {
 
   } finally {
     // Clean up - close DocumentDB connection
-    if (dataserve && dataserve.provider && typeof dataserve.provider.close === 'function') {
+    if (dataservice && dataservice.provider && typeof dataservice.provider.close === 'function') {
       try {
-        await dataserve.provider.close();
+        await dataservice.provider.close();
         console.log('DocumentDB connection closed');
       } catch (error) {
         console.warn('Error closing DocumentDB connection:', error.message);

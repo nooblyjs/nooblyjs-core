@@ -331,11 +331,12 @@
 
             <!-- Offline Services Section -->
             <div class="service-section" id="offline-services-section" style="display: none;">
-                <div class="section-header">
+                <div class="section-header" style="cursor: pointer;" onclick="toggleOfflineSection()">
                     <h2 class="section-title">Offline Services</h2>
                     <span class="section-badge offline" id="offline-count">0</span>
+                    <span id="offline-section-toggle" style="margin-left: auto; font-size: 1.5rem;">▼</span>
                 </div>
-                <div class="services-grid" id="offline-services-list"></div>
+                <div class="services-grid" id="offline-services-list" style="display: none;"></div>
             </div>
         </main>
     </div>
@@ -391,7 +392,6 @@
 
             card.innerHTML = `
                 <div class="service-card-header">
-                    <i class="bi ${service.icon} service-icon"></i>
                     <div>
                         <h3 class="service-title">
                             <a href="/services/${service.path}/">${service.title}</a>
@@ -407,6 +407,22 @@
             `;
 
             return card;
+        }
+
+        // Toggle offline services section in dashboard
+        function toggleOfflineSection() {
+            const offlineList = document.getElementById('offline-services-list');
+            const toggleIcon = document.getElementById('offline-section-toggle');
+
+            if (offlineList && toggleIcon) {
+                if (offlineList.style.display === 'none') {
+                    offlineList.style.display = 'grid';
+                    toggleIcon.textContent = '▲';
+                } else {
+                    offlineList.style.display = 'none';
+                    toggleIcon.textContent = '▼';
+                }
+            }
         }
 
         // Initialize services

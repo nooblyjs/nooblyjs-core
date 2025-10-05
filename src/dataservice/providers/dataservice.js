@@ -1,5 +1,5 @@
 /**
- * @fileoverview In-memory DataServe provider for storing and searching JSON objects
+ * @fileoverview In-memory DataService provider for storing and searching JSON objects
  * with container-based organization and event emission support.
  * @author NooblyJS Team
  * @version 1.0.14
@@ -15,7 +15,7 @@ const { v4: uuidv4 } = require('uuid');
  * Provides methods for creating containers and storing, retrieving, and searching JSON objects.
  * @class
  */
-class InMemoryDataServeProvider {
+class InMemoryDataServiceProvider {
   /**
    * Initializes the in-memory data storage provider.
    * @param {Object=} options Configuration options (unused in this implementation).
@@ -40,7 +40,7 @@ class InMemoryDataServeProvider {
     }
     this.containers.set(containerName, new Map());
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:createContainer', { containerName });
+      this.eventEmitter_.emit('api-dataservice-createContainer', { containerName });
   }
 
   /**
@@ -57,7 +57,7 @@ class InMemoryDataServeProvider {
     const objectKey = uuidv4();
     this.containers.get(containerName).set(objectKey, jsonObject);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:add', {
+      this.eventEmitter_.emit('api-dataservice-add', {
         containerName,
         objectKey,
         jsonObject,
@@ -77,7 +77,7 @@ class InMemoryDataServeProvider {
     }
     const obj = this.containers.get(containerName).get(objectKey);
     if (obj && this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:getByUuid', { containerName, objectKey, obj });
+      this.eventEmitter_.emit('api-dataservice-getByUuid', { containerName, objectKey, obj });
     return obj || null;
   }
 
@@ -93,7 +93,7 @@ class InMemoryDataServeProvider {
     }
     const removed = this.containers.get(containerName).delete(objectKey);
     if (removed && this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:remove', { containerName, objectKey });
+      this.eventEmitter_.emit('api-dataservice-remove', { containerName, objectKey });
     return removed;
   }
 
@@ -107,7 +107,7 @@ class InMemoryDataServeProvider {
   async find(containerName, searchTerm) {
     if (!this.containers.has(containerName)) {
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('dataserve:find', {
+        this.eventEmitter_.emit('api-dataservice-find', {
           containerName,
           searchTerm,
           results: [],
@@ -142,7 +142,7 @@ class InMemoryDataServeProvider {
       }
     }
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('dataserve:find', {
+      this.eventEmitter_.emit('api-dataservice-find', {
         containerName,
         searchTerm,
         results,
@@ -151,4 +151,4 @@ class InMemoryDataServeProvider {
   }
 }
 
-module.exports = InMemoryDataServeProvider;
+module.exports = InMemoryDataServiceProvider;
