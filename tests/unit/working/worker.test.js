@@ -36,6 +36,8 @@ describe('WorkerProvider', () => {
     if (workerInstance && workerInstance.stop) {
       workerInstance.stop(); // Ensure worker is stopped after each test
     }
+    // Reset the singleton instance for next test
+    getWorkerInstance._reset();
   });
 
   it('should be a singleton', () => {
@@ -69,10 +71,12 @@ describe('WorkerProvider', () => {
     expect(workerInstanceMock.postMessage).toHaveBeenCalledWith({
       type: 'start',
       scriptPath: mockScriptPath,
+      data: {}
     });
     expect(await workerInstance.getStatus()).toBe('idle'); // Status is updated by message from worker
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('worker:start', {
       scriptPath: mockScriptPath,
+      data: {}
     });
   });
 

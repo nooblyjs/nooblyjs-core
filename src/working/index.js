@@ -64,4 +64,12 @@ function getWorkerInstance(type, options, eventEmitter) {
   return instance;
 }
 
+/**
+ * Reset the singleton instance (primarily for testing)
+ * @private
+ */
+getWorkerInstance._reset = function() {
+  instance = null;
+};
+
 module.exports = getWorkerInstance;

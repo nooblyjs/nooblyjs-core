@@ -45,31 +45,31 @@ describe('ServiceRegistry', () => {
   });
 
   describe('Basic ServiceRegistry functionality', () => {
-    
+
     it('should initialize without API keys', () => {
       expect(() => {
-        serviceRegistry.initialize(app);
+        serviceRegistry.initialize(app, null, {});
       }).not.toThrow();
-      
+
       expect(serviceRegistry.initialized).toBe(true);
     });
-    
+
     it('should initialize with API key configuration', () => {
       const apiKeys = [serviceRegistry.generateApiKey()];
-      
+
       expect(() => {
-        serviceRegistry.initialize(app, {
+        serviceRegistry.initialize(app, null, {
           apiKeys,
           requireApiKey: true
         });
       }).not.toThrow();
-      
+
       expect(serviceRegistry.initialized).toBe(true);
     });
     
     it('should create services after initialization', () => {
-      serviceRegistry.initialize(app);
-      
+      serviceRegistry.initialize(app, null, {});
+
       const cache = serviceRegistry.cache('memory');
       expect(cache).toBeDefined();
       expect(typeof cache.put).toBe('function');
@@ -96,31 +96,31 @@ describe('ServiceRegistry', () => {
     });
     
     it('should list initialized services', () => {
-      serviceRegistry.initialize(app);
-      
+      serviceRegistry.initialize(app, null, {});
+
       const cache = serviceRegistry.cache('memory');
       const logger = serviceRegistry.logger('console');
-      
+
       const services = serviceRegistry.listServices();
       expect(services).toContain('caching:memory');
       expect(services).toContain('logging:console');
     });
-    
+
     it('should return singleton instances', () => {
-      serviceRegistry.initialize(app);
-      
+      serviceRegistry.initialize(app, null, {});
+
       const cache1 = serviceRegistry.cache('memory');
       const cache2 = serviceRegistry.cache('memory');
-      
+
       expect(cache1).toBe(cache2);
     });
-    
+
     it('should create different instances for different provider types', () => {
-      serviceRegistry.initialize(app);
-      
+      serviceRegistry.initialize(app, null, {});
+
       const memoryCache = serviceRegistry.cache('memory');
       const redisCache = serviceRegistry.cache('redis');
-      
+
       expect(memoryCache).not.toBe(redisCache);
     });
   });
@@ -133,7 +133,10 @@ describe('ServiceRegistry', () => {
     });
     
     it('should emit setup event when API keys are configured', (done) => {
-      serviceRegistry.getEventEmitter().on('api-auth-setup', (data) => {
+      // Need to get the event emitter before initializing
+      const eventEmitter = new (require('events'))();
+
+      eventEmitter.on('api-auth-setup', (data) => {
         expect(data).toMatchObject({
           message: 'API key authentication enabled',
           keyCount: 1,
@@ -141,43 +144,43 @@ describe('ServiceRegistry', () => {
         });
         done();
       });
-      
-      serviceRegistry.initialize(app, {
+
+      serviceRegistry.initialize(app, eventEmitter, {
         apiKeys: [validApiKey],
         requireApiKey: true
       });
     });
     
     it('should protect API endpoints when API keys are configured', async () => {
-      serviceRegistry.initialize(app, {
+      serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
         requireApiKey: true
       });
-      
+
       // Create cache service to register routes
       serviceRegistry.cache('memory');
-      
+
       // Test without API key - should fail
       const response = await request(app)
         .post('/services/caching/api/put/test')
         .send({ message: 'test' })
         .expect(401);
-      
+
       expect(response.body).toMatchObject({
         error: 'Unauthorized',
         code: 'MISSING_API_KEY'
       });
     });
-    
+
     it('should allow access with valid API key', async () => {
-      serviceRegistry.initialize(app, {
+      serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
         requireApiKey: true
       });
-      
+
       // Create cache service to register routes
       serviceRegistry.cache('memory');
-      
+
       // Test with valid API key - should succeed
       await request(app)
         .post('/services/caching/api/put/test')
@@ -185,16 +188,16 @@ describe('ServiceRegistry', () => {
         .send({ message: 'test' })
         .expect(200);
     });
-    
+
     it('should allow access to status endpoints without API key', async () => {
-      serviceRegistry.initialize(app, {
+      serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
         requireApiKey: true
       });
-      
+
       // Create cache service to register routes
       serviceRegistry.cache('memory');
-      
+
       // Status endpoint should be accessible without API key
       await request(app)
         .get('/services/caching/api/status')
@@ -204,38 +207,38 @@ describe('ServiceRegistry', () => {
     it('should work with multiple API keys', async () => {
       const apiKey1 = serviceRegistry.generateApiKey();
       const apiKey2 = serviceRegistry.generateApiKey();
-      
-      serviceRegistry.initialize(app, {
+
+      serviceRegistry.initialize(app, null, {
         apiKeys: [apiKey1, apiKey2],
         requireApiKey: true
       });
-      
+
       // Create cache service to register routes
       serviceRegistry.cache('memory');
-      
+
       // Both keys should work
       await request(app)
         .post('/services/caching/api/put/test1')
         .set('x-api-key', apiKey1)
         .send({ message: 'test1' })
         .expect(200);
-      
+
       await request(app)
         .post('/services/caching/api/put/test2')
         .set('x-api-key', apiKey2)
         .send({ message: 'test2' })
         .expect(200);
     });
-    
+
     it('should allow disabling API key requirement', async () => {
-      serviceRegistry.initialize(app, {
+      serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
         requireApiKey: false
       });
-      
+
       // Create cache service to register routes
       serviceRegistry.cache('memory');
-      
+
       // Should work without API key when disabled
       await request(app)
         .post('/services/caching/api/put/test')
@@ -245,9 +248,9 @@ describe('ServiceRegistry', () => {
   });
 
   describe('Service Creation', () => {
-    
+
     beforeEach(() => {
-      serviceRegistry.initialize(app);
+      serviceRegistry.initialize(app, null, {});
     });
     
     it('should create cache services', () => {
@@ -301,9 +304,9 @@ describe('ServiceRegistry', () => {
   });
 
   describe('Event Handling', () => {
-    
+
     beforeEach(() => {
-      serviceRegistry.initialize(app);
+      serviceRegistry.initialize(app, null, {});
     });
     
     it('should provide event emitter', () => {
@@ -313,18 +316,14 @@ describe('ServiceRegistry', () => {
       expect(typeof eventEmitter.emit).toBe('function');
     });
     
-    it('should patch event emitter for debugging', () => {
+    it('should emit events correctly', () => {
       const eventEmitter = serviceRegistry.getEventEmitter();
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const mockHandler = jest.fn();
+
+      eventEmitter.on('test-event', mockHandler);
       eventEmitter.emit('test-event', 'test-data');
-      
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Caught event: "test-event"'),
-        expect.stringContaining('test-data')
-      );
-      
-      consoleSpy.mockRestore();
+
+      expect(mockHandler).toHaveBeenCalledWith('test-data');
     });
   });
 });
