@@ -314,7 +314,7 @@ describe('DataService', () => {
       mockSimpleDB.deleteAttributes.mockClear();
       mockSimpleDB.select.mockClear();
       
-      simpleDbDataService = createDataserveService(
+      simpleDbDataService = createDataServiceService(
         'simpledb',
         {
           region: mockRegion,

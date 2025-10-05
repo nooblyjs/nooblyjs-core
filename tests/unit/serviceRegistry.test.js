@@ -267,10 +267,10 @@ describe('ServiceRegistry', () => {
     });
     
     it('should create dataservice services', () => {
-      const dataServe = serviceRegistry.dataServe('memory');
-      expect(dataServe).toBeDefined();
-      
-      const fileDataService = serviceRegistry.dataServe('file');
+      const dataService = serviceRegistry.dataService('memory');
+      expect(dataService).toBeDefined();
+
+      const fileDataService = serviceRegistry.dataService('file');
       expect(fileDataService).toBeDefined();
     });
     

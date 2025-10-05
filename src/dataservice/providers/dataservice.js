@@ -36,7 +36,7 @@ class InMemoryDataServiceProvider {
    */
   async createContainer(containerName) {
     if (this.containers.has(containerName)) {
-      return;
+      throw new Error(`Container '${containerName}' already exists.`);
     }
     this.containers.set(containerName, new Map());
     if (this.eventEmitter_)

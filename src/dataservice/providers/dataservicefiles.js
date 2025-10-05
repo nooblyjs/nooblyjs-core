@@ -96,7 +96,7 @@ class FileDataRingProvider {
     const containerFilePath = path.join(this.baseDir, `${containerName}.json`);
     try {
       await fs.access(containerFilePath);
-      return;
+      throw new Error(`Container '${containerName}' already exists.`);
     } catch (error) {
       if (error.code === 'ENOENT') {
         // Container does not exist, create an empty file for it
