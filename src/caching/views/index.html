@@ -1388,6 +1388,9 @@
 
         // Initialize Swagger UI - Proper embedded implementation
         document.addEventListener('DOMContentLoaded', function() {
+
+             checkStatus();
+             
             // Ensure Swagger UI dependencies are loaded
             if (typeof SwaggerUIBundle === 'undefined') {
                 console.error('SwaggerUIBundle not loaded');
