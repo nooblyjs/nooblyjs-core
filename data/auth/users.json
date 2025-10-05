@@ -1,21 +1,11 @@
 {
   "admin": {
-    "id": "x8qsdvp30mfqw75bl",
+    "id": "kuumewurrmgd8g0gl",
     "username": "admin",
     "email": "admin@localhost",
-    "password": "25dbfaa6c1494b25f571f373831710d1f6eb32c53eec845783c2a3a28751f6d9",
+    "password": "063f2fa2843785a01385aa2b86afe6b6c86268b0de03823f9f9f3d0494d96602",
     "role": "admin",
-    "createdAt": "2025-09-19T13:45:46.930Z",
-    "lastLogin": null,
-    "isActive": true
-  },
-  "stephenrbooysen@gmail.com": {
-    "id": "ubv6h51romgd6921q",
-    "username": "stephenrbooysen@gmail.com",
-    "email": "stephenrbooysen@gmail.com",
-    "password": "daf5fcfbaf58837078387d0ad0ad400380f75920ee8532705ca795513dd39434",
-    "role": "user",
-    "createdAt": "2025-10-05T03:58:08.031Z",
+    "createdAt": "2025-10-05T04:59:31.797Z",
     "lastLogin": null,
     "isActive": true
   }

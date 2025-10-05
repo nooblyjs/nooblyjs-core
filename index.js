@@ -456,7 +456,7 @@ class ServiceRegistry {
    * @param {boolean} options.createDefaultAdmin - Create default admin user (for memory provider)
    * @returns {Object} Auth service instance
    */
-  authservice(providerType = 'file', options = {}) {
+  authservice(providerType = 'memory', options = {}) {
     return this.getService('authservice', providerType, options);
   }
 

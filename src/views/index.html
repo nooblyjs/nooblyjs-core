@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noobly JS Service Registry</title>
+    <title>Noobly JS - Service Registry</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* Custom CSS for professional look */
         :root {
             --custom-primary: #0066cc;
             --custom-secondary: #6c757d;
@@ -17,22 +16,46 @@
 
         body {
             background-color: #f8f9fa;
+            margin: 0;
         }
 
         .sidebar {
             background-color: white;
             border-right: 1px solid #dee2e6;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .logo {
             color: var(--custom-primary);
             border-bottom: 1px solid #dee2e6;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo .subtitle {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
         }
 
         .nav-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #212529;
+            text-decoration: none;
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
+            border-bottom: 1px solid #f8f9fa;
         }
 
         .nav-item:hover {
@@ -47,7 +70,43 @@
             border-left-color: #0052a3;
         }
 
+        .main-content {
+            background-color: white;
+            min-height: 100vh;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1rem;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .page-subtitle {
+            margin: 0.5rem 0 0 0;
+            color: #6c757d;
+            font-size: 1.125rem;
+        }
+
+        .app-container {
+            display: flex;
+        }
+
         .service-card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             transition: all 0.3s ease;
         }
 
@@ -56,11 +115,46 @@
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
 
+        .service-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            color: var(--custom-primary);
+        }
+
+        .service-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .service-title a {
+            color: #212529;
+            text-decoration: none;
+        }
+
+        .service-title a:hover {
+            color: var(--custom-primary);
+        }
+
+        .service-status {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
+            margin-right: 0.5rem;
         }
 
         .status-indicator.running {
@@ -71,86 +165,116 @@
             background-color: var(--custom-danger);
         }
 
-        .main-content {
-            background-color: white;
-            min-height: 100vh;
+        .status-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .status-text.running {
+            color: var(--custom-success);
+        }
+
+        .status-text.stopped {
+            color: var(--custom-danger);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .logout-section {
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+            margin-top: auto;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .user-info small {
+            display: block;
+            color: #6c757d;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-info strong {
+            font-size: 0.875rem;
+            color: #212529;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+            width: 100%;
+        }
+
+        .btn-danger {
+            color: white;
+            background-color: var(--custom-danger);
+            border-color: var(--custom-danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
         }
     </style>
 </head>
 <body>
-    <div class="d-flex">
-        <!-- Sidebar -->
-        <nav class="sidebar d-flex flex-column p-0" style="width: 280px; min-height: 100vh;">
-            <div class="logo p-4">
-                <h4 class="fw-bold mb-1">Noobly JS</h4>
-                <small class="text-muted">Service Registry</small>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Noobly JS</h1>
+                <div class="subtitle">Service Registry</div>
             </div>
+            <a href="/services/" class="nav-item active">Home</a>
+            <a href="/services/ai/" class="nav-item">AI Service</a>
+            <a href="/services/authservice/" class="nav-item">Authentication</a>
+            <a href="/services/caching/" class="nav-item">Cache Management</a>
+            <a href="/services/dataserve/" class="nav-item">Data Serve</a>
+            <a href="/services/filing/" class="nav-item">File Management</a>
+            <a href="/services/logging/" class="nav-item">Logging</a>
+            <a href="/services/measuring/" class="nav-item">Measuring</a>
+            <a href="/services/notifying/" class="nav-item">Notifications</a>
+            <a href="/services/queueing/" class="nav-item">Queue Management</a>
+            <a href="/services/scheduling/" class="nav-item">Scheduling</a>
+            <a href="/services/searching/" class="nav-item">Search</a>
+            <a href="/services/working/" class="nav-item">Background Tasks</a>
+            <a href="/services/workflow/" class="nav-item">Workflows</a>
 
-            <div class="flex-grow-1">
-                <a href="/services/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark active">
-                    <i class="bi bi-house-door-fill"></i> Home
-                </a>
-                <a href="/services/ai/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-robot"></i> AI Service
-                </a>
-                <a href="/services/authservice/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-lock-fill"></i> Authentication
-                </a>
-                <a href="/services/caching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-server"></i> Cache Management
-                </a>
-                <a href="/services/dataserve/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-bar-chart-line-fill"></i> Data Serve
-                </a>
-                <a href="/services/filing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-folder-fill"></i> File Management
-                </a>
-                <a href="/services/logging/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-journal-text"></i> Logging
-                </a>
-                <a href="/services/measuring/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-graph-up"></i> Measuring
-                </a>
-                <a href="/services/notifying/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-bell-fill"></i> Notifications
-                </a>
-                <a href="/services/queueing/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-rocket-takeoff-fill"></i> Queue Management
-                </a>
-                <a href="/services/scheduling/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-alarm-fill"></i> Scheduling
-                </a>
-                <a href="/services/searching/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-search"></i> Search
-                </a>
-                <a href="/services/working/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-gear-fill"></i> Background Tasks
-                </a>
-                <a href="/services/workflow/" class="nav-item d-block px-4 py-3 text-decoration-none text-dark">
-                    <i class="bi bi-arrow-repeat"></i> Workflows
-                </a>
-            </div>
-
-            <div class="p-4 border-top">
-                <div id="user-info" class="mb-3 text-center">
-                    <small class="text-muted">Logged in as:</small><br>
+            <div class="logout-section">
+                <div class="user-info">
+                    <small>Logged in as:</small>
                     <strong id="username-display">Loading...</strong>
                 </div>
-                <button id="logout-btn" class="btn btn-outline-danger w-100 mb-2">
+                <button id="logout-btn" class="btn btn-danger">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
-                <a href="/" class="btn btn-outline-primary w-100"><i class="bi bi-arrow-left"></i> Back to Home</a>
             </div>
         </nav>
 
-        <!-- Main Content -->
-        <main class="main-content flex-grow-1 p-4">
-            <div class="mb-4">
-                <h1 class="display-6 fw-bold text-primary mb-2">Service Registry</h1>
-                <p class="lead text-muted">A dashboard of all available services and their current status.</p>
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Service Registry Dashboard</h1>
+                <p class="page-subtitle">Overview of all available services and their current status</p>
             </div>
 
-            <div class="row" id="service-list">
+            <div class="services-grid" id="service-list">
                 <!-- Services will be dynamically added here -->
             </div>
         </main>
@@ -158,69 +282,43 @@
 
     <script>
         const services = [
-            { name: 'aiservice', icon: '<i class="bi bi-robot"></i>', title: 'AI Service' },
-            { name: 'authservice', icon: '<i class="bi bi-lock-fill"></i>', title: 'Authentication' },
-            { name: 'caching', icon: '<i class="bi bi-server"></i>', title: 'Cache Management' },
-            { name: 'dataserve', icon: '<i class="bi bi-bar-chart-line-fill"></i>', title: 'Data Serve' },
-            { name: 'filing', icon: '<i class="bi bi-folder-fill"></i>', title: 'File Management' },
-            { name: 'logging', icon: '<i class="bi bi-journal-text"></i>', title: 'Logging' },
-            { name: 'measuring', icon: '<i class="bi bi-graph-up"></i>', title: 'Measuring' },
-            { name: 'notifying', icon: '<i class="bi bi-bell-fill"></i>', title: 'Notifications' },
-            { name: 'queueing', icon: '<i class="bi bi-rocket-takeoff-fill"></i>', title: 'Queue Management' },
-            { name: 'scheduling', icon: '<i class="bi bi-alarm-fill"></i>', title: 'Scheduling' },
-            { name: 'searching', icon: '<i class="bi bi-search"></i>', title: 'Search' },
-            { name: 'workflow', icon: '<i class="bi bi-arrow-repeat"></i>', title: 'Workflows' },
-            { name: 'working', icon: '<i class="bi bi-gear-fill"></i>', title: 'Background Tasks' }
+            { name: 'ai', icon: 'bi-robot', title: 'AI Service' },
+            { name: 'authservice', icon: 'bi-lock-fill', title: 'Authentication' },
+            { name: 'caching', icon: 'bi-server', title: 'Cache Management' },
+            { name: 'dataserve', icon: 'bi-database', title: 'Data Serve' },
+            { name: 'filing', icon: 'bi-folder-fill', title: 'File Management' },
+            { name: 'logging', icon: 'bi-journal-text', title: 'Logging' },
+            { name: 'measuring', icon: 'bi-graph-up', title: 'Measuring' },
+            { name: 'notifying', icon: 'bi-bell-fill', title: 'Notifications' },
+            { name: 'queueing', icon: 'bi-list-task', title: 'Queue Management' },
+            { name: 'scheduling', icon: 'bi-alarm-fill', title: 'Scheduling' },
+            { name: 'searching', icon: 'bi-search', title: 'Search' },
+            { name: 'workflow', icon: 'bi-diagram-3-fill', title: 'Workflows' },
+            { name: 'working', icon: 'bi-gear-fill', title: 'Background Tasks' }
         ];
 
         const serviceList = document.getElementById('service-list');
 
         services.forEach(service => {
-            const serviceCol = document.createElement('div');
-            serviceCol.className = 'col-lg-4 col-md-6 mb-4';
-
             const serviceCard = document.createElement('div');
-            serviceCard.className = 'card service-card h-100 shadow-sm';
+            serviceCard.className = 'service-card';
 
-            const cardBody = document.createElement('div');
-            cardBody.className = 'card-body d-flex align-items-center';
+            serviceCard.innerHTML = `
+                <div class="service-card-header">
+                    <i class="bi ${service.icon} service-icon"></i>
+                    <div>
+                        <h3 class="service-title">
+                            <a href="/services/${service.name}/">${service.title}</a>
+                        </h3>
+                    </div>
+                </div>
+                <div class="service-status">
+                    <span class="status-indicator" id="status-${service.name}"></span>
+                    <span class="status-text" id="status-text-${service.name}">Checking...</span>
+                </div>
+            `;
 
-            const serviceIcon = document.createElement('div');
-            serviceIcon.className = 'me-3';
-            serviceIcon.style.fontSize = '2rem';
-            serviceIcon.innerHTML = service.icon;
-
-            const serviceInfo = document.createElement('div');
-            serviceInfo.className = 'flex-grow-1';
-
-            const serviceName = document.createElement('h5');
-            serviceName.className = 'card-title mb-1';
-            serviceName.innerHTML = `<a href="/services/${service.name}/" class="text-decoration-none text-dark">${service.title}</a>`;
-
-            const serviceStatus = document.createElement('div');
-            serviceStatus.className = 'd-flex align-items-center';
-
-            const statusIndicator = document.createElement('span');
-            statusIndicator.className = 'status-indicator me-2';
-            statusIndicator.id = `status-${service.name}`;
-
-            const statusText = document.createElement('small');
-            statusText.className = 'text-muted';
-            statusText.id = `status-text-${service.name}`;
-            statusText.textContent = 'Checking...';
-
-            serviceStatus.appendChild(statusIndicator);
-            serviceStatus.appendChild(statusText);
-
-            serviceInfo.appendChild(serviceName);
-            serviceInfo.appendChild(serviceStatus);
-
-            cardBody.appendChild(serviceIcon);
-            cardBody.appendChild(serviceInfo);
-
-            serviceCard.appendChild(cardBody);
-            serviceCol.appendChild(serviceCard);
-            serviceList.appendChild(serviceCol);
+            serviceList.appendChild(serviceCard);
 
             // Fetch status
             fetch(`/services/${service.name}/api/status`)
@@ -228,36 +326,28 @@
                     if (response.ok) {
                         return response.json();
                     } else {
-                        throw new Error('Network response was not ok.');
+                        throw new Error('Service unavailable');
                     }
                 })
                 .then(data => {
                     const indicator = document.getElementById(`status-${service.name}`);
                     const statusText = document.getElementById(`status-text-${service.name}`);
-                    if (data) {
-                        indicator.classList.add('running');
-                        statusText.textContent = 'Running';
-                        statusText.className = 'small text-success';
-                    } else {
-                        indicator.classList.add('stopped');
-                        statusText.textContent = 'Stopped';
-                        statusText.className = 'small text-danger';
-                    }
+                    indicator.classList.add('running');
+                    statusText.textContent = 'Running';
+                    statusText.classList.add('running');
                 })
                 .catch(error => {
                     const indicator = document.getElementById(`status-${service.name}`);
                     const statusText = document.getElementById(`status-text-${service.name}`);
                     indicator.classList.add('stopped');
-                    statusText.textContent = 'Error';
-                    statusText.className = 'small text-danger';
-                    console.error(`Error fetching status for ${service.name}:`, error);
+                    statusText.textContent = 'Unavailable';
+                    statusText.classList.add('stopped');
                 });
         });
 
         // Initialize user info and logout functionality
         function initializeAuth() {
             const currentUser = localStorage.getItem('currentUser');
-            const authToken = localStorage.getItem('authToken');
 
             if (currentUser) {
                 try {
@@ -285,15 +375,13 @@
 
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentUser');
-                window.location.href = '/login.html';
+                window.location.href = '/services/authservice/views/login.html';
             });
         }
 
-        // Initialize authentication when page loads
         initializeAuth();
     </script>
 
-    <!-- Bootstrap 5 JavaScript Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

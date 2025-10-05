@@ -149,7 +149,7 @@ function createServicesAuthMiddleware(serviceRegistry) {
  */
 function redirectToLogin(req, res) {
   const returnUrl = encodeURIComponent(req.originalUrl);
-  res.redirect(`/login.html?returnUrl=${returnUrl}`);
+  res.redirect(`/services/authservice/views/login.html?returnUrl=${returnUrl}`);
 }
 
 module.exports = { createServicesAuthMiddleware };
