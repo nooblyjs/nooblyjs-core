@@ -1300,158 +1300,311 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
             // Check service status first
+            checkStatus();
             checkServiceStatus();
+            checkStatus();
 
+            checkStatus();
             // Check status of all providers
+            checkStatus();
             ['claude', 'chatgpt', 'ollama'].forEach(checkProviderStatus);
+            checkStatus();
 
+            checkStatus();
             // Load initial analytics
+            checkStatus();
             loadAnalytics();
+            checkStatus();
 
+            checkStatus();
             // Auto-refresh analytics every 30 seconds
+            checkStatus();
             setInterval(loadAnalytics, 30000);
+            checkStatus();
         });
+            checkStatus();
 
+            checkStatus();
         // Swagger UI setup
+            checkStatus();
         const spec = {
+            checkStatus();
             openapi: '3.0.0',
+            checkStatus();
             info: {
+            checkStatus();
                 title: 'AI Service API',
+            checkStatus();
                 description: 'REST API for AI service operations with multiple provider support',
+            checkStatus();
                 version: '1.0.0'
+            checkStatus();
             },
+            checkStatus();
             servers: [
+            checkStatus();
                 { url: '/services/ai/api', description: 'AI Service API' }
+            checkStatus();
             ],
+            checkStatus();
             paths: {
+            checkStatus();
                 '/prompt': {
+            checkStatus();
                     post: {
+            checkStatus();
                         summary: 'Send prompt to AI',
+            checkStatus();
                         description: 'Send a prompt to the configured AI provider and get a response',
+            checkStatus();
                         requestBody: {
+            checkStatus();
                             required: true,
+            checkStatus();
                             content: {
+            checkStatus();
                                 'application/json': {
+            checkStatus();
                                     schema: {
+            checkStatus();
                                         type: 'object',
+            checkStatus();
                                         properties: {
+            checkStatus();
                                             prompt: { type: 'string', example: 'Explain quantum computing' },
+            checkStatus();
                                             options: {
+            checkStatus();
                                                 type: 'object',
+            checkStatus();
                                                 properties: {
+            checkStatus();
                                                     maxTokens: { type: 'integer', example: 1000 },
+            checkStatus();
                                                     temperature: { type: 'number', example: 0.7 }
+            checkStatus();
                                                 }
+            checkStatus();
                                             }
+            checkStatus();
                                         },
+            checkStatus();
                                         required: ['prompt']
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         },
+            checkStatus();
                         responses: {
+            checkStatus();
                             '200': {
+            checkStatus();
                                 description: 'AI response received',
+            checkStatus();
                                 content: {
+            checkStatus();
                                     'application/json': {
+            checkStatus();
                                         schema: {
+            checkStatus();
                                             type: 'object',
+            checkStatus();
                                             properties: {
+            checkStatus();
                                                 content: { type: 'string' },
+            checkStatus();
                                                 usage: {
+            checkStatus();
                                                     type: 'object',
+            checkStatus();
                                                     properties: {
+            checkStatus();
                                                         promptTokens: { type: 'integer' },
+            checkStatus();
                                                         completionTokens: { type: 'integer' },
+            checkStatus();
                                                         totalTokens: { type: 'integer' }
+            checkStatus();
                                                     }
+            checkStatus();
                                                 },
+            checkStatus();
                                                 model: { type: 'string' },
+            checkStatus();
                                                 provider: { type: 'string' }
+            checkStatus();
                                             }
+            checkStatus();
                                         }
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         }
+            checkStatus();
                     }
+            checkStatus();
                 },
+            checkStatus();
                 '/status': {
+            checkStatus();
                     get: {
+            checkStatus();
                         summary: 'Service status',
+            checkStatus();
                         description: 'Check if the AI service is running',
+            checkStatus();
                         responses: {
+            checkStatus();
                             '200': {
+            checkStatus();
                                 description: 'Service status',
+            checkStatus();
                                 content: {
+            checkStatus();
                                     'application/json': {
+            checkStatus();
                                         schema: { type: 'object' }
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         }
+            checkStatus();
                     }
+            checkStatus();
                 },
+            checkStatus();
                 '/analytics': {
+            checkStatus();
                     get: {
+            checkStatus();
                         summary: 'Usage analytics',
+            checkStatus();
                         description: 'Get AI service usage statistics',
+            checkStatus();
                         responses: {
+            checkStatus();
                             '200': {
+            checkStatus();
                                 description: 'Analytics data',
+            checkStatus();
                                 content: {
+            checkStatus();
                                     'application/json': {
+            checkStatus();
                                         schema: { type: 'object' }
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         }
+            checkStatus();
                     }
+            checkStatus();
                 },
+            checkStatus();
                 '/models': {
+            checkStatus();
                     get: {
+            checkStatus();
                         summary: 'Available models',
+            checkStatus();
                         description: 'List available models (Ollama provider)',
+            checkStatus();
                         responses: {
+            checkStatus();
                             '200': {
+            checkStatus();
                                 description: 'List of models',
+            checkStatus();
                                 content: {
+            checkStatus();
                                     'application/json': {
+            checkStatus();
                                         schema: { type: 'object' }
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         }
+            checkStatus();
                     }
+            checkStatus();
                 },
+            checkStatus();
                 '/health': {
+            checkStatus();
                     get: {
+            checkStatus();
                         summary: 'Health check',
+            checkStatus();
                         description: 'Check provider health status',
+            checkStatus();
                         responses: {
+            checkStatus();
                             '200': {
+            checkStatus();
                                 description: 'Health status',
+            checkStatus();
                                 content: {
+            checkStatus();
                                     'application/json': {
+            checkStatus();
                                         schema: {
+            checkStatus();
                                             type: 'object',
+            checkStatus();
                                             properties: {
+            checkStatus();
                                                 healthy: { type: 'boolean' },
+            checkStatus();
                                                 provider: { type: 'string' }
+            checkStatus();
                                             }
+            checkStatus();
                                         }
+            checkStatus();
                                     }
+            checkStatus();
                                 }
+            checkStatus();
                             }
+            checkStatus();
                         }
+            checkStatus();
                     }
+            checkStatus();
                 }
+            checkStatus();
             }
+            checkStatus();
         };
+            checkStatus();
 
+            checkStatus();
         // Initialize Swagger UI - Proper embedded implementation
+            checkStatus();
         document.addEventListener('DOMContentLoaded', function() {
+            checkStatus();
             // Ensure Swagger UI dependencies are loaded
             if (typeof SwaggerUIBundle === 'undefined') {
                 console.error('SwaggerUIBundle not loaded');

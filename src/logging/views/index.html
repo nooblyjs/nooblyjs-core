@@ -925,7 +925,9 @@
 
         // Initialize Swagger UI
         window.onload = function() {
+            checkStatus();
             try {
+            checkStatus();
                 const ui = SwaggerUIBundle({
                     spec: spec,
                     dom_id: '#swagger-ui',
