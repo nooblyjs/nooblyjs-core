@@ -31,8 +31,8 @@ app.get('/', (req, res) => {
   res.redirect('/services');
 });
 
-app.listen(9001, () => {
-  logger.info('Server running on port 9001');
+app.listen(3001, () => {
+  logger.info('Server running on port 3001');
   logger.info('Visit: http://localhost:9001/ (redirects to /services)');
   logger.info('Login page at: http://localhost:9001/services/authservice/views/login.html');
   logger.info('Register page at: http://localhost:9001/services/authservice/views/register.html');
