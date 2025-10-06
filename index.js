@@ -1,18 +1,17 @@
 /**
  * @fileoverview NooblyJS Core - Service Registry
- * A powerful set of modular Node.js backend services with singleton pattern.
+ * This is the container of all the services. It manages the various dependancies of the services
  */
 
 const EventEmitter = require('events');
 const express = require('express');
 const path = require('path');
-const {
-  createApiKeyAuthMiddleware,
-  generateApiKey,
-} = require('./src/middleware/apiKeyAuth');
+
+const { createApiKeyAuthMiddleware, generateApiKey} = require('./src/middleware/apiKeyAuth');
 const { createServicesAuthMiddleware } = require('./src/middleware/servicesAuth');
 
 class ServiceRegistry {
+
   constructor() {
     this.services = new Map();
     this.serviceDependencies = new Map();
@@ -28,6 +27,8 @@ class ServiceRegistry {
    * @param {Object} globalOptions - Global configuration options
    */
   initialize(expressApp, eventEmitter, globalOptions = {}) {
+
+    // Prevent re-initialization
     if (this.initialized) {
       return this;
     }
@@ -35,12 +36,11 @@ class ServiceRegistry {
     // Assign the express app
     this.expressApp = expressApp;
 
-    // Assign the Event Emitter
-    if (!eventEmitter) {
-      eventEmitter = new EventEmitter();
+    // Assign the Event Emitter if its passed
+    if (eventEmitter) {
+      this.eventEmitter = eventEmitter;    
     } 
-    this.eventEmitter = eventEmitter;
-    
+
     // Assign the passed global options
     this.globalOptions = {
       'express-app': expressApp,
@@ -97,11 +97,6 @@ class ServiceRegistry {
       express.static(path.join(__dirname, 'src/views')),
     );
 
-    // Serve the service registry landing page
-    this.expressApp.get('/services/documentation', (req, res) => {
-      res.sendFile(path.join(__dirname, './jsdoc', 'index.html'));
-    });
-
     this.initialized = true;
     return this;
   }
@@ -150,6 +145,7 @@ class ServiceRegistry {
       message: 'Service dependency hierarchy initialized',
       dependencies: Object.fromEntries(this.serviceDependencies)
     });
+    
   }
 
   /**
