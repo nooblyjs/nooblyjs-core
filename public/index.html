@@ -506,17 +506,14 @@
             const navMenu = document.getElementById('nav-menu');
 
             if (navMenu) {
-                // Replace login with dashboard and logout
+                // Replace login with logout
                 const authLinksHtml = `
-                    <li class="nav-item">
-                        <a href="/services" class="nav-link">Dashboard</a>
-                    </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" onclick="logout()">Logout (${user.username})</a>
                     </li>
                 `;
 
-                // Remove login link and add dashboard/logout
+                // Remove login link and add logout
                 navMenu.innerHTML = navMenu.innerHTML
                     .replace(/<li[^>]*>\s*<a[^>]*href="login\.html"[^>]*>.*?<\/a>\s*<\/li>/g, authLinksHtml);
 

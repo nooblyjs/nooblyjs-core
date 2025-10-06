@@ -76,7 +76,7 @@ const NooblyNavigation = {
                 <h1>Noobly JS</h1>
                 <div class="subtitle">Service Registry</div>
             </div>
-            <a href="/services/" class="nav-item ${activeService === 'home' ? 'active' : ''}">Home</a>
+            <a href="/" class="nav-item ${activeService === 'home' ? 'active' : ''}">Home</a>
         `;
 
         // Online Services Section
