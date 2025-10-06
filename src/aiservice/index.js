@@ -12,6 +12,7 @@
 const AIClaude = require('./provider/aiclaude');
 const AIOpenAI = require('./provider/aiopenai');
 const AIOllama = require('./provider/aiollama');
+const AIApi = require('./provider/aiApi');
 
 const Routes = require('./routes');
 const Views = require('./views');
@@ -19,7 +20,7 @@ const Views = require('./views');
 /**
  * Creates an AI service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the AI service.
- * @param {string} type - The AI provider type ('claude', 'chatgpt', 'ollama')
+ * @param {string} type - The AI provider type ('claude', 'chatgpt', 'ollama', 'api')
  * @param {Object} options - Provider-specific configuration options
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -27,7 +28,7 @@ const Views = require('./views');
  * @param {Object} options.dependencies.workflow - Workflow service instance
  * @param {Object} options.dependencies.queueing - Queueing service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {AIClaude|AIOpenAI|AIOllama} AI service instance with specified provider
+ * @return {AIClaude|AIOpenAI|AIOllama|AIApi} AI service instance with specified provider
  * @throws {Error} When unsupported AI provider type is provided
  */
 function createAIService(type, options, eventEmitter) {
@@ -49,6 +50,9 @@ function createAIService(type, options, eventEmitter) {
       break;
     case 'ollama':
       aiservice = new AIOllama(providerOptions, eventEmitter);
+      break;
+    case 'api':
+      aiservice = new AIApi(providerOptions, eventEmitter);
       break;
     default:
       throw new Error(`Unsupported AI provider type: ${type}`);

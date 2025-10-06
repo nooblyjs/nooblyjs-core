@@ -11,20 +11,21 @@
 'use strict';
 
 const InMemoryQueue = require('./providers/InMemoryQueue');
+const QueueingApi = require('./providers/queueingApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
 /**
  * Creates a queue service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the queue service.
- * @param {string} type - The queue provider type (currently only 'memory' is supported)
+ * @param {string} type - The queue provider type ('memory', 'api')
  * @param {Object} options - Configuration options for the queue service
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.caching - Caching service instance
  * @param {Object} options.dependencies.dataservice - DataService service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {InMemoryQueue} Queue service instance with specified provider
+ * @return {InMemoryQueue|QueueingApi} Queue service instance with specified provider
  * @throws {Error} When unsupported queue type is provided
  */
 function createQueue(type, options, eventEmitter) {
@@ -37,11 +38,13 @@ function createQueue(type, options, eventEmitter) {
 
   // Create queue instance based on provider type
   switch (type) {
+    case 'api':
+      queue = new QueueingApi(providerOptions, eventEmitter);
+      break;
     case 'memory':
+    default:
       queue = new InMemoryQueue(providerOptions, eventEmitter);
       break;
-    default:
-      throw new Error(`Unsupported queue type: ${type}`);
   }
 
   // Inject dependencies into queue service

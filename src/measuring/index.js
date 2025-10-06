@@ -11,20 +11,31 @@
 'use strict';
 
 const MeasuringService = require('./provider/measuring');
+const MeasuringApi = require('./providers/measuringApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
 /**
  * Creates a measuring service instance with performance monitoring capabilities.
  * Automatically configures routes and views for the measuring service.
- * @param {string} type - The measuring service type (currently only 'default' is supported)
+ * @param {string} type - The measuring service type ('default', 'api')
  * @param {Object} options - Configuration options for the measuring service
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {MeasuringService} Measuring service instance for performance monitoring
+ * @return {MeasuringService|MeasuringApi} Measuring service instance for performance monitoring
  */
 function createMeasuringService(type, options, eventEmitter) {
   // Create measuring service instance
-  const measuring = new MeasuringService(options, eventEmitter);
+  let measuring;
+
+  switch (type) {
+    case 'api':
+      measuring = new MeasuringApi(options, eventEmitter);
+      break;
+    case 'default':
+    default:
+      measuring = new MeasuringService(options, eventEmitter);
+      break;
+  }
   
   // Initialize routes and views for the measuring service
   Routes(options, eventEmitter, measuring);

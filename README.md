@@ -7,7 +7,8 @@
 **Key Features:**
 - **Service Registry Architecture** - Centralized service management with singleton pattern
 - **Pluggable Providers** - Multiple implementation options for each service (memory, Redis, S3, file system, etc.)
-- **Event-Driven Communication** - Global EventEmitter for inter-service communication  
+- **Enterprise API Providers** - ⭐ **NEW!** All services support remote backend APIs for distributed architectures
+- **Event-Driven Communication** - Global EventEmitter for inter-service communication
 - **RESTful APIs** - Consistent REST endpoints for all services
 - **Multiple UI Themes** - 5 different UI design implementations (glass, flat, material, minimalist, shadcn)
 - **Comprehensive Testing** - Unit tests, load tests, and API tests included
@@ -105,15 +106,19 @@ Each API is designed to be stateless and can be integrated independently. For mo
 - `memory` - In-memory cache with LRU eviction
 - `redis` - Redis-backed distributed cache with analytics
 - `memcached` - Memcached-backed cache
+- `api` - **Remote backend API** (Enterprise Architecture)
 
 **Features:** Analytics tracking, hit/miss statistics, automatic eviction
 
-### 📊 Data Serving Service  
+### 📊 Data Serving Service
 **Purpose:** Persistent key-value data storage
 **Providers:**
 - `memory` - In-memory data store
 - `simpledb` - SimpleDB integration
 - `file` - File system-based storage
+- `mongodb` - MongoDB database
+- `documentdb` - AWS DocumentDB
+- `api` - **Remote backend API** (Enterprise Architecture)
 
 **Features:** CRUD operations, data persistence, simple query capabilities
 
@@ -123,6 +128,10 @@ Each API is designed to be stateless and can be integrated independently. For mo
 - `local` - Local file system storage
 - `ftp` - FTP server integration
 - `s3` - AWS S3 cloud storage
+- `git` - Git repository storage
+- `gcp` - Google Cloud Platform storage
+- `sync` - Synchronized file storage
+- `api` - **Remote backend API** (Enterprise Architecture)
 
 **Features:** File operations, metadata handling, cloud storage integration
 
@@ -131,6 +140,7 @@ Each API is designed to be stateless and can be integrated independently. For mo
 **Providers:**
 - `console` - Console output logging
 - `file` - File-based logging with rotation
+- `api` - **Remote backend API** (Enterprise Architecture)
 
 **Features:** Multiple log levels, structured logging, file rotation
 
@@ -191,6 +201,92 @@ Each API is designed to be stateless and can be integrated independently. For mo
 - `google` - Google OAuth 2.0 authentication
 
 **Features:** User registration/login, session management, role-based access control, password hashing, token validation, OAuth integration
+
+---
+
+## 🏢 Enterprise Architecture with API Providers
+
+**NEW in v1.0.14:** All services now support the `'api'` provider type, enabling enterprise client-server architectures.
+
+### What are API Providers?
+
+API providers allow your frontend applications to consume remote backend service APIs instead of using local providers. This enables:
+
+- **Microservices Architecture** - Separate frontend and backend services
+- **Distributed Systems** - Scale services independently
+- **Security** - Keep sensitive data and operations on the backend
+- **Load Balancing** - Multiple clients can share backend resources
+- **Flexibility** - Switch between local and remote services easily
+
+### Quick Example
+
+**Backend Server** (hosts actual services):
+```javascript
+const serviceRegistry = require('noobly-core');
+const app = express();
+
+serviceRegistry.initialize(app, {
+  apiKeys: ['your-api-key'],
+  requireApiKey: true
+});
+
+// Use real providers (Redis, MongoDB, S3, etc.)
+const cache = serviceRegistry.cache('redis', {
+  host: 'localhost',
+  port: 6379
+});
+```
+
+**Frontend Client** (consumes APIs):
+```javascript
+const serviceRegistry = require('noobly-core');
+const app = express();
+
+serviceRegistry.initialize(app, {
+  exposeServices: false  // Client mode
+});
+
+// Use API provider to connect to backend
+const cache = serviceRegistry.cache('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Use exactly as before - transparent API calls!
+await cache.put('user:123', userData);
+const user = await cache.get('user:123');
+```
+
+### Supported Services
+
+All 12 core services support API providers:
+- ✅ Caching (`api`)
+- ✅ Data Service (`api`)
+- ✅ Filing (`api`)
+- ✅ Logging (`api`)
+- ✅ AI Service (`api`)
+- ✅ Auth Service (`api`)
+- ✅ Measuring (`api`)
+- ✅ Notifying (`api`)
+- ✅ Queueing (`api`)
+- ✅ Searching (`api`)
+- ✅ Workflow (`api`)
+- ✅ Working (`api`)
+
+### Example Application
+
+See [`tests/examples/api-provider-example.js`](tests/examples/api-provider-example.js) for a complete working example with both backend and frontend.
+
+**Run the example:**
+```bash
+node tests/examples/api-provider-example.js
+```
+
+For comprehensive documentation, see:
+- **Usage Guide**: [`docs/nooblyjs-core-usage-guide.md`](docs/nooblyjs-core-usage-guide.md) - Section "Enterprise Architecture with API Providers"
+- **Testing Guide**: [`tests/unit/API_PROVIDER_TESTING.md`](tests/unit/API_PROVIDER_TESTING.md) - Complete testing documentation
+
+---
 
 ## Installation
 

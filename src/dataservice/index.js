@@ -28,7 +28,7 @@ function getNestedValue(obj, path) {
 /**
  * Creates a data service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the data service.
- * @param {string} type - The data provider type ('memory', 'file', 'simpledb', 'mongodb', 'documentdb')
+ * @param {string} type - The data provider type ('memory', 'file', 'simpledb', 'mongodb', 'documentdb', 'api')
  * @param {Object} options - Provider-specific configuration options
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -60,6 +60,10 @@ function createDataserviceService(type, options, eventEmitter) {
     case 'documentdb':
       const DocumentDBDataServiceProvider = require('./providers/dataserviceDocumentDB');
       provider = new DocumentDBDataServiceProvider(providerOptions, eventEmitter);
+      break;
+    case 'api':
+      const DataServiceApiProvider = require('./providers/dataserviceApi');
+      provider = new DataServiceApiProvider(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:

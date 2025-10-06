@@ -356,6 +356,10 @@ function createFilingService(type = 'local', options, eventEmitter) {
       const GCPFilingProvider = require('./providers/filingGCP');
       provider = new GCPFilingProvider(options, eventEmitter);
       break;
+    case 'api':
+      const FilingApiProvider = require('./providers/filingApi');
+      provider = new FilingApiProvider(options, eventEmitter);
+      break;
     case 'sync':
       // Sync provider requires a remote provider configuration
       if (!options || !options.remoteType) {

@@ -123,17 +123,19 @@ await cache.put('key', 'value');
 
 | Service | Purpose | Providers | API Endpoints |
 |---------|---------|-----------|---------------|
-| **caching** | High-performance caching | memory, redis, memcached | `/services/caching/api/*` |
-| **dataservice** | Database-style JSON document storage with UUIDs | memory, simpledb, file | `/services/dataservice/api/*` |
-| **filing** | File management | local, ftp, s3, git, sync | `/services/filing/api/*` |
-| **logging** | Application logging | console, file | `/services/logging/api/*` |
-| **measuring** | Metrics collection | memory | `/services/measuring/api/*` |
-| **notifying** | Pub/sub messaging | memory | `/services/notifying/api/*` |
-| **queueing** | Task queueing | memory | `/services/queueing/api/*` |
+| **caching** | High-performance caching | memory, redis, memcached, **api** | `/services/caching/api/*` |
+| **dataservice** | Database-style JSON document storage with UUIDs | memory, simpledb, file, mongodb, documentdb, **api** | `/services/dataservice/api/*` |
+| **filing** | File management | local, ftp, s3, git, gcp, sync, **api** | `/services/filing/api/*` |
+| **logging** | Application logging | console, file, **api** | `/services/logging/api/*` |
+| **aiservice** | AI/LLM integration | claude, chatgpt, ollama, **api** | `/services/ai/api/*` |
+| **authservice** | Authentication & user management | passport, google, memory, file, **api** | `/services/authservice/api/*` |
+| **measuring** | Metrics & performance monitoring | memory, **api** | `/services/measuring/api/*` |
+| **notifying** | Pub/sub notifications | memory, **api** | `/services/notifying/api/*` |
+| **queueing** | Task queue management | memory, **api** | `/services/queueing/api/*` |
+| **searching** | Full-text search | memory, **api** | `/services/searching/api/*` |
+| **workflow** | Multi-step workflow orchestration | memory, **api** | `/services/workflow/api/*` |
+| **working** | Background job execution | memory, **api** | `/services/working/api/*` |
 | **scheduling** | Task scheduling | memory | `/services/scheduling/api/*` |
-| **searching** | Full-text search | memory | `/services/searching/api/*` |
-| **workflow** | Multi-step workflows | memory | `/services/workflow/api/*` |
-| **working** | Background tasks | memory | `/services/working/api/*` |
 
 ---
 
@@ -534,7 +536,208 @@ const filing = serviceRegistry.filing('s3', {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
+
+// API providers - Connect to remote backend services (Enterprise Architecture)
+const cache = serviceRegistry.cache('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY,
+  timeout: 5000
+});
+
+const dataService = serviceRegistry.dataService('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY
+});
+
+const logger = serviceRegistry.logger('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY
+});
 ```
+
+### Enterprise Architecture with API Providers
+
+NooblyJS Core supports an **enterprise client-server architecture** where frontend applications consume backend service APIs. This enables microservices, distributed systems, and scalable architectures.
+
+#### Backend Server Setup
+
+```javascript
+// backend-server.js - Exposes service APIs
+const express = require('express');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+
+// Initialize with real service providers
+serviceRegistry.initialize(app, {
+  apiKeys: [process.env.API_KEY],
+  requireApiKey: true
+});
+
+// Use actual providers (redis, s3, mongodb, etc.)
+const cache = serviceRegistry.cache('redis', {
+  host: process.env.REDIS_HOST,
+  port: 6379
+});
+
+const dataService = serviceRegistry.dataService('mongodb', {
+  uri: process.env.MONGODB_URI
+});
+
+const filing = serviceRegistry.filing('s3', {
+  bucket: process.env.S3_BUCKET
+});
+
+app.listen(3000, () => {
+  console.log('Backend API server running on port 3000');
+});
+```
+
+#### Frontend Client Setup
+
+```javascript
+// frontend-client.js - Consumes backend APIs
+const express = require('express');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+
+// Initialize with NO service exposure (client-only mode)
+serviceRegistry.initialize(app, {
+  exposeServices: false  // Don't create API routes
+});
+
+// Use API providers to connect to backend
+const cache = serviceRegistry.cache('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY,
+  timeout: 5000
+});
+
+const dataService = serviceRegistry.dataService('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY
+});
+
+const filing = serviceRegistry.filing('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: process.env.BACKEND_API_KEY
+});
+
+// Use services exactly as before - transparent API calls
+app.get('/users/:id', async (req, res) => {
+  try {
+    // These calls go to the backend API
+    const user = await cache.get(`user:${req.params.id}`);
+    if (!user) {
+      const userData = await dataService.readById('users', req.params.id);
+      await cache.put(`user:${req.params.id}`, userData, 3600);
+      return res.json(userData);
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(4000, () => {
+  console.log('Frontend client running on port 4000');
+});
+```
+
+#### All Available API Providers
+
+All services support the `'api'` provider type for enterprise architectures:
+
+```javascript
+// Caching API Provider
+const cache = serviceRegistry.cache('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key',
+  timeout: 5000
+});
+
+// AI Service API Provider
+const aiService = serviceRegistry.aiService('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key',
+  timeout: 30000
+});
+
+// Auth Service API Provider
+const authService = serviceRegistry.authService('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Data Service API Provider
+const dataService = serviceRegistry.dataService('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Filing Service API Provider
+const filing = serviceRegistry.filing('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key',
+  timeout: 30000
+});
+
+// Logging Service API Provider
+const logger = serviceRegistry.logger('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Measuring Service API Provider
+const measuring = serviceRegistry.measuring('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Notifying Service API Provider
+const notifying = serviceRegistry.notifying('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Queueing Service API Provider
+const queueing = serviceRegistry.queueing('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Searching Service API Provider
+const searching = serviceRegistry.searching('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key'
+});
+
+// Workflow Service API Provider
+const workflow = serviceRegistry.workflow('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key',
+  timeout: 30000
+});
+
+// Working Service API Provider
+const working = serviceRegistry.working('api', {
+  apiRoot: 'https://backend.example.com',
+  apiKey: 'your-api-key',
+  timeout: 30000
+});
+```
+
+#### Benefits of API Provider Architecture
+
+1. **Separation of Concerns**: Frontend handles UI/UX, backend handles data/business logic
+2. **Scalability**: Scale frontend and backend services independently
+3. **Security**: Sensitive operations and data stay on the backend
+4. **Flexibility**: Switch between local and remote services easily
+5. **Microservices**: Build distributed microservice architectures
+6. **Load Balancing**: Multiple frontend clients can share backend resources
 
 ### Advanced Service Usage
 

@@ -12,16 +12,17 @@
 
 const logging = require('./providers/logging');
 const loggingFile = require('./providers/loggingFile');
+const loggingApi = require('./providers/loggingApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
 /**
  * Creates a logging service instance with the specified provider.
  * Automatically configures routes and views for the logging service.
- * @param {string} type - The logging provider type ('console', 'file')
+ * @param {string} type - The logging provider type ('console', 'file', 'api')
  * @param {Object} options - Provider-specific configuration options
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {logging|loggingFile} Logging service instance with specified provider
+ * @return {logging|loggingFile|loggingApi} Logging service instance with specified provider
  */
 function createLogger(type, options, eventEmitter) {
   let logger;
@@ -30,6 +31,9 @@ function createLogger(type, options, eventEmitter) {
   switch (type) {
     case 'file':
       logger = new loggingFile(options, eventEmitter);
+      break;
+    case 'api':
+      logger = new loggingApi(options, eventEmitter);
       break;
     case 'console':
     default:

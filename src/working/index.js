@@ -13,6 +13,7 @@
 // TODO - we need to work on how data is passed to the script
 
 const WorkerProvider = require('./providers/working');
+const WorkingApi = require('./providers/workingApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -22,12 +23,12 @@ let instance = null;
 /**
  * Returns the singleton instance of the worker service with dependency injection.
  * Automatically configures routes and views for the working service.
- * @param {string} type - The worker service type
+ * @param {string} type - The worker service type ('default', 'api')
  * @param {Object} options - Configuration options for the worker service
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {WorkerProvider} The singleton worker service instance
+ * @return {WorkerProvider|WorkingApi} The singleton worker service instance
  */
 function getWorkerInstance(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;
@@ -35,7 +36,15 @@ function getWorkerInstance(type, options, eventEmitter) {
 
   // Create singleton instance if it doesn't exist
   if (!instance) {
-    instance = new WorkerProvider(providerOptions, eventEmitter);
+    switch (type) {
+      case 'api':
+        instance = new WorkingApi(providerOptions, eventEmitter);
+        break;
+      case 'default':
+      default:
+        instance = new WorkerProvider(providerOptions, eventEmitter);
+        break;
+    }
 
     // Inject logging dependency into working service
     if (logger) {

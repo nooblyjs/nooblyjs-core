@@ -10,20 +10,31 @@
 
 'use strict';
 const NotificationService = require('./provider/notifying');
+const NotifyingApi = require('./providers/notifyingApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
 /**
  * Creates a notification service instance with messaging capabilities.
  * Automatically configures routes and views for the notification service.
- * @param {string} type - The notification service type
+ * @param {string} type - The notification service type ('default', 'api')
  * @param {Object} options - Configuration options for the notification service
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {NotificationService} Notification service instance for messaging
+ * @return {NotificationService|NotifyingApi} Notification service instance for messaging
  */
 function createNotificationService(type, options, eventEmitter) {
   // Create notification service instance
-  const notifying = new NotificationService(options, eventEmitter);
+  let notifying;
+
+  switch (type) {
+    case 'api':
+      notifying = new NotifyingApi(options, eventEmitter);
+      break;
+    case 'default':
+    default:
+      notifying = new NotificationService(options, eventEmitter);
+      break;
+  }
   
   // Initialize routes and views for the notification service
   Routes(options, eventEmitter, notifying);

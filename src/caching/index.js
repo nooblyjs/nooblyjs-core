@@ -13,6 +13,7 @@ const Cache = require('./providers/caching');
 const CacheRedis = require('./providers/cachingRedis');
 const CacheMemcached = require('./providers/cachingMemcached');
 const CacheFile = require('./providers/cachingFile');
+const CacheApi = require('./providers/cachingApi');
 
 const Routes = require('./routes');
 const Views = require('./views');
@@ -20,12 +21,12 @@ const Views = require('./views');
 /**
  * Creates a cache service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the cache service.
- * @param {string} type - The cache provider type ('memory', 'redis', 'memcached', 'file')
+ * @param {string} type - The cache provider type ('memory', 'redis', 'memcached', 'file', 'api')
  * @param {Object} options - Provider-specific configuration options
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {Cache|CacheRedis|CacheMemcached|CacheFile} Cache service instance with specified provider
+ * @return {Cache|CacheRedis|CacheMemcached|CacheFile|CacheApi} Cache service instance with specified provider
  * @throws {Error} When unsupported cache type is provided
  */
 function createCache(type, options, eventEmitter) {
@@ -44,6 +45,9 @@ function createCache(type, options, eventEmitter) {
       break;
     case 'file':
       cache = new CacheFile(providerOptions, eventEmitter);
+      break;
+    case 'api':
+      cache = new CacheApi(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:

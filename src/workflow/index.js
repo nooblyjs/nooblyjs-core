@@ -12,6 +12,7 @@
 
 const { Worker } = require('worker_threads');
 const path = require('path');
+const WorkflowApi = require('./providers/workflowApi');
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -178,7 +179,7 @@ class WorkflowService {
 /**
  * Creates a workflow service instance with the specified configuration and dependency injection.
  * Automatically configures routes and views for the workflow service.
- * @param {string} type - The workflow provider type (currently only supports 'memory')
+ * @param {string} type - The workflow provider type ('memory', 'api')
  * @param {Object} options - Provider-specific configuration options
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -186,7 +187,7 @@ class WorkflowService {
  * @param {Object} options.dependencies.scheduling - Scheduling service instance
  * @param {Object} options.dependencies.measuring - Measuring service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {WorkflowService} Workflow service instance
+ * @return {WorkflowService|WorkflowApi} Workflow service instance
  */
 function createWorkflowService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;
@@ -195,7 +196,17 @@ function createWorkflowService(type, options, eventEmitter) {
   const scheduling = dependencies.scheduling;
   const measuring = dependencies.measuring;
 
-  const workflow = new WorkflowService(eventEmitter);
+  let workflow;
+
+  switch (type) {
+    case 'api':
+      workflow = new WorkflowApi(providerOptions, eventEmitter);
+      break;
+    case 'memory':
+    default:
+      workflow = new WorkflowService(eventEmitter);
+      break;
+  }
 
   // Inject dependencies into workflow service
   if (logger) {
