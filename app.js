@@ -58,9 +58,9 @@ if (process.env.aiapikey) {
       apiKey: process.env.aiapikey,
       'express-app': app
     });
-    console.log('AI service (Claude) initialized successfully');
+    log.info('AI service (Claude) initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize Claude AI service:', error.message);
+    log.error('Failed to initialize Claude AI service:', error.message);
   }
 }
 
@@ -72,12 +72,12 @@ if (!aiservice) {
       model: 'llama3.2',
       'express-app': app
     });
-    console.log('AI service (Ollama) initialized - configure Claude with aiapikey env var for Claude support');
+    log.info('AI service (Ollama) initialized - configure Claude with aiapikey env var for Claude support');
   } catch (error) {
-    console.log('AI service not available - Ollama not running and no API key configured');
-    console.log('To enable AI features:');
-    console.log('  - For Claude: Set aiapikey environment variable');
-    console.log('  - For Ollama: Start Ollama server at http://localhost:11434');
+    log.info('AI service not available - Ollama not running and no API key configured');
+    log.info('To enable AI features:');
+    log.info('  - For Claude: Set aiapikey environment variable');
+    log.info('  - For Ollama: Start Ollama server at http://localhost:11434');
   }
 }
 const authservice = serviceRegistry.authservice('file', {

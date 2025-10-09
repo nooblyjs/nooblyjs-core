@@ -41,6 +41,8 @@ class ServiceRegistry {
       this.eventEmitter = eventEmitter;    
     } 
 
+    this.debug_emitter(this.eventEmitter, "ServiceRegistry");
+
     // Assign the passed global options
     this.globalOptions = {
       'express-app': expressApp,
@@ -207,7 +209,7 @@ class ServiceRegistry {
    */
   getDefaultProviderType(serviceName) {
     const defaultProviders = {
-      'logging': 'console',
+      'logging': 'memory',
       'filing': 'local',
       'measuring': 'memory',
       'caching': 'memory',
@@ -314,11 +316,11 @@ class ServiceRegistry {
 
   /**
    * Get the logging service
-   * @param {string} providerType - 'console' or 'file'
+   * @param {string} providerType - 'memory' or 'file'
    * @param {Object} options - Provider-specific options
    * @returns {Object} Logger service instance
    */
-  logger(providerType = 'console', options = {}) {
+  logger(providerType = 'memory', options = {}) {
     return this.getService('logging', providerType, options);
   }
 
@@ -497,6 +499,15 @@ class ServiceRegistry {
   reset() {
     this.services.clear();
     this.initialized = false;
+  }
+
+ debug_emitter(emitter, name) {
+    var orig_emit = emitter.emit;
+    emitter.emit = function() {
+        var emitArgs = arguments;
+        console.log(emitArgs);
+        orig_emit.apply(emitter, arguments);
+    }
   }
 }
 
