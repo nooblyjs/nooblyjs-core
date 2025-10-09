@@ -6,7 +6,7 @@
  */
 
 const express = require('express');
-const serviceRegistry = require('../index');
+const serviceRegistry = require('../../../index');
 
 const app = express();
 

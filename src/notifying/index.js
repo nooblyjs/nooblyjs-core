@@ -39,10 +39,7 @@ function createNotificationService(type, options, eventEmitter) {
   // Initialize routes and views for the notification service
   Routes(options, eventEmitter, notifying);
   Views(options, eventEmitter, notifying);
-  
-  // Log service creation for debugging
-  console.log('Notification service created with type:', type);
-  
+    
   return notifying;
 }
 
