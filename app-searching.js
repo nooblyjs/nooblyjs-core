@@ -1,0 +1,113 @@
+/**
+ * @fileoverview Light App
+ *
+ * @author NooblyJS Team
+ * @version 1.0.14
+ * @since 1.0.0
+ */
+
+'use strict';
+
+const path = require('path');
+const express = require('express');
+const serviceRegistry = require('./index');
+
+const app = express();
+app.use(express.json());
+
+// Initialize registry (no public folder needed!)
+serviceRegistry.initialize(app);
+
+// Initialize auth service (required for login/register functionality)
+// The authservice automatically serves login.html and register.html from its views folder
+const authservice = serviceRegistry.authservice();
+
+// Get other services
+const cache = serviceRegistry.cache();
+const logger = serviceRegistry.logger();
+const dataService = serviceRegistry.dataService();
+const filing = serviceRegistry.filing();
+const queueing = serviceRegistry.queue();
+const worker = serviceRegistry.working('default', {
+  maxThreads: 4,
+  activitiesFolder: 'activities', // or use absolute path
+  dependencies: {
+    queueing,
+    filing
+  }
+});
+const scheduler = serviceRegistry.scheduling();
+
+const searching = serviceRegistry.searching();
+
+// Redirect root to services
+app.get('/', (req, res) => {
+  res.redirect('/services');
+});
+
+// Random name generators
+const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emma', 'Chris', 'Lisa', 'James', 'Mary', 'Robert', 'Jennifer', 'William', 'Linda', 'Richard', 'Patricia', 'Thomas', 'Barbara', 'Charles', 'Elizabeth'];
+const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+const countries = ['England', 'USA', 'Canada', 'Australia', 'Germany', 'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil', 'Mexico', 'Argentina', 'Colombia', 'South Africa', 'Nigeria', 'Egypt', 'Russia', 'Poland'];
+
+function getRandomElement(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function getRandomAge() {
+  return Math.floor(Math.random() * 60) + 18; // Age between 18 and 77
+}
+
+async function generateRandomPeople(count) {
+  const people = [];
+  for (let i = 0; i < count; i++) {
+    people.push({
+      firstname: getRandomElement(firstNames),
+      lastname: getRandomElement(lastNames),
+      country: getRandomElement(countries),
+      age: getRandomAge()
+    });
+  }
+  return people;
+}
+
+app.listen(3001, async () => {
+  logger.info('Server running on port 3001');
+  logger.info('Visit: http://localhost:3001/ (redirects to /services)');
+  logger.info('Login page at: http://localhost:3001/services/authservice/views/login.html');
+  logger.info('Register page at: http://localhost:3001/services/authservice/views/register.html');
+  logger.info('Activities folder: ./activities');
+
+  // Start the built-in indexing processor (runs every 5 seconds, processes up to 100 items per batch)
+  await searching.startIndexing(5, 100);
+  logger.info('Started search indexing processor (runs every 5 seconds, batch size: 100)');
+
+  // Function to add random people to the search queue
+  const addRandomPeople = async () => {
+    try {
+      const stats = await searching.getStats();
+      logger.info(`Adding 1000 random people. Current stats: ${stats.indexedItems} indexed, ${stats.queueSize} in queue`);
+
+      const people = await generateRandomPeople(1000);
+      let added = 0;
+
+      for (const person of people) {
+        const key = `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await searching.add(key, person);
+        added++;
+      }
+
+      logger.info(`Queued ${added} people for indexing`);
+    } catch (error) {
+      logger.error('Error adding random people:', error.message);
+    }
+  };
+
+  // Add initial batch
+  await addRandomPeople();
+
+  // Schedule adding random people every 10 seconds
+  setInterval(addRandomPeople, 10000);
+
+  logger.info('Scheduled random people generation every 10 seconds (1000 people per batch)');
+});

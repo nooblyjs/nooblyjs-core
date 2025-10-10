@@ -6,5 +6,13 @@
     "role": "admin",
     "createdAt": "2025-10-09T19:09:37.135Z",
     "expiresAt": "2025-10-10T19:09:37.135Z"
+  },
+  "2evqhli7pazmgkv6ii7": {
+    "token": "2evqhli7pazmgkv6ii7",
+    "userId": "kha9brbixmgkv6dvd",
+    "username": "stephenrbooysen@gmail.com",
+    "role": "user",
+    "createdAt": "2025-10-10T13:10:23.023Z",
+    "expiresAt": "2025-10-11T13:10:23.023Z"
   }
 }

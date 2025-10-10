@@ -23,7 +23,7 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 **Services:**
 - **Logging** - Fundamental logging capabilities
 
-### **Level 0: Foundation Services** (No Dependencies)
+### **Level 1: Foundation Services** (No Dependencies)
 *These services provide core functionality and cannot depend on other NooblyJS services*
 
 ```
@@ -45,7 +45,7 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 
 ---
 
-### **Level 1: Infrastructure Services** (Use Foundation Services)
+### **Level 2: Infrastructure Services** (Use Foundation Services)
 *Core infrastructure that enhances foundation services*
 
 ```
@@ -81,7 +81,7 @@ await dataStore.put('users', userData);
 
 ---
 
-### **Level 2: Business Logic Services** (Use Infrastructure Services)
+### **Level 3: Business Logic Services** (Use Infrastructure Services)
 *Services that implement business logic using infrastructure capabilities*
 
 ```
@@ -144,7 +144,7 @@ class EnhancedQueue {
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  
-│  Workflow   │  │ Notifying   │  │ AuthService │  
+│  Workflow   │  │ Notifying   │  │ AIService   │  
 │             │  │             │  │             │  
 └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  
        │                │                │
@@ -162,25 +162,6 @@ class EnhancedQueue {
 
 - **Notifying** - Uses queueing for async delivery, scheduling for delayed notifications
 - **AuthService** - Uses caching for sessions, dataservice for user storage
-
----
-
-### **Level 4: Integration Services** (Use Application Services)
-*Services that integrate with external systems and APIs*
-
-```
-┌─────────────┐
-│ AIService   │
-│             │
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│  Workflow   │
-│ (Level 3)   │
-└─────────────┘
-```
-
-**Services:**
 - **AIService** - Uses workflow for complex AI pipelines, caching for responses, queueing for async processing
 
 ---
