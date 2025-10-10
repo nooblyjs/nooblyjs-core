@@ -29,22 +29,22 @@ module.exports = (options, eventEmitter, worker) => {
      * Starts a background worker task with completion callback.
      *
      * @param {express.Request} req - Express request object
-     * @param {*} req.body.task - The task to execute in the background
+     * @param {string} req.body.scriptPath - The path to the script to execute in the worker
      * @param {*} req.body.data - Optional data for the task execution
      * @param {express.Response} res - Express response object
      * @return {void}
      */
     app.post('/services/working/api/run', (req, res) => {
-      const { task } = req.body;
-      if (task) {
+      const { scriptPath, data } = req.body;
+      if (scriptPath) {
         worker
-          .start(task, (data) => {
-            eventEmitter.emit('worker-complete', data);
+          .start(scriptPath, data, (status, result) => {
+            eventEmitter.emit('worker-complete', { status, result });
           })
-          .then((result) => res.status(200).json(result))
+          .then((taskId) => res.status(200).json({ taskId, message: 'Task queued successfully' }))
           .catch((err) => res.status(500).send(err.message));
       } else {
-        res.status(400).send('Bad Request: Missing task');
+        res.status(400).send('Bad Request: Missing scriptPath');
       }
     });
 
@@ -72,8 +72,51 @@ module.exports = (options, eventEmitter, worker) => {
      * @return {void}
      */
     app.get('/services/working/api/status', (req, res) => {
-      eventEmitter.emit('api-working-status', 'working api running');
-      res.status(200).json('working api running');
+      worker
+        .getStatus()
+        .then((status) => {
+          eventEmitter.emit('api-working-status', status);
+          res.status(200).json(status);
+        })
+        .catch((err) => res.status(500).send(err.message));
+    });
+
+    /**
+     * GET /services/working/api/history
+     * Returns the task history.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/working/api/history', (req, res) => {
+      const limit = parseInt(req.query.limit) || 100;
+      worker
+        .getTaskHistory(limit)
+        .then((history) => res.status(200).json(history))
+        .catch((err) => res.status(500).send(err.message));
+    });
+
+    /**
+     * GET /services/working/api/task/:taskId
+     * Returns information about a specific task.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/working/api/task/:taskId', (req, res) => {
+      const { taskId } = req.params;
+      worker
+        .getTask(taskId)
+        .then((task) => {
+          if (task) {
+            res.status(200).json(task);
+          } else {
+            res.status(404).send('Task not found');
+          }
+        })
+        .catch((err) => res.status(500).send(err.message));
     });
   }
 };

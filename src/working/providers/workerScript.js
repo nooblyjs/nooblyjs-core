@@ -40,7 +40,8 @@ parentPort.on('message', async (message) => {
     try {
       userScript = require(userScriptPath);
       updateStatus('running');
-      const result = await userScript.run();
+      // Pass the data to the user script's run function
+      const result = await userScript.run(message.data);
       updateStatus('completed', result);
     } catch (error) {
       updateStatus('error', error.message);

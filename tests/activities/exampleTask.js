@@ -16,18 +16,23 @@ const { parentPort } = require('worker_threads');
 
 /**
  * Runs the example worker task.
- * 
+ *
  * This function demonstrates the basic structure of a worker task.
  * It simulates asynchronous work with a timeout and returns a completion message.
- * 
+ *
  * @async
  * @function run
+ * @param {Object} data - The data passed from the parent thread
  * @returns {Promise<Object>} A promise that resolves with a completion message object
  */
-async function run() {
-  console.log('Example task started with data:');
+async function run(data) {
+  console.log('Example task started with data:', data);
   return new Promise((resolve) => {
-      resolve({'message': 'Example task completed successfully! Yay!'});
+      resolve({
+        'message': 'Example task completed successfully! Yay!',
+        'receivedData': data,
+        'processedAt': new Date().toISOString()
+      });
   });
 }
 
