@@ -42,8 +42,8 @@ app.listen(3001, () => {
   // Start an example worker task
   worker.start(
     path.resolve('/workspaces/nooblyjs-core/tests/activities/exampleTask.js'),
-    {exampleParam: 'Hello from main thread!'},
-    function(status, result) {
+    { exampleParam: 'Hello from main thread!' },
+    function (status, result) {
       console.log('Worker completed with status:', status);
       console.log('Worker result:', result);
     }
@@ -52,4 +52,21 @@ app.listen(3001, () => {
   }).catch((err) => {
     logger.error('Failed to queue example task:', err);
   });
+
+  const interval = setInterval(() => {
+    worker.start(
+      path.resolve('/workspaces/nooblyjs-core/tests/activities/exampleTask.js'),
+      { exampleParam: 'Hello from main thread!' },
+      function (status, result) {
+        console.log('Worker completed with status:', status);
+        console.log('Worker result:', result);
+      }
+    ).then((taskId) => {
+      logger.info('Example task queued with ID:', taskId);
+    }).catch((err) => {
+      logger.error('Failed to queue example task:', err);
+    });
+  }, 1000);
+
+
 });

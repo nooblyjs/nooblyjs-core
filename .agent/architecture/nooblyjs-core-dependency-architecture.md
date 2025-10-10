@@ -14,16 +14,15 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 *These services provide core functionality and cannot depend on other NooblyJS services*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│   Logging   │  │   Filing    │  │  Measuring  │
-│  (Base)     │  │  (Storage)  │  │ (Metrics)   │
-└─────────────┘  └─────────────┘  └─────────────┘
+┌─────────────┐  ┌─────────────┐  
+│   Logging   │  │   Filing    │  
+│  (Base)     │  │  (Storage)  │  
+└─────────────┘  └─────────────┘  
 ```
 
 **Services:**
 - **Logging** - Fundamental logging capabilities
 - **Filing** - File system operations
-- **Measuring** - Basic metrics collection
 
 **Characteristics:**
 - Self-contained with no internal dependencies
@@ -36,12 +35,12 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 *Core infrastructure that enhances foundation services*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│   Caching   │  │  DataServe  │  │   Working   │
-│             │  │             │  │             │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-       │                │                │
-       └────────────────┼────────────────┘
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐ ┌─────────────┐
+│   Caching   │  │ Dataservice │  │   Working   │ │  Measuring  │
+│             │  │             │  │             │ │ (Metrics)   │
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘ └──────┬──────┘
+       │                │                │               │
+       └────────────────┼────────────────┘───────────────┘
                         │
                 ┌───────▼───────┐
                 │    Logging    │
@@ -53,6 +52,7 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 - **Caching** - Uses logging for cache operations
 - **DataServe** - Uses logging and filing for data operations
 - **Working** - Uses logging for job execution tracking
+- **Measuring** - Basic metrics collection
 
 **Example Usage:**
 ```javascript
@@ -79,12 +79,12 @@ await dataStore.put('users', userData);
        │                │                │
        └────────────────┼────────────────┘
                         │
-         ┌──────────────┼──────────────┐
-         │              │              │
-   ┌─────▼────┐  ┌──────▼──────┐  ┌────▼─────┐
-   │ Caching  │  │  DataServe  │  │ Logging  │
-   │(Level 1) │  │ (Level 1)   │  │(Level 0) │
-   └──────────┘  └─────────────┘  └──────────┘
+         ┌──────────────┼──────────────┐──────────────┐
+         │              │              │              │
+   ┌─────▼────┐  ┌──────▼──────┐  ┌────▼──────┐  ┌────▼──────┐
+   │ Caching  │  │ Dataservice │  │  Logging  │  │ Working   │
+   │(Level 1) │  │ (Level 1)   │  │ (Level 0) │  │ (Level 1) │
+   └──────────┘  └─────────────┘  └───────────┘  └───────────┘
 ```
 
 **Services:**
@@ -130,10 +130,10 @@ class EnhancedQueue {
 *High-level services that orchestrate business operations*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Workflow   │  │ Notifying   │  │ AuthService │
-│             │  │             │  │             │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐  
+│  Workflow   │  │ Notifying   │  │ AuthService │  
+│             │  │             │  │             │  
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘  
        │                │                │
        └────────────────┼────────────────┘
                         │
@@ -191,12 +191,13 @@ class ServiceRegistry {
     // Level 0 services (no dependencies)
     this.serviceDependencies.set('logging', []);
     this.serviceDependencies.set('filing', []);
-    this.serviceDependencies.set('measuring', []);
+    
 
     // Level 1 services
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('dataservice', ['logging', 'filing']);
     this.serviceDependencies.set('working', ['logging']);
+    this.serviceDependencies.set('measuring', ['logging']]);
 
     // Level 2 services
     this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataservice']);

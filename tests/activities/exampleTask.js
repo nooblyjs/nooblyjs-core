@@ -28,11 +28,13 @@ const { parentPort } = require('worker_threads');
 async function run(data) {
   console.log('Example task started with data:', data);
   return new Promise((resolve) => {
+    setTimeout(() => {
       resolve({
         'message': 'Example task completed successfully! Yay!',
         'receivedData': data,
         'processedAt': new Date().toISOString()
       });
+    }, 10000); // 10 second delay
   });
 }
 
