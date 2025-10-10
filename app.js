@@ -80,10 +80,12 @@ if (!aiservice) {
     log.info('  - For Ollama: Start Ollama server at http://localhost:11434');
   }
 }
+
 const authservice = serviceRegistry.authservice('file', {
   'express-app': app,
   dataDir: './data/auth'
 });
+
 
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));

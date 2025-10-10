@@ -400,6 +400,7 @@ class WorkerManager {
     });
 
     // Send the task to the worker
+    // Note: Cannot pass functions directly, worker will use parentPort for logging
     worker.postMessage({
       type: 'start',
       scriptPath: task.scriptPath,

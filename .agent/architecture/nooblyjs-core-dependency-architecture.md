@@ -31,6 +31,8 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
  │   Filing    │  │   Caching   │  │  Queueing   │ 
  │  (Storage)  │  │   (Cache)   │  │  (Queues)   │
  └─────────────┘  └─────────────┘  └─────────────┘
+
+ 
 ```
 
 **Services:**
