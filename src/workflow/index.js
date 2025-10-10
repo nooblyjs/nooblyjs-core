@@ -10,7 +10,6 @@
 
 'use strict';
 
-const { Worker } = require('worker_threads');
 const path = require('path');
 const WorkflowApi = require('./providers/workflowApi');
 const Routes = require('./routes');
@@ -18,19 +17,23 @@ const Views = require('./views');
 
 /**
  * WorkflowService class for managing and executing workflows.
- * Uses worker threads to execute individual steps in isolation.
+ * Uses the working service to execute individual steps via worker threads.
  */
 class WorkflowService {
   /**
    * Creates a new WorkflowService instance.
    * @param {EventEmitter} eventEmitter - Global event emitter for workflow events
+   * @param {Object} workingService - Working service instance for executing tasks
    */
-  constructor(eventEmitter) {
+  constructor(eventEmitter, workingService) {
     /** @private {Map<string, Array<string>>} Map of workflow names to step file paths */
     this.workflows = new Map();
 
     /** @private {EventEmitter} Global event emitter */
     this.eventEmitter_ = eventEmitter;
+
+    /** @private {Object} Working service for task execution */
+    this.workingService_ = workingService;
   }
 
   /**
@@ -58,12 +61,13 @@ class WorkflowService {
   /**
    * Executes a defined workflow with the provided data.
    * Each step receives the output of the previous step as input.
+   * Uses the working service to execute each step in a worker thread.
    * @param {string} workflowName - Name of the workflow to execute
    * @param {Object} data - Initial data object to pass to first step
    * @param {function} statusCallback - Callback function for workflow progress updates
    * @throws {Error} When workflow is not found or step execution fails
    */
-  async runWorkflow(workflowName, data, statusCallback) {
+  async runWorkflow(workflowName, data, statusCallback = () => {}) {
     const steps = this.workflows.get(workflowName);
     if (!steps) {
       const error = new Error(`Workflow '${workflowName}' not found.`);
@@ -74,6 +78,22 @@ class WorkflowService {
         });
       }
       throw error;
+    }
+
+    if (!this.workingService_) {
+      const error = new Error('Working service not available');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('workflow:error', {
+          workflowName,
+          error: error.message,
+        });
+      }
+      throw error;
+    }
+
+    // Ensure statusCallback is a function
+    if (typeof statusCallback !== 'function') {
+      statusCallback = () => {};
     }
 
     let currentData = data;
@@ -104,32 +124,19 @@ class WorkflowService {
         });
 
       try {
-        const worker = new Worker(
-          path.resolve(__dirname, './provider/workerRunner.js'),
-          {
-            workerData: { stepPath, data: currentData },
-          },
-        );
-
-        currentData = await new Promise((resolve, reject) => {
-          worker.on('message', (message) => {
-            if (message.type === 'result') {
-              worker.terminate();
-              resolve(message.data);
-            } else if (message.type === 'error') {
-              worker.terminate();
-              reject(new Error(message.error));
-            }
-          });
-          worker.on('error', (error) => {
-            worker.terminate();
-            reject(error);
-          });
-          worker.on('exit', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Worker stopped with exit code ${code}`));
-            }
-          });
+        // Use the working service to execute the step
+        currentData = await new Promise(async (resolve, reject) => {
+          try {
+            await this.workingService_.start(stepPath, currentData, (status, result) => {
+              if (status === 'completed') {
+                resolve(result);
+              } else if (status === 'error') {
+                reject(new Error(result));
+              }
+            });
+          } catch (err) {
+            reject(err);
+          }
         });
 
         statusCallback({
@@ -186,6 +193,7 @@ class WorkflowService {
  * @param {Object} options.dependencies.queueing - Queueing service instance
  * @param {Object} options.dependencies.scheduling - Scheduling service instance
  * @param {Object} options.dependencies.measuring - Measuring service instance
+ * @param {Object} options.dependencies.working - Working service instance for task execution
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {WorkflowService|WorkflowApi} Workflow service instance
  */
@@ -195,6 +203,7 @@ function createWorkflowService(type, options, eventEmitter) {
   const queueing = dependencies.queueing;
   const scheduling = dependencies.scheduling;
   const measuring = dependencies.measuring;
+  const working = dependencies.working;
 
   let workflow;
 
@@ -204,7 +213,7 @@ function createWorkflowService(type, options, eventEmitter) {
       break;
     case 'memory':
     default:
-      workflow = new WorkflowService(eventEmitter);
+      workflow = new WorkflowService(eventEmitter, working);
       break;
   }
 
@@ -223,7 +232,8 @@ function createWorkflowService(type, options, eventEmitter) {
       hasLogging: true,
       hasQueueing: !!queueing,
       hasScheduling: !!scheduling,
-      hasMeasuring: !!measuring
+      hasMeasuring: !!measuring,
+      hasWorking: !!working
     });
   }
 
@@ -240,6 +250,11 @@ function createWorkflowService(type, options, eventEmitter) {
   // Inject measuring dependency for performance metrics
   if (measuring) {
     workflow.measuring = measuring;
+  }
+
+  // Inject working service for task execution
+  if (working) {
+    workflow.workingService_ = working;
   }
 
   // Store all dependencies for potential use by workflow steps

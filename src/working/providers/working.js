@@ -26,8 +26,10 @@ class WorkerManager {
    * Initializes the WorkerManager with worker thread management.
    * @param {Object=} options Configuration options for the worker manager.
    * @param {number=} options.maxThreads Maximum number of concurrent worker threads (default: 4).
+   * @param {string=} options.activitiesFolder Path to the activities folder (default: 'activities').
    * @param {Object=} options.dependencies Injected service dependencies.
    * @param {Object=} options.dependencies.queueing Queueing service instance.
+   * @param {Object=} options.dependencies.filing Filing service instance for activity resolution.
    * @param {EventEmitter=} eventEmitter Optional event emitter for worker events.
    */
   constructor(options = {}, eventEmitter) {
@@ -43,6 +45,10 @@ class WorkerManager {
     this.isRunning_ = true;
     /** @private {Object} Queueing service instance */
     this.queueService_ = options.dependencies?.queueing;
+    /** @private {Object} Filing service instance */
+    this.filingService_ = options.dependencies?.filing;
+    /** @private {string} Activities folder path */
+    this.activitiesFolder_ = options.activitiesFolder || options['noobly-core-activities'] || 'activities';
     /** @private {number} Queue processing interval ID */
     this.queueProcessorInterval_ = null;
     /** @private @const {string} Queue name for incoming tasks */
@@ -66,8 +72,41 @@ class WorkerManager {
   }
 
   /**
+   * Resolves an activity script path.
+   * If the path is relative (not absolute), it will be resolved from the activities folder.
+   * If filing service is available, it will verify relative paths exist.
+   * @private
+   * @param {string} scriptPath The script path (can be relative or absolute).
+   * @return {Promise<string>} A promise that resolves to the absolute script path.
+   * @throws {Error} When script is not found.
+   */
+  async resolveActivityPath_(scriptPath) {
+    // If it's already an absolute path, use it as-is (trust it exists)
+    if (path.isAbsolute(scriptPath)) {
+      return scriptPath;
+    }
+
+    // Build path from activities folder
+    const resolvedPath = path.resolve(process.cwd(), this.activitiesFolder_, scriptPath);
+
+    // If filing service is available, verify the relative path exists
+    if (this.filingService_) {
+      try {
+        // Try to read the file metadata to verify it exists
+        const fs = require('fs').promises;
+        await fs.access(resolvedPath);
+        return resolvedPath;
+      } catch (error) {
+        throw new Error(`Activity script not found: ${scriptPath} (resolved to: ${resolvedPath})`);
+      }
+    }
+
+    return resolvedPath;
+  }
+
+  /**
    * Starts a worker task. Adds task to the incoming queue for processing.
-   * @param {string} scriptPath The absolute path to the script to execute in the worker.
+   * @param {string} scriptPath The script path (can be relative to activities folder or absolute).
    * @param {Object} data The data to be passed to the worker thread.
    * @param {Function=} completionCallback Optional callback function to be called on completion.
    * @return {Promise<string>} A promise that resolves with the task ID.
@@ -84,10 +123,14 @@ class WorkerManager {
       throw new Error('Queueing service is not available');
     }
 
+    // Resolve the activity script path
+    const resolvedScriptPath = await this.resolveActivityPath_(scriptPath);
+
     const taskId = this.generateTaskId_();
     const task = {
       id: taskId,
-      scriptPath,
+      scriptPath: resolvedScriptPath,
+      originalScriptPath: scriptPath,
       data,
       completionCallback,
       queuedAt: new Date(),
@@ -101,7 +144,8 @@ class WorkerManager {
     if (this.eventEmitter_)
       this.eventEmitter_.emit('worker:queued', {
         taskId,
-        scriptPath,
+        scriptPath: resolvedScriptPath,
+        originalScriptPath: scriptPath,
         queueName: this.QUEUE_INCOMING_,
         queueLength: queueSize
       });

@@ -3509,12 +3509,17 @@ const status = workflow.status;              // Service status
 
 ### Working Service
 
-**Purpose**: Background script execution with queue-based task management
+**Purpose**: Background script execution with queue-based task management and automatic activity path resolution
 
 **Queue Integration**: The working service automatically uses named queues for task lifecycle:
 - `noobly-core-working-incoming`: Tasks waiting to be processed
 - `noobly-core-working-complete`: Successfully completed tasks
 - `noobly-core-working-error`: Failed tasks with error details
+
+**Activity Path Resolution**: Activities can be referenced by filename alone - they're automatically resolved from the activities folder:
+- Default activities folder: `./activities`
+- Configurable via `activitiesFolder` or `noobly-core-activities` option
+- Supports both relative (from activities folder) and absolute paths
 
 **Methods**:
 ```javascript
@@ -3542,15 +3547,21 @@ const task = await worker.getTask(taskId);                     // Get specific t
 
 **Examples**:
 ```javascript
-// Create working service with queue dependency
+// Create working service with queue and filing dependencies
 const queueing = serviceRegistry.queueing('memory');
+const filing = serviceRegistry.filing('local');
 const working = serviceRegistry.working('default', {
   maxThreads: 4,
-  dependencies: { queueing }
+  activitiesFolder: 'activities', // Default: 'activities'
+  dependencies: {
+    queueing,
+    filing  // Used for activity path verification
+  }
 });
 
-// Start a background task
-const taskId = await working.start('./scripts/processData.js', {
+// Start a background task using simple activity name
+// Automatically resolves to ./activities/processData.js
+const taskId = await working.start('processData.js', {
   userId: '123',
   action: 'export'
 }, (status, result) => {
@@ -3559,6 +3570,21 @@ const taskId = await working.start('./scripts/processData.js', {
   } else {
     console.error('Task failed:', result);
   }
+});
+
+// Or use absolute path if needed
+const taskId2 = await working.start('/path/to/script.js', data, callback);
+
+// Custom activities folder
+const worker2 = serviceRegistry.working('default', {
+  activitiesFolder: '/custom/activities/path',
+  dependencies: { queueing, filing }
+});
+
+// Using 'noobly-core-activities' option name
+const worker3 = serviceRegistry.working('default', {
+  'noobly-core-activities': './my-activities',
+  dependencies: { queueing, filing }
 });
 
 // Check status including queue sizes
@@ -3573,14 +3599,39 @@ const completedTask = await queueing.dequeue('noobly-core-working-complete');
 // Get error tasks from queue for retry logic
 const errorTask = await queueing.dequeue('noobly-core-working-error');
 if (errorTask && errorTask.retryCount < 3) {
-  // Retry the task
-  await working.start(errorTask.scriptPath, errorTask.data);
+  // Retry the task (using original activity name)
+  await working.start(errorTask.originalScriptPath, errorTask.data);
 }
 
 // Monitor queue sizes
 const incomingSize = await queueing.size('noobly-core-working-incoming');
 const completeSize = await queueing.size('noobly-core-working-complete');
 const errorSize = await queueing.size('noobly-core-working-error');
+```
+
+**Activity Structure**:
+
+Activities should be placed in the `./activities` folder and follow this structure:
+
+```javascript
+// activities/processData.js
+const { parentPort } = require('worker_threads');
+
+async function run(data) {
+  // Your processing logic here
+  console.log('Processing data:', data);
+
+  // Simulate async work
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  return {
+    success: true,
+    processedData: data,
+    timestamp: new Date().toISOString()
+  };
+}
+
+module.exports = { run };
 ```
 
 ---

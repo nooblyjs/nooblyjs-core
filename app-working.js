@@ -26,7 +26,21 @@ const authservice = serviceRegistry.authservice();
 const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
-const worker = serviceRegistry.working();
+const filing = serviceRegistry.filing();
+
+// Initialize queueing service (required by working service)
+const queueing = serviceRegistry.queue();
+
+// Initialize working service with filing dependency for activity resolution
+// Activities folder defaults to './activities' relative to project root
+const worker = serviceRegistry.working('default', {
+  maxThreads: 4,
+  activitiesFolder: 'activities', // or use absolute path
+  dependencies: {
+    queueing,
+    filing
+  }
+});
 
 // Redirect root to services
 app.get('/', (req, res) => {
@@ -38,10 +52,12 @@ app.listen(3001, () => {
   logger.info('Visit: http://localhost:3001/ (redirects to /services)');
   logger.info('Login page at: http://localhost:3001/services/authservice/views/login.html');
   logger.info('Register page at: http://localhost:3001/services/authservice/views/register.html');
+  logger.info('Activities folder: ./activities');
 
-  // Start an example worker task
+  // Start an example worker task using relative path (resolved from activities folder)
+  // No need for path.resolve() - just use the activity filename!
   worker.start(
-    path.resolve('/workspaces/nooblyjs-core/tests/activities/exampleTask.js'),
+    'exampleTask.js', // Automatically resolves to ./activities/exampleTask.js
     { exampleParam: 'Hello from main thread!' },
     function (status, result) {
       console.log('Worker completed with status:', status);
@@ -55,7 +71,7 @@ app.listen(3001, () => {
 
   const interval = setInterval(() => {
     worker.start(
-      path.resolve('/workspaces/nooblyjs-core/tests/activities/exampleTask.js'),
+      'exampleTask.js', // Much simpler! No path.resolve() needed
       { exampleParam: 'Hello from main thread!' },
       function (status, result) {
         console.log('Worker completed with status:', status);
@@ -66,7 +82,7 @@ app.listen(3001, () => {
     }).catch((err) => {
       logger.error('Failed to queue example task:', err);
     });
-  }, 100);
+  }, 10000);
 
 
 });

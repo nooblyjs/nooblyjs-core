@@ -2,6 +2,7 @@ const path = require('path');
 const EventEmitter = require('events');
 
 let getWorkerInstance;
+let getQueueService;
 
 jest.mock('worker_threads', () => ({
   Worker: jest.fn().mockImplementation(() => ({
@@ -19,16 +20,28 @@ describe('WorkerProvider', () => {
   let workerInstance;
   let MockWorker;
   let mockEventEmitter;
+  let mockQueueService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
+
+    // Import the queue service
+    if (!getQueueService) {
+      getQueueService = require('../../../src/queueing');
+    }
+    mockQueueService = getQueueService('memory', {}, mockEventEmitter);
+
     // Import the module (keep using cached version for stability)
     if (!getWorkerInstance) {
       getWorkerInstance = require('../../../src/working');
     }
-    workerInstance = getWorkerInstance('default', {}, mockEventEmitter);
+    workerInstance = getWorkerInstance('default', {
+      dependencies: {
+        queueing: mockQueueService
+      }
+    }, mockEventEmitter);
     MockWorker = require('worker_threads').Worker;
   });
 
