@@ -18,9 +18,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} logger - The logging provider instance with level methods
+ * @param {Object} analytics - The analytics module instance for log retrieval
  * @return {void}
  */
-module.exports = (options, eventEmitter, logger) => {
+module.exports = (options, eventEmitter, logger, analytics) => {
   if (options['express-app'] && logger) {
     const app = options['express-app'];
 
@@ -98,6 +99,40 @@ module.exports = (options, eventEmitter, logger) => {
     app.get('/services/logging/api/status', (req, res) => {
       eventEmitter.emit('api-logging-status', 'logging api running');
       res.status(200).json('logging api running');
+    });
+
+    /**
+     * GET /services/logging/api/logs
+     * Retrieves the last 1000 logs from analytics in descending order.
+     * Optional query parameter 'level' can filter by log level (INFO, WARN, ERROR, LOG).
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.query.level - Optional log level filter (case-insensitive)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/logging/api/logs', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const level = req.query.level;
+        const logs = analytics.list(level);
+
+        res.status(200).json({
+          count: logs.length,
+          level: level || 'ALL',
+          logs: logs
+        });
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve logs',
+          message: err.message
+        });
+      }
     });
   }
 };

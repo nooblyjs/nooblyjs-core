@@ -15,6 +15,7 @@ const loggingFile = require('./providers/loggingFile');
 const loggingApi = require('./providers/loggingApi');
 const Routes = require('./routes');
 const Views = require('./views');
+const LogAnalytics = require('./modules/analytics');
 
 /**
  * Creates a logging service instance with the specified provider.
@@ -26,7 +27,13 @@ const Views = require('./views');
  */
 function createLogger(type, options, eventEmitter) {
   let logger;
-  
+
+  // Initialize analytics module to capture logs
+  let analytics = null;
+  if (eventEmitter) {
+    analytics = new LogAnalytics(eventEmitter);
+  }
+
   // Create logger instance based on provider type
   switch (type) {
     case 'file':
@@ -40,11 +47,11 @@ function createLogger(type, options, eventEmitter) {
       logger = new logging(options, eventEmitter);
       break;
   }
-  
+
   // Initialize routes and views for the logging service
-  Routes(options, eventEmitter, logger);
+  Routes(options, eventEmitter, logger, analytics);
   Views(options, eventEmitter, logger);
-  
+
   return logger;
 }
 

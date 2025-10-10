@@ -621,6 +621,56 @@
             outline: 2px solid var(--custom-primary);
             outline-offset: 2px;
         }
+
+        /* Dashboard specific styles */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -642,6 +692,80 @@
             <div class="alert alert-error" id="errorAlert">
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
+
+            <!-- Bootstrap 5 Tabs -->
+            <ul class="nav nav-tabs mb-4" id="loggingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="loggingTabContent">
+
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Log Analytics</h2>
+                                    <p class="card-subtitle">View and filter recent log entries (last 1000 logs)</p>
+                                </div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select class="form-select form-select-sm" id="logLevelFilter" style="width: 150px;">
+                                        <option value="">All Levels</option>
+                                        <option value="INFO">INFO</option>
+                                        <option value="WARN">WARN</option>
+                                        <option value="ERROR">ERROR</option>
+                                        <option value="LOG">LOG</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">Log Level</th>
+                                            <th>Message</th>
+                                            <th style="width: 200px;">Date Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logsTableBody">
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading logs...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="logCount">0</span> log entries displayed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Log Message Form -->
             <div class="card">
@@ -705,9 +829,17 @@
                     <div id="swagger-ui"></div>
                 </div>
             </div>
+
+                </div>
+                <!-- End Data Tab -->
+
+            </div>
+            <!-- End Tab Content -->
+
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
@@ -864,6 +996,132 @@
             }
         }
 
+        // Dashboard functionality
+        let currentLogs = [];
+
+        // Fetch logs from analytics API
+        async function fetchLogs(level = '') {
+            try {
+                const url = level
+                    ? `/services/logging/api/logs?level=${level}`
+                    : '/services/logging/api/logs';
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                showAlert('Error fetching logs: ' + error.message, 'error');
+                return { logs: [], count: 0 };
+            }
+        }
+
+        // Render logs table
+        function renderLogsTable(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            const countElement = document.getElementById('logCount');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle fs-4"></i>
+                            <p class="mb-0 mt-2">No logs found</p>
+                        </td>
+                    </tr>
+                `;
+                countElement.textContent = '0';
+                return;
+            }
+
+            // Build table rows
+            const rows = logs.map(log => {
+                // Determine badge color based on level
+                let badgeClass = 'bg-secondary';
+                if (log.level === 'INFO') badgeClass = 'bg-primary';
+                else if (log.level === 'WARN') badgeClass = 'bg-warning text-dark';
+                else if (log.level === 'ERROR') badgeClass = 'bg-danger';
+
+                // Format timestamp
+                const date = new Date(log.timestamp);
+                const formattedDate = date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="badge ${badgeClass}">${log.level}</span>
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 600px;" title="${escapeHtml(log.message)}">
+                                ${escapeHtml(log.message)}
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted">${formattedDate}</small>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+            countElement.textContent = logs.length;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Refresh dashboard with current filter
+        async function refreshDashboard() {
+            const levelFilter = document.getElementById('logLevelFilter').value;
+            const tbody = document.getElementById('logsTableBody');
+
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading logs...
+                    </td>
+                </tr>
+            `;
+
+            const data = await fetchLogs(levelFilter);
+            currentLogs = data.logs || [];
+            renderLogsTable(currentLogs);
+        }
+
+        // Handle log level filter change
+        document.getElementById('logLevelFilter')?.addEventListener('change', refreshDashboard);
+
+        // Load dashboard on tab activation
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', function (e) {
+            refreshDashboard();
+        });
+
+        // Initial dashboard load
+        if (document.getElementById('dashboard').classList.contains('show')) {
+            refreshDashboard();
+        }
+
         // Swagger UI setup
         const spec = {
             openapi: '3.0.0',
@@ -915,6 +1173,97 @@
                                 content: {
                                     'application/json': {
                                         schema: { type: 'string', example: 'logging api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/logs': {
+                    get: {
+                        summary: 'Get log analytics',
+                        description: 'Retrieves the last 1000 logs from analytics in descending order (newest to oldest). Optional query parameter to filter by log level.',
+                        parameters: [
+                            {
+                                name: 'level',
+                                in: 'query',
+                                description: 'Filter logs by level (INFO, WARN, ERROR, LOG)',
+                                required: false,
+                                schema: {
+                                    type: 'string',
+                                    enum: ['INFO', 'WARN', 'ERROR', 'LOG']
+                                }
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Logs retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                count: {
+                                                    type: 'number',
+                                                    example: 10
+                                                },
+                                                level: {
+                                                    type: 'string',
+                                                    example: 'ALL'
+                                                },
+                                                logs: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            level: {
+                                                                type: 'string',
+                                                                example: 'INFO'
+                                                            },
+                                                            message: {
+                                                                type: 'string',
+                                                                example: '2025-10-10T13:23:19.980Z - INFO - hostname - Application started'
+                                                            },
+                                                            timestamp: {
+                                                                type: 'string',
+                                                                example: '2025-10-10T13:23:19.980Z'
+                                                            },
+                                                            capturedAt: {
+                                                                type: 'number',
+                                                                example: 1728568999980
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '500': {
+                                description: 'Server error',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string' },
+                                                message: { type: 'string' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            '503': {
+                                description: 'Analytics module not available',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                error: { type: 'string' }
+                                            }
+                                        }
                                     }
                                 }
                             }
