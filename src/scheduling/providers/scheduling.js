@@ -8,11 +8,10 @@
 
 'use strict';
 
-const getWorkerInstance = require('../../working/');
-
 /**
  * A class that manages scheduling and execution of tasks in worker threads.
  * Provides methods for starting, stopping, and monitoring scheduled tasks.
+ * Uses the working service for task execution via dependency injection.
  * @class
  */
 class SchedulerProvider {
@@ -20,14 +19,19 @@ class SchedulerProvider {
    * Initializes the SchedulerProvider with task storage and worker instance.
    * @param {Object=} options Configuration options for the scheduler.
    * @param {EventEmitter=} eventEmitter Optional event emitter for scheduler events.
+   * @param {Object=} workingService Working service instance for task execution.
    */
-  constructor(options, eventEmitter) {
+  constructor(options, eventEmitter, workingService) {
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
     /** @private @const {!Map<string, !Object>} */
     this.tasks_ = new Map();
     /** @private @const {WorkerProvider} */
-    this.worker_ = getWorkerInstance('memory', options, this.eventEmitter_);
+    this.worker_ = workingService;
+
+    if (!this.worker_) {
+      throw new Error('Working service is required for SchedulerProvider');
+    }
   }
 
   /**

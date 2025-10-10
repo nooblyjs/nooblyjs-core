@@ -85,8 +85,8 @@ await dataStore.put('users', userData);
 *Services that implement business logic using infrastructure capabilities*
 
 ```
-        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-        │  Queueing   │  │ Scheduling  │  │  Searching  │
+        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
+        │ Scheduling  │  │  Searching  │  │  Workflow   │ 
         │             │  │             │  │             │
         └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
                │                │                │
@@ -101,7 +101,7 @@ await dataStore.put('users', userData);
 ```
 
 **Services:**
-- **Queueing** - Uses caching for queue state, dataservice for persistence, logging for operations
+- **Workflow** - Uses queueing for step execution, scheduling for timed workflows, logging/measuring
 - **Scheduling** - Uses logging, measuring for performance metrics, queueing for job distribution
 - **Searching** - Uses caching for search results, dataservice for indexing, logging for queries
 
@@ -159,7 +159,7 @@ class EnhancedQueue {
 ```
 
 **Services:**
-- **Workflow** - Uses queueing for step execution, scheduling for timed workflows, logging/measuring
+
 - **Notifying** - Uses queueing for async delivery, scheduling for delayed notifications
 - **AuthService** - Uses caching for sessions, dataservice for user storage
 

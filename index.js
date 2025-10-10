@@ -131,7 +131,7 @@ class ServiceRegistry {
     this.serviceDependencies.set('measuring', ['logging','queueing','caching']);
 
     // Level 3 services (Application - Use business logic services)
-    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
+    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing', 'working']);
     this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring', 'working']);
     this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
