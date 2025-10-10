@@ -712,12 +712,111 @@
 
                 <!-- Dashboard Tab -->
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+
+                    <!-- Statistics Card with Pie Chart -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h2 class="card-title">Log Level Distribution</h2>
+                                    <p class="card-subtitle">Visual breakdown of log entries by level</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="logStatsChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="stats-summary">
+                                        <h5 class="mb-3">Statistics Summary</h5>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-primary">INFO</span></span>
+                                                <strong id="statInfoCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statInfoBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%">
+                                                    <span id="statInfoPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-warning text-dark">WARN</span></span>
+                                                <strong id="statWarnCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statWarnBar" class="progress-bar bg-warning" role="progressbar" style="width: 0%">
+                                                    <span id="statWarnPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-danger">ERROR</span></span>
+                                                <strong id="statErrorCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statErrorBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%">
+                                                    <span id="statErrorPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-secondary">LOG</span></span>
+                                                <strong id="statLogCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statLogBar" class="progress-bar bg-secondary" role="progressbar" style="width: 0%">
+                                                    <span id="statLogPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total Logs:</strong>
+                                            <strong id="statTotalCount" class="fs-4 text-primary">0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Chart Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h2 class="card-title">Log Activity Timeline</h2>
+                                    <p class="card-subtitle">Real-time log activity per minute across all levels</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div style="position: relative; height: 400px;">
+                                <canvas id="logTimelineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Table Card -->
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h2 class="card-title">Log Analytics</h2>
-                                    <p class="card-subtitle">View and filter recent log entries (last 1000 logs)</p>
+                                    <h2 class="card-title">Log Entries</h2>
+                                    <p class="card-subtitle">Recent log entries (last 1000 logs)</p>
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <select class="form-select form-select-sm" id="logLevelFilter" style="width: 150px;">
@@ -727,9 +826,6 @@
                                         <option value="ERROR">ERROR</option>
                                         <option value="LOG">LOG</option>
                                     </select>
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
-                                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -840,6 +936,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
@@ -998,6 +1095,264 @@
 
         // Dashboard functionality
         let currentLogs = [];
+        let logStatsChart = null;
+        let logTimelineChart = null;
+
+        // Fetch statistics from analytics API
+        async function fetchStats() {
+            try {
+                const response = await fetch('/services/logging/api/stats');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                return null;
+            }
+        }
+
+        // Update statistics display
+        function updateStatsDisplay(stats) {
+            if (!stats) return;
+
+            // Update total count
+            document.getElementById('statTotalCount').textContent = stats.total;
+
+            // Update INFO stats
+            document.getElementById('statInfoCount').textContent = stats.counts.INFO;
+            document.getElementById('statInfoPercent').textContent = stats.percentages.INFO + '%';
+            document.getElementById('statInfoBar').style.width = stats.percentages.INFO + '%';
+
+            // Update WARN stats
+            document.getElementById('statWarnCount').textContent = stats.counts.WARN;
+            document.getElementById('statWarnPercent').textContent = stats.percentages.WARN + '%';
+            document.getElementById('statWarnBar').style.width = stats.percentages.WARN + '%';
+
+            // Update ERROR stats
+            document.getElementById('statErrorCount').textContent = stats.counts.ERROR;
+            document.getElementById('statErrorPercent').textContent = stats.percentages.ERROR + '%';
+            document.getElementById('statErrorBar').style.width = stats.percentages.ERROR + '%';
+
+            // Update LOG stats
+            document.getElementById('statLogCount').textContent = stats.counts.LOG;
+            document.getElementById('statLogPercent').textContent = stats.percentages.LOG + '%';
+            document.getElementById('statLogBar').style.width = stats.percentages.LOG + '%';
+        }
+
+        // Fetch timeline from analytics API
+        async function fetchTimeline() {
+            try {
+                const response = await fetch('/services/logging/api/timeline');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching timeline:', error);
+                return null;
+            }
+        }
+
+        // Initialize or update pie chart
+        function updateChart(stats) {
+            if (!stats) return;
+
+            const ctx = document.getElementById('logStatsChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (logStatsChart) {
+                logStatsChart.destroy();
+            }
+
+            // Create new chart
+            logStatsChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['INFO', 'WARN', 'ERROR', 'LOG'],
+                    datasets: [{
+                        label: 'Log Levels',
+                        data: [
+                            stats.counts.INFO,
+                            stats.counts.WARN,
+                            stats.counts.ERROR,
+                            stats.counts.LOG
+                        ],
+                        backgroundColor: [
+                            'rgba(13, 110, 253, 0.8)',   // Bootstrap primary (blue)
+                            'rgba(255, 193, 7, 0.8)',    // Bootstrap warning (yellow)
+                            'rgba(220, 53, 69, 0.8)',    // Bootstrap danger (red)
+                            'rgba(108, 117, 125, 0.8)'   // Bootstrap secondary (gray)
+                        ],
+                        borderColor: [
+                            'rgba(13, 110, 253, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(108, 117, 125, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = stats.percentages[label] || 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize or update timeline chart
+        function updateTimelineChart(timeline) {
+            if (!timeline) return;
+
+            const ctx = document.getElementById('logTimelineChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (logTimelineChart) {
+                logTimelineChart.destroy();
+            }
+
+            // Create new timeline chart
+            logTimelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeline.labels,
+                    datasets: [
+                        {
+                            label: 'INFO',
+                            data: timeline.datasets.INFO,
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'WARN',
+                            data: timeline.datasets.WARN,
+                            borderColor: 'rgba(255, 193, 7, 1)',
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'ERROR',
+                            data: timeline.datasets.ERROR,
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'LOG',
+                            data: timeline.datasets.LOG,
+                            borderColor: 'rgba(108, 117, 125, 1)',
+                            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return 'Time: ' + context[0].label;
+                                },
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y || 0;
+                                    return `${label}: ${value} log${value !== 1 ? 's' : ''}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time (per minute)',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Logs',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // Fetch logs from analytics API
         async function fetchLogs(level = '') {
@@ -1104,8 +1459,26 @@
                 </tr>
             `;
 
-            const data = await fetchLogs(levelFilter);
-            currentLogs = data.logs || [];
+            // Fetch stats, timeline, and logs in parallel
+            const [stats, timeline, logsData] = await Promise.all([
+                fetchStats(),
+                fetchTimeline(),
+                fetchLogs(levelFilter)
+            ]);
+
+            // Update statistics and pie chart
+            if (stats) {
+                updateStatsDisplay(stats);
+                updateChart(stats);
+            }
+
+            // Update timeline chart
+            if (timeline) {
+                updateTimelineChart(timeline);
+            }
+
+            // Update logs table
+            currentLogs = logsData.logs || [];
             renderLogsTable(currentLogs);
         }
 

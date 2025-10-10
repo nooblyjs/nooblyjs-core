@@ -134,5 +134,57 @@ module.exports = (options, eventEmitter, logger, analytics) => {
         });
       }
     });
+
+    /**
+     * GET /services/logging/api/stats
+     * Retrieves statistics about log levels including counts and percentages.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/logging/api/stats', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const stats = analytics.getStats();
+        res.status(200).json(stats);
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve statistics',
+          message: err.message
+        });
+      }
+    });
+
+    /**
+     * GET /services/logging/api/timeline
+     * Retrieves timeline data showing log activity per minute for each log level.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/logging/api/timeline', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const timeline = analytics.getTimeline();
+        res.status(200).json(timeline);
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve timeline',
+          message: err.message
+        });
+      }
+    });
   }
 };

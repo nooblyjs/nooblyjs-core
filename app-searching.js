@@ -107,7 +107,7 @@ app.listen(3001, async () => {
   await addRandomPeople();
 
   // Schedule adding random people every 10 seconds
-  setInterval(addRandomPeople, 10000);
+  setInterval(addRandomPeople, 1000);
 
   logger.info('Scheduled random people generation every 10 seconds (1000 people per batch)');
 });

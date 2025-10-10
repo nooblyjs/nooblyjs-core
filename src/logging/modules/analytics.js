@@ -132,6 +132,107 @@ class LogAnalytics {
   clear() {
     this.logs_ = [];
   }
+
+  /**
+   * Gets statistics about log levels including counts and percentages.
+   * @return {Object} Statistics object with counts and percentages for each level.
+   */
+  getStats() {
+    const total = this.logs_.length;
+
+    // Count logs by level
+    const counts = {
+      INFO: 0,
+      WARN: 0,
+      ERROR: 0,
+      LOG: 0
+    };
+
+    this.logs_.forEach(log => {
+      if (counts.hasOwnProperty(log.level)) {
+        counts[log.level]++;
+      }
+    });
+
+    // Calculate percentages
+    const percentages = {};
+    Object.keys(counts).forEach(level => {
+      percentages[level] = total > 0 ? ((counts[level] / total) * 100).toFixed(2) : 0;
+    });
+
+    return {
+      total: total,
+      counts: counts,
+      percentages: percentages
+    };
+  }
+
+  /**
+   * Gets timeline data showing log activity per minute for each log level.
+   * @return {Object} Timeline object with time labels and datasets for each level.
+   */
+  getTimeline() {
+    if (this.logs_.length === 0) {
+      return {
+        labels: [],
+        datasets: {
+          INFO: [],
+          WARN: [],
+          ERROR: [],
+          LOG: []
+        }
+      };
+    }
+
+    // Create a map to store counts per minute per level
+    const timeMap = new Map();
+
+    // Process each log entry
+    this.logs_.forEach(log => {
+      const logTime = new Date(log.timestamp);
+      // Round down to the nearest minute
+      const minuteKey = new Date(logTime.getFullYear(), logTime.getMonth(), logTime.getDate(),
+                                 logTime.getHours(), logTime.getMinutes(), 0, 0).getTime();
+
+      if (!timeMap.has(minuteKey)) {
+        timeMap.set(minuteKey, {
+          INFO: 0,
+          WARN: 0,
+          ERROR: 0,
+          LOG: 0
+        });
+      }
+
+      const counts = timeMap.get(minuteKey);
+      if (counts.hasOwnProperty(log.level)) {
+        counts[log.level]++;
+      }
+    });
+
+    // Sort time keys and create labels
+    const sortedTimes = Array.from(timeMap.keys()).sort((a, b) => a - b);
+    const labels = sortedTimes.map(time => {
+      const date = new Date(time);
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    });
+
+    // Create datasets for each level
+    const datasets = {
+      INFO: sortedTimes.map(time => timeMap.get(time).INFO),
+      WARN: sortedTimes.map(time => timeMap.get(time).WARN),
+      ERROR: sortedTimes.map(time => timeMap.get(time).ERROR),
+      LOG: sortedTimes.map(time => timeMap.get(time).LOG)
+    };
+
+    return {
+      labels: labels,
+      datasets: datasets
+    };
+  }
 }
 
 module.exports = LogAnalytics;
