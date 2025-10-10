@@ -82,7 +82,7 @@ app.listen(3001, () => {
     }).catch((err) => {
       logger.error('Failed to queue example task:', err);
     });
-  }, 10000);
+  }, 100);
 
 
 });

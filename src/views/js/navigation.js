@@ -17,7 +17,7 @@ const NooblyNavigation = {
         { name: 'scheduling', icon: 'bi-alarm-fill', title: 'Scheduling', path: 'scheduling' },
         { name: 'searching', icon: 'bi-search', title: 'Search', path: 'searching' },
         { name: 'workflow', icon: 'bi-diagram-3-fill', title: 'Workflows', path: 'workflow' },
-        { name: 'working', icon: 'bi-gear-fill', title: 'Background Tasks', path: 'working' }
+        { name: 'working', icon: 'bi-gear-fill', title: 'Worker Tasks', path: 'working' }
     ],
 
     serviceStatus: {},

@@ -137,5 +137,35 @@ module.exports = (options, eventEmitter, queue) => {
       eventEmitter.emit('api-queueing-status', 'queueing api running');
       res.status(200).json('queueing api running');
     });
+
+    /**
+     * GET /services/queueing/api/analytics
+     * Returns analytics data for queue operations.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/queueing/api/analytics', async (req, res) => {
+      try {
+        if (!queue.analytics) {
+          return res.status(503).json({ error: 'Analytics not available' });
+        }
+
+        const stats = queue.analytics.getStats();
+        const distribution = queue.analytics.getDistribution();
+        const timeline = queue.analytics.getTimeline(10);
+        const queueList = await queue.analytics.getQueueList(queue, 100);
+
+        res.status(200).json({
+          stats: stats,
+          distribution: distribution,
+          timeline: timeline,
+          queueList: queueList
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
   }
 };

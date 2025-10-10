@@ -1,0 +1,1241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queueing Management - Noobly JS Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/css/navigation.css">
+    <style>
+        /* Custom CSS for professional look */
+        :root {
+            --custom-primary: #0066cc;
+            --custom-secondary: #6c757d;
+            --custom-success: #198754;
+            --custom-danger: #dc3545;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #dee2e6;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            color: var(--custom-primary);
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo .subtitle {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .nav-section-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            margin-top: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            color: #212529;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            border-bottom: 1px solid #f8f9fa;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background-color: #f8f9fa;
+            color: var(--custom-primary);
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background-color: var(--custom-primary);
+            color: white;
+            border-left-color: #0052a3;
+        }
+
+        .nav-item.offline {
+            opacity: 0.6;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: auto;
+        }
+
+        .status-dot.online {
+            background-color: var(--custom-success);
+        }
+
+        .status-dot.offline {
+            background-color: var(--custom-danger);
+        }
+
+        .main-content {
+            background-color: white;
+            min-height: 100vh;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1rem;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .page-subtitle {
+            margin: 0.5rem 0 0 0;
+            color: #6c757d;
+            font-size: 1.125rem;
+        }
+
+        .app-container {
+            display: flex;
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .alert-error {
+            color: #842029;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .card-subtitle {
+            margin: 0.25rem 0 0 0;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .form-input {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #212529;
+            background-color: white;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-input:focus {
+            color: #212529;
+            background-color: white;
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .helper-text {
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            margin-bottom: 0;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .btn:hover {
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--custom-primary);
+            border-color: var(--custom-primary);
+        }
+
+        .btn-primary:hover {
+            color: white;
+            background-color: #0052a3;
+            border-color: #004785;
+        }
+
+        .btn-secondary {
+            color: white;
+            background-color: var(--custom-secondary);
+            border-color: var(--custom-secondary);
+        }
+
+        .btn-secondary:hover {
+            color: white;
+            background-color: #565e64;
+            border-color: #4c5258;
+        }
+
+        .btn-error {
+            color: white;
+            background-color: var(--custom-danger);
+            border-color: var(--custom-danger);
+        }
+
+        .btn-error:hover {
+            color: white;
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* Response Styles */
+        .response-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+
+        .response-title {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .response-content {
+            background-color: white;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Validation Styles */
+        .validation-message {
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .validation-success {
+            color: var(--custom-success);
+        }
+
+        .validation-error {
+            color: var(--custom-danger);
+        }
+
+        .json-valid {
+            border-color: var(--custom-success);
+        }
+
+        .json-invalid {
+            border-color: var(--custom-danger);
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Analytics Table Styles (for caching service) */
+        .analytics-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-info {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .analytics-refresh {
+            background-color: var(--custom-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .analytics-refresh:hover {
+            background-color: #0052a3;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .analytics-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: #e9ecef;
+        }
+
+        .sort-asc::after {
+            content: " ↑";
+        }
+
+        .sort-desc::after {
+            content: " ↓";
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .key-cell {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .hits-cell {
+            font-weight: 600;
+            color: var(--custom-primary);
+        }
+
+        .date-cell {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Swagger UI Integration Styles */
+        #swagger-ui {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        #swagger-ui .swagger-ui {
+            max-width: none;
+        }
+
+        #swagger-ui .topbar {
+            display: none;
+        }
+
+        #swagger-ui .info {
+            margin: 20px 0;
+        }
+
+        #swagger-ui .info .title {
+            font-size: 1.5rem;
+            color: var(--custom-primary);
+        }
+
+        #swagger-ui .scheme-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        #swagger-ui .opblock-tag {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+        }
+
+        #swagger-ui .opblock {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        #swagger-ui .opblock.is-open .opblock-summary {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        #swagger-ui .opblock .opblock-summary-method {
+            border-radius: 0.375rem;
+            font-weight: 600;
+        }
+
+        #swagger-ui .opblock.opblock-post .opblock-summary-method {
+            background: var(--custom-success);
+        }
+
+        #swagger-ui .opblock.opblock-get .opblock-summary-method {
+            background: var(--custom-primary);
+        }
+
+        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
+            background: var(--custom-danger);
+        }
+
+        #swagger-ui .opblock.opblock-put .opblock-summary-method {
+            background: #fd7e14;
+        }
+
+        #swagger-ui .btn {
+            border-radius: 0.375rem;
+            font-weight: 500;
+            padding: 0.375rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        #swagger-ui .btn.execute {
+            background: var(--custom-primary);
+            border-color: var(--custom-primary);
+        }
+
+        #swagger-ui .btn.execute:hover {
+            background: #0052a3;
+            border-color: #004785;
+        }
+
+        #swagger-ui .btn.btn-clear {
+            background: var(--custom-secondary);
+            border-color: var(--custom-secondary);
+            color: white;
+        }
+
+        #swagger-ui .btn.btn-clear:hover {
+            background: #565e64;
+            border-color: #4c5258;
+        }
+
+        #swagger-ui .parameters-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+        }
+
+        #swagger-ui .parameter__name {
+            color: var(--custom-primary);
+            font-weight: 600;
+        }
+
+        #swagger-ui input[type="text"],
+        #swagger-ui textarea,
+        #swagger-ui select {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        #swagger-ui input[type="text"]:focus,
+        #swagger-ui textarea:focus,
+        #swagger-ui select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: 0;
+        }
+
+        #swagger-ui .response-col_status {
+            font-weight: 600;
+        }
+
+        #swagger-ui .response-col_status.response-undocumented {
+            color: var(--custom-secondary);
+        }
+
+        #swagger-ui .response .response-col_status {
+            color: var(--custom-success);
+        }
+
+        #swagger-ui .responses-inner h4 {
+            color: var(--custom-primary);
+            font-weight: 600;
+        }
+
+        #swagger-ui .highlight-code {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+
+        #swagger-ui .model-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+
+        #swagger-ui .model .property {
+            color: var(--custom-primary);
+        }
+
+        #swagger-ui .prop-type {
+            color: var(--custom-secondary);
+        }
+
+        /* Ensure proper responsiveness */
+        #swagger-ui .wrapper {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        #swagger-ui .swagger-ui table {
+            table-layout: auto;
+            width: 100%;
+        }
+
+        /* Fix potential z-index issues */
+        #swagger-ui .dialog-ux {
+            z-index: 1050;
+        }
+
+        #swagger-ui .model-box-control:focus {
+            outline: 2px solid var(--custom-primary);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" id="navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Queue Management</h1>
+                <p class="page-subtitle">Enqueue, dequeue, and manage items in the queue</p>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" role="tablist" style="border-bottom: 2px solid #dee2e6; margin-bottom: 2rem;">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="index.html" role="tab" style="border: none; color: #6c757d; padding: 0.75rem 1.5rem; font-weight: 500;">
+                        <i class="bi bi-graph-up"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="data-tab" href="#" role="tab" style="border: none; color: #0066cc; padding: 0.75rem 1.5rem; font-weight: 500; border-bottom: 2px solid #0066cc; margin-bottom: -2px;">
+                        <i class="bi bi-pencil-square"></i> Data Operations
+                    </a>
+                </li>
+            </ul>
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Enqueue Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Enqueue Item</h2>
+                    <p class="card-subtitle">Add an item to a named queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="enqueueForm">
+                        <div class="form-group">
+                            <label class="form-label" for="enqueueQueueName">Queue Name</label>
+                            <input type="text" id="enqueueQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue (e.g., emailQueue, imageQueue, dataQueue)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="enqueueItem">Task/Item (JSON)</label>
+                            <textarea id="enqueueItem" class="form-input form-textarea" placeholder='{"task": "process-payment", "orderId": 12345}' required></textarea>
+                            <div id="enqueueValidation" class="validation-message" style="display: none;"></div>
+                            <div class="helper-text">Enter a valid JSON object to add to the queue</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Enqueue</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('enqueueItem')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('enqueueItem')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="enqueueResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Response:</div>
+                        <div id="enqueueResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dequeue Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Dequeue Item</h2>
+                    <p class="card-subtitle">Remove and retrieve the next item from a named queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="dequeueForm">
+                        <div class="form-group">
+                            <label class="form-label" for="dequeueQueueName">Queue Name</label>
+                            <input type="text" id="dequeueQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to dequeue from</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Dequeue</button>
+                        </div>
+                    </form>
+                    <div id="dequeueResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Dequeued Item:</div>
+                        <div id="dequeueResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Size Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Queue Size</h2>
+                    <p class="card-subtitle">Get the current number of items in a named queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="sizeForm">
+                        <div class="form-group">
+                            <label class="form-label" for="sizeQueueName">Queue Name</label>
+                            <input type="text" id="sizeQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to check size</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Get Size</button>
+                        </div>
+                    </form>
+                    <div id="sizeResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Queue Size:</div>
+                        <div id="sizeResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Queues -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">List All Queues</h2>
+                    <p class="card-subtitle">View all active queue names</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="listQueues()">List Queues</button>
+                    </div>
+                    <div id="listQueuesResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Active Queues:</div>
+                        <div id="listQueuesResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purge Queue -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Purge Queue</h2>
+                    <p class="card-subtitle">Clear all items from a named queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="purgeForm">
+                        <div class="form-group">
+                            <label class="form-label" for="purgeQueueName">Queue Name</label>
+                            <input type="text" id="purgeQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to purge (WARNING: This will delete all items)</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Purge Queue</button>
+                        </div>
+                    </form>
+                    <div id="purgeResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Purge Result:</div>
+                        <div id="purgeResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check queueing service status</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Queueing service</p>
+                </div>
+                <div class="card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="/services/js/navigation.js"></script>
+    <script>
+        NooblyNavigation.renderNavigation('navigation-sidebar', 'queueing');
+    </script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Item', 'Validation'));
+            const value = element.value.trim();
+            
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                validation.style.display = 'none';
+                return true;
+            }
+            
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                validation.textContent = '✓ Valid JSON';
+                validation.className = 'validation-message validation-success';
+                validation.style.display = 'block';
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.className = 'validation-message validation-error';
+                validation.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('enqueueItem').addEventListener('input', () => validateJSON('enqueueItem'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                enqueueItem: {
+                    "task": "send-welcome-email",
+                    "userId": "user-xyz-123",
+                    "template": "welcome-template-v2"
+                }
+            };
+            
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('enqueueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const queueName = document.getElementById('enqueueQueueName').value.trim();
+            const item = document.getElementById('enqueueItem').value;
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
+            if (!validateJSON('enqueueItem')) {
+                showAlert('Please enter a valid JSON item', 'error');
+                return;
+            }
+
+            try {
+                setLoading('enqueueForm', true);
+                const parsedItem = JSON.parse(item);
+                const result = await makeRequest(`/services/queueing/api/enqueue/${queueName}`, 'POST', { task: parsedItem });
+                showResponse('enqueueResponse', 'enqueueResponseContent', result);
+                showAlert(`Item enqueued to '${queueName}' successfully`);
+            } catch (error) {
+                showAlert('Error enqueuing item: ' + error.message, 'error');
+                showResponse('enqueueResponse', 'enqueueResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('enqueueForm', false);
+            }
+        });
+
+        document.getElementById('dequeueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const queueName = document.getElementById('dequeueQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
+            try {
+                setLoading('dequeueForm', true);
+                const result = await makeRequest(`/services/queueing/api/dequeue/${queueName}`);
+                showResponse('dequeueResponse', 'dequeueResponseContent', result);
+                showAlert(`Item dequeued from '${queueName}' successfully`);
+            } catch (error) {
+                showAlert('Error dequeuing item: ' + error.message, 'error');
+                showResponse('dequeueResponse', 'dequeueResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('dequeueForm', false);
+            }
+        });
+
+        document.getElementById('sizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const queueName = document.getElementById('sizeQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
+            try {
+                setLoading('sizeForm', true);
+                const result = await makeRequest(`/services/queueing/api/size/${queueName}`);
+                showResponse('sizeResponse', 'sizeResponseContent', result);
+                showAlert(`Queue size for '${queueName}' retrieved successfully`);
+            } catch (error) {
+                showAlert('Error retrieving queue size: ' + error.message, 'error');
+                showResponse('sizeResponse', 'sizeResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('sizeForm', false);
+            }
+        });
+
+        document.getElementById('purgeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const queueName = document.getElementById('purgeQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to purge all items from queue '${queueName}'? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                setLoading('purgeForm', true);
+                const result = await makeRequest(`/services/queueing/api/purge/${queueName}`, 'DELETE');
+                showResponse('purgeResponse', 'purgeResponseContent', result);
+                showAlert(`Queue '${queueName}' purged successfully`);
+            } catch (error) {
+                showAlert('Error purging queue: ' + error.message, 'error');
+                showResponse('purgeResponse', 'purgeResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('purgeForm', false);
+            }
+        });
+
+        async function listQueues() {
+            try {
+                const result = await makeRequest('/services/queueing/api/queues');
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', result);
+                showAlert('Queue list retrieved successfully');
+            } catch (error) {
+                showAlert('Error listing queues: ' + error.message, 'error');
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/queueing/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup
+        const spec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Queueing API',
+                description: 'REST API for named queue operations with support for multiple independent queues',
+                version: '2.0.0'
+            },
+            servers: [
+                { url: '/services/queueing/api', description: 'Queueing API' }
+            ],
+            paths: {
+                '/enqueue/{queueName}': {
+                    post: {
+                        summary: 'Enqueue an item',
+                        description: 'Adds an item to the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            task: { type: 'object' }
+                                        }
+                                    },
+                                    example: { "task": { "type": "process-payment", "orderId": 12345 } }
+                                }
+                            }
+                        },
+                        responses: {
+                            '200': { description: 'Item enqueued successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
+                            '400': { description: 'Bad Request - Missing queue name or task' },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/dequeue/{queueName}': {
+                    get: {
+                        summary: 'Dequeue an item',
+                        description: 'Removes and retrieves the next item from the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
+                        responses: {
+                            '200': { description: 'Item dequeued successfully', content: { 'application/json': { schema: { type: 'object' } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/size/{queueName}': {
+                    get: {
+                        summary: 'Get queue size',
+                        description: 'Gets the current number of items in the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
+                        responses: {
+                            '200': { description: 'Queue size retrieved successfully', content: { 'application/json': { schema: { type: 'number', example: 5 } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/queues': {
+                    get: {
+                        summary: 'List all queues',
+                        description: 'Returns a list of all active queue names',
+                        responses: {
+                            '200': {
+                                description: 'Queue list retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'array',
+                                            items: { type: 'string' },
+                                            example: ['emailQueue', 'imageQueue', 'dataQueue']
+                                        }
+                                    }
+                                }
+                            },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/purge/{queueName}': {
+                    delete: {
+                        summary: 'Purge a queue',
+                        description: 'Removes all items from the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue to purge',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
+                        responses: {
+                            '200': { description: 'Queue purged successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/status': {
+                    get: {
+                        summary: 'Service status',
+                        description: 'Check if the queueing service is running',
+                        responses: {
+                            '200': {
+                                description: 'Service is running',
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'string', example: 'queueing api running' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Initialize Swagger UI
+        window.onload = function() {
+            checkStatus();
+            try {
+            checkStatus();
+                const ui = SwaggerUIBundle({
+                    spec: spec,
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.presets.standalone
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "BaseLayout",
+                    tryItOutEnabled: true,
+                    requestInterceptor: (request) => {
+                        // Add any headers or modify request if needed
+                        return request;
+                    },
+                    responseInterceptor: (response) => {
+                        // Handle response if needed
+                        return response;
+                    },
+                    onComplete: () => {
+                        console.log('Swagger UI loaded successfully');
+                    },
+                    onFailure: (error) => {
+                        console.error('Swagger UI failed to load:', error);
+                    }
+                });
+
+                window.ui = ui;
+            } catch (error) {
+                console.error('Error initializing Swagger UI:', error);
+                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
+            }
+        };
+    </script>
+</body>
+</html>

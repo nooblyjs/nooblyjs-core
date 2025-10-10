@@ -1,21 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queueing Management - Noobly JS Admin</title>
+    <title>Queueing Dashboard - Noobly JS Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* Custom CSS for professional look */
         :root {
             --custom-primary: #0066cc;
             --custom-secondary: #6c757d;
             --custom-success: #198754;
             --custom-danger: #dc3545;
+            --custom-warning: #ffc107;
         }
 
         body {
@@ -87,10 +86,6 @@
             border-left-color: #0052a3;
         }
 
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
         .status-dot {
             width: 8px;
             height: 8px;
@@ -137,32 +132,34 @@
             display: flex;
         }
 
-        /* Alert Styles */
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            display: none;
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 2rem;
         }
 
-        .alert.show {
-            display: block;
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .alert-success {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            border-color: #badbcc;
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom: 2px solid var(--custom-primary);
+            margin-bottom: -2px;
         }
 
-        .alert-error {
-            color: #842029;
-            background-color: #f8d7da;
-            border-color: #f5c2c7;
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom: 2px solid var(--custom-primary);
+            margin-bottom: -2px;
         }
 
-        /* Card Styles */
+        /* Cards */
         .card {
             background-color: white;
             border: 1px solid #dee2e6;
@@ -195,195 +192,18 @@
             padding: 1.5rem;
         }
 
-        /* Form Styles */
-        .form-group {
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 400px;
             margin-bottom: 1rem;
         }
 
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #212529;
+        .chart-container.small {
+            height: 300px;
         }
 
-        .form-input {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #212529;
-            background-color: white;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .form-input:focus {
-            color: #212529;
-            background-color: white;
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .helper-text {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #212529;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .btn:hover {
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            color: white;
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        .btn-primary:hover {
-            color: white;
-            background-color: #0052a3;
-            border-color: #004785;
-        }
-
-        .btn-secondary {
-            color: white;
-            background-color: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-        }
-
-        .btn-secondary:hover {
-            color: white;
-            background-color: #565e64;
-            border-color: #4c5258;
-        }
-
-        .btn-error {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-error:hover {
-            color: white;
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* Response Styles */
-        .response-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        .response-title {
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 0.5rem;
-        }
-
-        .response-content {
-            background-color: white;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Validation Styles */
-        .validation-message {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-        }
-
-        .validation-success {
-            color: var(--custom-success);
-        }
-
-        .validation-error {
-            color: var(--custom-danger);
-        }
-
-        .json-valid {
-            border-color: var(--custom-success);
-        }
-
-        .json-invalid {
-            border-color: var(--custom-danger);
-        }
-
-        /* Loading States */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Analytics Table Styles (for caching service) */
-        .analytics-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .analytics-info {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh {
-            background-color: var(--custom-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh:hover {
-            background-color: #0052a3;
-        }
-
+        /* Table */
         .analytics-table {
             width: 100%;
             border-collapse: collapse;
@@ -401,6 +221,13 @@
             background-color: #f8f9fa;
             font-weight: 600;
             color: #495057;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .analytics-table tbody tr:hover {
+            background-color: #f8f9fa;
         }
 
         .sortable {
@@ -424,203 +251,125 @@
             text-align: center;
             color: #6c757d;
             font-style: italic;
+            padding: 2rem;
         }
 
-        .key-cell {
+        .queue-name {
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.875rem;
-        }
-
-        .hits-cell {
-            font-weight: 600;
             color: var(--custom-primary);
+            font-weight: 600;
         }
 
-        .date-cell {
+        .metric-value {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .metric-label {
             color: #6c757d;
             font-size: 0.875rem;
         }
 
-        /* Swagger UI Integration Styles */
-        #swagger-ui {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        #swagger-ui .swagger-ui {
-            max-width: none;
-        }
-
-        #swagger-ui .topbar {
-            display: none;
-        }
-
-        #swagger-ui .info {
-            margin: 20px 0;
-        }
-
-        #swagger-ui .info .title {
-            font-size: 1.5rem;
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .scheme-container {
-            background: #f8f9fa;
+        .stat-card {
+            background: white;
             border: 1px solid #dee2e6;
             border-radius: 0.375rem;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        #swagger-ui .opblock-tag {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        #swagger-ui .opblock {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
+            padding: 1.5rem;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
 
-        #swagger-ui .opblock.is-open .opblock-summary {
-            border-bottom: 1px solid #dee2e6;
+        .stat-card .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
         }
 
-        #swagger-ui .opblock .opblock-summary-method {
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .stat-card .stat-icon {
+            float: right;
+            font-size: 2rem;
+            opacity: 0.3;
+        }
+
+        /* Refresh Button */
+        .refresh-btn {
+            background-color: var(--custom-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
             border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #0052a3;
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--custom-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
-        #swagger-ui .opblock.opblock-post .opblock-summary-method {
-            background: var(--custom-success);
-        }
-
-        #swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: var(--custom-primary);
-        }
-
-        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
-            background: var(--custom-danger);
-        }
-
-        #swagger-ui .opblock.opblock-put .opblock-summary-method {
-            background: #fd7e14;
-        }
-
-        #swagger-ui .btn {
-            border-radius: 0.375rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        #swagger-ui .btn.execute {
-            background: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        #swagger-ui .btn.execute:hover {
-            background: #0052a3;
-            border-color: #004785;
-        }
-
-        #swagger-ui .btn.btn-clear {
-            background: var(--custom-secondary);
-            border-color: var(--custom-secondary);
+        .badge-primary {
+            background-color: var(--custom-primary);
             color: white;
         }
 
-        #swagger-ui .btn.btn-clear:hover {
-            background: #565e64;
-            border-color: #4c5258;
+        .badge-success {
+            background-color: var(--custom-success);
+            color: white;
         }
 
-        #swagger-ui .parameters-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        #swagger-ui .parameter__name {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui input[type="text"],
-        #swagger-ui textarea,
-        #swagger-ui select {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        #swagger-ui input[type="text"]:focus,
-        #swagger-ui textarea:focus,
-        #swagger-ui select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: 0;
-        }
-
-        #swagger-ui .response-col_status {
-            font-weight: 600;
-        }
-
-        #swagger-ui .response-col_status.response-undocumented {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .response .response-col_status {
-            color: var(--custom-success);
-        }
-
-        #swagger-ui .responses-inner h4 {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui .highlight-code {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model .property {
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .prop-type {
-            color: var(--custom-secondary);
-        }
-
-        /* Ensure proper responsiveness */
-        #swagger-ui .wrapper {
-            max-width: 100%;
-            overflow-x: auto;
-        }
-
-        #swagger-ui .swagger-ui table {
-            table-layout: auto;
-            width: 100%;
-        }
-
-        /* Fix potential z-index issues */
-        #swagger-ui .dialog-ux {
-            z-index: 1050;
-        }
-
-        #swagger-ui .model-box-control:focus {
-            outline: 2px solid var(--custom-primary);
-            outline-offset: 2px;
+        .badge-warning {
+            background-color: var(--custom-warning);
+            color: #000;
         }
     </style>
 </head>
@@ -632,596 +381,384 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Queue Management</h1>
-                <p class="page-subtitle">Enqueue, dequeue, and manage items in the queue</p>
+                <h1 class="page-title">Queue Analytics</h1>
+                <p class="page-subtitle">Monitor and analyze queue performance</p>
             </div>
 
-            <div class="alert alert-success" id="successAlert">
-                <strong>Success!</strong> <span id="successMessage"></span>
-            </div>
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab">
+                        <i class="bi bi-graph-up"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="data-tab" href="data.html" role="tab">
+                        <i class="bi bi-pencil-square"></i> Data Operations
+                    </a>
+                </li>
+            </ul>
 
-            <div class="alert alert-error" id="errorAlert">
-                <strong>Error!</strong> <span id="errorMessage"></span>
-            </div>
-
-            <!-- Enqueue Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Enqueue Item</h2>
-                    <p class="card-subtitle">Add an item to a named queue</p>
-                </div>
-                <div class="card-content">
-                    <form id="enqueueForm">
-                        <div class="form-group">
-                            <label class="form-label" for="enqueueQueueName">Queue Name</label>
-                            <input type="text" id="enqueueQueueName" class="form-input" placeholder="emailQueue" required>
-                            <div class="helper-text">Enter the name of the queue (e.g., emailQueue, imageQueue, dataQueue)</div>
+            <!-- Dashboard Tab Content -->
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="bi bi-stack stat-icon"></i>
+                            <div class="stat-label">Total Queues</div>
+                            <div class="stat-value" id="totalQueues">0</div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="enqueueItem">Task/Item (JSON)</label>
-                            <textarea id="enqueueItem" class="form-input form-textarea" placeholder='{"task": "process-payment", "orderId": 12345}' required></textarea>
-                            <div id="enqueueValidation" class="validation-message" style="display: none;"></div>
-                            <div class="helper-text">Enter a valid JSON object to add to the queue</div>
+                        <div class="stat-card">
+                            <i class="bi bi-inbox stat-icon"></i>
+                            <div class="stat-label">Total Messages</div>
+                            <div class="stat-value" id="totalMessages">0</div>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Enqueue</button>
-                            <button type="button" class="btn btn-secondary" onclick="formatJSON('enqueueItem')">Format JSON</button>
-                            <button type="button" class="btn btn-secondary" onclick="loadExample('enqueueItem')">Load Example</button>
+                        <div class="stat-card">
+                            <i class="bi bi-arrow-up stat-icon"></i>
+                            <div class="stat-label">Total Enqueued</div>
+                            <div class="stat-value" id="totalEnqueued">0</div>
                         </div>
-                    </form>
-                    <div id="enqueueResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="enqueueResponseContent" class="response-content"></div>
+                        <div class="stat-card">
+                            <i class="bi bi-arrow-down stat-icon"></i>
+                            <div class="stat-label">Total Dequeued</div>
+                            <div class="stat-value" id="totalDequeued">0</div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Dequeue Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Dequeue Item</h2>
-                    <p class="card-subtitle">Remove and retrieve the next item from a named queue</p>
-                </div>
-                <div class="card-content">
-                    <form id="dequeueForm">
-                        <div class="form-group">
-                            <label class="form-label" for="dequeueQueueName">Queue Name</label>
-                            <input type="text" id="dequeueQueueName" class="form-input" placeholder="emailQueue" required>
-                            <div class="helper-text">Enter the name of the queue to dequeue from</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Dequeue</button>
-                        </div>
-                    </form>
-                    <div id="dequeueResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Dequeued Item:</div>
-                        <div id="dequeueResponseContent" class="response-content"></div>
+                    <!-- Refresh Button -->
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <button class="refresh-btn" onclick="loadAnalytics()" id="refreshBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Analytics
+                        </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- Queue Size Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Queue Size</h2>
-                    <p class="card-subtitle">Get the current number of items in a named queue</p>
-                </div>
-                <div class="card-content">
-                    <form id="sizeForm">
-                        <div class="form-group">
-                            <label class="form-label" for="sizeQueueName">Queue Name</label>
-                            <input type="text" id="sizeQueueName" class="form-input" placeholder="emailQueue" required>
-                            <div class="helper-text">Enter the name of the queue to check size</div>
+                    <!-- Queue Distribution Pie Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Queue Distribution</h2>
+                            <p class="card-subtitle">Total messages per queue</p>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Get Size</button>
+                        <div class="card-content">
+                            <div class="chart-container">
+                                <canvas id="distributionChart"></canvas>
+                            </div>
                         </div>
-                    </form>
-                    <div id="sizeResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Queue Size:</div>
-                        <div id="sizeResponseContent" class="response-content"></div>
                     </div>
-                </div>
-            </div>
 
-            <!-- List Queues -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">List All Queues</h2>
-                    <p class="card-subtitle">View all active queue names</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="listQueues()">List Queues</button>
-                    </div>
-                    <div id="listQueuesResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Active Queues:</div>
-                        <div id="listQueuesResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Purge Queue -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Purge Queue</h2>
-                    <p class="card-subtitle">Clear all items from a named queue</p>
-                </div>
-                <div class="card-content">
-                    <form id="purgeForm">
-                        <div class="form-group">
-                            <label class="form-label" for="purgeQueueName">Queue Name</label>
-                            <input type="text" id="purgeQueueName" class="form-input" placeholder="emailQueue" required>
-                            <div class="helper-text">Enter the name of the queue to purge (WARNING: This will delete all items)</div>
+                    <!-- Activity Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Top 10 Queues Activity</h2>
+                            <p class="card-subtitle">Activity over time (operations per minute)</p>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-error">Purge Queue</button>
+                        <div class="card-content">
+                            <div class="chart-container">
+                                <canvas id="activityChart"></canvas>
+                            </div>
                         </div>
-                    </form>
-                    <div id="purgeResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Purge Result:</div>
-                        <div id="purgeResponseContent" class="response-content"></div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Status Check -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check queueing service status</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    <!-- Queue List Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Queue Details</h2>
+                            <p class="card-subtitle">Top 100 queues with current sizes</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="analytics-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="sortable" onclick="sortTable('name')">Queue Name<span id="sort-name"></span></th>
+                                            <th class="sortable" onclick="sortTable('currentSize')">Current Size<span id="sort-currentSize"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalEnqueued')">Total Enqueued<span id="sort-totalEnqueued"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalDequeued')">Total Dequeued<span id="sort-totalDequeued"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalMessages')">Total Messages<span id="sort-totalMessages"></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="queueTableBody">
+                                        <tr>
+                                            <td colspan="5" class="no-data">Loading analytics...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Queueing service</p>
-                </div>
-                <div class="card-content">
-                    <div id="swagger-ui"></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
         NooblyNavigation.renderNavigation('navigation-sidebar', 'queueing');
     </script>
     <script>
-        // JSON validation
-        function validateJSON(elementId) {
-            const element = document.getElementById(elementId);
-            const validation = document.getElementById(elementId.replace('Item', 'Validation'));
-            const value = element.value.trim();
-            
-            if (!value) {
-                element.classList.remove('json-valid', 'json-invalid');
-                validation.style.display = 'none';
-                return true;
-            }
-            
-            try {
-                JSON.parse(value);
-                element.classList.remove('json-invalid');
-                element.classList.add('json-valid');
-                validation.textContent = '✓ Valid JSON';
-                validation.className = 'validation-message validation-success';
-                validation.style.display = 'block';
-                return true;
-            } catch (e) {
-                element.classList.remove('json-valid');
-                element.classList.add('json-invalid');
-                validation.textContent = '✗ Invalid JSON: ' + e.message;
-                validation.className = 'validation-message validation-error';
-                validation.style.display = 'block';
-                return false;
-            }
-        }
+        let distributionChart = null;
+        let activityChart = null;
+        let queueListData = [];
+        let sortColumn = 'currentSize';
+        let sortDirection = 'desc';
 
-        // Real-time validation
-        document.getElementById('enqueueItem').addEventListener('input', () => validateJSON('enqueueItem'));
+        // Color palette for charts
+        const chartColors = [
+            '#0066cc', '#198754', '#dc3545', '#ffc107', '#6610f2',
+            '#fd7e14', '#20c997', '#0dcaf0', '#d63384', '#6c757d',
+            '#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0'
+        ];
 
-        // Format JSON
-        function formatJSON(elementId) {
-            const element = document.getElementById(elementId);
-            try {
-                const parsed = JSON.parse(element.value);
-                element.value = JSON.stringify(parsed, null, 2);
-                validateJSON(elementId);
-            } catch (e) {
-                showAlert('Invalid JSON cannot be formatted', 'error');
-            }
-        }
-
-        // Load example
-        function loadExample(elementId) {
-            const examples = {
-                enqueueItem: {
-                    "task": "send-welcome-email",
-                    "userId": "user-xyz-123",
-                    "template": "welcome-template-v2"
-                }
-            };
-            
-            if (examples[elementId]) {
-                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
-                validateJSON(elementId);
-            }
-        }
-
-        // Utility functions
-        function showAlert(message, type = 'success') {
-            const alertElement = document.getElementById(type + 'Alert');
-            const messageElement = document.getElementById(type + 'Message');
-            messageElement.textContent = message;
-            alertElement.classList.add('show');
-            setTimeout(() => alertElement.classList.remove('show'), 5000);
-        }
-
-        function showResponse(containerId, contentId, data) {
-            const container = document.getElementById(containerId);
-            const content = document.getElementById(contentId);
-            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
-            container.style.display = 'block';
-        }
-
-        function setLoading(formId, isLoading) {
-            const form = document.getElementById(formId);
-            if (isLoading) {
-                form.classList.add('loading');
-            } else {
-                form.classList.remove('loading');
-            }
-        }
-
-        // API functions
-        async function makeRequest(url, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
-            
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-            
-            const response = await fetch(url, options);
-            const contentType = response.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                return await response.text();
-            }
-        }
-
-        // Form handlers
-        document.getElementById('enqueueForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const queueName = document.getElementById('enqueueQueueName').value.trim();
-            const item = document.getElementById('enqueueItem').value;
-
-            if (!queueName) {
-                showAlert('Please enter a queue name', 'error');
-                return;
-            }
-
-            if (!validateJSON('enqueueItem')) {
-                showAlert('Please enter a valid JSON item', 'error');
-                return;
-            }
+        // Load analytics data
+        async function loadAnalytics() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Loading<span class="loading-spinner"></span>';
 
             try {
-                setLoading('enqueueForm', true);
-                const parsedItem = JSON.parse(item);
-                const result = await makeRequest(`/services/queueing/api/enqueue/${queueName}`, 'POST', { task: parsedItem });
-                showResponse('enqueueResponse', 'enqueueResponseContent', result);
-                showAlert(`Item enqueued to '${queueName}' successfully`);
+                const response = await fetch('/services/queueing/api/analytics');
+                const data = await response.json();
+
+                updateStats(data.stats);
+                updateDistributionChart(data.distribution);
+                updateActivityChart(data.timeline);
+                updateQueueTable(data.queueList);
             } catch (error) {
-                showAlert('Error enqueuing item: ' + error.message, 'error');
-                showResponse('enqueueResponse', 'enqueueResponseContent', 'Error: ' + error.message);
+                console.error('Error loading analytics:', error);
+                document.getElementById('queueTableBody').innerHTML = '<tr><td colspan="5" class="no-data">Error loading analytics data</td></tr>';
             } finally {
-                setLoading('enqueueForm', false);
-            }
-        });
-
-        document.getElementById('dequeueForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const queueName = document.getElementById('dequeueQueueName').value.trim();
-
-            if (!queueName) {
-                showAlert('Please enter a queue name', 'error');
-                return;
-            }
-
-            try {
-                setLoading('dequeueForm', true);
-                const result = await makeRequest(`/services/queueing/api/dequeue/${queueName}`);
-                showResponse('dequeueResponse', 'dequeueResponseContent', result);
-                showAlert(`Item dequeued from '${queueName}' successfully`);
-            } catch (error) {
-                showAlert('Error dequeuing item: ' + error.message, 'error');
-                showResponse('dequeueResponse', 'dequeueResponseContent', 'Error: ' + error.message);
-            } finally {
-                setLoading('dequeueForm', false);
-            }
-        });
-
-        document.getElementById('sizeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const queueName = document.getElementById('sizeQueueName').value.trim();
-
-            if (!queueName) {
-                showAlert('Please enter a queue name', 'error');
-                return;
-            }
-
-            try {
-                setLoading('sizeForm', true);
-                const result = await makeRequest(`/services/queueing/api/size/${queueName}`);
-                showResponse('sizeResponse', 'sizeResponseContent', result);
-                showAlert(`Queue size for '${queueName}' retrieved successfully`);
-            } catch (error) {
-                showAlert('Error retrieving queue size: ' + error.message, 'error');
-                showResponse('sizeResponse', 'sizeResponseContent', 'Error: ' + error.message);
-            } finally {
-                setLoading('sizeForm', false);
-            }
-        });
-
-        document.getElementById('purgeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const queueName = document.getElementById('purgeQueueName').value.trim();
-
-            if (!queueName) {
-                showAlert('Please enter a queue name', 'error');
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to purge all items from queue '${queueName}'? This cannot be undone.`)) {
-                return;
-            }
-
-            try {
-                setLoading('purgeForm', true);
-                const result = await makeRequest(`/services/queueing/api/purge/${queueName}`, 'DELETE');
-                showResponse('purgeResponse', 'purgeResponseContent', result);
-                showAlert(`Queue '${queueName}' purged successfully`);
-            } catch (error) {
-                showAlert('Error purging queue: ' + error.message, 'error');
-                showResponse('purgeResponse', 'purgeResponseContent', 'Error: ' + error.message);
-            } finally {
-                setLoading('purgeForm', false);
-            }
-        });
-
-        async function listQueues() {
-            try {
-                const result = await makeRequest('/services/queueing/api/queues');
-                showResponse('listQueuesResponse', 'listQueuesResponseContent', result);
-                showAlert('Queue list retrieved successfully');
-            } catch (error) {
-                showAlert('Error listing queues: ' + error.message, 'error');
-                showResponse('listQueuesResponse', 'listQueuesResponseContent', 'Error: ' + error.message);
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Analytics';
             }
         }
 
-        async function checkStatus() {
-            try {
-                const result = await makeRequest('/services/queueing/api/status');
-                showResponse('statusResponse', 'statusResponseContent', result);
-                showAlert('Status checked successfully');
-            } catch (error) {
-                showAlert('Error checking status: ' + error.message, 'error');
-                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
-            }
+        // Update stats cards
+        function updateStats(stats) {
+            const totalQueues = stats.totalQueues || 0;
+            let totalMessages = 0;
+            let totalEnqueued = 0;
+            let totalDequeued = 0;
+
+            Object.values(stats.queues || {}).forEach(queueStats => {
+                totalMessages += queueStats.totalMessages || 0;
+                totalEnqueued += queueStats.enqueueCount || 0;
+                totalDequeued += queueStats.dequeueCount || 0;
+            });
+
+            document.getElementById('totalQueues').textContent = totalQueues;
+            document.getElementById('totalMessages').textContent = totalMessages.toLocaleString();
+            document.getElementById('totalEnqueued').textContent = totalEnqueued.toLocaleString();
+            document.getElementById('totalDequeued').textContent = totalDequeued.toLocaleString();
         }
 
-        // Swagger UI setup
-        const spec = {
-            openapi: '3.0.0',
-            info: {
-                title: 'Queueing API',
-                description: 'REST API for named queue operations with support for multiple independent queues',
-                version: '2.0.0'
-            },
-            servers: [
-                { url: '/services/queueing/api', description: 'Queueing API' }
-            ],
-            paths: {
-                '/enqueue/{queueName}': {
-                    post: {
-                        summary: 'Enqueue an item',
-                        description: 'Adds an item to the specified named queue',
-                        parameters: [
-                            {
-                                name: 'queueName',
-                                in: 'path',
-                                required: true,
-                                description: 'Name of the queue',
-                                schema: { type: 'string', example: 'emailQueue' }
-                            }
-                        ],
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            task: { type: 'object' }
-                                        }
-                                    },
-                                    example: { "task": { "type": "process-payment", "orderId": 12345 } }
+        // Update distribution pie chart
+        function updateDistributionChart(distribution) {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            if (!distribution.labels || distribution.labels.length === 0) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#6c757d';
+                ctx.textAlign = 'center';
+                ctx.fillText('No queue data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            distributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: distribution.labels,
+                    datasets: [{
+                        data: distribution.data,
+                        backgroundColor: chartColors,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
                                 }
                             }
                         },
-                        responses: {
-                            '200': { description: 'Item enqueued successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
-                            '400': { description: 'Bad Request - Missing queue name or task' },
-                            '500': { description: 'Server error' }
-                        }
-                    }
-                },
-                '/dequeue/{queueName}': {
-                    get: {
-                        summary: 'Dequeue an item',
-                        description: 'Removes and retrieves the next item from the specified named queue',
-                        parameters: [
-                            {
-                                name: 'queueName',
-                                in: 'path',
-                                required: true,
-                                description: 'Name of the queue',
-                                schema: { type: 'string', example: 'emailQueue' }
-                            }
-                        ],
-                        responses: {
-                            '200': { description: 'Item dequeued successfully', content: { 'application/json': { schema: { type: 'object' } } } },
-                            '400': { description: 'Bad Request - Missing queue name' },
-                            '500': { description: 'Server error' }
-                        }
-                    }
-                },
-                '/size/{queueName}': {
-                    get: {
-                        summary: 'Get queue size',
-                        description: 'Gets the current number of items in the specified named queue',
-                        parameters: [
-                            {
-                                name: 'queueName',
-                                in: 'path',
-                                required: true,
-                                description: 'Name of the queue',
-                                schema: { type: 'string', example: 'emailQueue' }
-                            }
-                        ],
-                        responses: {
-                            '200': { description: 'Queue size retrieved successfully', content: { 'application/json': { schema: { type: 'number', example: 5 } } } },
-                            '400': { description: 'Bad Request - Missing queue name' },
-                            '500': { description: 'Server error' }
-                        }
-                    }
-                },
-                '/queues': {
-                    get: {
-                        summary: 'List all queues',
-                        description: 'Returns a list of all active queue names',
-                        responses: {
-                            '200': {
-                                description: 'Queue list retrieved successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'array',
-                                            items: { type: 'string' },
-                                            example: ['emailQueue', 'imageQueue', 'dataQueue']
-                                        }
-                                    }
-                                }
-                            },
-                            '500': { description: 'Server error' }
-                        }
-                    }
-                },
-                '/purge/{queueName}': {
-                    delete: {
-                        summary: 'Purge a queue',
-                        description: 'Removes all items from the specified named queue',
-                        parameters: [
-                            {
-                                name: 'queueName',
-                                in: 'path',
-                                required: true,
-                                description: 'Name of the queue to purge',
-                                schema: { type: 'string', example: 'emailQueue' }
-                            }
-                        ],
-                        responses: {
-                            '200': { description: 'Queue purged successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
-                            '400': { description: 'Bad Request - Missing queue name' },
-                            '500': { description: 'Server error' }
-                        }
-                    }
-                },
-                '/status': {
-                    get: {
-                        summary: 'Service status',
-                        description: 'Check if the queueing service is running',
-                        responses: {
-                            '200': {
-                                description: 'Service is running',
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'string', example: 'queueing api running' }
-                                    }
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
                                 }
                             }
                         }
                     }
                 }
-            }
-        };
+            });
+        }
 
-        // Initialize Swagger UI
-        window.onload = function() {
-            checkStatus();
-            try {
-            checkStatus();
-                const ui = SwaggerUIBundle({
-                    spec: spec,
-                    dom_id: '#swagger-ui',
-                    deepLinking: true,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIBundle.presets.standalone
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
-                    tryItOutEnabled: true,
-                    requestInterceptor: (request) => {
-                        // Add any headers or modify request if needed
-                        return request;
+        // Update activity line chart
+        function updateActivityChart(timeline) {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+
+            if (activityChart) {
+                activityChart.destroy();
+            }
+
+            if (!timeline.labels || timeline.labels.length === 0) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#6c757d';
+                ctx.textAlign = 'center';
+                ctx.fillText('No activity data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            const datasets = timeline.datasets.map((dataset, index) => ({
+                label: dataset.name,
+                data: dataset.data,
+                borderColor: chartColors[index % chartColors.length],
+                backgroundColor: chartColors[index % chartColors.length] + '20',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: false
+            }));
+
+            activityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeline.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     },
-                    responseInterceptor: (response) => {
-                        // Handle response if needed
-                        return response;
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} operations`;
+                                }
+                            }
+                        }
                     },
-                    onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
-                    },
-                    onFailure: (error) => {
-                        console.error('Swagger UI failed to load:', error);
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Operations per Minute'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
                     }
-                });
+                }
+            });
+        }
 
-                window.ui = ui;
-            } catch (error) {
-                console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
+        // Update queue table
+        function updateQueueTable(queueList) {
+            queueListData = queueList || [];
+            renderQueueTable();
+        }
+
+        // Render queue table
+        function renderQueueTable() {
+            const tbody = document.getElementById('queueTableBody');
+
+            if (queueListData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No queues found</td></tr>';
+                return;
             }
-        };
+
+            // Sort data
+            const sortedData = [...queueListData].sort((a, b) => {
+                const aVal = a[sortColumn];
+                const bVal = b[sortColumn];
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update sort indicators
+            document.querySelectorAll('.sortable span').forEach(span => {
+                span.className = '';
+            });
+            const sortIndicator = document.getElementById(`sort-${sortColumn}`);
+            if (sortIndicator) {
+                sortIndicator.className = sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
+            }
+
+            // Render rows
+            tbody.innerHTML = sortedData.map(queue => `
+                <tr>
+                    <td><span class="queue-name">${escapeHtml(queue.name)}</span></td>
+                    <td class="metric-value">${queue.currentSize.toLocaleString()}</td>
+                    <td class="metric-value">${queue.totalEnqueued.toLocaleString()}</td>
+                    <td class="metric-value">${queue.totalDequeued.toLocaleString()}</td>
+                    <td class="metric-value">${queue.totalMessages.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Sort table
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            renderQueueTable();
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load analytics on page load
+        window.addEventListener('load', () => {
+            loadAnalytics();
+            // Auto-refresh every 30 seconds
+            setInterval(loadAnalytics, 30000);
+        });
     </script>
 </body>
 </html>

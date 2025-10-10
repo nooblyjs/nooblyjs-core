@@ -14,6 +14,7 @@ const CacheRedis = require('./providers/cachingRedis');
 const CacheMemcached = require('./providers/cachingMemcached');
 const CacheFile = require('./providers/cachingFile');
 const CacheApi = require('./providers/cachingApi');
+const CacheAnalytics = require('./modules/analytics');
 
 const Routes = require('./routes');
 const Views = require('./views');
@@ -73,6 +74,17 @@ function createCache(type, options, eventEmitter) {
 
   // Store dependencies for potential use by provider
   cache.dependencies = dependencies;
+
+  // Initialize analytics module
+  if (eventEmitter) {
+    cache.analytics = new CacheAnalytics(eventEmitter);
+
+    if (logger) {
+      cache.log('info', 'Cache analytics initialized', {
+        provider: type
+      });
+    }
+  }
 
   // Initialize routes and views for the cache service
   Routes(options, eventEmitter, cache);

@@ -101,7 +101,7 @@ module.exports = (options, eventEmitter, cache) => {
     /**
      * GET /services/caching/api/list
      * Retrieves analytics data for cache operations including hit counts and access times.
-     * 
+     *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
      * @return {void}
@@ -122,6 +122,38 @@ module.exports = (options, eventEmitter, cache) => {
           success: false,
           error: err.message,
         });
+      }
+    });
+
+    /**
+     * GET /services/caching/api/analytics
+     * Returns comprehensive analytics data for cache operations.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/caching/api/analytics', async (req, res) => {
+      try {
+        if (!cache.analytics) {
+          return res.status(503).json({ error: 'Analytics not available' });
+        }
+
+        const stats = cache.analytics.getStats();
+        const hitDistribution = cache.analytics.getHitDistribution(50);
+        const timeline = cache.analytics.getTimeline(10);
+        const keyList = cache.analytics.getKeyList(100);
+        const topMisses = cache.analytics.getTopMisses(50);
+
+        res.status(200).json({
+          stats: stats,
+          hitDistribution: hitDistribution,
+          timeline: timeline,
+          keyList: keyList,
+          topMisses: topMisses
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
       }
     });
   }

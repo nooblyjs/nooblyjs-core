@@ -12,6 +12,7 @@
 
 const InMemoryQueue = require('./providers/InMemoryQueue');
 const QueueingApi = require('./providers/queueingApi');
+const QueueAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -77,6 +78,17 @@ function createQueue(type, options, eventEmitter) {
 
   // Store all dependencies for potential use by provider
   queue.dependencies = dependencies;
+
+  // Initialize analytics module
+  if (eventEmitter) {
+    queue.analytics = new QueueAnalytics(eventEmitter);
+
+    if (logger) {
+      queue.log('info', 'Queue analytics initialized', {
+        provider: type
+      });
+    }
+  }
 
   // Initialize routes and views for the queue service
   Routes(options, eventEmitter, queue);
