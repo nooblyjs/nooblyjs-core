@@ -41,7 +41,7 @@ class ServiceRegistry {
       this.eventEmitter = eventEmitter;    
     } 
 
-    this.debug_emitter(this.eventEmitter, "ServiceRegistry");
+    //this.debug_emitter(this.eventEmitter, "ServiceRegistry");
 
     // Assign the passed global options
     this.globalOptions = {
@@ -119,22 +119,23 @@ class ServiceRegistry {
 
     // Level 0 services (Foundation - No dependencies)
     this.serviceDependencies.set('logging', []);
-    this.serviceDependencies.set('filing', []);
-    this.serviceDependencies.set('measuring', []);
 
     // Level 1 services (Infrastructure - Use foundation services)
+    this.serviceDependencies.set('filing', ['logging']);
     this.serviceDependencies.set('caching', ['logging']);
-    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
-    this.serviceDependencies.set('working', ['logging']);
+    this.serviceDependencies.set('queueing', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
-    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataservice']);
-    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
-    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
+    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
+    this.serviceDependencies.set('working', ['logging','queueing','caching']);
+    this.serviceDependencies.set('measuring', ['logging','queueing','caching']);
 
     // Level 3 services (Application - Use business logic services)
+    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
+    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring']);
     this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
+
     this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
 
     // Level 4 services (Integration - Use application services)

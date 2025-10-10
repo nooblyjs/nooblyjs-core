@@ -1,10 +1,11 @@
 /**
  * @fileoverview Unit tests for the in-memory queue functionality.
- * 
+ *
  * This test suite covers the in-memory queue provider, testing queue
- * operations including enqueue, dequeue, and size management. Tests
- * verify proper FIFO behavior and event emission for queue operations.
- * 
+ * operations including enqueue, dequeue, and size management with support
+ * for multiple named queues. Tests verify proper FIFO behavior and event
+ * emission for queue operations.
+ *
  * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
@@ -17,9 +18,9 @@ const EventEmitter = require('events');
 
 /**
  * Test suite for in-memory queue operations.
- * 
+ *
  * Tests the in-memory queue functionality including FIFO operations,
- * size tracking, and proper event emission for queue activities.
+ * size tracking, multiple named queues, and proper event emission for queue activities.
  */
 describe('InMemoryQueue', () => {
   /** @type {Object} Queue instance for testing */
@@ -38,41 +39,70 @@ describe('InMemoryQueue', () => {
   });
 
   /**
-   * Test queue enqueue and dequeue operations.
-   * 
-   * Verifies that items can be added to and removed from the queue
+   * Test queue enqueue and dequeue operations with named queues.
+   *
+   * Verifies that items can be added to and removed from a named queue
    * in FIFO order with proper event emission.
    */
-  it('should enqueue and dequeue items', async () => {
-    await queue.enqueue('item1');
+  it('should enqueue and dequeue items from a named queue', async () => {
+    await queue.enqueue('emailQueue', 'item1');
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue', {
+      queueName: 'emailQueue',
       item: 'item1',
     });
-    await queue.enqueue('item2');
+    await queue.enqueue('emailQueue', 'item2');
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue', {
+      queueName: 'emailQueue',
       item: 'item2',
     });
     mockEventEmitter.emit.mockClear(); // Clear previous emits
-    expect(await queue.dequeue()).toBe('item1');
+    expect(await queue.dequeue('emailQueue')).toBe('item1');
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue', {
+      queueName: 'emailQueue',
       item: 'item1',
     });
-    expect(await queue.dequeue()).toBe('item2');
+    expect(await queue.dequeue('emailQueue')).toBe('item2');
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue', {
+      queueName: 'emailQueue',
       item: 'item2',
     });
-    expect(await queue.size()).toBe(0);
+    expect(await queue.size('emailQueue')).toBe(0);
+  });
+
+  /**
+   * Test multiple independent queues.
+   *
+   * Verifies that different named queues operate independently
+   * and maintain their own separate items.
+   */
+  it('should support multiple independent queues', async () => {
+    await queue.enqueue('emailQueue', 'email1');
+    await queue.enqueue('emailQueue', 'email2');
+    await queue.enqueue('imageQueue', 'image1');
+    await queue.enqueue('imageQueue', 'image2');
+    await queue.enqueue('imageQueue', 'image3');
+
+    expect(await queue.size('emailQueue')).toBe(2);
+    expect(await queue.size('imageQueue')).toBe(3);
+
+    expect(await queue.dequeue('emailQueue')).toBe('email1');
+    expect(await queue.size('emailQueue')).toBe(1);
+    expect(await queue.size('imageQueue')).toBe(3);
+
+    expect(await queue.dequeue('imageQueue')).toBe('image1');
+    expect(await queue.size('imageQueue')).toBe(2);
+    expect(await queue.size('emailQueue')).toBe(1);
   });
 
   /**
    * Test queue behavior when empty.
-   * 
+   *
    * Verifies that dequeuing from an empty queue returns undefined
    * and does not emit dequeue events.
    */
   it('should return undefined when dequeuing from an empty queue', async () => {
     mockEventEmitter.emit.mockClear(); // Clear previous emits
-    expect(await queue.dequeue()).toBeUndefined();
+    expect(await queue.dequeue('emptyQueue')).toBeUndefined();
     expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
       'queue:dequeue',
       expect.any(Object),
@@ -81,17 +111,64 @@ describe('InMemoryQueue', () => {
 
   /**
    * Test queue size tracking.
-   * 
+   *
    * Verifies that the queue correctly tracks its size as items
    * are enqueued and dequeued.
    */
-  it('should return the correct size', async () => {
-    expect(await queue.size()).toBe(0);
-    await queue.enqueue('item1');
-    expect(await queue.size()).toBe(1);
-    await queue.enqueue('item2');
-    expect(await queue.size()).toBe(2);
-    await queue.dequeue();
-    expect(await queue.size()).toBe(1);
+  it('should return the correct size for a named queue', async () => {
+    expect(await queue.size('testQueue')).toBe(0);
+    await queue.enqueue('testQueue', 'item1');
+    expect(await queue.size('testQueue')).toBe(1);
+    await queue.enqueue('testQueue', 'item2');
+    expect(await queue.size('testQueue')).toBe(2);
+    await queue.dequeue('testQueue');
+    expect(await queue.size('testQueue')).toBe(1);
+  });
+
+  /**
+   * Test listing all queue names.
+   *
+   * Verifies that the listQueues method returns all created queue names.
+   */
+  it('should list all queue names', async () => {
+    await queue.enqueue('emailQueue', 'item1');
+    await queue.enqueue('imageQueue', 'item2');
+    await queue.enqueue('dataQueue', 'item3');
+
+    const queues = await queue.listQueues();
+    expect(queues).toContain('emailQueue');
+    expect(queues).toContain('imageQueue');
+    expect(queues).toContain('dataQueue');
+    expect(queues.length).toBe(3);
+  });
+
+  /**
+   * Test purging a queue.
+   *
+   * Verifies that the purge method removes all items from a queue
+   * and emits the appropriate event.
+   */
+  it('should purge a queue', async () => {
+    await queue.enqueue('testQueue', 'item1');
+    await queue.enqueue('testQueue', 'item2');
+    await queue.enqueue('testQueue', 'item3');
+    expect(await queue.size('testQueue')).toBe(3);
+
+    mockEventEmitter.emit.mockClear();
+    await queue.purge('testQueue');
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:purge', {
+      queueName: 'testQueue',
+    });
+    expect(await queue.size('testQueue')).toBe(0);
+  });
+
+  /**
+   * Test that empty size returns 0 for non-existent queues.
+   *
+   * Verifies that checking size of a queue that was never created
+   * returns 0 rather than throwing an error.
+   */
+  it('should return 0 for non-existent queue size', async () => {
+    expect(await queue.size('nonExistentQueue')).toBe(0);
   });
 });

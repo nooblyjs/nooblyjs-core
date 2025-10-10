@@ -2,7 +2,8 @@
 ### NooblyJS Core - Queueing API Tests
 ###
 ### These tests demonstrate the Queueing service API endpoints with API key authentication.
-### The Queueing service provides message queue functionality for background processing.
+### The Queueing service provides message queue functionality for background processing
+### with support for multiple named queues.
 ###
 
 @baseUrl = http://localhost:3000
@@ -14,146 +15,215 @@ GET {{baseUrl}}/services/queueing/api/status
 ###
 
 ### Test without API key (should return 401 Unauthorized)
-POST {{baseUrl}}/services/queueing/api/push
+POST {{baseUrl}}/services/queueing/api/enqueue/emailQueue
 Content-Type: application/json
 
 {
-    "message": "This should fail without API key",
-    "timestamp": "{{$datetime iso8601}}"
+    "task": {
+        "message": "This should fail without API key",
+        "timestamp": "{{$datetime iso8601}}"
+    }
 }
 
 ###
 
-### PUSH - Add message to queue with x-api-key header
-POST {{baseUrl}}/services/queueing/api/push
+### ENQUEUE - Add message to email queue with x-api-key header
+POST {{baseUrl}}/services/queueing/api/enqueue/emailQueue
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
 {
-    "message": "User data processing task",
-    "type": "data-processing",
-    "payload": {
-        "userId": "john-doe",
-        "action": "profile-update",
-        "data": {
-            "email": "john.new@example.com",
-            "preferences": {"theme": "dark"}
-        }
-    },
-    "priority": 5,
-    "timestamp": "{{$datetime iso8601}}"
+    "task": {
+        "message": "Send welcome email",
+        "type": "email",
+        "payload": {
+            "to": "newuser@example.com",
+            "template": "welcome",
+            "variables": {
+                "name": "New User",
+                "loginUrl": "https://app.example.com"
+            }
+        },
+        "priority": 3,
+        "retryCount": 3,
+        "timestamp": "{{$datetime iso8601}}"
+    }
 }
 
 ###
 
-### PUSH - Add email task with Bearer token
-POST {{baseUrl}}/services/queueing/api/push
+### ENQUEUE - Add data processing task to data queue with Bearer token
+POST {{baseUrl}}/services/queueing/api/enqueue/dataQueue
 Content-Type: application/json
 Authorization: Bearer {{apiKey}}
 
 {
-    "message": "Send welcome email",
-    "type": "email",
-    "payload": {
-        "to": "newuser@example.com",
-        "template": "welcome",
-        "variables": {
-            "name": "New User",
-            "loginUrl": "https://app.example.com"
-        }
-    },
-    "priority": 3,
-    "retryCount": 3,
-    "timestamp": "{{$datetime iso8601}}"
+    "task": {
+        "message": "User data processing task",
+        "type": "data-processing",
+        "payload": {
+            "userId": "john-doe",
+            "action": "profile-update",
+            "data": {
+                "email": "john.new@example.com",
+                "preferences": {"theme": "dark"}
+            }
+        },
+        "priority": 5,
+        "timestamp": "{{$datetime iso8601}}"
+    }
 }
 
 ###
 
-### POP - Get next message from queue with ApiKey header
-GET {{baseUrl}}/services/queueing/api/pop
-Authorization: ApiKey {{apiKey}}
+### ENQUEUE - Add image processing task to image queue
+POST {{baseUrl}}/services/queueing/api/enqueue/imageQueue
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "task": {
+        "message": "Image processing task 1",
+        "type": "image-processing",
+        "payload": {
+            "imageId": "img-001",
+            "operations": ["resize", "optimize", "watermark"],
+            "targetSizes": [800, 400, 200]
+        },
+        "priority": 4,
+        "timestamp": "{{$datetime iso8601}}"
+    }
+}
 
 ###
 
-### SIZE - Get current queue size with query parameter
-GET {{baseUrl}}/services/queueing/api/size?api_key={{apiKey}}
-
-###
-
-### PUSH - Add batch processing task with api-key header
-POST {{baseUrl}}/services/queueing/api/push
+### ENQUEUE - Add batch processing task with api-key header
+POST {{baseUrl}}/services/queueing/api/enqueue/batchQueue
 Content-Type: application/json
 api-key: {{apiKey}}
 
 {
-    "message": "Batch report generation",
-    "type": "batch-processing",
-    "payload": {
-        "reportType": "sales-summary",
-        "dateRange": {
-            "start": "2024-01-01",
-            "end": "2024-01-31"
+    "task": {
+        "message": "Batch report generation",
+        "type": "batch-processing",
+        "payload": {
+            "reportType": "sales-summary",
+            "dateRange": {
+                "start": "2024-01-01",
+                "end": "2024-01-31"
+            },
+            "filters": {
+                "region": "US",
+                "department": "sales"
+            },
+            "outputFormat": "pdf"
         },
-        "filters": {
-            "region": "US",
-            "department": "sales"
-        },
-        "outputFormat": "pdf"
-    },
-    "priority": 2,
-    "estimatedDuration": "5-minutes",
-    "timestamp": "{{$datetime iso8601}}"
+        "priority": 2,
+        "estimatedDuration": "5-minutes",
+        "timestamp": "{{$datetime iso8601}}"
+    }
 }
 
 ###
 
-### Queue Management Sequence
-### 1. Check queue size
-GET {{baseUrl}}/services/queueing/api/size
+### DEQUEUE - Get next message from email queue with ApiKey header
+GET {{baseUrl}}/services/queueing/api/dequeue/emailQueue
+Authorization: ApiKey {{apiKey}}
+
+###
+
+### DEQUEUE - Get next message from image queue
+GET {{baseUrl}}/services/queueing/api/dequeue/imageQueue
 x-api-key: {{apiKey}}
 
-### 2. Add multiple messages
-POST {{baseUrl}}/services/queueing/api/push
+###
+
+### SIZE - Get email queue size with query parameter
+GET {{baseUrl}}/services/queueing/api/size/emailQueue?api_key={{apiKey}}
+
+###
+
+### SIZE - Get image queue size
+GET {{baseUrl}}/services/queueing/api/size/imageQueue
+x-api-key: {{apiKey}}
+
+###
+
+### LIST QUEUES - Get all queue names
+GET {{baseUrl}}/services/queueing/api/queues
+x-api-key: {{apiKey}}
+
+###
+
+### Multiple Queue Management Sequence
+### 1. Add messages to different queues
+POST {{baseUrl}}/services/queueing/api/enqueue/emailQueue
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
 {
-    "message": "Image processing task 1",
-    "type": "image-processing",
-    "payload": {
-        "imageId": "img-001",
-        "operations": ["resize", "optimize", "watermark"],
-        "targetSizes": [800, 400, 200]
-    },
-    "priority": 4
+    "task": {
+        "message": "Email 1",
+        "to": "user1@example.com"
+    }
 }
 
-### 3. Add another message
-POST {{baseUrl}}/services/queueing/api/push
+### 2. Add another message to email queue
+POST {{baseUrl}}/services/queueing/api/enqueue/emailQueue
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "task": {
+        "message": "Email 2",
+        "to": "user2@example.com"
+    }
+}
+
+### 3. Add message to image queue
+POST {{baseUrl}}/services/queueing/api/enqueue/imageQueue
 Content-Type: application/json
 Authorization: Bearer {{apiKey}}
 
 {
-    "message": "Image processing task 2", 
-    "type": "image-processing",
-    "payload": {
-        "imageId": "img-002",
-        "operations": ["resize", "compress"],
-        "quality": 85
-    },
-    "priority": 4
+    "task": {
+        "message": "Image processing task 2",
+        "type": "image-processing",
+        "payload": {
+            "imageId": "img-002",
+            "operations": ["resize", "compress"],
+            "quality": 85
+        },
+        "priority": 4
+    }
 }
 
-### 4. Check updated queue size
-GET {{baseUrl}}/services/queueing/api/size
+### 4. Check email queue size
+GET {{baseUrl}}/services/queueing/api/size/emailQueue
 x-api-key: {{apiKey}}
 
-### 5. Process messages from queue
-GET {{baseUrl}}/services/queueing/api/pop
+### 5. Check image queue size
+GET {{baseUrl}}/services/queueing/api/size/imageQueue
 x-api-key: {{apiKey}}
 
-### 6. Process another message
-GET {{baseUrl}}/services/queueing/api/pop
+### 6. List all queues
+GET {{baseUrl}}/services/queueing/api/queues
+x-api-key: {{apiKey}}
+
+### 7. Process message from email queue
+GET {{baseUrl}}/services/queueing/api/dequeue/emailQueue
+x-api-key: {{apiKey}}
+
+### 8. Process message from image queue
+GET {{baseUrl}}/services/queueing/api/dequeue/imageQueue
 Authorization: ApiKey {{apiKey}}
+
+### 9. Purge email queue
+DELETE {{baseUrl}}/services/queueing/api/purge/emailQueue
+x-api-key: {{apiKey}}
+
+### 10. Verify email queue is empty
+GET {{baseUrl}}/services/queueing/api/size/emailQueue
+x-api-key: {{apiKey}}
 
 ###

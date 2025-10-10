@@ -457,25 +457,61 @@ x-api-key: YOUR_API_KEY
 
 ### Queue API
 
+The Queue API supports multiple named queues, allowing you to organize different types of tasks.
+
 ```bash
-# Add task to queue
-POST /services/queueing/api/enqueue
+# Add task to a specific queue
+POST /services/queueing/api/enqueue/:queueName
 Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
 {
-  "taskType": "sendEmail",
-  "recipient": "user@example.com",
-  "template": "welcome",
-  "priority": "high"
+  "task": {
+    "taskType": "sendEmail",
+    "recipient": "user@example.com",
+    "template": "welcome",
+    "priority": "high"
+  }
 }
 
-# Get next task from queue
-GET /services/queueing/api/dequeue
+# Example: Add email task to email queue
+POST /services/queueing/api/enqueue/emailQueue
+Content-Type: application/json
 x-api-key: YOUR_API_KEY
 
-# Check queue size
-GET /services/queueing/api/size
+{
+  "task": {
+    "type": "sendEmail",
+    "to": "user@example.com"
+  }
+}
+
+# Get next task from a specific queue
+GET /services/queueing/api/dequeue/:queueName
+x-api-key: YOUR_API_KEY
+
+# Example: Get next task from email queue
+GET /services/queueing/api/dequeue/emailQueue
+x-api-key: YOUR_API_KEY
+
+# Check queue size for a specific queue
+GET /services/queueing/api/size/:queueName
+x-api-key: YOUR_API_KEY
+
+# Example: Check email queue size
+GET /services/queueing/api/size/emailQueue
+x-api-key: YOUR_API_KEY
+
+# List all queue names
+GET /services/queueing/api/queues
+x-api-key: YOUR_API_KEY
+
+# Purge a specific queue
+DELETE /services/queueing/api/purge/:queueName
+x-api-key: YOUR_API_KEY
+
+# Example: Purge email queue
+DELETE /services/queueing/api/purge/emailQueue
 x-api-key: YOUR_API_KEY
 ```
 
@@ -2257,22 +2293,40 @@ app.use((req, res, next) => {
 
 #### Background Task Processing
 
+The queue service supports multiple named queues, allowing you to organize different types of tasks separately.
+
 ```javascript
 const worker = serviceRegistry.working('memory');
-const queue = serviceRegistry.queue('memory');
+const queue = serviceRegistry.queueing('memory');
 
-// Add tasks to queue
-queue.enqueue({
+// Add tasks to different queues based on task type
+await queue.enqueue('emailQueue', {
   type: 'sendEmail',
   recipient: 'user@example.com',
   template: 'welcome'
 });
 
-queue.enqueue({
+await queue.enqueue('reportQueue', {
   type: 'generateReport',
   reportId: '456',
   format: 'pdf'
 });
+
+// Check queue sizes
+const emailQueueSize = await queue.size('emailQueue');
+const reportQueueSize = await queue.size('reportQueue');
+console.log(`Email queue: ${emailQueueSize}, Report queue: ${reportQueueSize}`);
+
+// List all queues
+const allQueues = await queue.listQueues();
+console.log('All queues:', allQueues);
+
+// Process tasks from specific queue
+const emailTask = await queue.dequeue('emailQueue');
+const reportTask = await queue.dequeue('reportQueue');
+
+// Purge a queue if needed
+await queue.purge('emailQueue');
 
 // Start worker to process tasks
 worker.start('./workers/taskProcessor.js', (result) => {
@@ -2282,14 +2336,15 @@ worker.start('./workers/taskProcessor.js', (result) => {
 
 #### Real-World Queue and Background Processing Examples
 
-**1. Email Processing System**
+**1. Email Processing System with Multiple Queues**
 ```javascript
 const queue = serviceRegistry.queueing('memory');
 const worker = serviceRegistry.working('memory');
 
 const emailProcessor = {
   async sendWelcomeEmail(data) {
-    queue.enqueue({
+    // Use dedicated queue for welcome emails
+    await queue.enqueue('emailQueue', {
       type: 'email',
       template: 'welcome',
       recipient: data.email,
@@ -2303,7 +2358,8 @@ const emailProcessor = {
   },
 
   async sendPasswordResetEmail(data) {
-    queue.enqueue({
+    // Use high-priority queue for security-related emails
+    await queue.enqueue('securityEmailQueue', {
       type: 'email',
       template: 'password_reset',
       recipient: data.email,
@@ -2311,17 +2367,17 @@ const emailProcessor = {
         resetUrl: `https://app.example.com/reset/${data.resetToken}`,
         expiresIn: '1 hour'
       },
-      priority: 'high' // High priority for security-related emails
+      priority: 'high'
     });
   },
 
   async sendBulkNewsletter(subscribers, newsletterData) {
-    // Break down bulk email into smaller batches
+    // Use separate queue for bulk newsletters
     const batchSize = 100;
     for (let i = 0; i < subscribers.length; i += batchSize) {
       const batch = subscribers.slice(i, i + batchSize);
 
-      queue.enqueue({
+      await queue.enqueue('newsletterQueue', {
         type: 'bulk_email',
         template: 'newsletter',
         batch: batch,
@@ -2333,8 +2389,8 @@ const emailProcessor = {
   },
 
   async processEmailQueue() {
-    // Start worker to process email tasks
-    worker.start('./workers/emailWorker.js', (result) => {
+    // Start worker to process email tasks from emailQueue
+    worker.start('./workers/emailWorker.js', async (result) => {
       if (result.success) {
         logger.info('Email sent successfully', {
           recipient: result.recipient,
@@ -2356,8 +2412,8 @@ const emailProcessor = {
 
         // Retry failed emails with exponential backoff
         if (result.retryCount < 3) {
-          setTimeout(() => {
-            queue.enqueue({
+          setTimeout(async () => {
+            await queue.enqueue('emailQueue', {
               ...result.task,
               retryCount: (result.retryCount || 0) + 1
             });
@@ -2367,34 +2423,43 @@ const emailProcessor = {
     });
   },
 
-  getQueueStatus() {
+  async getQueueStatus() {
+    const emailQueueSize = await queue.size('emailQueue');
+    const securityQueueSize = await queue.size('securityEmailQueue');
+    const newsletterQueueSize = await queue.size('newsletterQueue');
+    const allQueues = await queue.listQueues();
+
     return {
-      queueSize: queue.size(),
+      emailQueueSize,
+      securityQueueSize,
+      newsletterQueueSize,
+      allQueues,
       isWorkerRunning: worker.status === 'running'
     };
   }
 };
 
 // Usage
-emailProcessor.sendWelcomeEmail({
+await emailProcessor.sendWelcomeEmail({
   email: 'newuser@example.com',
   firstName: 'John',
   userId: 'user123',
   activationToken: 'abc123'
 });
 
-emailProcessor.processEmailQueue();
+await emailProcessor.processEmailQueue();
 ```
 
-**2. Image Processing Pipeline**
+**2. Image Processing Pipeline with Multiple Queues**
 ```javascript
 const imageQueue = serviceRegistry.queueing('memory');
 const imageWorker = serviceRegistry.working('memory');
 
 const imageProcessor = {
   async processUploadedImage(imageData) {
-    // Queue image processing tasks
-    imageQueue.enqueue({
+    // Use separate queues for different image processing tasks
+    // High-priority queue for image resizing (user-visible)
+    await imageQueue.enqueue('imageResizeQueue', {
       type: 'resize_image',
       imageId: imageData.id,
       imagePath: imageData.path,
@@ -2406,13 +2471,15 @@ const imageProcessor = {
       userId: imageData.userId
     });
 
-    imageQueue.enqueue({
+    // Medium-priority queue for metadata extraction
+    await imageQueue.enqueue('imageMetadataQueue', {
       type: 'extract_metadata',
       imageId: imageData.id,
       imagePath: imageData.path
     });
 
-    imageQueue.enqueue({
+    // Lower-priority queue for AI tagging (can be processed later)
+    await imageQueue.enqueue('imageAIQueue', {
       type: 'generate_ai_tags',
       imageId: imageData.id,
       imagePath: imageData.path
@@ -3367,14 +3434,44 @@ notifying.unsubscribe(topic, callback); // Remove subscriber
 
 ### Queueing Service
 
-**Purpose**: FIFO task queue processing
+**Purpose**: FIFO task queue processing with support for multiple named queues
+
+**Providers**:
+- `memory`: In-memory queue storage
+- `api`: Remote API-based queue service
 
 **Methods**:
 ```javascript
-queue.enqueue(task);                   // Add task
-const task = queue.dequeue();          // Get next task
-const size = queue.size();             // Queue size
-queue.clear();                         // Empty queue
+await queue.enqueue(queueName, task);           // Add task to named queue
+const task = await queue.dequeue(queueName);    // Get next task from queue
+const size = await queue.size(queueName);       // Get queue size
+const queues = await queue.listQueues();        // List all queue names
+await queue.purge(queueName);                   // Clear specific queue
+```
+
+**Examples**:
+```javascript
+// Create queue service
+const queue = serviceRegistry.queueing('memory');
+
+// Add tasks to different queues
+await queue.enqueue('emailQueue', { type: 'email', to: 'user@example.com' });
+await queue.enqueue('imageQueue', { type: 'resize', imageId: '123' });
+
+// Process tasks from specific queue
+const emailTask = await queue.dequeue('emailQueue');
+const imageTask = await queue.dequeue('imageQueue');
+
+// Check queue sizes
+const emailQueueSize = await queue.size('emailQueue');
+const imageQueueSize = await queue.size('imageQueue');
+
+// List all active queues
+const allQueues = await queue.listQueues();
+console.log('Active queues:', allQueues);
+
+// Purge a queue
+await queue.purge('emailQueue');
 ```
 
 ### Scheduling Service
@@ -3412,13 +3509,78 @@ const status = workflow.status;              // Service status
 
 ### Working Service
 
-**Purpose**: Background script execution
+**Purpose**: Background script execution with queue-based task management
+
+**Queue Integration**: The working service automatically uses named queues for task lifecycle:
+- `noobly-core-working-incoming`: Tasks waiting to be processed
+- `noobly-core-working-complete`: Successfully completed tasks
+- `noobly-core-working-error`: Failed tasks with error details
 
 **Methods**:
 ```javascript
-worker.start(scriptPath, callback);    // Start worker
-worker.stop();                        // Stop worker
-const status = worker.status;          // Worker status
+const taskId = await worker.start(scriptPath, data, callback); // Start worker task
+await worker.stop();                                           // Stop worker manager
+const status = await worker.getStatus();                       // Get detailed status
+const history = await worker.getTaskHistory(limit);            // Get task history
+const task = await worker.getTask(taskId);                     // Get specific task info
+```
+
+**Status Response**:
+```javascript
+{
+  isRunning: true,
+  maxThreads: 4,
+  activeWorkers: 2,
+  queues: {
+    incoming: 5,    // Tasks waiting
+    complete: 23,   // Completed tasks
+    error: 2        // Failed tasks
+  },
+  completedTasks: 25
+}
+```
+
+**Examples**:
+```javascript
+// Create working service with queue dependency
+const queueing = serviceRegistry.queueing('memory');
+const working = serviceRegistry.working('default', {
+  maxThreads: 4,
+  dependencies: { queueing }
+});
+
+// Start a background task
+const taskId = await working.start('./scripts/processData.js', {
+  userId: '123',
+  action: 'export'
+}, (status, result) => {
+  if (status === 'completed') {
+    console.log('Task completed:', result);
+  } else {
+    console.error('Task failed:', result);
+  }
+});
+
+// Check status including queue sizes
+const status = await working.getStatus();
+console.log(`Incoming: ${status.queues.incoming}`);
+console.log(`Complete: ${status.queues.complete}`);
+console.log(`Errors: ${status.queues.error}`);
+
+// Get completed tasks from queue
+const completedTask = await queueing.dequeue('noobly-core-working-complete');
+
+// Get error tasks from queue for retry logic
+const errorTask = await queueing.dequeue('noobly-core-working-error');
+if (errorTask && errorTask.retryCount < 3) {
+  // Retry the task
+  await working.start(errorTask.scriptPath, errorTask.data);
+}
+
+// Monitor queue sizes
+const incomingSize = await queueing.size('noobly-core-working-incoming');
+const completeSize = await queueing.size('noobly-core-working-complete');
+const errorSize = await queueing.size('noobly-core-working-error');
 ```
 
 ---

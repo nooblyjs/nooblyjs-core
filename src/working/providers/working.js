@@ -15,6 +15,10 @@ const crypto = require('crypto');
 /**
  * A class that manages multiple worker threads with queue support.
  * Provides methods for starting, stopping, and monitoring worker status.
+ * Uses named queues for task lifecycle management:
+ * - noobly-core-working-incoming: Tasks waiting to be processed
+ * - noobly-core-working-complete: Successfully completed tasks
+ * - noobly-core-working-error: Failed tasks
  * @class
  */
 class WorkerManager {
@@ -22,13 +26,13 @@ class WorkerManager {
    * Initializes the WorkerManager with worker thread management.
    * @param {Object=} options Configuration options for the worker manager.
    * @param {number=} options.maxThreads Maximum number of concurrent worker threads (default: 4).
+   * @param {Object=} options.dependencies Injected service dependencies.
+   * @param {Object=} options.dependencies.queueing Queueing service instance.
    * @param {EventEmitter=} eventEmitter Optional event emitter for worker events.
    */
   constructor(options = {}, eventEmitter) {
     /** @private {number} Maximum number of concurrent threads */
     this.maxThreads_ = options.maxThreads || 4;
-    /** @private {Array} Queue of pending tasks */
-    this.taskQueue_ = [];
     /** @private {Map} Active workers by task ID */
     this.activeWorkers_ = new Map();
     /** @private {Map} Task history with results */
@@ -37,6 +41,19 @@ class WorkerManager {
     this.eventEmitter_ = eventEmitter;
     /** @private {boolean} Manager running state */
     this.isRunning_ = true;
+    /** @private {Object} Queueing service instance */
+    this.queueService_ = options.dependencies?.queueing;
+    /** @private {number} Queue processing interval ID */
+    this.queueProcessorInterval_ = null;
+    /** @private @const {string} Queue name for incoming tasks */
+    this.QUEUE_INCOMING_ = 'noobly-core-working-incoming';
+    /** @private @const {string} Queue name for completed tasks */
+    this.QUEUE_COMPLETE_ = 'noobly-core-working-complete';
+    /** @private @const {string} Queue name for error tasks */
+    this.QUEUE_ERROR_ = 'noobly-core-working-error';
+
+    // Start queue processor that checks every 1 second
+    this.startQueueProcessor_();
   }
 
   /**
@@ -49,7 +66,7 @@ class WorkerManager {
   }
 
   /**
-   * Starts a worker task. If no slots are available, queues the task.
+   * Starts a worker task. Adds task to the incoming queue for processing.
    * @param {string} scriptPath The absolute path to the script to execute in the worker.
    * @param {Object} data The data to be passed to the worker thread.
    * @param {Function=} completionCallback Optional callback function to be called on completion.
@@ -63,6 +80,10 @@ class WorkerManager {
       throw new Error(error);
     }
 
+    if (!this.queueService_) {
+      throw new Error('Queueing service is not available');
+    }
+
     const taskId = this.generateTaskId_();
     const task = {
       id: taskId,
@@ -72,30 +93,70 @@ class WorkerManager {
       queuedAt: new Date(),
     };
 
-    // Add to queue
-    this.taskQueue_.push(task);
+    // Add to incoming queue
+    await this.queueService_.enqueue(this.QUEUE_INCOMING_, task);
+
+    const queueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
 
     if (this.eventEmitter_)
       this.eventEmitter_.emit('worker:queued', {
         taskId,
         scriptPath,
-        queueLength: this.taskQueue_.length
+        queueName: this.QUEUE_INCOMING_,
+        queueLength: queueSize
       });
-
-    // Try to process the queue
-    this.processQueue_();
 
     return taskId;
   }
 
   /**
-   * Processes the task queue, starting tasks when slots are available.
+   * Starts the queue processor that checks for available threads every 1 second.
    * @private
    */
-  processQueue_() {
+  startQueueProcessor_() {
+    if (this.queueProcessorInterval_) {
+      return; // Already running
+    }
+
+    this.queueProcessorInterval_ = setInterval(async () => {
+      if (this.isRunning_ && this.queueService_) {
+        await this.processQueue_();
+      }
+    }, 1000); // Check every 1 second
+  }
+
+  /**
+   * Stops the queue processor.
+   * @private
+   */
+  stopQueueProcessor_() {
+    if (this.queueProcessorInterval_) {
+      clearInterval(this.queueProcessorInterval_);
+      this.queueProcessorInterval_ = null;
+    }
+  }
+
+  /**
+   * Processes the incoming task queue, starting tasks when slots are available.
+   * @private
+   */
+  async processQueue_() {
+    if (!this.queueService_) {
+      return;
+    }
+
     // Process as many tasks as we have slots for
-    while (this.taskQueue_.length > 0 && this.activeWorkers_.size < this.maxThreads_) {
-      const task = this.taskQueue_.shift();
+    while (this.activeWorkers_.size < this.maxThreads_) {
+      const queueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+      if (queueSize === 0) {
+        break; // No more tasks to process
+      }
+
+      const task = await this.queueService_.dequeue(this.QUEUE_INCOMING_);
+      if (!task) {
+        break; // Queue is empty
+      }
+
       this.executeTask_(task);
     }
   }
@@ -105,7 +166,7 @@ class WorkerManager {
    * @private
    * @param {Object} task The task to execute.
    */
-  executeTask_(task) {
+  async executeTask_(task) {
     const worker = new Worker(path.resolve(__dirname, './workerScript.js'));
 
     const workerInfo = {
@@ -122,10 +183,10 @@ class WorkerManager {
         scriptPath: task.scriptPath,
         data: task.data,
         activeWorkers: this.activeWorkers_.size,
-        queueLength: this.taskQueue_.length,
+        incomingQueueSize: await this.queueService_?.size(this.QUEUE_INCOMING_) || 0,
       });
 
-    worker.on('message', (message) => {
+    worker.on('message', async (message) => {
       if (message.type === 'status') {
         if (this.eventEmitter_)
           this.eventEmitter_.emit('worker:status', {
@@ -135,8 +196,7 @@ class WorkerManager {
           });
 
         if (message.status === 'completed' || message.status === 'error') {
-          // Store in task history
-          this.taskHistory_.set(task.id, {
+          const taskResult = {
             taskId: task.id,
             scriptPath: task.scriptPath,
             status: message.status,
@@ -144,7 +204,28 @@ class WorkerManager {
             queuedAt: task.queuedAt,
             startedAt: workerInfo.startedAt,
             completedAt: new Date(),
-          });
+          };
+
+          // Store in task history
+          this.taskHistory_.set(task.id, taskResult);
+
+          // Add to appropriate queue based on status
+          if (this.queueService_) {
+            try {
+              if (message.status === 'completed') {
+                await this.queueService_.enqueue(this.QUEUE_COMPLETE_, taskResult);
+              } else if (message.status === 'error') {
+                await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
+              }
+            } catch (err) {
+              console.error('Error adding task to result queue:', err);
+              if (this.eventEmitter_)
+                this.eventEmitter_.emit('worker:queue:error', {
+                  taskId: task.id,
+                  error: err.message
+                });
+            }
+          }
 
           // Call completion callback
           if (task.completionCallback) {
@@ -166,11 +247,10 @@ class WorkerManager {
       }
     });
 
-    worker.on('error', (err) => {
+    worker.on('error', async (err) => {
       console.error('Worker error:', err);
 
-      // Store error in task history
-      this.taskHistory_.set(task.id, {
+      const taskResult = {
         taskId: task.id,
         scriptPath: task.scriptPath,
         status: 'error',
@@ -178,7 +258,24 @@ class WorkerManager {
         queuedAt: task.queuedAt,
         startedAt: workerInfo.startedAt,
         completedAt: new Date(),
-      });
+      };
+
+      // Store error in task history
+      this.taskHistory_.set(task.id, taskResult);
+
+      // Add to error queue
+      if (this.queueService_) {
+        try {
+          await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
+        } catch (queueErr) {
+          console.error('Error adding task to error queue:', queueErr);
+          if (this.eventEmitter_)
+            this.eventEmitter_.emit('worker:queue:error', {
+              taskId: task.id,
+              error: queueErr.message
+            });
+        }
+      }
 
       if (this.eventEmitter_)
         this.eventEmitter_.emit('worker:error', {
@@ -198,7 +295,7 @@ class WorkerManager {
       this.cleanupWorker_(task.id);
     });
 
-    worker.on('exit', (code) => {
+    worker.on('exit', async (code) => {
       // Only treat non-zero exit codes as errors if the task wasn't already marked as completed
       const taskInHistory = this.taskHistory_.get(task.id);
       if (code !== 0 && (!taskInHistory || taskInHistory.status !== 'completed')) {
@@ -207,7 +304,7 @@ class WorkerManager {
 
         // Only store if not already in history (error handler may have already stored it)
         if (!taskInHistory) {
-          this.taskHistory_.set(task.id, {
+          const taskResult = {
             taskId: task.id,
             scriptPath: task.scriptPath,
             status: 'error',
@@ -215,7 +312,23 @@ class WorkerManager {
             queuedAt: task.queuedAt,
             startedAt: workerInfo.startedAt,
             completedAt: new Date(),
-          });
+          };
+
+          this.taskHistory_.set(task.id, taskResult);
+
+          // Add to error queue
+          if (this.queueService_) {
+            try {
+              await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
+            } catch (queueErr) {
+              console.error('Error adding task to error queue:', queueErr);
+              if (this.eventEmitter_)
+                this.eventEmitter_.emit('worker:queue:error', {
+                  taskId: task.id,
+                  error: queueErr.message
+                });
+            }
+          }
 
           if (task.completionCallback) {
             try {
@@ -251,7 +364,7 @@ class WorkerManager {
   }
 
   /**
-   * Cleans up a worker and processes the next queued task.
+   * Cleans up a worker. Queue processing is handled by the interval.
    * @private
    * @param {string} taskId The task ID to clean up.
    */
@@ -266,10 +379,7 @@ class WorkerManager {
       this.activeWorkers_.delete(taskId);
     }
 
-    // Process next task in queue
-    if (this.isRunning_) {
-      this.processQueue_();
-    }
+    // Queue processing is now handled by the 1-second interval in startQueueProcessor_
   }
 
   /**
@@ -279,13 +389,17 @@ class WorkerManager {
   async stop() {
     this.isRunning_ = false;
 
-    // Clear the queue
-    const queuedTasks = this.taskQueue_.length;
-    this.taskQueue_ = [];
+    // Stop the queue processor
+    this.stopQueueProcessor_();
+
+    // Get queue sizes before stopping
+    const incomingQueueSize = this.queueService_
+      ? await this.queueService_.size(this.QUEUE_INCOMING_)
+      : 0;
 
     if (this.eventEmitter_)
       this.eventEmitter_.emit('worker:manager:stopping', {
-        queuedTasks,
+        incomingQueueSize,
         activeWorkers: this.activeWorkers_.size
       });
 
@@ -311,15 +425,29 @@ class WorkerManager {
   }
 
   /**
-   * Gets the current status of the worker manager.
+   * Gets the current status of the worker manager including all queue sizes.
    * @return {Promise<Object>} A promise that resolves to the current status.
    */
   async getStatus() {
+    let incomingQueueSize = 0;
+    let completeQueueSize = 0;
+    let errorQueueSize = 0;
+
+    if (this.queueService_) {
+      incomingQueueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+      completeQueueSize = await this.queueService_.size(this.QUEUE_COMPLETE_);
+      errorQueueSize = await this.queueService_.size(this.QUEUE_ERROR_);
+    }
+
     return {
       isRunning: this.isRunning_,
       maxThreads: this.maxThreads_,
       activeWorkers: this.activeWorkers_.size,
-      queuedTasks: this.taskQueue_.length,
+      queues: {
+        incoming: incomingQueueSize,
+        complete: completeQueueSize,
+        error: errorQueueSize,
+      },
       completedTasks: this.taskHistory_.size,
     };
   }

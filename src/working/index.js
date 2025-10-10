@@ -36,13 +36,19 @@ function getWorkerInstance(type, options, eventEmitter) {
 
   // Create singleton instance if it doesn't exist
   if (!instance) {
+    // Merge dependencies into providerOptions so they're available during construction
+    const optionsWithDeps = {
+      ...providerOptions,
+      dependencies
+    };
+
     switch (type) {
       case 'api':
-        instance = new WorkingApi(providerOptions, eventEmitter);
+        instance = new WorkingApi(optionsWithDeps, eventEmitter);
         break;
       case 'default':
       default:
-        instance = new WorkerProvider(providerOptions, eventEmitter);
+        instance = new WorkerProvider(optionsWithDeps, eventEmitter);
         break;
     }
 
@@ -58,7 +64,8 @@ function getWorkerInstance(type, options, eventEmitter) {
       // Log working service initialization
       instance.log('info', 'Working service initialized', {
         provider: type,
-        hasLogging: true
+        hasLogging: true,
+        hasQueueing: !!dependencies.queueing
       });
     }
 

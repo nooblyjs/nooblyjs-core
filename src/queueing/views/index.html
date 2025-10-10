@@ -648,12 +648,17 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Enqueue Item</h2>
-                    <p class="card-subtitle">Add an item to the queue</p>
+                    <p class="card-subtitle">Add an item to a named queue</p>
                 </div>
                 <div class="card-content">
                     <form id="enqueueForm">
                         <div class="form-group">
-                            <label class="form-label" for="enqueueItem">Item (JSON)</label>
+                            <label class="form-label" for="enqueueQueueName">Queue Name</label>
+                            <input type="text" id="enqueueQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue (e.g., emailQueue, imageQueue, dataQueue)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="enqueueItem">Task/Item (JSON)</label>
                             <textarea id="enqueueItem" class="form-input form-textarea" placeholder='{"task": "process-payment", "orderId": 12345}' required></textarea>
                             <div id="enqueueValidation" class="validation-message" style="display: none;"></div>
                             <div class="helper-text">Enter a valid JSON object to add to the queue</div>
@@ -675,10 +680,15 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Dequeue Item</h2>
-                    <p class="card-subtitle">Remove and retrieve the next item from the queue</p>
+                    <p class="card-subtitle">Remove and retrieve the next item from a named queue</p>
                 </div>
                 <div class="card-content">
                     <form id="dequeueForm">
+                        <div class="form-group">
+                            <label class="form-label" for="dequeueQueueName">Queue Name</label>
+                            <input type="text" id="dequeueQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to dequeue from</div>
+                        </div>
                         <div class="btn-group">
                             <button type="submit" class="btn btn-primary">Dequeue</button>
                         </div>
@@ -694,10 +704,15 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Queue Size</h2>
-                    <p class="card-subtitle">Get the current number of items in the queue</p>
+                    <p class="card-subtitle">Get the current number of items in a named queue</p>
                 </div>
                 <div class="card-content">
                     <form id="sizeForm">
+                        <div class="form-group">
+                            <label class="form-label" for="sizeQueueName">Queue Name</label>
+                            <input type="text" id="sizeQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to check size</div>
+                        </div>
                         <div class="btn-group">
                             <button type="submit" class="btn btn-primary">Get Size</button>
                         </div>
@@ -705,6 +720,47 @@
                     <div id="sizeResponse" class="response-container" style="display: none;">
                         <div class="response-title">Queue Size:</div>
                         <div id="sizeResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Queues -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">List All Queues</h2>
+                    <p class="card-subtitle">View all active queue names</p>
+                </div>
+                <div class="card-content">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="listQueues()">List Queues</button>
+                    </div>
+                    <div id="listQueuesResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Active Queues:</div>
+                        <div id="listQueuesResponseContent" class="response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purge Queue -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Purge Queue</h2>
+                    <p class="card-subtitle">Clear all items from a named queue</p>
+                </div>
+                <div class="card-content">
+                    <form id="purgeForm">
+                        <div class="form-group">
+                            <label class="form-label" for="purgeQueueName">Queue Name</label>
+                            <input type="text" id="purgeQueueName" class="form-input" placeholder="emailQueue" required>
+                            <div class="helper-text">Enter the name of the queue to purge (WARNING: This will delete all items)</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-error">Purge Queue</button>
+                        </div>
+                    </form>
+                    <div id="purgeResponse" class="response-container" style="display: none;">
+                        <div class="response-title">Purge Result:</div>
+                        <div id="purgeResponseContent" class="response-content"></div>
                     </div>
                 </div>
             </div>
@@ -857,20 +913,26 @@
         // Form handlers
         document.getElementById('enqueueForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            const queueName = document.getElementById('enqueueQueueName').value.trim();
             const item = document.getElementById('enqueueItem').value;
-            
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
             if (!validateJSON('enqueueItem')) {
                 showAlert('Please enter a valid JSON item', 'error');
                 return;
             }
-            
+
             try {
                 setLoading('enqueueForm', true);
                 const parsedItem = JSON.parse(item);
-                const result = await makeRequest(`/services/queueing/api/enqueue`, 'POST', parsedItem);
+                const result = await makeRequest(`/services/queueing/api/enqueue/${queueName}`, 'POST', { task: parsedItem });
                 showResponse('enqueueResponse', 'enqueueResponseContent', result);
-                showAlert(`Item enqueued successfully`);
+                showAlert(`Item enqueued to '${queueName}' successfully`);
             } catch (error) {
                 showAlert('Error enqueuing item: ' + error.message, 'error');
                 showResponse('enqueueResponse', 'enqueueResponseContent', 'Error: ' + error.message);
@@ -881,12 +943,19 @@
 
         document.getElementById('dequeueForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            const queueName = document.getElementById('dequeueQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
             try {
                 setLoading('dequeueForm', true);
-                const result = await makeRequest(`/services/queueing/api/dequeue`);
+                const result = await makeRequest(`/services/queueing/api/dequeue/${queueName}`);
                 showResponse('dequeueResponse', 'dequeueResponseContent', result);
-                showAlert(`Item dequeued successfully`);
+                showAlert(`Item dequeued from '${queueName}' successfully`);
             } catch (error) {
                 showAlert('Error dequeuing item: ' + error.message, 'error');
                 showResponse('dequeueResponse', 'dequeueResponseContent', 'Error: ' + error.message);
@@ -897,12 +966,19 @@
 
         document.getElementById('sizeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            const queueName = document.getElementById('sizeQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
             try {
                 setLoading('sizeForm', true);
-                const result = await makeRequest(`/services/queueing/api/size`);
+                const result = await makeRequest(`/services/queueing/api/size/${queueName}`);
                 showResponse('sizeResponse', 'sizeResponseContent', result);
-                showAlert(`Queue size retrieved successfully`);
+                showAlert(`Queue size for '${queueName}' retrieved successfully`);
             } catch (error) {
                 showAlert('Error retrieving queue size: ' + error.message, 'error');
                 showResponse('sizeResponse', 'sizeResponseContent', 'Error: ' + error.message);
@@ -910,6 +986,44 @@
                 setLoading('sizeForm', false);
             }
         });
+
+        document.getElementById('purgeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const queueName = document.getElementById('purgeQueueName').value.trim();
+
+            if (!queueName) {
+                showAlert('Please enter a queue name', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to purge all items from queue '${queueName}'? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                setLoading('purgeForm', true);
+                const result = await makeRequest(`/services/queueing/api/purge/${queueName}`, 'DELETE');
+                showResponse('purgeResponse', 'purgeResponseContent', result);
+                showAlert(`Queue '${queueName}' purged successfully`);
+            } catch (error) {
+                showAlert('Error purging queue: ' + error.message, 'error');
+                showResponse('purgeResponse', 'purgeResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('purgeForm', false);
+            }
+        });
+
+        async function listQueues() {
+            try {
+                const result = await makeRequest('/services/queueing/api/queues');
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', result);
+                showAlert('Queue list retrieved successfully');
+            } catch (error) {
+                showAlert('Error listing queues: ' + error.message, 'error');
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', 'Error: ' + error.message);
+            }
+        }
 
         async function checkStatus() {
             try {
@@ -927,83 +1041,125 @@
             openapi: '3.0.0',
             info: {
                 title: 'Queueing API',
-                description: 'REST API for queueing operations',
-                version: '1.0.0'
+                description: 'REST API for named queue operations with support for multiple independent queues',
+                version: '2.0.0'
             },
             servers: [
                 { url: '/services/queueing/api', description: 'Queueing API' }
             ],
             paths: {
-                '/enqueue': {
+                '/enqueue/{queueName}': {
                     post: {
                         summary: 'Enqueue an item',
-                        description: 'Adds an item to the queue',
+                        description: 'Adds an item to the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
                         requestBody: {
                             required: true,
                             content: {
                                 'application/json': {
-                                    schema: { type: 'object' },
-                                    example: { "task": "process-payment", "orderId": 12345 }
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            task: { type: 'object' }
+                                        }
+                                    },
+                                    example: { "task": { "type": "process-payment", "orderId": 12345 } }
                                 }
                             }
                         },
                         responses: {
-                            '200': {
-                                description: 'Item enqueued successfully',
-                                content: {
-                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
+                            '200': { description: 'Item enqueued successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
+                            '400': { description: 'Bad Request - Missing queue name or task' },
+                            '500': { description: 'Server error' }
                         }
                     }
                 },
-                '/dequeue': {
+                '/dequeue/{queueName}': {
                     get: {
                         summary: 'Dequeue an item',
-                        description: 'Removes and retrieves the next item from the queue',
-                        responses: {
-                            '200': {
-                                description: 'Item dequeued successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'object' }
-                                    }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
+                        description: 'Removes and retrieves the next item from the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
                             }
+                        ],
+                        responses: {
+                            '200': { description: 'Item dequeued successfully', content: { 'application/json': { schema: { type: 'object' } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
                         }
                     }
                 },
-                '/size': {
+                '/size/{queueName}': {
                     get: {
                         summary: 'Get queue size',
-                        description: 'Gets the current number of items in the queue',
+                        description: 'Gets the current number of items in the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue',
+                                schema: { type: 'string', example: 'emailQueue' }
+                            }
+                        ],
+                        responses: {
+                            '200': { description: 'Queue size retrieved successfully', content: { 'application/json': { schema: { type: 'number', example: 5 } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/queues': {
+                    get: {
+                        summary: 'List all queues',
+                        description: 'Returns a list of all active queue names',
                         responses: {
                             '200': {
-                                description: 'Queue size retrieved successfully',
+                                description: 'Queue list retrieved successfully',
                                 content: {
                                     'application/json': {
-                                        schema: { type: 'number' }
+                                        schema: {
+                                            type: 'array',
+                                            items: { type: 'string' },
+                                            example: ['emailQueue', 'imageQueue', 'dataQueue']
+                                        }
                                     }
                                 }
                             },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
+                            '500': { description: 'Server error' }
+                        }
+                    }
+                },
+                '/purge/{queueName}': {
+                    delete: {
+                        summary: 'Purge a queue',
+                        description: 'Removes all items from the specified named queue',
+                        parameters: [
+                            {
+                                name: 'queueName',
+                                in: 'path',
+                                required: true,
+                                description: 'Name of the queue to purge',
+                                schema: { type: 'string', example: 'emailQueue' }
                             }
+                        ],
+                        responses: {
+                            '200': { description: 'Queue purged successfully', content: { 'text/plain': { schema: { type: 'string', example: 'OK' } } } },
+                            '400': { description: 'Bad Request - Missing queue name' },
+                            '500': { description: 'Server error' }
                         }
                     }
                 },

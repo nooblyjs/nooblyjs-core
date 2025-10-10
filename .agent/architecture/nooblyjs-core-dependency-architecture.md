@@ -14,15 +14,29 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 *These services provide core functionality and cannot depend on other NooblyJS services*
 
 ```
-┌─────────────┐  ┌─────────────┐  
-│   Logging   │  │   Filing    │  
-│  (Base)     │  │  (Storage)  │  
-└─────────────┘  └─────────────┘  
+  ┌─────────────┐ 
+  │   Logging   │  
+  │   (Base)    │  
+  └─────────────┘  
 ```
 
 **Services:**
 - **Logging** - Fundamental logging capabilities
+
+### **Level 0: Foundation Services** (No Dependencies)
+*These services provide core functionality and cannot depend on other NooblyJS services*
+
+```
+ ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+ │   Filing    │  │   Caching   │  │  Queueing   │ 
+ │  (Storage)  │  │   (Cache)   │  │  (Queues)   │
+ └─────────────┘  └─────────────┘  └─────────────┘
+```
+
+**Services:**
 - **Filing** - File system operations
+- **Caching** - Caching system operations
+- **Queueing** - Queueing operations
 
 **Characteristics:**
 - Self-contained with no internal dependencies
@@ -35,22 +49,21 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 *Core infrastructure that enhances foundation services*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐ ┌─────────────┐
-│   Caching   │  │ Dataservice │  │   Working   │ │  Measuring  │
-│             │  │             │  │             │ │ (Metrics)   │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘ └──────┬──────┘
-       │                │                │               │
-       └────────────────┼────────────────┘───────────────┘
-                        │
-                ┌───────▼───────┐
-                │    Logging    │
-                │   (Level 0)   │
-                └───────────────┘
+ ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
+ │ Dataservice │  │   Working   │  │  Measuring  │ 
+ │             │  │             │  │             │ 
+ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ 
+        │                │                │               
+        └────────────────┘──┐─────────────┘─┐────────────────┐
+        │                   │               │                │ 
+┌───────▼───────┐   ┌───────▼───────┐ ┌─────▼───────┐  ┌─────▼───────┐
+│    Logging    │   │    Filing     │ │   Caching   │  │   Caching   │ 
+│   (Level 0)   │   │   (Level 1)   │ │  (Level 1)  │  │  (Level 1)  │
+└───────────────┘   └───────────────┘ └─────────────┘  └─────────────┘  
 ```
 
 **Services:**
-- **Caching** - Uses logging for cache operations
-- **DataServe** - Uses logging and filing for data operations
+- **Dataservice** - Uses logging and filing for data operations
 - **Working** - Uses logging for job execution tracking
 - **Measuring** - Basic metrics collection
 
@@ -72,18 +85,18 @@ await dataStore.put('users', userData);
 *Services that implement business logic using infrastructure capabilities*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Queueing   │  │ Scheduling  │  │  Searching  │
-│             │  │             │  │             │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-       │                │                │
-       └────────────────┼────────────────┘
-                        │
-         ┌──────────────┼──────────────┐──────────────┐
-         │              │              │              │
+        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+        │  Queueing   │  │ Scheduling  │  │  Searching  │
+        │             │  │             │  │             │
+        └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+               │                │                │
+               └────────────────┼────────────────┘
+                                │
+         ┌──────────────┐───────┘────────┐────────────┐
+         │              │                │            │
    ┌─────▼────┐  ┌──────▼──────┐  ┌────▼──────┐  ┌────▼──────┐
    │ Caching  │  │ Dataservice │  │  Logging  │  │ Working   │
-   │(Level 1) │  │ (Level 1)   │  │ (Level 0) │  │ (Level 1) │
+   │ (Level 1)│  │ (Level 1)   │  │ (Level 0) │  │ (Level 1) │
    └──────────┘  └─────────────┘  └───────────┘  └───────────┘
 ```
 
