@@ -46,6 +46,15 @@ app.listen(3001, async () => {
     'exampleTask-2.js'
   ]);
 
+  await workflow.defineWorkflow('example-workflow-1', [
+    'exampleTask.js'
+  ]);
+
+  await workflow.defineWorkflow('example-workflow-2', [
+    'exampleTask-2.js'
+  ]);
+
+
   logger.info('Workflow "example-workflow" defined');
   logger.info('Starting workflow execution every 10 seconds...');
 
@@ -54,6 +63,12 @@ app.listen(3001, async () => {
     try {
       logger.info('Starting workflow execution...');
       await workflow.runWorkflow('example-workflow', { timestamp: new Date().toISOString() }, (status) => {
+        logger.info(`Workflow status: ${status.status}`, status);
+      });
+      await workflow.runWorkflow('example-workflow-1', { timestamp: new Date().toISOString() }, (status) => {
+        logger.info(`Workflow status: ${status.status}`, status);
+      });
+      await workflow.runWorkflow('example-workflow-2', { timestamp: new Date().toISOString() }, (status) => {
         logger.info(`Workflow status: ${status.status}`, status);
       });
       logger.info('Workflow completed successfully');
@@ -70,5 +85,5 @@ app.listen(3001, async () => {
   runWorkflow();
 
   // Then run every 10 seconds
-  setInterval(runWorkflow, 60000);
+  setInterval(runWorkflow, 1000);
 });

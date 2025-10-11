@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         /* Custom CSS for professional look */
         :root {
@@ -621,6 +622,56 @@
             outline: 2px solid var(--custom-primary);
             outline-offset: 2px;
         }
+
+        /* Dashboard specific styles */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -642,6 +693,147 @@
             <div class="alert alert-error" id="errorAlert">
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
+
+            <!-- Bootstrap 5 Tabs -->
+            <ul class="nav nav-tabs mb-4" id="workingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="workingTabContent">
+
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+
+                    <!-- Statistics Card with Pie Chart -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h2 class="card-title">Task Status Distribution</h2>
+                                    <p class="card-subtitle">Visual breakdown of task execution status</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="taskStatsChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="stats-summary">
+                                        <h5 class="mb-3">Statistics Summary</h5>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-success">COMPLETED</span></span>
+                                                <strong id="statCompletedCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statCompletedBar" class="progress-bar bg-success" role="progressbar" style="width: 0%">
+                                                    <span id="statCompletedPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-danger">ERRORS</span></span>
+                                                <strong id="statErrorsCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statErrorsBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%">
+                                                    <span id="statErrorsPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-primary">ACTIVE</span></span>
+                                                <strong id="statActiveCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statActiveBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%">
+                                                    <span id="statActivePercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total Tasks:</strong>
+                                            <strong id="statTotalCount" class="fs-4 text-primary">0</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                            <strong>Last Run:</strong>
+                                            <span id="statLastRun" class="text-muted">Never</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Analytics Table Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Task Analytics</h2>
+                                    <p class="card-subtitle">Detailed analytics for each task (ordered by last run)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Script Path</th>
+                                            <th class="text-center">Total Runs</th>
+                                            <th class="text-center">Completed</th>
+                                            <th class="text-center">Errors</th>
+                                            <th class="text-center">Active</th>
+                                            <th class="text-center">Avg Duration (ms)</th>
+                                            <th>Last Run</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="analyticsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading analytics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="analyticsCount">0</span> tasks tracked
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Run Task Form -->
             <div class="card">
@@ -716,9 +908,17 @@
                     <div id="swagger-ui"></div>
                 </div>
             </div>
+
+                </div>
+                <!-- End Data Tab -->
+
+            </div>
+            <!-- End Tab Content -->
+
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script>
         // JSON validation
@@ -968,11 +1168,251 @@
             }
         };
 
+        // Dashboard functionality
+        let taskStatsChart = null;
+
+        // Fetch statistics from analytics API
+        async function fetchStats() {
+            try {
+                const response = await fetch('/services/working/api/stats');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                return null;
+            }
+        }
+
+        // Fetch task analytics from API
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/services/working/api/analytics');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                return null;
+            }
+        }
+
+        // Update statistics display
+        function updateStatsDisplay(stats) {
+            if (!stats) return;
+
+            // Update total count
+            document.getElementById('statTotalCount').textContent = stats.total;
+
+            // Update COMPLETED stats
+            document.getElementById('statCompletedCount').textContent = stats.counts.completed;
+            document.getElementById('statCompletedPercent').textContent = stats.percentages.completed + '%';
+            document.getElementById('statCompletedBar').style.width = stats.percentages.completed + '%';
+
+            // Update ERRORS stats
+            document.getElementById('statErrorsCount').textContent = stats.counts.errors;
+            document.getElementById('statErrorsPercent').textContent = stats.percentages.errors + '%';
+            document.getElementById('statErrorsBar').style.width = stats.percentages.errors + '%';
+
+            // Update ACTIVE stats
+            document.getElementById('statActiveCount').textContent = stats.counts.active;
+            document.getElementById('statActivePercent').textContent = stats.percentages.active + '%';
+            document.getElementById('statActiveBar').style.width = stats.percentages.active + '%';
+
+            // Update last run
+            if (stats.lastRun) {
+                const lastRunDate = new Date(stats.lastRun);
+                document.getElementById('statLastRun').textContent = lastRunDate.toLocaleString();
+            } else {
+                document.getElementById('statLastRun').textContent = 'Never';
+            }
+        }
+
+        // Initialize or update pie chart
+        function updateChart(stats) {
+            if (!stats) return;
+
+            const ctx = document.getElementById('taskStatsChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (taskStatsChart) {
+                taskStatsChart.destroy();
+            }
+
+            // Create new chart
+            taskStatsChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Completed', 'Errors', 'Active'],
+                    datasets: [{
+                        label: 'Task Status',
+                        data: [
+                            stats.counts.completed,
+                            stats.counts.errors,
+                            stats.counts.active
+                        ],
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.8)',    // Bootstrap success (green)
+                            'rgba(220, 53, 69, 0.8)',    // Bootstrap danger (red)
+                            'rgba(13, 110, 253, 0.8)'    // Bootstrap primary (blue)
+                        ],
+                        borderColor: [
+                            'rgba(25, 135, 84, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(13, 110, 253, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = stats.percentages[label.toLowerCase()] || 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render analytics table
+        function renderAnalyticsTable(analyticsData) {
+            const tbody = document.getElementById('analyticsTableBody');
+            const countElement = document.getElementById('analyticsCount');
+
+            if (!analyticsData || !analyticsData.tasks || analyticsData.tasks.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle fs-4"></i>
+                            <p class="mb-0 mt-2">No tasks tracked yet</p>
+                        </td>
+                    </tr>
+                `;
+                countElement.textContent = '0';
+                return;
+            }
+
+            // Build table rows
+            const rows = analyticsData.tasks.map(task => {
+                // Format timestamp
+                const lastRunDate = task.lastRun ? new Date(task.lastRun) : null;
+                const formattedDate = lastRunDate ? lastRunDate.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }) : 'Never';
+
+                return `
+                    <tr>
+                        <td>
+                            <code class="small">${escapeHtml(task.scriptPath)}</code>
+                        </td>
+                        <td class="text-center">
+                            <strong>${task.runCount}</strong>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success">${task.completedCount}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-danger">${task.errorCount}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">${task.activeCount}</span>
+                        </td>
+                        <td class="text-center">
+                            ${task.averageDuration.toLocaleString()}
+                        </td>
+                        <td>
+                            <small class="text-muted">${formattedDate}</small>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+            countElement.textContent = analyticsData.tasks.length;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Refresh dashboard
+        async function refreshDashboard() {
+            const tbody = document.getElementById('analyticsTableBody');
+
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading analytics...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch stats and analytics in parallel
+            const [stats, analyticsData] = await Promise.all([
+                fetchStats(),
+                fetchAnalytics()
+            ]);
+
+            // Update statistics and chart
+            if (stats) {
+                updateStatsDisplay(stats);
+                updateChart(stats);
+            }
+
+            // Update analytics table
+            renderAnalyticsTable(analyticsData);
+        }
+
+        // Load dashboard on tab activation
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', function (e) {
+            refreshDashboard();
+        });
+
         // Initialize Swagger UI
         window.onload = function() {
             checkStatus();
+
+            // Load dashboard if it's the active tab
+            if (document.getElementById('dashboard').classList.contains('show')) {
+                refreshDashboard();
+            }
+
             try {
-            checkStatus();
                 const ui = SwaggerUIBundle({
                     spec: spec,
                     dom_id: '#swagger-ui',

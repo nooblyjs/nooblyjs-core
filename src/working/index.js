@@ -14,11 +14,15 @@
 
 const WorkerProvider = require('./providers/working');
 const WorkingApi = require('./providers/workingApi');
+const WorkingAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
 const Views = require('./views');
 
 /** @type {WorkerProvider} */
 let instance = null;
+
+/** @type {WorkingAnalytics} */
+let analyticsInstance = null;
 
 /**
  * Returns the singleton instance of the worker service with dependency injection.
@@ -33,6 +37,11 @@ let instance = null;
 function getWorkerInstance(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;
   const logger = dependencies.logging;
+
+  // Create analytics instance if it doesn't exist
+  if (!analyticsInstance) {
+    analyticsInstance = new WorkingAnalytics(eventEmitter);
+  }
 
   // Create singleton instance if it doesn't exist
   if (!instance) {
@@ -73,7 +82,7 @@ function getWorkerInstance(type, options, eventEmitter) {
     instance.dependencies = dependencies;
 
     // Initialize routes and views for the working service
-    Routes(options, eventEmitter, instance);
+    Routes(options, eventEmitter, instance, analyticsInstance);
     Views(options, eventEmitter, instance);
   }
 
@@ -86,6 +95,7 @@ function getWorkerInstance(type, options, eventEmitter) {
  */
 getWorkerInstance._reset = function() {
   instance = null;
+  analyticsInstance = null;
 };
 
 module.exports = getWorkerInstance;

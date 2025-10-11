@@ -12,8 +12,12 @@
 
 const path = require('path');
 const WorkflowApi = require('./providers/workflowApi');
+const WorkflowAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
 const Views = require('./views');
+
+/** @type {WorkflowAnalytics} */
+let analyticsInstance = null;
 
 /**
  * WorkflowService class for managing and executing workflows.
@@ -98,9 +102,13 @@ class WorkflowService {
 
     let currentData = data;
 
+    // Generate unique workflow execution ID for analytics
+    const workflowId = `${workflowName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('workflow:start', {
         workflowName,
+        workflowId,
         initialData: data,
       });
     }
@@ -159,13 +167,20 @@ class WorkflowService {
           stepPath,
           error: error.message,
         });
-        if (this.eventEmitter_)
+        if (this.eventEmitter_) {
           this.eventEmitter_.emit('workflow:step:error', {
             workflowName,
             stepName,
             stepPath,
             error: error.message,
           });
+          // Emit workflow:error for analytics tracking
+          this.eventEmitter_.emit('workflow:error', {
+            workflowName,
+            workflowId,
+            error: error.message,
+          });
+        }
         throw error; // Re-throw to stop workflow execution on error
       }
     }
@@ -178,6 +193,7 @@ class WorkflowService {
     if (this.eventEmitter_)
       this.eventEmitter_.emit('workflow:complete', {
         workflowName,
+        workflowId,
         finalData: currentData,
       });
   }
@@ -204,6 +220,11 @@ function createWorkflowService(type, options, eventEmitter) {
   const scheduling = dependencies.scheduling;
   const measuring = dependencies.measuring;
   const working = dependencies.working;
+
+  // Create analytics instance if it doesn't exist
+  if (!analyticsInstance) {
+    analyticsInstance = new WorkflowAnalytics(eventEmitter);
+  }
 
   let workflow;
 
@@ -261,7 +282,7 @@ function createWorkflowService(type, options, eventEmitter) {
   workflow.dependencies = dependencies;
 
   // Initialize routes and views for the workflow service
-  Routes(options, eventEmitter, workflow);
+  Routes(options, eventEmitter, workflow, analyticsInstance);
   Views(options, eventEmitter, workflow);
 
   return workflow;

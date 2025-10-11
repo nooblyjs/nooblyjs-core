@@ -18,9 +18,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} worker - The worker provider instance with start/stop methods
+ * @param {Object} analytics - The analytics module instance for task analytics
  * @return {void}
  */
-module.exports = (options, eventEmitter, worker) => {
+module.exports = (options, eventEmitter, worker, analytics) => {
   if (options['express-app'] && worker) {
     const app = options['express-app'];
 
@@ -117,6 +118,96 @@ module.exports = (options, eventEmitter, worker) => {
           }
         })
         .catch((err) => res.status(500).send(err.message));
+    });
+
+    /**
+     * GET /services/working/api/stats
+     * Retrieves overall statistics about worker tasks including counts and percentages.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/working/api/stats', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const stats = analytics.getStats();
+        res.status(200).json(stats);
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve statistics',
+          message: err.message
+        });
+      }
+    });
+
+    /**
+     * GET /services/working/api/analytics
+     * Retrieves detailed analytics for all tasks ordered by last run date.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/working/api/analytics', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const taskAnalytics = analytics.getTaskAnalytics();
+        res.status(200).json({
+          count: taskAnalytics.length,
+          tasks: taskAnalytics
+        });
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve task analytics',
+          message: err.message
+        });
+      }
+    });
+
+    /**
+     * GET /services/working/api/analytics/:scriptPath
+     * Retrieves analytics for a specific task by script path.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/working/api/analytics/:scriptPath(*)', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      try {
+        const { scriptPath } = req.params;
+        const taskAnalytics = analytics.getTaskAnalyticsByPath(scriptPath);
+
+        if (taskAnalytics) {
+          res.status(200).json(taskAnalytics);
+        } else {
+          res.status(404).json({
+            error: 'Task not found',
+            scriptPath: scriptPath
+          });
+        }
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to retrieve task analytics',
+          message: err.message
+        });
+      }
     });
   }
 };

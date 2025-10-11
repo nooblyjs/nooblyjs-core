@@ -144,7 +144,7 @@ class EnhancedQueue {
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  
-│  Workflow   │  │ Notifying   │  │  AIService  │  
+│  Notifying  │  │ Authservice │  │  AIService  │  
 │             │  │             │  │             │  
 └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  
        │                │                │

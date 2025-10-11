@@ -27,14 +27,43 @@ class logging {
   }
 
   /**
+   * Formats the message and metadata into a log string.
+   * @private
+   * @param {string} message The message to log.
+   * @param {*=} meta Optional metadata to include in the log.
+   * @return {string} The formatted message.
+   */
+  formatMessage_(message, meta) {
+    if (meta === undefined || meta === null) {
+      return message;
+    }
+
+    // If meta is an object, stringify it nicely
+    if (typeof meta === 'object') {
+      try {
+        const metaStr = JSON.stringify(meta, null, 2);
+        return `${message} ${metaStr}`;
+      } catch (err) {
+        // If JSON.stringify fails, convert to string
+        return `${message} ${String(meta)}`;
+      }
+    }
+
+    // For primitive types, just append
+    return `${message} ${meta}`;
+  }
+
+  /**
    * Logs an info message to the console with timestamp and device info.
    * @param {string} message The message to log.
+   * @param {*=} meta Optional metadata to include in the log (object, string, etc.).
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
-  async info(message) {
+  async info(message, meta) {
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const logMessage = `${timestamp} - INFO - ${device} - ${message}`;
+    const formattedMessage = this.formatMessage_(message, meta);
+    const logMessage = `${timestamp} - INFO - ${device} - ${formattedMessage}`;
     console.log(logMessage);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:info', { message: logMessage });
@@ -43,12 +72,14 @@ class logging {
   /**
    * Logs a warning message to the console with timestamp and device info.
    * @param {string} message The message to log.
+   * @param {*=} meta Optional metadata to include in the log (object, string, etc.).
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
-  async warn(message) {
+  async warn(message, meta) {
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const logMessage = `${timestamp} - WARN - ${device} - ${message}`;
+    const formattedMessage = this.formatMessage_(message, meta);
+    const logMessage = `${timestamp} - WARN - ${device} - ${formattedMessage}`;
     console.warn(logMessage);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:warn', { message: logMessage });
@@ -57,12 +88,14 @@ class logging {
   /**
    * Logs an error message to the console with timestamp and device info.
    * @param {string} message The message to log.
+   * @param {*=} meta Optional metadata to include in the log (object, string, etc.).
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
-  async error(message) {
+  async error(message, meta) {
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const logMessage = `${timestamp} - ERROR - ${device} - ${message}`;
+    const formattedMessage = this.formatMessage_(message, meta);
+    const logMessage = `${timestamp} - ERROR - ${device} - ${formattedMessage}`;
     console.error(logMessage);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:error', { message: logMessage });
@@ -71,12 +104,14 @@ class logging {
   /**
    * Logs a generic message to the console with timestamp and device info.
    * @param {string} message The message to log.
+   * @param {*=} meta Optional metadata to include in the log (object, string, etc.).
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
-  async log(message) {
+  async log(message, meta) {
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const logMessage = `${timestamp} - ${device} - ${message}`;
+    const formattedMessage = this.formatMessage_(message, meta);
+    const logMessage = `${timestamp} - ${device} - ${formattedMessage}`;
     console.log(logMessage);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:log', { message: logMessage });
