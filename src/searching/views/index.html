@@ -295,6 +295,11 @@
             border-color: #b02a37;
         }
 
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
         .btn-group {
             display: flex;
             gap: 0.5rem;
@@ -699,6 +704,135 @@
             font-weight: 700;
             line-height: 1;
         }
+
+        /* Index Selector Styles */
+        .index-selector-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .index-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .index-selector-label {
+            font-weight: 600;
+            color: #212529;
+            white-space: nowrap;
+        }
+
+        .index-selector {
+            flex: 1;
+            max-width: 400px;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .index-selector:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: 0;
+        }
+
+        .current-index-badge {
+            padding: 0.5rem 1rem;
+            background-color: var(--custom-primary);
+            color: white;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Index Management Styles */
+        .index-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .index-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .index-item:hover {
+            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+
+        .index-info {
+            flex: 1;
+        }
+
+        .index-name {
+            font-weight: 600;
+            color: #212529;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .index-stats {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .index-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background-color: var(--custom-primary);
+            color: white;
+        }
+
+        .badge-secondary {
+            background-color: var(--custom-secondary);
+            color: white;
+        }
+
+        .new-index-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .new-index-form input {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -710,7 +844,23 @@
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Search Management</h1>
-                <p class="page-subtitle">Add, search, and delete documents in the search index</p>
+                <p class="page-subtitle">Add, search, and delete documents across multiple search indexes</p>
+            </div>
+
+            <!-- Index Selector -->
+            <div class="index-selector-container">
+                <div class="index-selector-wrapper">
+                    <label class="index-selector-label">
+                        <i class="bi bi-folder"></i> Active Index:
+                    </label>
+                    <select id="indexSelector" class="index-selector" onchange="selectIndex(this.value)">
+                        <option value="">Loading indexes...</option>
+                    </select>
+                </div>
+                <div class="current-index-badge">
+                    <i class="bi bi-check-circle"></i>
+                    <span id="currentIndexDisplay">All Indexes</span>
+                </div>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -731,6 +881,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
                         <i class="bi bi-database"></i> Data Operations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="indexes-tab" data-bs-toggle="tab" data-bs-target="#indexes" type="button" role="tab" aria-controls="indexes" aria-selected="false">
+                        <i class="bi bi-folder-fill"></i> Index Management
                     </button>
                 </li>
             </ul>
@@ -831,6 +986,13 @@
                         <div class="card-content">
                             <form id="addForm">
                                 <div class="form-group">
+                                    <label class="form-label" for="addIndexName">Target Index</label>
+                                    <select id="addIndexName" class="form-input">
+                                        <option value="">Use current index</option>
+                                    </select>
+                                    <div class="helper-text">Select which index to add the document to (defaults to current index)</div>
+                                </div>
+                                <div class="form-group">
                                     <label class="form-label" for="addDocument">Document (JSON)</label>
                                     <textarea id="addDocument" class="form-input form-textarea" placeholder='{"title": "My Document", "content": "This is the content of my document."}' required></textarea>
                                     <div id="addValidation" class="validation-message" style="display: none;"></div>
@@ -858,6 +1020,13 @@
                         <div class="card-content">
                             <form id="searchForm">
                                 <div class="form-group">
+                                    <label class="form-label" for="searchIndexName">Search In Index</label>
+                                    <select id="searchIndexName" class="form-input">
+                                        <option value="">Use current index</option>
+                                    </select>
+                                    <div class="helper-text">Select which index to search (defaults to current index)</div>
+                                </div>
+                                <div class="form-group">
                                     <label class="form-label" for="searchTerm">Search Term</label>
                                     <input type="text" id="searchTerm" class="form-input" placeholder="Enter search term" required>
                                     <div class="helper-text">The term to search for in the documents</div>
@@ -881,6 +1050,13 @@
                         </div>
                         <div class="card-content">
                             <form id="deleteForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="deleteIndexName">Delete From Index</label>
+                                    <select id="deleteIndexName" class="form-input">
+                                        <option value="">Use current index</option>
+                                    </select>
+                                    <div class="helper-text">Select which index to delete from (defaults to current index)</div>
+                                </div>
                                 <div class="form-group">
                                     <label class="form-label" for="deleteKey">Key</label>
                                     <input type="text" id="deleteKey" class="form-input" placeholder="Enter document key to delete" required>
@@ -928,6 +1104,56 @@
                 </div>
                 <!-- End Data Operations Tab -->
 
+                <!-- Index Management Tab -->
+                <div class="tab-pane fade" id="indexes" role="tabpanel" aria-labelledby="indexes-tab">
+
+                    <!-- Create New Index Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Create New Index</h2>
+                            <p class="card-subtitle">Add a new search index to organize your documents</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="createIndexForm" class="new-index-form">
+                                <input type="text" id="newIndexName" class="form-input" placeholder="Enter new index name" required pattern="[a-zA-Z0-9_-]+" title="Only letters, numbers, underscores, and hyphens are allowed">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Create Index
+                                </button>
+                            </form>
+                            <div class="helper-text">Index names can only contain letters, numbers, underscores, and hyphens</div>
+                        </div>
+                    </div>
+
+                    <!-- Indexes List Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Available Indexes</h2>
+                                    <p class="card-subtitle">Manage your search indexes</p>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshIndexStats()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <ul class="index-list" id="indexList">
+                                <li class="text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading indexes...
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- End Index Management Tab -->
+
             </div>
             <!-- End Tab Content -->
 
@@ -941,9 +1167,222 @@
         NooblyNavigation.renderNavigation('navigation-sidebar', 'searching');
     </script>
     <script>
-        // Analytics data and sorting
+        // Global state
+        let currentIndex = '';
+        let allIndexes = [];
         let analyticsData = [];
         let currentSort = { column: 'callCount', direction: 'desc' };
+
+        // Index Management Functions
+        async function fetchIndexes() {
+            try {
+                const response = await fetch('/services/searching/api/indexes');
+                const data = await response.json();
+                return data.indexes || [];
+            } catch (error) {
+                console.error('Error fetching indexes:', error);
+                showAlert('Error fetching indexes: ' + error.message, 'error');
+                return [];
+            }
+        }
+
+        function selectIndex(indexName) {
+            currentIndex = indexName;
+            document.getElementById('currentIndexDisplay').textContent = indexName || 'All Indexes';
+
+            // Update all index selectors in forms
+            const addIndexSelect = document.getElementById('addIndexName');
+            const searchIndexSelect = document.getElementById('searchIndexName');
+            const deleteIndexSelect = document.getElementById('deleteIndexName');
+
+            if (addIndexSelect) addIndexSelect.value = '';
+            if (searchIndexSelect) searchIndexSelect.value = '';
+            if (deleteIndexSelect) deleteIndexSelect.value = '';
+
+            // Refresh analytics if on dashboard
+            if (document.getElementById('dashboard').classList.contains('show')) {
+                refreshAnalytics();
+            }
+        }
+
+        async function createIndex(indexName) {
+            if (!indexName || !indexName.trim()) {
+                showAlert('Please enter a valid index name', 'error');
+                return;
+            }
+
+            try {
+                // Create index by adding a dummy document
+                const dummyDoc = {
+                    _indexInit: true,
+                    createdAt: new Date().toISOString()
+                };
+
+                const response = await fetch(`/services/searching/api/add?indexName=${encodeURIComponent(indexName)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dummyDoc)
+                });
+
+                if (response.ok) {
+                    showAlert(`Index "${indexName}" created successfully`);
+                    await refreshIndexStats();
+                    await populateIndexSelectors();
+                    document.getElementById('newIndexName').value = '';
+                } else {
+                    const error = await response.text();
+                    showAlert(`Error creating index: ${error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating index:', error);
+                showAlert('Error creating index: ' + error.message, 'error');
+            }
+        }
+
+        async function clearIndex(indexName) {
+            if (!confirm(`Are you sure you want to clear all documents from index "${indexName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(indexName)}/clear`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showAlert(`Index "${indexName}" cleared successfully`);
+                    await refreshIndexStats();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Error clearing index: ${error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error clearing index:', error);
+                showAlert('Error clearing index: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteIndex(indexName) {
+            if (!confirm(`Are you sure you want to DELETE the entire index "${indexName}"? This action cannot be undone and will remove all documents.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(indexName)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showAlert(`Index "${indexName}" deleted successfully`);
+                    if (currentIndex === indexName) {
+                        selectIndex('');
+                    }
+                    await refreshIndexStats();
+                    await populateIndexSelectors();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Error deleting index: ${error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting index:', error);
+                showAlert('Error deleting index: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshIndexStats() {
+            const indexList = document.getElementById('indexList');
+
+            // Show loading
+            indexList.innerHTML = `
+                <li class="text-center text-muted py-4">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Loading indexes...
+                </li>
+            `;
+
+            try {
+                const response = await fetch('/services/searching/api/indexes');
+                const data = await response.json();
+                const indexes = data.indexes || [];
+
+                if (indexes.length === 0) {
+                    indexList.innerHTML = `
+                        <li class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-4"></i>
+                            <p class="mb-0 mt-2">No indexes found. Create one to get started!</p>
+                        </li>
+                    `;
+                    return;
+                }
+
+                // Render index items
+                indexList.innerHTML = indexes.map(index => `
+                    <li class="index-item">
+                        <div class="index-info">
+                            <div class="index-name">
+                                <i class="bi bi-folder-fill text-primary"></i>
+                                ${escapeHtml(index.name)}
+                                ${index.name === currentIndex ? '<span class="badge badge-primary">Active</span>' : ''}
+                            </div>
+                            <div class="index-stats">
+                                <i class="bi bi-file-earmark-text"></i> ${index.count || 0} documents
+                            </div>
+                        </div>
+                        <div class="index-actions">
+                            <button class="btn btn-primary btn-sm" onclick="selectIndex('${escapeHtml(index.name)}')">
+                                <i class="bi bi-check-circle"></i> Select
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="clearIndex('${escapeHtml(index.name)}')">
+                                <i class="bi bi-trash"></i> Clear
+                            </button>
+                            <button class="btn btn-error btn-sm" onclick="deleteIndex('${escapeHtml(index.name)}')">
+                                <i class="bi bi-x-circle"></i> Delete
+                            </button>
+                        </div>
+                    </li>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading indexes:', error);
+                indexList.innerHTML = `
+                    <li class="text-center text-danger py-4">
+                        <i class="bi bi-exclamation-triangle fs-4"></i>
+                        <p class="mb-0 mt-2">Error loading indexes: ${escapeHtml(error.message)}</p>
+                    </li>
+                `;
+            }
+        }
+
+        async function populateIndexSelectors() {
+            try {
+                const indexes = await fetchIndexes();
+                allIndexes = indexes;
+
+                // Update main selector
+                const mainSelector = document.getElementById('indexSelector');
+                mainSelector.innerHTML = '<option value="">All Indexes</option>' +
+                    indexes.map(idx => `<option value="${escapeHtml(idx.name)}">${escapeHtml(idx.name)} (${idx.count || 0})</option>`).join('');
+
+                if (currentIndex) {
+                    mainSelector.value = currentIndex;
+                }
+
+                // Update form selectors
+                const formSelectors = ['addIndexName', 'searchIndexName', 'deleteIndexName'];
+                formSelectors.forEach(selectorId => {
+                    const selector = document.getElementById(selectorId);
+                    if (selector) {
+                        selector.innerHTML = '<option value="">Use current index</option>' +
+                            indexes.map(idx => `<option value="${escapeHtml(idx.name)}">${escapeHtml(idx.name)}</option>`).join('');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error populating index selectors:', error);
+            }
+        }
 
         // JSON validation
         function validateJSON(elementId) {
@@ -1074,7 +1513,12 @@
                     return null;
                 }
 
-                const response = await fetch(`/services/searching/api/analytics?authToken=${encodeURIComponent(authToken)}`);
+                let url = `/services/searching/api/analytics?authToken=${encodeURIComponent(authToken)}`;
+                if (currentIndex) {
+                    url += `&indexName=${encodeURIComponent(currentIndex)}`;
+                }
+
+                const response = await fetch(url);
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -1210,6 +1654,7 @@
             e.preventDefault();
 
             const doc = document.getElementById('addDocument').value;
+            const indexName = document.getElementById('addIndexName').value || currentIndex;
 
             if (!validateJSON('addDocument')) {
                 showAlert('Please enter a valid JSON document', 'error');
@@ -1219,14 +1664,21 @@
             try {
                 setLoading('addForm', true);
                 const parsedDoc = JSON.parse(doc);
-                const result = await makeRequest(`/services/searching/api/add`, 'POST', parsedDoc);
-                showResponse('addResponse', 'addResponseContent', result);
-                showAlert(`Document added successfully`);
 
-                // Refresh analytics if on dashboard tab
+                let url = '/services/searching/api/add';
+                if (indexName) {
+                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                }
+
+                const result = await makeRequest(url, 'POST', parsedDoc);
+                showResponse('addResponse', 'addResponseContent', result);
+                showAlert(`Document added successfully to index: ${indexName || 'default'}`);
+
+                // Refresh analytics and index stats
                 if (document.getElementById('dashboard').classList.contains('show')) {
                     refreshAnalytics();
                 }
+                await populateIndexSelectors();
             } catch (error) {
                 showAlert('Error adding document: ' + error.message, 'error');
                 showResponse('addResponse', 'addResponseContent', 'Error: ' + error.message);
@@ -1239,14 +1691,21 @@
             e.preventDefault();
 
             const term = document.getElementById('searchTerm').value;
+            const indexName = document.getElementById('searchIndexName').value || currentIndex;
 
             try {
                 setLoading('searchForm', true);
-                const result = await makeRequest(`/services/searching/api/search/${encodeURIComponent(term)}`);
-                showResponse('searchResponse', 'searchResponseContent', result);
-                showAlert(`Search completed for term: ${term}`);
 
-                // Refresh analytics if on dashboard tab
+                let url = `/services/searching/api/search/${encodeURIComponent(term)}`;
+                if (indexName) {
+                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                }
+
+                const result = await makeRequest(url);
+                showResponse('searchResponse', 'searchResponseContent', result);
+                showAlert(`Search completed for term: ${term} in index: ${indexName || 'all'}`);
+
+                // Refresh analytics
                 if (document.getElementById('dashboard').classList.contains('show')) {
                     refreshAnalytics();
                 }
@@ -1262,6 +1721,7 @@
             e.preventDefault();
 
             const key = document.getElementById('deleteKey').value;
+            const indexName = document.getElementById('deleteIndexName').value || currentIndex;
 
             if (!confirm(`Are you sure you want to delete document with key: ${key}?`)) {
                 return;
@@ -1269,20 +1729,33 @@
 
             try {
                 setLoading('deleteForm', true);
-                const result = await makeRequest(`/services/searching/api/delete/${encodeURIComponent(key)}`, 'DELETE');
-                showResponse('deleteResponse', 'deleteResponseContent', result);
-                showAlert(`Document with key: ${key} deleted successfully`);
 
-                // Refresh analytics if on dashboard tab
+                let url = `/services/searching/api/delete/${encodeURIComponent(key)}`;
+                if (indexName) {
+                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                }
+
+                const result = await makeRequest(url, 'DELETE');
+                showResponse('deleteResponse', 'deleteResponseContent', result);
+                showAlert(`Document with key: ${key} deleted successfully from index: ${indexName || 'default'}`);
+
+                // Refresh analytics and index stats
                 if (document.getElementById('dashboard').classList.contains('show')) {
                     refreshAnalytics();
                 }
+                await populateIndexSelectors();
             } catch (error) {
                 showAlert('Error deleting document: ' + error.message, 'error');
                 showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
             } finally {
                 setLoading('deleteForm', false);
             }
+        });
+
+        document.getElementById('createIndexForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const indexName = document.getElementById('newIndexName').value.trim();
+            await createIndex(indexName);
         });
 
         async function checkStatus() {
@@ -1301,6 +1774,11 @@
             refreshAnalytics();
         });
 
+        // Load index stats on indexes tab activation
+        document.getElementById('indexes-tab')?.addEventListener('shown.bs.tab', function (e) {
+            refreshIndexStats();
+        });
+
         // Initial analytics load if dashboard is active
         if (document.getElementById('dashboard').classList.contains('show')) {
             refreshAnalytics();
@@ -1311,7 +1789,7 @@
             openapi: '3.0.0',
             info: {
                 title: 'Searching API',
-                description: 'REST API for searching operations',
+                description: 'REST API for searching operations with multi-index support',
                 version: '1.0.0'
             },
             servers: [
@@ -1322,6 +1800,15 @@
                     post: {
                         summary: 'Add a document',
                         description: 'Adds a new document to the search index',
+                        parameters: [
+                            {
+                                name: 'indexName',
+                                in: 'query',
+                                required: false,
+                                schema: { type: 'string' },
+                                description: 'Name of the index to add the document to'
+                            }
+                        ],
                         requestBody: {
                             required: true,
                             content: {
@@ -1358,6 +1845,13 @@
                                 required: true,
                                 schema: { type: 'string' },
                                 description: 'The term to search for'
+                            },
+                            {
+                                name: 'indexName',
+                                in: 'query',
+                                required: false,
+                                schema: { type: 'string' },
+                                description: 'Name of the index to search in'
                             }
                         ],
                         responses: {
@@ -1387,6 +1881,13 @@
                                 required: true,
                                 schema: { type: 'string' },
                                 description: 'The key of the document to delete'
+                            },
+                            {
+                                name: 'indexName',
+                                in: 'query',
+                                required: false,
+                                schema: { type: 'string' },
+                                description: 'Name of the index to delete from'
                             }
                         ],
                         responses: {
@@ -1401,6 +1902,76 @@
                                 content: {
                                     'text/plain': { schema: { type: 'string' } }
                                 }
+                            }
+                        }
+                    }
+                },
+                '/indexes': {
+                    get: {
+                        summary: 'List all indexes',
+                        description: 'Get a list of all available search indexes',
+                        responses: {
+                            '200': {
+                                description: 'List of indexes',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                indexes: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            name: { type: 'string' },
+                                                            count: { type: 'number' }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/indexes/{indexName}': {
+                    delete: {
+                        summary: 'Delete an index',
+                        description: 'Deletes an entire index and all its documents',
+                        parameters: [
+                            {
+                                name: 'indexName',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Name of the index to delete'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Index deleted successfully'
+                            }
+                        }
+                    }
+                },
+                '/indexes/{indexName}/clear': {
+                    delete: {
+                        summary: 'Clear an index',
+                        description: 'Removes all documents from an index',
+                        parameters: [
+                            {
+                                name: 'indexName',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'Name of the index to clear'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Index cleared successfully'
                             }
                         }
                     }
@@ -1432,6 +2003,13 @@
                                 required: true,
                                 schema: { type: 'string' },
                                 description: 'Authentication token'
+                            },
+                            {
+                                name: 'indexName',
+                                in: 'query',
+                                required: false,
+                                schema: { type: 'string' },
+                                description: 'Filter analytics by index name'
                             }
                         ],
                         responses: {
@@ -1487,9 +2065,11 @@
             }
         };
 
-        // Initialize Swagger UI
+        // Initialize Swagger UI and load initial data
         window.onload = function() {
             checkStatus();
+            populateIndexSelectors();
+
             try {
                 const ui = SwaggerUIBundle({
                     spec: spec,
