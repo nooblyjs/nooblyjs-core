@@ -12,6 +12,7 @@
 
 const multer = require('multer');
 const upload = multer();
+const analytics = require('../modules/analytics');
 
 /**
  * Configures and registers file management routes with the Express application.
@@ -58,11 +59,12 @@ module.exports = (options, eventEmitter, filing) => {
 
         filing
           .upload(key, fileData)
-          .then(() =>
+          .then(() => {
+            analytics.trackWrite(key);
             res
               .status(200)
-              .json({ message: 'File uploaded successfully', key }),
-          )
+              .json({ message: 'File uploaded successfully', key });
+          })
           .catch((err) => res.status(500).json({ error: err.message }));
       },
     );
@@ -87,6 +89,7 @@ module.exports = (options, eventEmitter, filing) => {
       filing
         .download(key, encoding)
         .then((data) => {
+          analytics.trackRead(key);
           if (isAttachment) {
             // Set headers for file download
             const filename = key.split('/').pop() || 'download';
@@ -128,9 +131,10 @@ module.exports = (options, eventEmitter, filing) => {
       const key = req.params.key;
       filing
         .remove(key)
-        .then(() =>
-          res.status(200).json({ message: 'File removed successfully', key }),
-        )
+        .then(() => {
+          analytics.trackDelete(key);
+          res.status(200).json({ message: 'File removed successfully', key });
+        })
         .catch((err) => res.status(500).json({ error: err.message }));
     });
 
@@ -164,11 +168,12 @@ module.exports = (options, eventEmitter, filing) => {
 
       filing
         .upload(key, req)
-        .then(() =>
+        .then(() => {
+          analytics.trackWrite(key);
           res
             .status(200)
-            .json({ message: 'File uploaded successfully via stream', key }),
-        )
+            .json({ message: 'File uploaded successfully via stream', key });
+        })
         .catch((err) => res.status(500).json({ error: err.message }));
     });
 
@@ -682,6 +687,71 @@ module.exports = (options, eventEmitter, filing) => {
 
         res.status(200).json({
           message: 'Auto fetch stopped',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Analytics routes
+
+    /**
+     * GET /services/filing/api/analytics
+     * Returns file operation analytics data.
+     * Query: ?limit=number (optional, default 250)
+     *
+     * @param {express.Request} req - Express request object
+     * @param {number} [req.query.limit] - Maximum number of entries to return
+     * @param {express.Response} res - Express response object
+     */
+    app.get('/services/filing/api/analytics', (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit) || 250;
+        const analyticsData = analytics.getAnalytics(limit);
+        const stats = analytics.getStats();
+
+        res.status(200).json({
+          stats,
+          data: analyticsData,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/filing/api/analytics/stats
+     * Returns aggregated analytics statistics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     */
+    app.get('/services/filing/api/analytics/stats', (req, res) => {
+      try {
+        const stats = analytics.getStats();
+        res.status(200).json({
+          ...stats,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * DELETE /services/filing/api/analytics
+     * Clears all analytics data.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     */
+    app.delete('/services/filing/api/analytics', (req, res) => {
+      try {
+        analytics.clear();
+        res.status(200).json({
+          message: 'Analytics data cleared successfully',
           timestamp: new Date().toISOString()
         });
       } catch (error) {

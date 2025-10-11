@@ -31,8 +31,6 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
  │   Filing    │  │   Caching   │  │  Queueing   │ 
  │  (Storage)  │  │   (Cache)   │  │  (Queues)   │
  └─────────────┘  └─────────────┘  └─────────────┘
-
- 
 ```
 
 **Services:**
@@ -146,7 +144,7 @@ class EnhancedQueue {
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  
-│  Workflow   │  │ Notifying   │  │ AIService   │  
+│  Workflow   │  │ Notifying   │  │  AIService  │  
 │             │  │             │  │             │  
 └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  
        │                │                │

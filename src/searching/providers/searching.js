@@ -8,6 +8,8 @@
 
 'use strict';
 
+const analytics = require('../modules/analytics');
+
 /**
  * A class that implements a search service for JSON objects.
  * Provides methods for adding, removing, and searching through stored objects.
@@ -62,6 +64,9 @@ class SearchService {
    * @return {Promise<boolean>} A promise that resolves to true if the object was queued/added, false if the key already exists.
    */
   async add(key, jsonObject) {
+    // Track add operation
+    analytics.trackAdd();
+
     // If queueing is enabled, add to queue for batch processing
     if (this.queueService_) {
       await this.queueService_.enqueue(this.QUEUE_INDEXING_, {
@@ -114,8 +119,11 @@ class SearchService {
    */
   async remove(key) {
     const removed = this.data.delete(key);
-    if (removed && this.eventEmitter_)
-      this.eventEmitter_.emit('search:remove', { key });
+    if (removed) {
+      analytics.trackDelete();
+      if (this.eventEmitter_)
+        this.eventEmitter_.emit('search:remove', { key });
+    }
     return removed;
   }
 
@@ -159,6 +167,10 @@ class SearchService {
         results.push({key, obj});
       }
     }
+
+    // Track search operation with term and result count
+    analytics.trackSearch(searchTerm, results.length);
+
     if (this.eventEmitter_)
       this.eventEmitter_.emit('search:search', { searchTerm, results });
     return results;

@@ -11,6 +11,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const analytics = require('../modules/analytics');
 
 /**
  * Configures and registers search routes with the Express application.
@@ -95,6 +96,75 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/status', (req, res) => {
       eventEmitter.emit('api-searching-status', 'searching api running');
       res.status(200).json('searching api is running');
+    });
+
+    /**
+     * GET /services/searching/api/analytics
+     * Returns analytics data including operation stats and search term statistics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/analytics', (req, res) => {
+      try {
+        const data = analytics.getAllAnalytics();
+        res.status(200).json(data);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/searching/api/analytics/operations
+     * Returns operation statistics only.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/analytics/operations', (req, res) => {
+      try {
+        const stats = analytics.getOperationStats();
+        res.status(200).json(stats);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/searching/api/analytics/terms
+     * Returns search term analytics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/analytics/terms', (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit) || 100;
+        const terms = analytics.getSearchTermAnalytics(limit);
+        res.status(200).json(terms);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * DELETE /services/searching/api/analytics
+     * Clears all analytics data.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.delete('/services/searching/api/analytics', (req, res) => {
+      try {
+        analytics.clear();
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
   }
 };

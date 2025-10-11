@@ -10,7 +10,7 @@
 
 const path = require('path');
 const express = require('express');
-const serviceRegistry = require('./index');
+const serviceRegistry = require('../index');
 
 const app = express();
 app.use(express.json());
@@ -82,6 +82,30 @@ app.listen(3001, async () => {
   await searching.startIndexing(5, 100);
   logger.info('Started search indexing processor (runs every 5 seconds, batch size: 100)');
 
+  // Function to perform random searches
+  const performRandomSearches = async () => {
+    const searchTerms = [
+      ...firstNames,
+      ...lastNames,
+      ...countries,
+      'age:25', 'age:30', 'age:40', 'age:50',
+      'John Smith', 'Jane Williams', 'Michael Brown'
+    ];
+
+    try {
+      for (let i = 0; i < 10; i++) {
+        const searchTerm = getRandomElement(searchTerms);
+        const results = await searching.search(searchTerm, { limit: 10 });
+        logger.info(`Search for "${searchTerm}": found ${results.length} results`);
+
+        // Small delay between searches
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    } catch (error) {
+      logger.error('Error performing random searches:', error.message);
+    }
+  };
+
   // Function to add random people to the search queue
   const addRandomPeople = async () => {
     try {
@@ -98,6 +122,9 @@ app.listen(3001, async () => {
       }
 
       logger.info(`Queued ${added} people for indexing`);
+
+      // Perform random searches after adding people
+      await performRandomSearches();
     } catch (error) {
       logger.error('Error adding random people:', error.message);
     }

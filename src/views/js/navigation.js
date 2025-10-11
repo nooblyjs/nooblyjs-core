@@ -13,7 +13,7 @@ const NooblyNavigation = {
         { name: 'logging', icon: 'bi-journal-text', title: 'Logging', path: 'logging' },
         { name: 'measuring', icon: 'bi-graph-up', title: 'Measuring', path: 'measuring' },
         { name: 'notifying', icon: 'bi-bell-fill', title: 'Notifications', path: 'notifying' },
-        { name: 'queueing', icon: 'bi-list-task', title: 'Queue Management', path: 'queueing' },
+        { name: 'queueing', icon: 'bi-list-task', title: 'Queues', path: 'queueing' },
         { name: 'scheduling', icon: 'bi-alarm-fill', title: 'Scheduling', path: 'scheduling' },
         { name: 'searching', icon: 'bi-search', title: 'Search', path: 'searching' },
         { name: 'workflow', icon: 'bi-diagram-3-fill', title: 'Workflows', path: 'workflow' },

@@ -46,29 +46,29 @@ function createDataserviceService(type, options, eventEmitter) {
   // Create data service instance based on provider type (lazy load to avoid unnecessary AWS SDK imports)
   switch (type) {
     case 'file':
-      const FileDataRingProvider = require('./providers/dataservicefiles');
-      provider = new FileDataRingProvider(providerOptions, eventEmitter);
+      const Dataservicefiles = require('./providers/dataservicefiles');
+      provider = new Dataservicefiles(providerOptions, eventEmitter);
       break;
     case 'simpledb':
-      const SimpleDbDataRingProvider = require('./providers/dataserviceSimpleDB');
-      provider = new SimpleDbDataRingProvider(providerOptions, eventEmitter);
+      const DataserviceSimpleDB = require('./providers/dataserviceSimpleDB');
+      provider = new DataserviceSimpleDB(providerOptions, eventEmitter);
       break;
     case 'mongodb':
-      const MongoDBDataServiceProvider = require('./providers/dataserviceMongoDB');
-      provider = new MongoDBDataServiceProvider(providerOptions, eventEmitter);
+      const DataserviceMongoDB = require('./providers/dataserviceMongoDB');
+      provider = new DataserviceMongoDB(providerOptions, eventEmitter);
       break;
     case 'documentdb':
-      const DocumentDBDataServiceProvider = require('./providers/dataserviceDocumentDB');
-      provider = new DocumentDBDataServiceProvider(providerOptions, eventEmitter);
+      const DataserviceDocumentDB = require('./providers/dataserviceDocumentDB');
+      provider = new DataserviceDocumentDB(providerOptions, eventEmitter);
       break;
     case 'api':
-      const DataServiceApiProvider = require('./providers/dataserviceApi');
-      provider = new DataServiceApiProvider(providerOptions, eventEmitter);
+      const DataserviceApi = require('./providers/dataserviceApi');
+      provider = new DataserviceApi(providerOptions, eventEmitter);
       break;
     case 'memory':
     default:
-      const InMemoryDataServiceProvider = require('./providers/dataservice');
-      provider = new InMemoryDataServiceProvider(providerOptions, eventEmitter);
+      const Dataservice = require('./providers/dataservice');
+      provider = new Dataservice(providerOptions, eventEmitter);
       break;
   }
 

@@ -13,6 +13,7 @@
 // Lazy load providers to avoid loading AWS SDK when not needed
 const Routes = require('./routes');
 const Views = require('./views');
+const analytics = require('./modules/analytics');
 
 /**
  * Filing service wrapper class that provides a unified interface for file operations.
@@ -40,7 +41,9 @@ class FilingService {
    * @return {Promise<void>} Promise that resolves when the file is created
    */
   async create(path, content) {
-    return this.provider.create(path, content);
+    const result = await this.provider.create(path, content);
+    analytics.trackWrite(path);
+    return result;
   }
 
   /**
@@ -50,7 +53,9 @@ class FilingService {
    * @return {Promise<void>} Promise that resolves when the file is uploaded
    */
   async upload(path, content) {
-    return this.provider.create(path, content);
+    const result = await this.provider.create(path, content);
+    analytics.trackWrite(path);
+    return result;
   }
 
   /**
@@ -60,7 +65,9 @@ class FilingService {
    * @return {Promise<Buffer|string>} Promise that resolves with the file content as Buffer or string if encoding specified
    */
   async read(path, encoding) {
-    return this.provider.read(path, encoding);
+    const result = await this.provider.read(path, encoding);
+    analytics.trackRead(path);
+    return result;
   }
 
   /**
@@ -70,7 +77,9 @@ class FilingService {
    * @return {Promise<Buffer|string>} Promise that resolves with the file content as Buffer or string if encoding specified
    */
   async download(path, encoding) {
-    return this.provider.read(path, encoding);
+    const result = await this.provider.read(path, encoding);
+    analytics.trackRead(path);
+    return result;
   }
 
   /**
@@ -79,7 +88,9 @@ class FilingService {
    * @return {Promise<void>} Promise that resolves when the file is deleted
    */
   async delete(path) {
-    return this.provider.delete(path);
+    const result = await this.provider.delete(path);
+    analytics.trackDelete(path);
+    return result;
   }
 
   /**
@@ -88,7 +99,9 @@ class FilingService {
    * @return {Promise<void>} Promise that resolves when the file is removed
    */
   async remove(path) {
-    return this.provider.delete(path);
+    const result = await this.provider.delete(path);
+    analytics.trackDelete(path);
+    return result;
   }
 
   /**
@@ -107,7 +120,9 @@ class FilingService {
    * @return {Promise<void>} Promise that resolves when the file is updated
    */
   async update(path, content) {
-    return this.provider.update(path, content);
+    const result = await this.provider.update(path, content);
+    analytics.trackWrite(path);
+    return result;
   }
 
   // Sync-specific methods (available when using sync provider)

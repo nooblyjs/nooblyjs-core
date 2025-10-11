@@ -320,6 +320,54 @@
                 <p class="page-subtitle">Overview of all available services and their current status</p>
             </div>
 
+            <!-- System Monitoring Section -->
+            <div class="service-section">
+                <div class="section-header">
+                    <h2 class="section-title">System Monitoring</h2>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-memory"></i> RAM Usage</h5>
+                                <div style="height: 150px; position: relative;">
+                                    <canvas id="ramChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="ramStats" class="text-muted"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-cpu"></i> CPU Usage</h5>
+                                <div style="height: 150px; position: relative;">
+                                    <canvas id="cpuChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="cpuStats" class="text-muted"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-hdd-stack"></i> Active Handles</h5>
+                                <div style="height: 150px; position: relative;">
+                                    <canvas id="threadsChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="threadsStats" class="text-muted"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Online Services Section -->
             <div class="service-section" id="online-services-section" style="display: none;">
                 <div class="section-header">
@@ -341,6 +389,7 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
         // Initialize navigation
@@ -389,13 +438,12 @@
         function createServiceCard(service, isOnline) {
             const card = document.createElement('div');
             card.className = `service-card ${isOnline ? '' : 'offline'}`;
+            card.style.cursor = 'pointer';
 
             card.innerHTML = `
                 <div class="service-card-header">
                     <div>
-                        <h3 class="service-title">
-                            <a href="/services/${service.path}/">${service.title}</a>
-                        </h3>
+                        <h3 class="service-title">${service.title}</h3>
                     </div>
                 </div>
                 <div class="service-status">
@@ -405,6 +453,11 @@
                     </span>
                 </div>
             `;
+
+            // Make the entire card clickable
+            card.addEventListener('click', () => {
+                window.location.href = `/services/${service.path}/`;
+            });
 
             return card;
         }
@@ -427,6 +480,215 @@
 
         // Initialize services
         renderServices();
+
+        // System Monitoring Charts
+        let ramChart, cpuChart, threadsChart;
+        const MAX_DATA_POINTS = 30; // Limit to 30 data points (2.5 minutes at 5s intervals)
+
+        function initializeCharts() {
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: false, // Disable animations to reduce CPU usage
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    x: {
+                        display: false
+                    }
+                }
+            };
+
+            // RAM Chart
+            const ramCtx = document.getElementById('ramChart').getContext('2d');
+            ramChart = new Chart(ramCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'RAM Usage (MB)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'MB'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // CPU Chart
+            const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+            cpuChart = new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU Usage (%)',
+                        data: [],
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '%'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Threads/Handles Chart
+            const threadsCtx = document.getElementById('threadsChart').getContext('2d');
+            threadsChart = new Chart(threadsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Active Handles',
+                        data: [],
+                        borderColor: 'rgb(153, 102, 255)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function updateMonitoringData() {
+            try {
+                // Get auth token from localStorage
+                const authToken = localStorage.getItem('authToken');
+
+                // Include auth token in request
+                const response = await fetch('/services/api/monitoring/metrics?authToken=' + authToken);
+
+                if (!response.ok) {
+                    console.error('Failed to fetch monitoring data:', response.status, response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Monitoring data received:', {
+                    ramPoints: data.ram?.length || 0,
+                    cpuPoints: data.cpu?.length || 0,
+                    threadPoints: data.threads?.length || 0
+                });
+
+                // Update RAM chart
+                if (data.ram && data.ram.length > 0) {
+                    // Take only the last MAX_DATA_POINTS entries
+                    const ramSlice = data.ram.slice(-MAX_DATA_POINTS);
+                    const ramLabels = ramSlice.map((_, i) => i);
+                    const ramData = ramSlice.map(d => d.used);
+
+                    ramChart.data.labels = ramLabels;
+                    ramChart.data.datasets[0].data = ramData;
+                    ramChart.update('none');
+
+                    // Update RAM stats
+                    const latestRam = data.ram[data.ram.length - 1];
+                    document.getElementById('ramStats').textContent =
+                        `${latestRam.used} MB / ${latestRam.total} MB (${latestRam.percentage}%)`;
+                }
+
+                // Update CPU chart
+                if (data.cpu && data.cpu.length > 0) {
+                    // Take only the last MAX_DATA_POINTS entries
+                    const cpuSlice = data.cpu.slice(-MAX_DATA_POINTS);
+                    const cpuLabels = cpuSlice.map((_, i) => i);
+                    const cpuData = cpuSlice.map(d => d.usage);
+
+                    cpuChart.data.labels = cpuLabels;
+                    cpuChart.data.datasets[0].data = cpuData;
+                    cpuChart.update('none');
+
+                    // Update CPU stats
+                    const latestCpu = data.cpu[data.cpu.length - 1];
+                    document.getElementById('cpuStats').textContent =
+                        `${latestCpu.usage}% (${latestCpu.cores} cores)`;
+                }
+
+                // Update Threads/Handles chart
+                if (data.threads && data.threads.length > 0) {
+                    // Take only the last MAX_DATA_POINTS entries
+                    const threadsSlice = data.threads.slice(-MAX_DATA_POINTS);
+                    const threadsLabels = threadsSlice.map((_, i) => i);
+                    const threadsData = threadsSlice.map(d => d.total);
+
+                    threadsChart.data.labels = threadsLabels;
+                    threadsChart.data.datasets[0].data = threadsData;
+                    threadsChart.update('none');
+
+                    // Update Threads stats
+                    const latestThreads = data.threads[data.threads.length - 1];
+                    document.getElementById('threadsStats').textContent =
+                        `Handles: ${latestThreads.active} | Requests: ${latestThreads.requests}`;
+                }
+            } catch (error) {
+                console.error('Error fetching monitoring data:', error);
+            }
+        }
+
+        // Initialize monitoring with error handling
+        try {
+            console.log('Initializing monitoring charts...');
+            initializeCharts();
+            console.log('Charts initialized successfully');
+            updateMonitoringData();
+
+            // Update monitoring data every 5 seconds
+            setInterval(updateMonitoringData, 5000);
+        } catch (error) {
+            console.error('Failed to initialize monitoring:', error);
+        }
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

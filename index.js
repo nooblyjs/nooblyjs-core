@@ -9,6 +9,7 @@ const path = require('path');
 
 const { createApiKeyAuthMiddleware, generateApiKey} = require('./src/middleware/apiKeyAuth');
 const { createServicesAuthMiddleware } = require('./src/middleware/servicesAuth');
+const systemMonitoring = require('./src/views/modules/monitoring');
 
 class ServiceRegistry {
 
@@ -98,6 +99,25 @@ class ServiceRegistry {
       },
       express.static(path.join(__dirname, 'src/views')),
     );
+
+    // Add system monitoring API endpoints
+    this.expressApp.get('/services/api/monitoring/metrics', this.servicesAuthMiddleware, (req, res) => {
+      try {
+        const metrics = systemMonitoring.getMetrics();
+        res.status(200).json(metrics);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    this.expressApp.get('/services/api/monitoring/snapshot', this.servicesAuthMiddleware, (req, res) => {
+      try {
+        const snapshot = systemMonitoring.getCurrentSnapshot();
+        res.status(200).json(snapshot);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
 
     this.initialized = true;
     return this;

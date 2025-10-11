@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -357,7 +356,7 @@
             pointer-events: none;
         }
 
-        /* Analytics Table Styles (for caching service) */
+        /* Analytics Table Styles */
         .analytics-controls {
             display: flex;
             justify-content: space-between;
@@ -622,6 +621,84 @@
             outline: 2px solid var(--custom-primary);
             outline-offset: 2px;
         }
+
+        /* Dashboard specific styles */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--custom-primary) 0%, #0052a3 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .stat-card.reads {
+            background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+        }
+
+        .stat-card.writes {
+            background: linear-gradient(135deg, var(--custom-success) 0%, #146c43 100%);
+        }
+
+        .stat-card.deletes {
+            background: linear-gradient(135deg, var(--custom-danger) 0%, #b02a37 100%);
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
@@ -633,7 +710,7 @@
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">File Management</h1>
-                <p class="page-subtitle">Upload, download, and delete files</p>
+                <p class="page-subtitle">Upload, download, and manage files</p>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -644,119 +721,236 @@
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
 
-            <!-- Upload File Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Upload File</h2>
-                    <p class="card-subtitle">Upload a new file to the system</p>
-                </div>
-                <div class="card-content">
-                    <form id="uploadForm">
-                        <div class="form-group">
-                            <label class="form-label" for="uploadKey">Key</label>
-                            <input type="text" id="uploadKey" class="form-input" placeholder="Enter file key" required>
-                            <div class="helper-text">Unique identifier for the file</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="uploadFile">File</label>
-                            <input type="file" id="uploadFile" class="form-input" required>
-                            <div class="helper-text">Select a file to upload</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Upload File</button>
-                        </div>
-                    </form>
-                    <div id="uploadResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="uploadResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <!-- Bootstrap 5 Tabs -->
+            <ul class="nav nav-tabs mb-4" id="filingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data Operations
+                    </button>
+                </li>
+            </ul>
 
-            <!-- Download File Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Download File</h2>
-                    <p class="card-subtitle">Download a file by key</p>
-                </div>
-                <div class="card-content">
-                    <form id="downloadForm">
-                        <div class="form-group">
-                            <label class="form-label" for="downloadKey">Key</label>
-                            <input type="text" id="downloadKey" class="form-input" placeholder="Enter file key to download" required>
-                            <div class="helper-text">Key of the file to download</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Download File</button>
-                        </div>
-                    </form>
-                    <div id="downloadResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Downloaded File:</div>
-                        <div id="downloadResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <!-- Tab Content -->
+            <div class="tab-content" id="filingTabContent">
 
-            <!-- Delete File Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Delete File</h2>
-                    <p class="card-subtitle">Remove a file from the system</p>
-                </div>
-                <div class="card-content">
-                    <form id="deleteForm">
-                        <div class="form-group">
-                            <label class="form-label" for="deleteKey">Key</label>
-                            <input type="text" id="deleteKey" class="form-input" placeholder="Enter file key to delete" required>
-                            <div class="helper-text">Key of the file to remove</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-error">Delete File</button>
-                        </div>
-                    </form>
-                    <div id="deleteResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="deleteResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
 
-            <!-- Status Check -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check filing service status</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h3>Total Paths</h3>
+                                <div class="stat-value" id="statTotalPaths">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card reads">
+                                <h3>Total Reads</h3>
+                                <div class="stat-value" id="statTotalReads">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card writes">
+                                <h3>Total Writes</h3>
+                                <div class="stat-value" id="statTotalWrites">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card deletes">
+                                <h3>Total Deletes</h3>
+                                <div class="stat-value" id="statTotalDeletes">0</div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Filing service</p>
+                    <!-- Analytics Table Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">File Analytics</h2>
+                                    <p class="card-subtitle">Top 250 file paths by activity</p>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshAnalytics()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="analytics-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="sortable" onclick="sortTable('path')">
+                                                <span id="sort-path">Folder/File Path</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('reads')">
+                                                <span id="sort-reads">Reads</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('writes')">
+                                                <span id="sort-writes">Writes</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('deletes')">
+                                                <span id="sort-deletes">Deletes</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('total')">
+                                                <span id="sort-total">Total Activity</span>
+                                            </th>
+                                            <th>Last Access</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="analyticsTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading analytics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div id="swagger-ui"></div>
+
+                <!-- Data Operations Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+
+                    <!-- Upload File Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Upload File</h2>
+                            <p class="card-subtitle">Upload a new file to the system</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="uploadForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="uploadKey">Key</label>
+                                    <input type="text" id="uploadKey" class="form-input" placeholder="Enter file key" required>
+                                    <div class="helper-text">Unique identifier for the file</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="uploadFile">File</label>
+                                    <input type="file" id="uploadFile" class="form-input" required>
+                                    <div class="helper-text">Select a file to upload</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Upload File</button>
+                                </div>
+                            </form>
+                            <div id="uploadResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="uploadResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download File Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Download File</h2>
+                            <p class="card-subtitle">Download a file by key</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="downloadForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="downloadKey">Key</label>
+                                    <input type="text" id="downloadKey" class="form-input" placeholder="Enter file key to download" required>
+                                    <div class="helper-text">Key of the file to download</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Download File</button>
+                                </div>
+                            </form>
+                            <div id="downloadResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Downloaded File:</div>
+                                <div id="downloadResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete File Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Delete File</h2>
+                            <p class="card-subtitle">Remove a file from the system</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="deleteForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="deleteKey">Key</label>
+                                    <input type="text" id="deleteKey" class="form-input" placeholder="Enter file key to delete" required>
+                                    <div class="helper-text">Key of the file to remove</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-error">Delete File</button>
+                                </div>
+                            </form>
+                            <div id="deleteResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="deleteResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Check -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check filing service status</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                            </div>
+                            <div id="statusResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Documentation -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">API Documentation</h2>
+                            <p class="card-subtitle">Interactive API documentation for Filing service</p>
+                        </div>
+                        <div class="card-content">
+                            <div id="swagger-ui"></div>
+                        </div>
+                    </div>
+
                 </div>
+                <!-- End Data Operations Tab -->
+
             </div>
+            <!-- End Tab Content -->
+
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
         NooblyNavigation.renderNavigation('navigation-sidebar', 'filing');
     </script>
     <script>
+        // Analytics data and sorting
+        let analyticsData = [];
+        let currentSort = { column: 'total', direction: 'desc' };
+
         // Utility functions
         function showAlert(message, type = 'success') {
             const alertElement = document.getElementById(type + 'Alert');
@@ -795,10 +989,10 @@
                 options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(body);
             }
-            
+
             const response = await fetch(url, options);
             const contentType = response.headers.get('content-type');
-            
+
             if (contentType && contentType.includes('application/json')) {
                 return await response.json();
             } else {
@@ -806,10 +1000,157 @@
             }
         }
 
+        // Analytics functions
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/services/filing/api/analytics');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                return null;
+            }
+        }
+
+        function updateStatsCards(stats) {
+            if (!stats) return;
+
+            document.getElementById('statTotalPaths').textContent = stats.totalPaths || 0;
+            document.getElementById('statTotalReads').textContent = stats.totalReads || 0;
+            document.getElementById('statTotalWrites').textContent = stats.totalWrites || 0;
+            document.getElementById('statTotalDeletes').textContent = stats.totalDeletes || 0;
+        }
+
+        function sortTable(column) {
+            // Update sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc';
+            }
+
+            // Update sort indicators
+            document.querySelectorAll('.sortable span').forEach(span => {
+                span.parentElement.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            const sortElement = document.getElementById(`sort-${column}`);
+            if (sortElement) {
+                sortElement.parentElement.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+
+            // Sort data
+            analyticsData.sort((a, b) => {
+                let aVal, bVal;
+
+                if (column === 'total') {
+                    aVal = (a.reads || 0) + (a.writes || 0) + (a.deletes || 0);
+                    bVal = (b.reads || 0) + (b.writes || 0) + (b.deletes || 0);
+                } else if (column === 'path') {
+                    aVal = a.path || '';
+                    bVal = b.path || '';
+                    return currentSort.direction === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                } else {
+                    aVal = a[column] || 0;
+                    bVal = b[column] || 0;
+                }
+
+                return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+
+            // Re-render table
+            renderAnalyticsTable();
+        }
+
+        function renderAnalyticsTable() {
+            const tbody = document.getElementById('analyticsTableBody');
+
+            if (!analyticsData || analyticsData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle fs-4"></i>
+                            <p class="mb-0 mt-2">No analytics data available</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Build table rows (limit to 250)
+            const rows = analyticsData.slice(0, 250).map(item => {
+                const total = (item.reads || 0) + (item.writes || 0) + (item.deletes || 0);
+                const lastAccess = item.lastAccess ? new Date(item.lastAccess).toLocaleString() : 'N/A';
+
+                return `
+                    <tr>
+                        <td class="key-cell">${escapeHtml(item.path)}</td>
+                        <td class="hits-cell">${item.reads || 0}</td>
+                        <td class="hits-cell">${item.writes || 0}</td>
+                        <td class="hits-cell">${item.deletes || 0}</td>
+                        <td class="hits-cell">${total}</td>
+                        <td class="date-cell">${lastAccess}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        async function refreshAnalytics() {
+            const tbody = document.getElementById('analyticsTableBody');
+
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading analytics...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch analytics data
+            const data = await fetchAnalytics();
+
+            if (data) {
+                updateStatsCards(data.stats);
+                analyticsData = data.data || [];
+
+                // Sort by total activity by default
+                sortTable('total');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger py-4">
+                            <i class="bi bi-exclamation-triangle fs-4"></i>
+                            <p class="mb-0 mt-2">Error loading analytics data</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
         // Form handlers
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const key = document.getElementById('uploadKey').value;
             const fileInput = document.getElementById('uploadFile');
             const file = fileInput.files[0];
@@ -821,12 +1162,17 @@
 
             const formData = new FormData();
             formData.append('file', file);
-            
+
             try {
                 setLoading('uploadForm', true);
                 const result = await makeRequest(`/services/filing/api/upload/${encodeURIComponent(key)}`, 'POST', formData);
                 showResponse('uploadResponse', 'uploadResponseContent', result);
                 showAlert(`File uploaded successfully with key: ${key}`);
+
+                // Refresh analytics if on dashboard tab
+                if (document.getElementById('dashboard').classList.contains('show')) {
+                    refreshAnalytics();
+                }
             } catch (error) {
                 showAlert('Error uploading file: ' + error.message, 'error');
                 showResponse('uploadResponse', 'uploadResponseContent', 'Error: ' + error.message);
@@ -837,14 +1183,19 @@
 
         document.getElementById('downloadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const key = document.getElementById('downloadKey').value;
-            
+
             try {
                 setLoading('downloadForm', true);
                 const result = await makeRequest(`/services/filing/api/download/${encodeURIComponent(key)}`);
                 showResponse('downloadResponse', 'downloadResponseContent', result);
                 showAlert(`File downloaded successfully for key: ${key}`);
+
+                // Refresh analytics if on dashboard tab
+                if (document.getElementById('dashboard').classList.contains('show')) {
+                    refreshAnalytics();
+                }
             } catch (error) {
                 showAlert('Error downloading file: ' + error.message, 'error');
                 showResponse('downloadResponse', 'downloadResponseContent', 'Error: ' + error.message);
@@ -855,18 +1206,23 @@
 
         document.getElementById('deleteForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const key = document.getElementById('deleteKey').value;
-            
+
             if (!confirm(`Are you sure you want to delete the file with key: ${key}?`)) {
                 return;
             }
-            
+
             try {
                 setLoading('deleteForm', true);
                 const result = await makeRequest(`/services/filing/api/remove/${encodeURIComponent(key)}`, 'DELETE');
                 showResponse('deleteResponse', 'deleteResponseContent', result);
                 showAlert(`File deleted successfully for key: ${key}`);
+
+                // Refresh analytics if on dashboard tab
+                if (document.getElementById('dashboard').classList.contains('show')) {
+                    refreshAnalytics();
+                }
             } catch (error) {
                 showAlert('Error deleting file: ' + error.message, 'error');
                 showResponse('deleteResponse', 'deleteResponseContent', 'Error: ' + error.message);
@@ -884,6 +1240,16 @@
                 showAlert('Error checking status: ' + error.message, 'error');
                 showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
             }
+        }
+
+        // Load analytics on dashboard tab activation
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', function (e) {
+            refreshAnalytics();
+        });
+
+        // Initial analytics load if dashboard is active
+        if (document.getElementById('dashboard').classList.contains('show')) {
+            refreshAnalytics();
         }
 
         // Swagger UI setup
@@ -1016,6 +1382,49 @@
                             }
                         }
                     }
+                },
+                '/analytics': {
+                    get: {
+                        summary: 'Get file analytics',
+                        description: 'Retrieves analytics data for file operations',
+                        responses: {
+                            '200': {
+                                description: 'Analytics retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                stats: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        totalPaths: { type: 'number', example: 10 },
+                                                        totalReads: { type: 'number', example: 45 },
+                                                        totalWrites: { type: 'number', example: 30 },
+                                                        totalDeletes: { type: 'number', example: 5 },
+                                                        totalOperations: { type: 'number', example: 80 }
+                                                    }
+                                                },
+                                                data: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            path: { type: 'string', example: '/folder/path' },
+                                                            reads: { type: 'number', example: 10 },
+                                                            writes: { type: 'number', example: 5 },
+                                                            deletes: { type: 'number', example: 2 },
+                                                            lastAccess: { type: 'string', example: '2025-10-11T00:00:00.000Z' }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -1024,7 +1433,6 @@
         window.onload = function() {
             checkStatus();
             try {
-            checkStatus();
                 const ui = SwaggerUIBundle({
                     spec: spec,
                     dom_id: '#swagger-ui',
