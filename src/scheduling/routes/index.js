@@ -10,6 +10,8 @@
 
 'use strict';
 
+const analytics = require('../modules/analytics');
+
 /**
  * Configures and registers scheduling routes with the Express application.
  * Sets up endpoints for cron-based task scheduling operations.
@@ -74,6 +76,75 @@ module.exports = (options, eventEmitter, scheduler) => {
     app.get('/services/scheduling/api/status', (req, res) => {
       eventEmitter.emit('api-scheduling-status', 'scheduling api running');
       res.status(200).json('scheduling api running');
+    });
+
+    /**
+     * GET /services/scheduling/api/analytics
+     * Returns complete analytics data including totals and schedule statistics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/scheduling/api/analytics', (req, res) => {
+      try {
+        const data = analytics.getAllAnalytics();
+        res.status(200).json(data);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/scheduling/api/analytics/totals
+     * Returns total statistics across all schedules.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/scheduling/api/analytics/totals', (req, res) => {
+      try {
+        const stats = analytics.getTotalStats();
+        res.status(200).json(stats);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/scheduling/api/analytics/schedules
+     * Returns analytics for individual schedules.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/scheduling/api/analytics/schedules', (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit) || 100;
+        const schedules = analytics.getScheduleAnalytics(limit);
+        res.status(200).json(schedules);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * DELETE /services/scheduling/api/analytics
+     * Clears all analytics data.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.delete('/services/scheduling/api/analytics', (req, res) => {
+      try {
+        analytics.clear();
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
   }
 };

@@ -621,6 +621,79 @@
             outline: 2px solid var(--custom-primary);
             outline-offset: 2px;
         }
+
+        /* Dashboard specific styles */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
+        }
+
+        /* Statistics Cards */
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stat-card p {
+            font-size: 1rem;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #fd7e14 0%, #dc6502 100%);
+        }
+
+        .stat-card.purple {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+        }
     </style>
 </head>
 <body>
@@ -642,6 +715,95 @@
             <div class="alert alert-error" id="errorAlert">
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
+
+            <!-- Bootstrap 5 Tabs -->
+            <ul class="nav nav-tabs mb-4" id="schedulingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="schedulingTabContent">
+
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+
+                    <!-- Statistics Cards -->
+                    <div class="stats-row">
+                        <div class="stat-card blue">
+                            <h3 id="totalSchedules">0</h3>
+                            <p>Total Schedules</p>
+                        </div>
+                        <div class="stat-card orange">
+                            <h3 id="totalPending">0</h3>
+                            <p>Pending</p>
+                        </div>
+                        <div class="stat-card purple">
+                            <h3 id="totalRunning">0</h3>
+                            <p>Running</p>
+                        </div>
+                        <div class="stat-card green">
+                            <h3 id="totalCompleted">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+
+                    <!-- Error Card -->
+                    <div class="stats-row">
+                        <div class="stat-card red">
+                            <h3 id="totalErrors">0</h3>
+                            <p>Errors</p>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Table Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Schedule Analytics</h2>
+                            <p class="card-subtitle">Detailed statistics for each schedule</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="analytics-controls">
+                                <div class="analytics-info">
+                                    Click column headers to sort
+                                </div>
+                                <button class="analytics-refresh" onclick="fetchAnalytics()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" onclick="sortTable(0)">Schedule</th>
+                                        <th class="sortable" onclick="sortTable(1)">Pending</th>
+                                        <th class="sortable" onclick="sortTable(2)">Run Count</th>
+                                        <th class="sortable" onclick="sortTable(3)">Complete Count</th>
+                                        <th class="sortable" onclick="sortTable(4)">Error Count</th>
+                                        <th class="sortable" onclick="sortTable(5)">Last Run</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyticsTableBody">
+                                    <tr>
+                                        <td colspan="6" class="no-data">Loading analytics data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- End Dashboard Tab -->
+
+                <!-- Data Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Schedule Task Form -->
             <div class="card">
@@ -726,9 +888,17 @@
                     <div id="swagger-ui"></div>
                 </div>
             </div>
+
+                </div>
+                <!-- End Data Tab -->
+
+            </div>
+            <!-- End Tab Content -->
+
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script>
         // JSON validation
@@ -896,6 +1066,148 @@
                 showAlert('Error checking status: ' + error.message, 'error');
                 showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
             }
+        }
+
+        // Analytics functionality
+        let currentSortColumn = -1;
+        let currentSortDirection = 'asc';
+
+        async function fetchAnalytics() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+
+                const response = await fetch('/services/scheduling/api/analytics', {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateAnalyticsDisplay(data);
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                const tbody = document.getElementById('analyticsTableBody');
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">Error loading analytics data</td></tr>';
+            }
+        }
+
+        function updateAnalyticsDisplay(data) {
+            // Update statistics cards
+            document.getElementById('totalSchedules').textContent = data.totalSchedules || 0;
+            document.getElementById('totalPending').textContent = data.totalPending || 0;
+            document.getElementById('totalRunning').textContent = data.totalRunning || 0;
+            document.getElementById('totalCompleted').textContent = data.totalCompleted || 0;
+            document.getElementById('totalErrors').textContent = data.totalErrors || 0;
+
+            // Update analytics table
+            const tbody = document.getElementById('analyticsTableBody');
+
+            if (!data.schedules || data.schedules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No schedule data available</td></tr>';
+                return;
+            }
+
+            const rows = data.schedules.map(schedule => {
+                const lastRun = schedule.lastRun ? new Date(schedule.lastRun).toLocaleString() : 'Never';
+                return `
+                    <tr>
+                        <td class="key-cell">${escapeHtml(schedule.name || schedule.scheduleId)}</td>
+                        <td class="hits-cell">${schedule.pending || 0}</td>
+                        <td class="hits-cell">${schedule.runCount || 0}</td>
+                        <td class="hits-cell">${schedule.completeCount || 0}</td>
+                        <td class="hits-cell">${schedule.errorCount || 0}</td>
+                        <td class="date-cell">${lastRun}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector('.analytics-table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Check if we have data rows (not just the "no data" row)
+            if (rows.length === 0 || rows[0].cells.length < 2) {
+                return;
+            }
+
+            // Update sort direction
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = columnIndex;
+                currentSortDirection = 'asc';
+            }
+
+            // Remove sort indicators from all headers
+            const headers = table.querySelectorAll('th');
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            // Add sort indicator to current column
+            headers[columnIndex].classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+
+                // Handle numeric columns (Pending, Run Count, Complete Count, Error Count)
+                if (columnIndex >= 1 && columnIndex <= 4) {
+                    aValue = parseInt(aValue) || 0;
+                    bValue = parseInt(bValue) || 0;
+                } else if (columnIndex === 5) {
+                    // Handle date column
+                    aValue = aValue === 'Never' ? 0 : new Date(aValue).getTime();
+                    bValue = bValue === 'Never' ? 0 : new Date(bValue).getTime();
+                }
+
+                if (aValue < bValue) {
+                    return currentSortDirection === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return currentSortDirection === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+
+            // Rebuild table body
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Load analytics on dashboard tab activation
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', function (e) {
+            fetchAnalytics();
+        });
+
+        // Initial analytics load if dashboard is active
+        if (document.getElementById('dashboard').classList.contains('show')) {
+            fetchAnalytics();
         }
 
         // Swagger UI setup

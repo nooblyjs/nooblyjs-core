@@ -43,23 +43,25 @@ serviceRegistry.initialize(app, {
 - Provider Pattern: Multiple backends (memory, redis, s3, etc.)
 - Event-Driven: Global EventEmitter for inter-service communication
 - RESTful APIs: Consistent HTTP endpoints
+- Dependency Injection: Services automatically receive their dependencies
 
 ### Available Services
 
 | Service | Providers | Purpose |
 |---------|-----------|---------|
-| **aiservice** | claude, chatgpt, ollama | LLM integration with token tracking |
-| **caching** | memory, redis, memcached | High-performance caching |
-| **dataservice** | memory, simpledb, file | JSON document storage with UUIDs |
-| **filing** | local, ftp, s3, git, sync | File management |
-| **logging** | console, file | Application logging |
-| **measuring** | memory | Metrics collection |
-| **notifying** | memory | Pub/sub messaging |
-| **queueing** | memory | Task queueing |
-| **scheduling** | memory | Task scheduling |
-| **searching** | memory | Full-text search |
-| **workflow** | memory | Multi-step workflows |
-| **working** | memory | Background tasks |
+| **aiservice** | claude, chatgpt, ollama, api | LLM integration with token tracking |
+| **authservice** | file, memory, passport, google, api | Authentication & user management |
+| **caching** | memory, redis, memcached, file, api | High-performance caching |
+| **dataservice** | memory, simpledb, file, mongodb, documentdb, api | JSON document storage with UUIDs |
+| **filing** | local, ftp, s3, git, gcp, sync, api | File management |
+| **logging** | console, file, api | Application logging |
+| **measuring** | memory, api | Metrics collection |
+| **notifying** | memory, api | Pub/sub messaging |
+| **queueing** | memory, api | Task queueing |
+| **scheduling** | memory | Task scheduling with worker threads |
+| **searching** | memory, api | Full-text search |
+| **workflow** | memory, api | Multi-step workflows |
+| **working** | memory, api | Background tasks with worker threads |
 
 ## API Usage
 
@@ -142,6 +144,22 @@ GET /services/filing/api/download/:path
 DELETE /services/filing/api/remove/:path
 ```
 
+### Scheduling API
+```bash
+# Schedule task with interval
+POST /services/scheduling/api/schedule
+{"task": "taskName", "scriptPath": "path/to/script.js", "intervalSeconds": 60}
+
+# Stop task
+DELETE /services/scheduling/api/cancel/:taskName
+
+# Get analytics
+GET /services/scheduling/api/analytics
+
+# Status
+GET /services/scheduling/api/status
+```
+
 ### Workflow API
 ```bash
 # Define workflow
@@ -156,14 +174,17 @@ POST /services/workflow/api/start
 ### Queue API
 ```bash
 # Enqueue task
-POST /services/queueing/api/enqueue
-{task data}
+POST /services/queueing/api/enqueue/:queueName
+{"task": {...}}
 
 # Dequeue task
-GET /services/queueing/api/dequeue
+GET /services/queueing/api/dequeue/:queueName
 
 # Queue size
-GET /services/queueing/api/size
+GET /services/queueing/api/size/:queueName
+
+# List all queues
+GET /services/queueing/api/queues
 ```
 
 ### AI Service API
@@ -180,7 +201,7 @@ const claudeAI = serviceRegistry.aiservice('claude', {
 
 const chatGPT = serviceRegistry.aiservice('chatgpt', {
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-3.5-turbo'
+  model: 'gpt-4'
 });
 
 const ollama = serviceRegistry.aiservice('ollama', {
@@ -437,6 +458,40 @@ async function summarizeDocuments(documents) {
 }
 ```
 
+### Scheduling
+
+```javascript
+const scheduling = serviceRegistry.scheduling('memory', {
+  dependencies: {
+    working: serviceRegistry.working('memory') // Required dependency
+  }
+});
+
+// Schedule task to run every N seconds
+await scheduling.start(
+  'backupTask',              // Task name
+  'scripts/backup.js',       // Script path
+  { config: 'production' },  // Data passed to script
+  3600,                      // Interval in seconds (1 hour)
+  (status, result) => {      // Callback on each execution
+    if (status === 'completed') {
+      console.log('Backup completed:', result);
+    } else {
+      console.error('Backup failed:', result);
+    }
+  }
+);
+
+// Stop a specific task
+await scheduling.stop('backupTask');
+
+// Check if task is running
+const isRunning = await scheduling.isRunning('backupTask');
+
+// Stop all tasks
+await scheduling.stop();
+```
+
 ### Workflow Orchestration
 
 ```javascript
@@ -520,7 +575,7 @@ notifying.notify('orders', {type: 'order_placed', data: orderData});
 const queueing = serviceRegistry.queueing('memory');
 
 // Add tasks
-await queueing.enqueue({
+await queueing.enqueue('emailQueue', {
   taskType: 'sendEmail',
   recipient: 'user@example.com',
   template: 'welcome'
@@ -528,38 +583,35 @@ await queueing.enqueue({
 
 // Process tasks
 async function processQueue() {
-  while (await queueing.size() > 0) {
-    const task = await queueing.dequeue();
+  while (await queueing.size('emailQueue') > 0) {
+    const task = await queueing.dequeue('emailQueue');
     await handleTask(task);
   }
 }
-```
-
-### Scheduling
-
-```javascript
-const scheduling = serviceRegistry.scheduling('memory');
-
-// Schedule one-time task
-scheduling.scheduleTask('backup-db', () => {
-  backupDatabase();
-}, new Date(Date.now() + 3600000)); // 1 hour from now
-
-// Schedule recurring task
-scheduling.scheduleRecurring('cleanup', () => {
-  cleanupTempFiles();
-}, 86400000); // Every 24 hours
 ```
 
 ## Web Interface
 
 NooblyJS includes built-in web UIs for service management:
 
-- **Glass theme**: `/` or `/glass`
-- **Flat theme**: `/flat`
-- **Material theme**: `/material`
-- **Minimalist theme**: `/minimalist`
-- **Shadcn theme**: `/shadcn`
+- **Service Registry Dashboard**: `/services/` - Overview of all services
+- **Individual Service Dashboards**:
+  - `/services/caching/` - Cache management and analytics
+  - `/services/dataservice/` - Data operations and search
+  - `/services/filing/` - File management
+  - `/services/logging/` - Log viewer and analytics
+  - `/services/queueing/` - Queue monitoring
+  - `/services/scheduling/` - Task scheduler
+  - `/services/searching/` - Search interface
+  - `/services/workflow/` - Workflow management
+  - `/services/authservice/` - User authentication
+  - `/services/ai/` - AI service management
+
+Each dashboard includes:
+- Analytics with real-time metrics
+- Interactive API testing
+- Swagger/OpenAPI documentation
+- Operation forms
 
 ## Configuration
 
@@ -596,6 +648,11 @@ serviceRegistry.initialize(app, {
 **File Logging:**
 ```javascript
 {filename: './app.log', maxFiles: 5, maxSize: '10m'}
+```
+
+**Working Service (Background Tasks):**
+```javascript
+{maxThreads: 4, activitiesFolder: './activities'}
 ```
 
 ## Event System
@@ -680,7 +737,7 @@ npm run test-load
 ```
 
 ### Manual API Tests
-Use `.http` files in `tests-api/` directory with REST clients.
+Use `.http` files in `tests/api/` directory with REST clients.
 
 ## Deployment
 
@@ -731,6 +788,11 @@ ANTHROPIC_API_KEY=...
 - Ensure key is passed in correct header/parameter
 - Check path isn't excluded from auth
 - Verify key is in apiKeys array
+
+### Scheduling Issues
+- Ensure working service is initialized before scheduling service
+- Check script paths are absolute
+- Verify worker thread limits aren't exceeded
 
 ## Error Response Format
 

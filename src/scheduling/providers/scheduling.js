@@ -8,6 +8,8 @@
 
 'use strict';
 
+const analytics = require('../modules/analytics');
+
 /**
  * A class that manages scheduling and execution of tasks in worker threads.
  * Provides methods for starting, stopping, and monitoring scheduled tasks.
@@ -74,7 +76,20 @@ class SchedulerProvider {
     }
 
     const executeTask = () => {
+      // Track as running when execution starts
+      analytics.trackScheduleRunning(taskName);
+
       this.worker_.start(scriptPath, data, (status, data) => {
+        // Track completion or error based on status
+        if (status === 'completed' || status === 'success') {
+          analytics.trackScheduleCompleted(taskName);
+        } else if (status === 'error' || status === 'failed') {
+          analytics.trackScheduleError(taskName);
+        } else {
+          // Default to completed for other statuses
+          analytics.trackScheduleCompleted(taskName);
+        }
+
         if (callback) {
           callback(status, data);
         }
@@ -97,6 +112,9 @@ class SchedulerProvider {
       executionCallback: callback,
     });
 
+    // Track schedule as started
+    analytics.trackScheduleStarted(taskName);
+
     if (this.eventEmitter_)
       this.eventEmitter_.emit('scheduler:started', {
         taskName,
@@ -116,12 +134,20 @@ class SchedulerProvider {
         const task = this.tasks_.get(taskName);
         clearInterval(task.intervalId);
         this.tasks_.delete(taskName);
+
+        // Track schedule as stopped
+        analytics.trackScheduleStopped(taskName);
+
         if (this.eventEmitter_)
           this.eventEmitter_.emit('scheduler:stopped', { taskName });
       }
     } else {
       this.tasks_.forEach((task, name) => {
         clearInterval(task.intervalId);
+
+        // Track each schedule as stopped
+        analytics.trackScheduleStopped(name);
+
         if (this.eventEmitter_)
           this.eventEmitter_.emit('scheduler:stopped', { taskName: name });
       });
