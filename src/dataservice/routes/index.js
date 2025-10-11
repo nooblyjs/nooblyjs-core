@@ -10,6 +10,8 @@
 
 'use strict';
 
+const analytics = require('../modules/analytics');
+
 /**
  * Configures and registers data service routes with the Express application.
  * Sets up endpoints for persistent data management operations.
@@ -180,6 +182,75 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/status', (req, res) => {
       eventEmitter.emit('api-dataservice-status', 'dataservice api running');
       res.status(200).json('dataservice api running');
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics
+     * Returns analytics data including total stats and container statistics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics', (req, res) => {
+      try {
+        const data = analytics.getAllAnalytics();
+        res.status(200).json(data);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics/totals
+     * Returns total operation statistics only.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics/totals', (req, res) => {
+      try {
+        const stats = analytics.getTotalStats();
+        res.status(200).json(stats);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics/containers
+     * Returns container analytics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics/containers', (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit) || 100;
+        const containers = analytics.getContainerAnalytics(limit);
+        res.status(200).json(containers);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * DELETE /services/dataservice/api/analytics
+     * Clears all analytics data.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.delete('/services/dataservice/api/analytics', (req, res) => {
+      try {
+        analytics.clear();
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
   }
 };

@@ -106,6 +106,58 @@ app.listen(3001, async () => {
     }
   };
 
+  // Store keys for later deletion
+  const addedKeys = [];
+
+  // Function to perform random read operations
+  const performRandomReads = async () => {
+    if (addedKeys.length === 0) return;
+
+    try {
+      const numReads = Math.min(5, addedKeys.length);
+      logger.info(`Performing ${numReads} random read operations...`);
+
+      for (let i = 0; i < numReads; i++) {
+        const randomKey = getRandomElement(addedKeys);
+        // Read operation via search (simulating a get/read)
+        await searching.search(randomKey);
+        logger.info(`Read operation for key: ${randomKey}`);
+
+        // Small delay between reads
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    } catch (error) {
+      logger.error('Error performing random reads:', error.message);
+    }
+  };
+
+  // Function to perform random delete operations
+  const performRandomDeletes = async () => {
+    if (addedKeys.length === 0) return;
+
+    try {
+      const numDeletes = Math.min(3, addedKeys.length);
+      logger.info(`Performing ${numDeletes} random delete operations...`);
+
+      for (let i = 0; i < numDeletes; i++) {
+        const randomIndex = Math.floor(Math.random() * addedKeys.length);
+        const keyToDelete = addedKeys[randomIndex];
+
+        const deleted = await searching.remove(keyToDelete);
+        if (deleted) {
+          logger.info(`Deleted document with key: ${keyToDelete}`);
+          // Remove from our tracking array
+          addedKeys.splice(randomIndex, 1);
+        }
+
+        // Small delay between deletes
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    } catch (error) {
+      logger.error('Error performing random deletes:', error.message);
+    }
+  };
+
   // Function to add random people to the search queue
   const addRandomPeople = async () => {
     try {
@@ -118,13 +170,16 @@ app.listen(3001, async () => {
       for (const person of people) {
         const key = `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         await searching.add(key, person);
+        addedKeys.push(key); // Track the key
         added++;
       }
 
       logger.info(`Queued ${added} people for indexing`);
 
-      // Perform random searches after adding people
+      // Perform random operations after adding people
       await performRandomSearches();
+      await performRandomReads();
+      await performRandomDeletes();
     } catch (error) {
       logger.error('Error adding random people:', error.message);
     }

@@ -12,6 +12,7 @@
 // Lazy load providers to avoid loading AWS SDK when not needed
 const Routes = require('./routes');
 const Views = require('./views');
+const analytics = require('./modules/analytics');
 
 /**
  * Helper function to get nested values from objects using dot notation
@@ -79,9 +80,18 @@ function createDataserviceService(type, options, eventEmitter) {
     provider: provider,
     dependencies: dependencies,
     createContainer: (...args) => provider.createContainer(...args),
-    add: (...args) => provider.add(...args),
-    remove: (...args) => provider.remove(...args),
-    find: (...args) => provider.find(...args),
+    add: async (containerName, ...args) => {
+      analytics.trackAdd(containerName);
+      return provider.add(containerName, ...args);
+    },
+    remove: async (containerName, ...args) => {
+      analytics.trackRemove(containerName);
+      return provider.remove(containerName, ...args);
+    },
+    find: async (containerName, ...args) => {
+      analytics.trackFind(containerName);
+      return provider.find(containerName, ...args);
+    },
     
     // UUID-based retrieval for API routes
     getByUuid: async (containerName, uuid) => {
