@@ -38,6 +38,7 @@ const worker = serviceRegistry.working('default', {
 });
 const scheduler = serviceRegistry.scheduling();
 
+// start the search service
 const searching = serviceRegistry.searching();
 
 // Redirect root to services
