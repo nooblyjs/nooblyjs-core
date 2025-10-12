@@ -53,20 +53,20 @@ class SearchService {
   /**
    * Gets or creates an index by name.
    * @private
-   * @param {string} indexName The name of the index.
+   * @param {string} searchContainer The name of the index.
    * @return {Map<string, Object>} The index data map.
    */
-  getIndex_(indexName) {
-    if (!this.indexes.has(indexName)) {
-      this.indexes.set(indexName, new Map());
+  getIndex_(searchContainer) {
+    if (!this.indexes.has(searchContainer)) {
+      this.indexes.set(searchContainer, new Map());
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('search:index:created', {
-          indexName,
+          searchContainer,
           totalIndexes: this.indexes.size
         });
       }
     }
-    return this.indexes.get(indexName);
+    return this.indexes.get(searchContainer);
   }
 
   /**
@@ -87,10 +87,10 @@ class SearchService {
    * If queueing is enabled, adds to queue instead of direct indexing.
    * @param {string} key The unique key for the JSON object.
    * @param {!Object} jsonObject The JSON object to add.
-   * @param {string=} indexName The name of the index (defaults to default index).
+   * @param {string=} searchContainer The name of the index (defaults to default index).
    * @return {Promise<boolean>} A promise that resolves to true if the object was queued/added, false if the key already exists.
    */
-  async add(key, jsonObject, indexName = this.defaultIndex_) {
+  async add(key, jsonObject, searchContainer = this.defaultIndex_) {
     // Track add operation
     analytics.trackAdd();
 
@@ -100,14 +100,14 @@ class SearchService {
         operation: 'add',
         key,
         data: jsonObject,
-        indexName,
+        searchContainer,
         timestamp: new Date().toISOString()
       });
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('search:queued', {
           operation: 'add',
           key,
-          indexName,
+          searchContainer,
           queueName: this.QUEUE_INDEXING_
         });
       }
@@ -115,49 +115,49 @@ class SearchService {
     }
 
     // Direct add if no queueing
-    return this.addDirect_(key, jsonObject, indexName);
+    return this.addDirect_(key, jsonObject, searchContainer);
   }
 
   /**
    * Directly adds a JSON object to the search index (used by indexing activity).
    * @param {string} key The unique key for the JSON object.
    * @param {!Object} jsonObject The JSON object to add.
-   * @param {string=} indexName The name of the index (defaults to default index).
+   * @param {string=} searchContainer The name of the index (defaults to default index).
    * @return {Promise<boolean>} A promise that resolves to true if the object was added, false if the key already exists.
    * @private
    */
-  async addDirect_(key, jsonObject, indexName = this.defaultIndex_) {
-    const index = this.getIndex_(indexName);
+  async addDirect_(key, jsonObject, searchContainer = this.defaultIndex_) {
+    const index = this.getIndex_(searchContainer);
 
     if (index.has(key)) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('search:add:error', {
           jsonObject: jsonObject,
           key: key,
-          indexName,
+          searchContainer,
           error: 'Key already exists.',
         });
       return false;
     }
     index.set(key, jsonObject);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('search:add', { jsonObject: jsonObject, key, indexName });
+      this.eventEmitter_.emit('search:add', { jsonObject: jsonObject, key, searchContainer });
     return true;
   }
 
   /**
    * Removes a JSON object from the search service by its key.
    * @param {string} key The key of the JSON object to remove.
-   * @param {string=} indexName The name of the index (defaults to default index).
+   * @param {string=} searchContainer The name of the index (defaults to default index).
    * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false if the key was not found.
    */
-  async remove(key, indexName = this.defaultIndex_) {
-    const index = this.getIndex_(indexName);
+  async remove(key, searchContainer = this.defaultIndex_) {
+    const index = this.getIndex_(searchContainer);
     const removed = index.delete(key);
     if (removed) {
       analytics.trackDelete();
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:remove', { key, indexName });
+        this.eventEmitter_.emit('search:remove', { key, searchContainer });
     }
     return removed;
   }
@@ -166,18 +166,18 @@ class SearchService {
    * Searches for a term across all string values within the stored JSON objects.
    * The search is case-insensitive and recursive through nested objects.
    * @param {string} searchTerm The term to search for.
-   * @param {string=} indexName The name of the index to search (defaults to default index).
+   * @param {string=} searchContainer The name of the index to search (defaults to default index).
    * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects with their keys.
    */
-  async search(searchTerm, indexName = this.defaultIndex_) {
+  async search(searchTerm, searchContainer = this.defaultIndex_) {
     const results = [];
     if (!searchTerm) {
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:search', { searchTerm, indexName, results });
+        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer, results });
       return results;
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const index = this.getIndex_(indexName);
+    const index = this.getIndex_(searchContainer);
 
     for (const [key, obj] of index.entries()) {
       let found = false;
@@ -209,23 +209,23 @@ class SearchService {
     analytics.trackSearch(searchTerm, results.length);
 
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('search:search', { searchTerm, indexName, results });
+      this.eventEmitter_.emit('search:search', { searchTerm, searchContainer, results });
     return results;
   }
 
   /**
    * Gets statistics about the search service including queue size.
-   * If indexName is provided, returns stats for that specific index.
+   * If searchContainer is provided, returns stats for that specific index.
    * If not provided, returns aggregated stats for all indexes.
-   * @param {string=} indexName The name of the index (optional).
+   * @param {string=} searchContainer The name of the index (optional).
    * @return {Promise<Object>} A promise that resolves to statistics object.
    */
-  async getStats(indexName) {
-    if (indexName) {
+  async getStats(searchContainer) {
+    if (searchContainer) {
       // Return stats for specific index
-      const index = this.getIndex_(indexName);
+      const index = this.getIndex_(searchContainer);
       const stats = {
-        indexName,
+        searchContainer,
         indexedItems: index.size,
         queueName: this.QUEUE_INDEXING_,
         queueSize: 0
@@ -273,13 +273,13 @@ class SearchService {
 
   /**
    * Gets statistics for a specific index.
-   * @param {string} indexName The name of the index.
+   * @param {string} searchContainer The name of the index.
    * @return {Object} Statistics object for the specified index.
    */
-  getIndexStats(indexName) {
-    const index = this.getIndex_(indexName);
+  getIndexStats(searchContainer) {
+    const index = this.getIndex_(searchContainer);
     return {
-      indexName,
+      searchContainer,
       size: index.size,
       keys: Array.from(index.keys())
     };
@@ -287,17 +287,17 @@ class SearchService {
 
   /**
    * Clears all data from a specific index.
-   * @param {string} indexName The name of the index to clear.
+   * @param {string} searchContainer The name of the index to clear.
    * @return {boolean} True if the index was cleared successfully.
    */
-  clearIndex(indexName) {
-    const index = this.getIndex_(indexName);
+  clearIndex(searchContainer) {
+    const index = this.getIndex_(searchContainer);
     const previousSize = index.size;
     index.clear();
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('search:index:cleared', {
-        indexName,
+        searchContainer,
         previousSize
       });
     }
@@ -307,25 +307,25 @@ class SearchService {
 
   /**
    * Completely removes an index. Cannot delete the default index.
-   * @param {string} indexName The name of the index to delete.
+   * @param {string} searchContainer The name of the index to delete.
    * @return {boolean} True if the index was deleted, false if it's the default index.
    * @throws {Error} If attempting to delete the default index.
    */
-  deleteIndex(indexName) {
-    if (indexName === this.defaultIndex_) {
+  deleteIndex(searchContainer) {
+    if (searchContainer === this.defaultIndex_) {
       throw new Error('Cannot delete the default index');
     }
 
-    if (!this.indexes.has(indexName)) {
+    if (!this.indexes.has(searchContainer)) {
       return false;
     }
 
-    const deletedSize = this.indexes.get(indexName).size;
-    const deleted = this.indexes.delete(indexName);
+    const deletedSize = this.indexes.get(searchContainer).size;
+    const deleted = this.indexes.delete(searchContainer);
 
     if (deleted && this.eventEmitter_) {
       this.eventEmitter_.emit('search:index:deleted', {
-        indexName,
+        searchContainer,
         deletedSize,
         remainingIndexes: this.indexes.size
       });
@@ -371,8 +371,8 @@ class SearchService {
 
           try {
             if (item.operation === 'add') {
-              const indexName = item.indexName || this.defaultIndex_;
-              const added = await this.addDirect_(item.key, item.data, indexName);
+              const searchContainer = item.searchContainer || this.defaultIndex_;
+              const added = await this.addDirect_(item.key, item.data, searchContainer);
               if (added) {
                 processedCount++;
               } else {

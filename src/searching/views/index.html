@@ -847,22 +847,6 @@
                 <p class="page-subtitle">Add, search, and delete documents across multiple search indexes</p>
             </div>
 
-            <!-- Index Selector -->
-            <div class="index-selector-container">
-                <div class="index-selector-wrapper">
-                    <label class="index-selector-label">
-                        <i class="bi bi-folder"></i> Active Index:
-                    </label>
-                    <select id="indexSelector" class="index-selector" onchange="selectIndex(this.value)">
-                        <option value="">Loading indexes...</option>
-                    </select>
-                </div>
-                <div class="current-index-badge">
-                    <i class="bi bi-check-circle"></i>
-                    <span id="currentIndexDisplay">All Indexes</span>
-                </div>
-            </div>
-
             <div class="alert alert-success" id="successAlert">
                 <strong>Success!</strong> <span id="successMessage"></span>
             </div>
@@ -881,11 +865,6 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
                         <i class="bi bi-database"></i> Data Operations
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="indexes-tab" data-bs-toggle="tab" data-bs-target="#indexes" type="button" role="tab" aria-controls="indexes" aria-selected="false">
-                        <i class="bi bi-folder-fill"></i> Index Management
                     </button>
                 </li>
             </ul>
@@ -976,6 +955,53 @@
 
                 <!-- Data Operations Tab -->
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+
+                    <!-- Create New Index Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Create New Index</h2>
+                            <p class="card-subtitle">Add a new search index to organize your documents</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="createIndexForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="newIndexName">Index Name</label>
+                                    <input type="text" id="newIndexName" class="form-input" placeholder="Enter new index name" required pattern="[a-zA-Z0-9_-]+" title="Only letters, numbers, underscores, and hyphens are allowed">
+                                    <div class="helper-text">Index names can only contain letters, numbers, underscores, and hyphens</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Create Index
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Indexes List Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Available Indexes</h2>
+                                    <p class="card-subtitle">Manage your search indexes</p>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshIndexStats()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <ul class="index-list" id="indexList">
+                                <li class="text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading indexes...
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
                     <!-- Add Document Form -->
                     <div class="card">
@@ -1104,56 +1130,6 @@
                 </div>
                 <!-- End Data Operations Tab -->
 
-                <!-- Index Management Tab -->
-                <div class="tab-pane fade" id="indexes" role="tabpanel" aria-labelledby="indexes-tab">
-
-                    <!-- Create New Index Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Create New Index</h2>
-                            <p class="card-subtitle">Add a new search index to organize your documents</p>
-                        </div>
-                        <div class="card-content">
-                            <form id="createIndexForm" class="new-index-form">
-                                <input type="text" id="newIndexName" class="form-input" placeholder="Enter new index name" required pattern="[a-zA-Z0-9_-]+" title="Only letters, numbers, underscores, and hyphens are allowed">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Create Index
-                                </button>
-                            </form>
-                            <div class="helper-text">Index names can only contain letters, numbers, underscores, and hyphens</div>
-                        </div>
-                    </div>
-
-                    <!-- Indexes List Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="card-title">Available Indexes</h2>
-                                    <p class="card-subtitle">Manage your search indexes</p>
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshIndexStats()">
-                                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <ul class="index-list" id="indexList">
-                                <li class="text-center text-muted py-4">
-                                    <div class="spinner-border spinner-border-sm me-2" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    Loading indexes...
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                </div>
-                <!-- End Index Management Tab -->
-
             </div>
             <!-- End Tab Content -->
 
@@ -1186,27 +1162,27 @@
             }
         }
 
-        function selectIndex(indexName) {
-            currentIndex = indexName;
-            document.getElementById('currentIndexDisplay').textContent = indexName || 'All Indexes';
+        function selectIndex(searchContainer) {
+            currentIndex = searchContainer;
 
             // Update all index selectors in forms
             const addIndexSelect = document.getElementById('addIndexName');
             const searchIndexSelect = document.getElementById('searchIndexName');
             const deleteIndexSelect = document.getElementById('deleteIndexName');
 
-            if (addIndexSelect) addIndexSelect.value = '';
-            if (searchIndexSelect) searchIndexSelect.value = '';
-            if (deleteIndexSelect) deleteIndexSelect.value = '';
+            if (addIndexSelect) addIndexSelect.value = searchContainer || '';
+            if (searchIndexSelect) searchIndexSelect.value = searchContainer || '';
+            if (deleteIndexSelect) deleteIndexSelect.value = searchContainer || '';
 
-            // Refresh analytics if on dashboard
-            if (document.getElementById('dashboard').classList.contains('show')) {
-                refreshAnalytics();
-            }
+            // Refresh index stats to show active badge
+            refreshIndexStats();
+
+            // Show success message
+            showAlert(`Active index set to: ${searchContainer || 'default'}`);
         }
 
-        async function createIndex(indexName) {
-            if (!indexName || !indexName.trim()) {
+        async function createIndex(searchContainer) {
+            if (!searchContainer || !searchContainer.trim()) {
                 showAlert('Please enter a valid index name', 'error');
                 return;
             }
@@ -1218,14 +1194,14 @@
                     createdAt: new Date().toISOString()
                 };
 
-                const response = await fetch(`/services/searching/api/add?indexName=${encodeURIComponent(indexName)}`, {
+                const response = await fetch(`/services/searching/api/add?searchContainer=${encodeURIComponent(searchContainer)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dummyDoc)
                 });
 
                 if (response.ok) {
-                    showAlert(`Index "${indexName}" created successfully`);
+                    showAlert(`Index "${searchContainer}" created successfully`);
                     await refreshIndexStats();
                     await populateIndexSelectors();
                     document.getElementById('newIndexName').value = '';
@@ -1239,18 +1215,18 @@
             }
         }
 
-        async function clearIndex(indexName) {
-            if (!confirm(`Are you sure you want to clear all documents from index "${indexName}"? This action cannot be undone.`)) {
+        async function clearIndex(searchContainer) {
+            if (!confirm(`Are you sure you want to clear all documents from index "${searchContainer}"? This action cannot be undone.`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(indexName)}/clear`, {
+                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(searchContainer)}/clear`, {
                     method: 'DELETE'
                 });
 
                 if (response.ok) {
-                    showAlert(`Index "${indexName}" cleared successfully`);
+                    showAlert(`Index "${searchContainer}" cleared successfully`);
                     await refreshIndexStats();
                 } else {
                     const error = await response.text();
@@ -1262,19 +1238,19 @@
             }
         }
 
-        async function deleteIndex(indexName) {
-            if (!confirm(`Are you sure you want to DELETE the entire index "${indexName}"? This action cannot be undone and will remove all documents.`)) {
+        async function deleteIndex(searchContainer) {
+            if (!confirm(`Are you sure you want to DELETE the entire index "${searchContainer}"? This action cannot be undone and will remove all documents.`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(indexName)}`, {
+                const response = await fetch(`/services/searching/api/indexes/${encodeURIComponent(searchContainer)}`, {
                     method: 'DELETE'
                 });
 
                 if (response.ok) {
-                    showAlert(`Index "${indexName}" deleted successfully`);
-                    if (currentIndex === indexName) {
+                    showAlert(`Index "${searchContainer}" deleted successfully`);
+                    if (currentIndex === searchContainer) {
                         selectIndex('');
                     }
                     await refreshIndexStats();
@@ -1360,22 +1336,21 @@
                 const indexes = await fetchIndexes();
                 allIndexes = indexes;
 
-                // Update main selector
-                const mainSelector = document.getElementById('indexSelector');
-                mainSelector.innerHTML = '<option value="">All Indexes</option>' +
-                    indexes.map(idx => `<option value="${escapeHtml(idx.name)}">${escapeHtml(idx.name)} (${idx.count || 0})</option>`).join('');
-
-                if (currentIndex) {
-                    mainSelector.value = currentIndex;
-                }
-
                 // Update form selectors
                 const formSelectors = ['addIndexName', 'searchIndexName', 'deleteIndexName'];
                 formSelectors.forEach(selectorId => {
                     const selector = document.getElementById(selectorId);
                     if (selector) {
+                        const currentValue = selector.value;
                         selector.innerHTML = '<option value="">Use current index</option>' +
                             indexes.map(idx => `<option value="${escapeHtml(idx.name)}">${escapeHtml(idx.name)}</option>`).join('');
+
+                        // Restore previous selection if it still exists
+                        if (currentValue && indexes.some(idx => idx.name === currentValue)) {
+                            selector.value = currentValue;
+                        } else if (currentIndex) {
+                            selector.value = currentIndex;
+                        }
                     }
                 });
 
@@ -1515,7 +1490,7 @@
 
                 let url = `/services/searching/api/analytics?authToken=${encodeURIComponent(authToken)}`;
                 if (currentIndex) {
-                    url += `&indexName=${encodeURIComponent(currentIndex)}`;
+                    url += `&searchContainer=${encodeURIComponent(currentIndex)}`;
                 }
 
                 const response = await fetch(url);
@@ -1654,7 +1629,7 @@
             e.preventDefault();
 
             const doc = document.getElementById('addDocument').value;
-            const indexName = document.getElementById('addIndexName').value || currentIndex;
+            const searchContainer = document.getElementById('addIndexName').value || currentIndex;
 
             if (!validateJSON('addDocument')) {
                 showAlert('Please enter a valid JSON document', 'error');
@@ -1666,13 +1641,13 @@
                 const parsedDoc = JSON.parse(doc);
 
                 let url = '/services/searching/api/add';
-                if (indexName) {
-                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                if (searchContainer) {
+                    url += `?searchContainer=${encodeURIComponent(searchContainer)}`;
                 }
 
                 const result = await makeRequest(url, 'POST', parsedDoc);
                 showResponse('addResponse', 'addResponseContent', result);
-                showAlert(`Document added successfully to index: ${indexName || 'default'}`);
+                showAlert(`Document added successfully to index: ${searchContainer || 'default'}`);
 
                 // Refresh analytics and index stats
                 if (document.getElementById('dashboard').classList.contains('show')) {
@@ -1691,19 +1666,19 @@
             e.preventDefault();
 
             const term = document.getElementById('searchTerm').value;
-            const indexName = document.getElementById('searchIndexName').value || currentIndex;
+            const searchContainer = document.getElementById('searchIndexName').value || currentIndex;
 
             try {
                 setLoading('searchForm', true);
 
                 let url = `/services/searching/api/search/${encodeURIComponent(term)}`;
-                if (indexName) {
-                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                if (searchContainer) {
+                    url += `?searchContainer=${encodeURIComponent(searchContainer)}`;
                 }
 
                 const result = await makeRequest(url);
                 showResponse('searchResponse', 'searchResponseContent', result);
-                showAlert(`Search completed for term: ${term} in index: ${indexName || 'all'}`);
+                showAlert(`Search completed for term: ${term} in index: ${searchContainer || 'all'}`);
 
                 // Refresh analytics
                 if (document.getElementById('dashboard').classList.contains('show')) {
@@ -1721,7 +1696,7 @@
             e.preventDefault();
 
             const key = document.getElementById('deleteKey').value;
-            const indexName = document.getElementById('deleteIndexName').value || currentIndex;
+            const searchContainer = document.getElementById('deleteIndexName').value || currentIndex;
 
             if (!confirm(`Are you sure you want to delete document with key: ${key}?`)) {
                 return;
@@ -1731,13 +1706,13 @@
                 setLoading('deleteForm', true);
 
                 let url = `/services/searching/api/delete/${encodeURIComponent(key)}`;
-                if (indexName) {
-                    url += `?indexName=${encodeURIComponent(indexName)}`;
+                if (searchContainer) {
+                    url += `?searchContainer=${encodeURIComponent(searchContainer)}`;
                 }
 
                 const result = await makeRequest(url, 'DELETE');
                 showResponse('deleteResponse', 'deleteResponseContent', result);
-                showAlert(`Document with key: ${key} deleted successfully from index: ${indexName || 'default'}`);
+                showAlert(`Document with key: ${key} deleted successfully from index: ${searchContainer || 'default'}`);
 
                 // Refresh analytics and index stats
                 if (document.getElementById('dashboard').classList.contains('show')) {
@@ -1754,8 +1729,8 @@
 
         document.getElementById('createIndexForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const indexName = document.getElementById('newIndexName').value.trim();
-            await createIndex(indexName);
+            const searchContainer = document.getElementById('newIndexName').value.trim();
+            await createIndex(searchContainer);
         });
 
         async function checkStatus() {
@@ -1774,8 +1749,8 @@
             refreshAnalytics();
         });
 
-        // Load index stats on indexes tab activation
-        document.getElementById('indexes-tab')?.addEventListener('shown.bs.tab', function (e) {
+        // Load index stats on data operations tab activation
+        document.getElementById('data-tab')?.addEventListener('shown.bs.tab', function (e) {
             refreshIndexStats();
         });
 
@@ -1802,7 +1777,7 @@
                         description: 'Adds a new document to the search index',
                         parameters: [
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'query',
                                 required: false,
                                 schema: { type: 'string' },
@@ -1847,7 +1822,7 @@
                                 description: 'The term to search for'
                             },
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'query',
                                 required: false,
                                 schema: { type: 'string' },
@@ -1883,7 +1858,7 @@
                                 description: 'The key of the document to delete'
                             },
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'query',
                                 required: false,
                                 schema: { type: 'string' },
@@ -1936,13 +1911,13 @@
                         }
                     }
                 },
-                '/indexes/{indexName}': {
+                '/indexes/{searchContainer}': {
                     delete: {
                         summary: 'Delete an index',
                         description: 'Deletes an entire index and all its documents',
                         parameters: [
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'path',
                                 required: true,
                                 schema: { type: 'string' },
@@ -1956,13 +1931,13 @@
                         }
                     }
                 },
-                '/indexes/{indexName}/clear': {
+                '/indexes/{searchContainer}/clear': {
                     delete: {
                         summary: 'Clear an index',
                         description: 'Removes all documents from an index',
                         parameters: [
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'path',
                                 required: true,
                                 schema: { type: 'string' },
@@ -2005,7 +1980,7 @@
                                 description: 'Authentication token'
                             },
                             {
-                                name: 'indexName',
+                                name: 'searchContainer',
                                 in: 'query',
                                 required: false,
                                 schema: { type: 'string' },

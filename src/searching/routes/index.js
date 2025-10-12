@@ -17,7 +17,7 @@ const analytics = require('../modules/analytics');
 /**
  * Configures and registers search routes with the Express application.
  * Sets up endpoints for search index management and query operations.
- * All endpoints support an optional 'indexName' query parameter or field.
+ * All endpoints support an optional 'searchContainer' query parameter or field.
  *
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance
@@ -35,17 +35,17 @@ module.exports = (options, eventEmitter, search) => {
      *
      * @param {express.Request} req - Express request object
      * @param {*} req.body - The content to add to the search index
-     * @param {string} [req.body.indexName] - Optional index name (from body)
-     * @param {string} [req.query.indexName] - Optional index name (from query)
+     * @param {string} [req.body.searchContainer] - Optional index name (from body)
+     * @param {string} [req.query.searchContainer] - Optional index name (from query)
      * @param {express.Response} res - Express response object
      * @return {void}
      */
     app.post('/services/searching/api/add/', (req, res) => {
       const key = crypto.randomUUID();
       const value = req.body;
-      const indexName = req.body.indexName || req.query.indexName;
+      const searchContainer = req.body.searchContainer || req.query.searchContainer;
 
-      if (search.add(key, value, indexName)) {
+      if (search.add(key, value, searchContainer)) {
         res.status(200).send('OK');
       } else {
         res.status(400).send('Bad Request: Key already exists.');
@@ -58,15 +58,15 @@ module.exports = (options, eventEmitter, search) => {
      *
      * @param {express.Request} req - Express request object
      * @param {string} req.params.key - The UUID key of content to remove
-     * @param {string} [req.query.indexName] - Optional index name
+     * @param {string} [req.query.searchContainer] - Optional index name
      * @param {express.Response} res - Express response object
      * @return {void}
      */
     app.delete('/services/searching/api/delete/:key', (req, res) => {
       const key = req.params.key;
-      const indexName = req.query.indexName;
+      const searchContainer = req.query.searchContainer;
 
-      if (search.remove(key, indexName)) {
+      if (search.remove(key, searchContainer)) {
         res.status(200).send('OK');
       } else {
         res.status(404).send('Not Found: Key not found.');
@@ -79,17 +79,17 @@ module.exports = (options, eventEmitter, search) => {
      *
      * @param {express.Request} req - Express request object
      * @param {string} req.params.term - The search term/query string
-     * @param {string} [req.query.indexName] - Optional index name to search within
+     * @param {string} [req.query.searchContainer] - Optional index name to search within
      * @param {express.Response} res - Express response object
      * @return {void}
      */
     app.get('/services/searching/api/search/:term', (req, res) => {
       const term = req.params.term;
-      const indexName = req.query.indexName;
+      const searchContainer = req.query.searchContainer;
 
       if (term) {
         search
-          .search(term, indexName)
+          .search(term, searchContainer)
           .then((results) => res.status(200).json(results))
           .catch((err) => res.status(500).send(err.message));
       } else {
@@ -128,18 +128,18 @@ module.exports = (options, eventEmitter, search) => {
     });
 
     /**
-     * GET /services/searching/api/indexes/:indexName/stats
+     * GET /services/searching/api/indexes/:searchContainer/stats
      * Returns statistics for a specific index.
      *
      * @param {express.Request} req - Express request object
-     * @param {string} req.params.indexName - The name of the index
+     * @param {string} req.params.searchContainer - The name of the index
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/searching/api/indexes/:indexName/stats', (req, res) => {
+    app.get('/services/searching/api/indexes/:searchContainer/stats', (req, res) => {
       try {
-        const indexName = req.params.indexName;
-        const stats = search.getIndexStats(indexName);
+        const searchContainer = req.params.searchContainer;
+        const stats = search.getIndexStats(searchContainer);
 
         if (stats) {
           res.status(200).json(stats);
@@ -152,21 +152,21 @@ module.exports = (options, eventEmitter, search) => {
     });
 
     /**
-     * DELETE /services/searching/api/indexes/:indexName
+     * DELETE /services/searching/api/indexes/:searchContainer
      * Deletes an entire index and all its contents.
      *
      * @param {express.Request} req - Express request object
-     * @param {string} req.params.indexName - The name of the index to delete
+     * @param {string} req.params.searchContainer - The name of the index to delete
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/searching/api/indexes/:indexName', (req, res) => {
+    app.delete('/services/searching/api/indexes/:searchContainer', (req, res) => {
       try {
-        const indexName = req.params.indexName;
-        const result = search.deleteIndex(indexName);
+        const searchContainer = req.params.searchContainer;
+        const result = search.deleteIndex(searchContainer);
 
         if (result) {
-          res.status(200).json({ message: `Index '${indexName}' deleted successfully` });
+          res.status(200).json({ message: `Index '${searchContainer}' deleted successfully` });
         } else {
           res.status(404).json({ error: 'Index not found' });
         }
@@ -176,21 +176,21 @@ module.exports = (options, eventEmitter, search) => {
     });
 
     /**
-     * DELETE /services/searching/api/indexes/:indexName/clear
+     * DELETE /services/searching/api/indexes/:searchContainer/clear
      * Clears all documents from a specific index without deleting the index itself.
      *
      * @param {express.Request} req - Express request object
-     * @param {string} req.params.indexName - The name of the index to clear
+     * @param {string} req.params.searchContainer - The name of the index to clear
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/searching/api/indexes/:indexName/clear', (req, res) => {
+    app.delete('/services/searching/api/indexes/:searchContainer/clear', (req, res) => {
       try {
-        const indexName = req.params.indexName;
-        const result = search.clearIndex(indexName);
+        const searchContainer = req.params.searchContainer;
+        const result = search.clearIndex(searchContainer);
 
         if (result) {
-          res.status(200).json({ message: `Index '${indexName}' cleared successfully` });
+          res.status(200).json({ message: `Index '${searchContainer}' cleared successfully` });
         } else {
           res.status(404).json({ error: 'Index not found' });
         }

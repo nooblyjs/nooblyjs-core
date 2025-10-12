@@ -58,7 +58,7 @@ describe('SearchService', () => {
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:add', {
       jsonObject: obj1,
       key: key1,
-      indexName: 'default',
+      searchContainer: 'default',
     });
 
     // Try adding with the same key, should return false
@@ -70,7 +70,7 @@ describe('SearchService', () => {
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:add:error', {
       jsonObject: { id: 2, name: 'Another Object' },
       key: 'key1',
-      indexName: 'default',
+      searchContainer: 'default',
       error: 'Key already exists.',
     });
   });
@@ -97,7 +97,7 @@ describe('SearchService', () => {
     expect(getDefaultIndex().size).toBe(1);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:remove', {
       key: key1,
-      indexName: 'default',
+      searchContainer: 'default',
     });
 
     // Try removing a non-existent key, should return false
@@ -106,7 +106,7 @@ describe('SearchService', () => {
     expect(getDefaultIndex().size).toBe(1);
     expect(mockEventEmitter.emit).not.toHaveBeenCalledWith('search:remove', {
       key: 'nonExistentKey',
-      indexName: 'default',
+      searchContainer: 'default',
     });
   });
 
@@ -142,7 +142,7 @@ describe('SearchService', () => {
     expect(results.length).toBe(3);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'fruit',
-      indexName: 'default',
+      searchContainer: 'default',
       results,
     });
 
@@ -153,7 +153,7 @@ describe('SearchService', () => {
     expect(results.length).toBe(2);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'red',
-      indexName: 'default',
+      searchContainer: 'default',
       results,
     });
 
@@ -164,7 +164,7 @@ describe('SearchService', () => {
     expect(results.length).toBe(1);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'yellow',
-      indexName: 'default',
+      searchContainer: 'default',
       results,
     });
 
@@ -175,7 +175,7 @@ describe('SearchService', () => {
     expect(results.length).toBe(0);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'grape',
-      indexName: 'default',
+      searchContainer: 'default',
       results: [],
     });
 
@@ -186,7 +186,7 @@ describe('SearchService', () => {
     expect(results.length).toBe(1);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'brown',
-      indexName: 'default',
+      searchContainer: 'default',
       results,
     });
 
@@ -198,7 +198,7 @@ describe('SearchService', () => {
     expect(results).toEqual([]);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'fruitName',
-      indexName: 'default',
+      searchContainer: 'default',
       results: [],
     });
   });
@@ -215,7 +215,7 @@ describe('SearchService', () => {
     expect(results).toEqual([]);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: 'anything',
-      indexName: 'default',
+      searchContainer: 'default',
       results: [],
     });
   });
@@ -234,7 +234,7 @@ describe('SearchService', () => {
     expect(results).toEqual([]);
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
       searchTerm: '',
-      indexName: 'default',
+      searchContainer: 'default',
       results: [],
     });
   });
@@ -271,15 +271,15 @@ describe('SearchService', () => {
 
       // Verify index creation events were emitted
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:index:created', {
-        indexName: 'products',
+        searchContainer: 'products',
         totalIndexes: 2 // includes default
       });
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:index:created', {
-        indexName: 'people',
+        searchContainer: 'people',
         totalIndexes: 3
       });
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:index:created', {
-        indexName: 'articles',
+        searchContainer: 'articles',
         totalIndexes: 4
       });
 
@@ -337,7 +337,7 @@ describe('SearchService', () => {
       ]));
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
         searchTerm: 'Electronics',
-        indexName: 'products',
+        searchContainer: 'products',
         results: productResults,
       });
 
@@ -349,7 +349,7 @@ describe('SearchService', () => {
       expect(bookResults).toEqual([{ key: 'book1', obj: book }]);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
         searchTerm: 'Electronics',
-        indexName: 'books',
+        searchContainer: 'books',
         results: bookResults,
       });
     });
@@ -379,7 +379,7 @@ describe('SearchService', () => {
       expect(searchService.indexes.get('indexB').size).toBe(1); // indexB unchanged
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:remove', {
         key: 'doc1',
-        indexName: 'indexA',
+        searchContainer: 'indexA',
       });
     });
 
@@ -405,7 +405,7 @@ describe('SearchService', () => {
     });
 
     /**
-     * Test getIndexStats(indexName) method.
+     * Test getIndexStats(searchContainer) method.
      *
      * Verifies that getIndexStats returns correct statistics
      * for a specific index including size and keys.
@@ -417,14 +417,14 @@ describe('SearchService', () => {
 
       const stats = searchService.getIndexStats('testIndex');
       expect(stats).toEqual({
-        indexName: 'testIndex',
+        searchContainer: 'testIndex',
         size: 3,
         keys: ['key1', 'key2', 'key3']
       });
     });
 
     /**
-     * Test clearIndex(indexName) method.
+     * Test clearIndex(searchContainer) method.
      *
      * Verifies that clearIndex removes all documents from an index
      * while keeping the index itself intact.
@@ -443,13 +443,13 @@ describe('SearchService', () => {
       expect(searchService.indexes.get('testIndex').size).toBe(0);
       expect(searchService.indexes.has('testIndex')).toBe(true); // Index still exists
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:index:cleared', {
-        indexName: 'testIndex',
+        searchContainer: 'testIndex',
         previousSize: 3
       });
     });
 
     /**
-     * Test deleteIndex(indexName) method.
+     * Test deleteIndex(searchContainer) method.
      *
      * Verifies that deleteIndex completely removes an index
      * and emits appropriate events.
@@ -466,7 +466,7 @@ describe('SearchService', () => {
       expect(result).toBe(true);
       expect(searchService.indexes.has('testIndex')).toBe(false);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:index:deleted', {
-        indexName: 'testIndex',
+        searchContainer: 'testIndex',
         deletedSize: 2,
         remainingIndexes: 1 // Only default index remains
       });
@@ -533,16 +533,16 @@ describe('SearchService', () => {
     /**
      * Test getStats with specific index.
      *
-     * Verifies that getStats(indexName) returns statistics
+     * Verifies that getStats(searchContainer) returns statistics
      * for a specific index when provided.
      */
-    it('should get stats for a specific index when indexName is provided', async () => {
+    it('should get stats for a specific index when searchContainer is provided', async () => {
       await searchService.add('key1', { data: 'value1' }, 'testIndex');
       await searchService.add('key2', { data: 'value2' }, 'testIndex');
 
       const stats = await searchService.getStats('testIndex');
       expect(stats).toEqual({
-        indexName: 'testIndex',
+        searchContainer: 'testIndex',
         indexedItems: 2,
         queueName: 'noobly-core-searching',
         queueSize: 0
@@ -550,12 +550,12 @@ describe('SearchService', () => {
     });
 
     /**
-     * Test getStats without indexName returns aggregated stats.
+     * Test getStats without searchContainer returns aggregated stats.
      *
      * Verifies that getStats() without parameters returns
      * aggregated statistics across all indexes.
      */
-    it('should get aggregated stats when no indexName is provided', async () => {
+    it('should get aggregated stats when no searchContainer is provided', async () => {
       await searchService.add('key1', { data: 'value1' }, 'index1');
       await searchService.add('key2', { data: 'value2' }, 'index1');
       await searchService.add('key3', { data: 'value3' }, 'index2');
