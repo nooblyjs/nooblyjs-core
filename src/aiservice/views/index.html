@@ -555,52 +555,62 @@
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Send Prompt</h2>
-                            <p class="card-subtitle">Interact with configured language models</p>
+                            <h2 class="card-title">AI Prompt Interface</h2>
+                            <p class="card-subtitle">Send prompts to AI models and receive responses</p>
                         </div>
                         <div class="card-content">
                             <div class="form-group">
-                                <label class="form-label">Select Provider</label>
-                                <div class="d-flex gap-2 flex-wrap" id="providerSelector">
+                                <label class="form-label">Select AI Provider</label>
+                                <div class="provider-selector" id="providerSelector">
                                     <label class="provider-option selected" data-provider="claude">
-                                        <input type="radio" name="provider" value="claude" class="form-check-input me-1" checked>
+                                        <input type="radio" name="provider" value="claude" checked>
                                         Claude
-                                        <span class="status-indicator status-unknown"></span>
+                                        <div class="provider-status">
+                                            <span class="status-indicator status-unknown"></span>
+                                        </div>
                                     </label>
                                     <label class="provider-option" data-provider="chatgpt">
-                                        <input type="radio" name="provider" value="chatgpt" class="form-check-input me-1">
+                                        <input type="radio" name="provider" value="chatgpt">
                                         ChatGPT
-                                        <span class="status-indicator status-unknown"></span>
+                                        <div class="provider-status">
+                                            <span class="status-indicator status-unknown"></span>
+                                        </div>
                                     </label>
                                     <label class="provider-option" data-provider="ollama">
-                                        <input type="radio" name="provider" value="ollama" class="form-check-input me-1">
+                                        <input type="radio" name="provider" value="ollama">
                                         Ollama
-                                        <span class="status-indicator status-unknown"></span>
+                                        <div class="provider-status">
+                                            <span class="status-indicator status-unknown"></span>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group example-prompts">
                                 <label class="form-label">Example Prompts</label>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-prompt="Explain quantum computing in simple terms">Quantum Computing</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-prompt="Write a short story about a robot learning to paint">Creative Story</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-prompt="Generate a Python function to calculate fibonacci numbers">Code Generation</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-prompt="What are the main differences between REST and GraphQL APIs?">Technical Q&A</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-prompt="Translate 'Hello, how are you?' to French, Spanish, and German">Translation</button>
+                                <div class="example-buttons">
+                                    <button type="button" class="example-btn" data-prompt="Explain quantum computing in simple terms">Quantum Computing</button>
+                                    <button type="button" class="example-btn" data-prompt="Write a short story about a robot learning to paint">Creative Story</button>
+                                    <button type="button" class="example-btn" data-prompt="Generate a Python function to calculate fibonacci numbers">Code Generation</button>
+                                    <button type="button" class="example-btn" data-prompt="What are the main differences between REST and GraphQL APIs?">Technical Q&A</button>
+                                    <button type="button" class="example-btn" data-prompt="Translate 'Hello, how are you?' to French, Spanish, and German">Translation</button>
                                 </div>
                             </div>
 
                             <form id="promptForm">
                                 <div class="form-group">
                                     <label class="form-label" for="promptUsername">Username (optional)</label>
-                                    <input type="text" id="promptUsername" class="form-input" placeholder="e.g. analyst@example.com">
-                                    <div class="helper-text">Used for analytics attribution</div>
+                                    <input type="text" id="promptUsername" class="form-input" placeholder="Enter username for analytics attribution">
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label" for="promptText">Your Prompt</label>
-                                    <textarea id="promptText" class="prompt-textarea" placeholder="Enter your prompt here..." required></textarea>
+                                    <textarea 
+                                        id="promptText" 
+                                        class="prompt-textarea" 
+                                        placeholder="Enter your prompt here... (e.g., 'Explain machine learning in simple terms' or 'Write a Python function to sort a list')"
+                                        required
+                                    ></textarea>
                                 </div>
 
                                 <div class="advanced-options">
@@ -608,40 +618,40 @@
                                         <i class="bi bi-gear-fill"></i> Advanced Options
                                     </div>
                                     <div class="advanced-content" id="advancedContent">
-                                        <div class="row g-3">
-                                            <div class="col-md-4">
+                                        <div class="option-group">
+                                            <div class="form-group">
                                                 <label class="form-label" for="maxTokens">Max Tokens</label>
-                                                <input type="number" id="maxTokens" class="form-input" value="1000" min="1" max="8000">
-                                                <div class="helper-text">Maximum response length</div>
+                                                <input type="number" id="maxTokens" class="form-input" value="1000" min="1" max="4000">
+                                                <div class="helper-text">Maximum number of tokens in the response</div>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="form-group">
                                                 <label class="form-label" for="temperature">Temperature</label>
                                                 <input type="range" id="temperature" class="form-range" min="0" max="1" step="0.1" value="0.7">
-                                                <div class="helper-text">Creativity: <span id="temperatureValue">0.7</span></div>
+                                                <div class="helper-text">Creativity of the response: <span id="temperatureValue">0.7</span></div>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="form-group">
                                                 <label class="form-label" for="modelName">Model (optional)</label>
-                                                <input type="text" id="modelName" class="form-input" placeholder="Leave blank to use defaults">
+                                                <input type="text" id="modelName" class="form-input" placeholder="Override default model if supported">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center gap-3 mt-3">
-                                    <button type="submit" class="btn btn-primary" id="submitBtn">Send Prompt</button>
-                                    <button type="button" class="btn btn-secondary" id="clearPromptButton">Clear</button>
-                                    <div class="d-none align-items-center gap-2" id="loadingIndicator">
-                                        <div class="spinner-border spinner-border-sm" role="status"></div>
-                                        <span>Processing...</span>
+                                    <div class="d-flex align-items-center gap-3 mt-3">
+                                        <button type="submit" class="btn btn-primary" id="submitBtn">Send Prompt</button>
+                                        <button type="button" class="btn btn-secondary" id="clearPromptButton">Clear Prompt</button>
+                                        <div class="loading-indicator d-none" id="loadingIndicator">
+                                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                                            <span>Processing...</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
 
                             <div id="responseContainer" class="response-container" style="display: none;">
                                 <div class="response-title">AI Response</div>
                                 <pre id="aiResponse" class="mb-0"></pre>
                                 <div id="usageInfo" class="mt-3" style="display: none;">
-                                    <strong>Usage:</strong>
+                                    <strong>Usage Metrics</strong>
                                     <ul class="mb-0">
                                         <li>Prompt tokens: <span id="promptTokens">0</span></li>
                                         <li>Completion tokens: <span id="responseTokens">0</span></li>
@@ -656,7 +666,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Service Status</h2>
-                            <p class="card-subtitle">Check health, models, and availability</p>
+                            <p class="card-subtitle">Monitor AI service health and availability</p>
                         </div>
                         <div class="card-content">
                             <div class="btn-group">
@@ -665,7 +675,7 @@
                                 <button type="button" class="btn btn-secondary" onclick="checkHealth()">Health Check</button>
                             </div>
                             <div id="statusResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Status:</div>
+                                <div class="response-title">Status Information</div>
                                 <div id="statusResponseContent" class="response-content"></div>
                             </div>
                         </div>
@@ -673,8 +683,24 @@
 
                     <div class="card">
                         <div class="card-header">
+                            <h2 class="card-title">Usage Analytics</h2>
+                            <p class="card-subtitle">Current analytics snapshot from the API</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="text-muted small" id="analyticsCount">Loading...</div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadAnalytics()">Refresh</button>
+                            </div>
+                            <div id="analyticsData" class="response-container" style="display: none;">
+                                <div class="response-content" id="analyticsContent"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
                             <h2 class="card-title">API Documentation</h2>
-                            <p class="card-subtitle">Interactive reference for AI service endpoints</p>
+                            <p class="card-subtitle">Interactive API documentation for AI service</p>
                         </div>
                         <div class="card-content">
                             <div id="swagger-ui"></div>
@@ -1005,8 +1031,23 @@
                 renderOverview(response.overview || {});
                 renderTopPrompts(response.topPrompts || []);
                 analyticsData = response.topRecent || [];
-                currentSort.column = 'lastPrompt';
-                currentSort.direction = 'asc';
+
+                const analyticsContainer = document.getElementById('analyticsData');
+                const analyticsContent = document.getElementById('analyticsContent');
+                const analyticsCount = document.getElementById('analyticsCount');
+
+                if (analyticsContainer && analyticsContent) {
+                    analyticsContainer.style.display = 'block';
+                    analyticsContent.textContent = JSON.stringify(response, null, 2);
+                }
+
+                if (analyticsCount) {
+                    const totalCalls = response?.overview?.totalCalls || 0;
+                    analyticsCount.textContent = `${formatNumber(totalCalls)} calls recorded`;
+                }
+
+                currentSort.column = '';
+                currentSort.direction = 'desc';
                 sortTable('lastPrompt');
             } catch (error) {
                 console.error('Error loading analytics:', error);

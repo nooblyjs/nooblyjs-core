@@ -1094,30 +1094,266 @@
                 openapi: '3.0.0',
                 info: {
                     title: 'Authentication API',
-                    description: 'REST API for authentication operations',
+                    description: 'REST API for authentication, sessions, roles, and analytics',
                     version: '1.0.0'
                 },
-                servers: [{ url: '/services/authservice/api', description: 'Auth API' }]
-            };
-
-            try {
-                SwaggerUIBundle({
-                    spec,
-                    dom_id: '#swagger-ui',
-                    deepLinking: true,
-                    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.presets.standalone],
-                    plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-                    layout: 'BaseLayout',
-                    tryItOutEnabled: true
-                });
-            } catch (error) {
-                console.error('Error initializing Swagger UI:', error);
-                const swaggerContainer = document.getElementById('swagger-ui');
-                if (swaggerContainer) {
-                    swaggerContainer.innerHTML = '<p class="text-danger">Error loading API documentation. Please refresh the page.</p>';
-                }
-            }
-        }
+                servers: [{ url: '/services/authservice/api', description: 'Authentication API' }],
+                paths: {
+                    '/register': {
+                        post: {
+                            summary: 'Register a user',
+                            description: 'Creates a new user account',
+                            requestBody: {
+                                required: true,
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                username: { type: 'string' },
+                                                email: { type: 'string', format: 'email' },
+                                                password: { type: 'string' },
+                                                role: { type: 'string', example: 'user' }
+                                            },
+                                            required: ['username', 'email', 'password']
+                                        },
+                                        example: {
+                                            username: 'jane.doe',
+                                            email: 'jane@example.com',
+                                            password: 'P@ssw0rd!',
+                                            role: 'user'
+                                        }
+                                    }
+                                }
+                            },
+                            responses: {
+                                '201': {
+                                    description: 'User registered successfully',
+                                    content: {
+                                        'application/json': { schema: { type: 'object' } }
+                                    }
+                                },
+                                '400': { description: 'Validation error' },
+                                '500': { description: 'Server error' }
+                            }
+                        }
+                    },
+                    '/login': {
+                        post: {
+                            summary: 'Authenticate user',
+                            description: 'Authenticates credentials and creates a session token',
+                            requestBody: {
+                                required: true,
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                username: { type: 'string' },
+                                                password: { type: 'string' }
+                                            },
+                                            required: ['username', 'password']
+                                        },
+                                        example: {
+                                            username: 'jane.doe',
+                                            password: 'P@ssw0rd!'
+                                        }
+                                    }
+                                }
+                            },
+                            responses: {
+                                '200': {
+                                    description: 'Login successful',
+                                    content: {
+                                        'application/json': {
+                                            schema: {
+                                                type: 'object',
+                                                properties: {
+                                                    success: { type: 'boolean' },
+                                                    message: { type: 'string' },
+                                                    data: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            user: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    username: { type: 'string' },
+                                                                    email: { type: 'string' },
+                                                                    role: { type: 'string' }
+                                                                }
+                                                            },
+                                                            session: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    token: { type: 'string' },
+                                                                    expiresAt: { type: 'string', format: 'date-time' }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                '401': { description: 'Invalid credentials' },
+                                '500': { description: 'Server error' }
+                            }
+                        }
+                    },
+                    '/logout': {
+                        post: {
+                            summary: 'Logout session',
+                            description: 'Invalidates a session token',
+                            requestBody: {
+                                required: true,
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                token: { type: 'string' }
+                                            },
+                                            required: ['token']
+                                        },
+                                        example: { token: 'abc123' }
+                                    }
+                                }
+                            },
+                            responses: {
+                                '200': { description: 'Logout successful' },
+                                '400': { description: 'Invalid request' },
+                                '500': { description: 'Server error' }
+                            }
+                        }
+                    },
+                    '/validate': {
+                        post: {
+                            summary: 'Validate session token',
+                            description: 'Validates a session token and returns session information when valid',
+                            requestBody: {
+                                required: true,
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                token: { type: 'string' }
+                                            },
+                                            required: ['token']
+                                        },
+                                        example: { token: 'abc123' }
+                                    }
+                                }
+                            },
+                            responses: {
+                                '200': {
+                                    description: 'Validation result',
+                                    content: {
+                                        'application/json': {
+                                            schema: {
+                                                type: 'object',
+                                                properties: {
+                                                    success: { type: 'boolean' },
+                                                    message: { type: 'string' },
+                                                    data: {
+                                                        type: 'object',
+                                                        nullable: true,
+                                                        properties: {
+                                                            username: { type: 'string' },
+                                                            role: { type: 'string' },
+                                                            expiresAt: { type: 'string', format: 'date-time' }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                '500': { description: 'Server error' }
+                            }
+                        }
+                    },
+                    '/users': {
+                        get: {
+                            summary: 'List users',
+                            description: 'Lists all registered users',
+                            responses: {
+                                '200': {
+                                    description: 'Users retrieved successfully',
+                                    content: {
+                                        'application/json': {
+                                            schema: {
+                                                type: 'object',
+                                                properties: {
+                                                    success: { type: 'boolean' },
+                                                    data: { type: 'array', items: { type: 'object' } },
+                                                    total: { type: 'integer' }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                '401': { description: 'Unauthorized' },
+                                '500': { description: 'Server error' }
+                            }
+                        }
+                    },
+                    '/users/{username}': {
+                        get: {
+                            summary: 'Get user',
+                            description: 'Retrieves a specific user by username',
+                            parameters: [
+                                {
+                                    name: 'username',
+                                    in: 'path',
+                                    required: true,
+                                    schema: { type: 'string' }
+                                }
+                            ],
+                            responses: {
+                                '200': { description: 'User retrieved successfully' },
+                                '404': { description: 'User not found' },
+                                '500': { description: 'Server error' }
+                            }
+                        },
+                        put: {
+                            summary: 'Update user',
+                            description: 'Updates a user profile',
+                            parameters: [
+                                {
+                                    name: 'username',
+                                    in: 'path',
+                                    required: true,
+                                    schema: { type: 'string' }
+                                }
+                            ],
+                            requestBody: {
+                                required: true,
+                                content: {
+                                    'application/json': {
+                                        schema: { type: 'object' }
+                                    }
+                                }
+                            },
+                            responses: {
+                                '200': { description: 'User updated successfully' },
+                                '404': { description: 'User not found' },
+                                '500': { description: 'Server error' }
+                            }
+                        },
+                        delete: {
+                            summary: 'Delete user',
+                            description: 'Deletes a user account',
+                            parameters: [
+                                {
+                                    name: 'username',
+                                    in: 'path',
+                                    required: true,
+                                    schema: { type: 'string' }
+                                }
+                            ],
+                            responses: {
     </script>
 </body>
 </html>
