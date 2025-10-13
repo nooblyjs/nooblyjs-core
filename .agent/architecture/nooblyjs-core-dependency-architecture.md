@@ -49,15 +49,15 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 *Core infrastructure that enhances foundation services*
 
 ```
- ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
- │ Dataservice │  │   Working   │  │  Measuring  │ 
- │             │  │             │  │             │ 
- └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ 
-        │                │                │               
-        └────────────────┘──┐─────────────┘─┐────────────────┐
+          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
+          │ Dataservice │  │   Working   │  │  Measuring  │ 
+          │             │  │             │  │             │ 
+          └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ 
+                 │                │                │               
+        ┌────────┘──────────┐─────┘─────────┐──────┘─────────┐
         │                   │               │                │ 
 ┌───────▼───────┐   ┌───────▼───────┐ ┌─────▼───────┐  ┌─────▼───────┐
-│    Logging    │   │    Filing     │ │   Caching   │  │   Caching   │ 
+│    Logging    │   │    Filing     │ │   Caching   │  │   Queues    │ 
 │   (Level 0)   │   │   (Level 1)   │ │  (Level 1)  │  │  (Level 1)  │
 └───────────────┘   └───────────────┘ └─────────────┘  └─────────────┘  
 ```

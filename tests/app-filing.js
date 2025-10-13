@@ -26,7 +26,7 @@ const authservice = serviceRegistry.authservice();
 const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
-const filing = serviceRegistry.filing();
+const filing = serviceRegistry.filing('local');
 
 // Redirect root to services
 app.get('/', (req, res) => {
