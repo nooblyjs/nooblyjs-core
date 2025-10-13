@@ -7,9 +7,9 @@
 # Features
 
 - [x] Logging level filters
-- [ ] Measuring Manager Analytics and Dasjboard
-- [ ] Authentication Manager Analytics and Dasjboard
-- [ ] AI Manager Analytics and Dashboard
+- [x] Measuring Manager Analytics and Dashboard
+- [x] Authentication Manager Analytics and Dasjboard
+- [x] AI Manager Analytics and Dashboard
 
 
 # Filer Features
