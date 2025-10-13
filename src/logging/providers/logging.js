@@ -16,15 +16,42 @@ const os = require('os');
  * @class
  */
 class logging {
+
   /**
    * Initializes the console logger.
    * @param {Object=} options Configuration options (unused in this implementation).
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options, eventEmitter) {
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+    if (options && options.log.level){
+      this.minLogLevel = options.log.level || 'info';
+    }
   }
+
+  /**
+   * Determines the priority of a log level.
+   * @param {} level 
+   * @returns 
+   */
+  determineLogLevelPriority(level) {
+    const levels = ['error', 'warn', 'info', 'log'];
+    return levels.indexOf(level);
+  }
+
+  /**
+   * Determines if a message should be logged based on its level and the minimum log level.
+   * @param {*} level 
+   * @returns 
+   */
+  shouldLog(level) {
+    if (!this.minLogLevel) {
+      return true; // No minimum level set, log everything
+    }
+    const messagePriority = this.determineLogLevelPriority(level);
+    const minPriority = this.determineLogLevelPriority(this.minLogLevel);
+    return messagePriority <= minPriority;
+  } 
 
   /**
    * Formats the message and metadata into a log string.
@@ -60,6 +87,9 @@ class logging {
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
   async info(message, meta) {
+    if (!this.shouldLog('info')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message, meta);
@@ -76,6 +106,9 @@ class logging {
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
   async warn(message, meta) {
+    if (!this.shouldLog('warn')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message, meta);
@@ -92,6 +125,9 @@ class logging {
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
   async error(message, meta) {
+    if (!this.shouldLog('error')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message, meta);
@@ -108,6 +144,9 @@ class logging {
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
   async log(message, meta) {
+    if (!this.shouldLog('log')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message, meta);

@@ -21,19 +21,10 @@ class CacheAnalytics {
    * @param {EventEmitter} eventEmitter - Event emitter to listen for cache events.
    */
   constructor(eventEmitter) {
-    /** @private @const {number} Maximum number of activity entries to store per key */
     this.MAX_ACTIVITY_ENTRIES_ = 1000;
-
-    /** @private {Map<string, Object>} Cache key statistics by key name */
     this.keyStats_ = new Map();
-
-    /** @private {Map<string, Array<Object>>} Activity timeline by key name */
     this.keyActivity_ = new Map();
-
-    /** @private {Map<string, number>} Miss counts by key name */
     this.keyMisses_ = new Map();
-
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
 
     // Set up event listeners for cache operations

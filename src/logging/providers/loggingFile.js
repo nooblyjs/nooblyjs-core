@@ -25,23 +25,45 @@ class loggingFile {
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options = {}, eventEmitter) {
-    /** @private @const {string} */
     this.logDir_ = options.logDir || './.logs';
-    
-    // Generate default filename with current date if not provided
     const defaultFilename = options.filename || this.generateDefaultFilename_();
-    
-    /** @private @const {string} */
     this.filename_ = path.isAbsolute(defaultFilename) 
       ? defaultFilename 
       : path.join(this.logDir_, defaultFilename);
-      
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+    
+    if (options && options.log.level){
+      this.minLogLevel = log.level || 'info';
+    }
     
     // Ensure log directory exists
     this.initializeLogDir_();
   }
+
+  /**
+   * Determines the priority of a log level.
+   * @param {} level 
+   * @returns 
+   */
+  determineLogLevelPriority(level) {
+    const levels = ['error', 'warn', 'info', 'log'];
+    return levels.indexOf(level);
+  }
+
+  /**
+   * Determines if a message should be logged based on its level and the minimum log level.
+   * @param {*} level 
+   * @returns 
+   */
+  shouldLog(level) {
+    if (!this.minLogLevel) {
+      return true; // No minimum level set, log everything
+    }
+    const messagePriority = this.determineLogLevelPriority(level);
+    const minPriority = this.determineLogLevelPriority(this.minLogLevel);
+    return messagePriority <= minPriority;
+  } 
+
 
   /**
    * Generates a default log filename with current date.
@@ -78,6 +100,9 @@ class loggingFile {
    * @throws {Error} When file write operation fails.
    */
   async info(message) {
+     if (!this.shouldLog('info')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const os = require('os');
     const device = os.hostname();
@@ -94,6 +119,9 @@ class loggingFile {
    * @throws {Error} When file write operation fails.
    */
   async warn(message) {
+     if (!this.shouldLog('warn')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const os = require('os');
     const device = os.hostname();
@@ -110,6 +138,9 @@ class loggingFile {
    * @throws {Error} When file write operation fails.
    */
   async error(message) {
+    if (!this.shouldLog('error')) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const os = require('os');
     const device = os.hostname();
@@ -126,6 +157,9 @@ class loggingFile {
    * @throws {Error} When file write operation fails.
    */
   async log(message) {
+    if (!this.shouldLog('log')) {
+      return;
+    }
     fs.appendFileSync(this.filename_, message + '\n');
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:log', { filename: this.filename_, message: message });

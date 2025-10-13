@@ -21,13 +21,8 @@ class LogAnalytics {
    * @param {EventEmitter} eventEmitter - Event emitter to listen for log events.
    */
   constructor(eventEmitter) {
-    /** @private @const {number} Maximum number of logs to store */
     this.MAX_LOGS_ = 1000;
-
-    /** @private {Array<Object>} Circular buffer storing log entries */
     this.logs_ = [];
-
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
 
     // Set up event listeners for different log levels
@@ -90,8 +85,7 @@ class LogAnalytics {
 
   /**
    * Retrieves logs filtered by level in descending order (newest to oldest).
-   * @param {string=} level - Optional log level to filter by (INFO, WARN, ERROR, LOG).
-   *                          If not provided, returns all logs.
+   * @param {string=} level - Optional log level to filter by (INFO, WARN, ERROR, LOG). If not provided, returns all logs.
    * @return {Array<Object>} Array of log entries matching the criteria.
    */
   list(level) {

@@ -20,12 +20,9 @@ class Cache {
    * @param {EventEmitter=} eventEmitter Optional event emitter for cache events.
    */
   constructor(options, eventEmitter) {
-    /** @private @const {!Object<string, *>} */
     this.cache_ = {};
     this.eventEmitter_ = eventEmitter;
-    /** @private @const {!Map<string, {key: string, hits: number, lastHit: Date}>} */
     this.analytics_ = new Map();
-    /** @private @const {number} */
     this.maxAnalyticsEntries_ = 100;
   }
 

@@ -16,7 +16,7 @@ const app = express();
 app.use(express.json());
 
 // Initialize registry (no public folder needed!)
-serviceRegistry.initialize(app);
+serviceRegistry.initialize(app,null, {log: { level: 'log' }});
 
 // Initialize auth service (required for login/register functionality)
 // The authservice automatically serves login.html and register.html from its views folder
