@@ -27,7 +27,7 @@ npm install
 To run the application in development mode, use the following command. This will start the server and watch for changes.
 
 ```bash
-npm run dev
+npm run dev:web
 ```
 
 The application will be available at `http://localhost:3001`.
