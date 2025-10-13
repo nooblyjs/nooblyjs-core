@@ -25,6 +25,7 @@ class loggingFile {
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options = {}, eventEmitter) {
+
     this.logDir_ = options.logDir || './.logs';
     const defaultFilename = options.filename || this.generateDefaultFilename_();
     this.filename_ = path.isAbsolute(defaultFilename) 
@@ -32,8 +33,8 @@ class loggingFile {
       : path.join(this.logDir_, defaultFilename);
     this.eventEmitter_ = eventEmitter;
     
-    if (options && options.log.level){
-      this.minLogLevel = log.level || 'info';
+    if (options && options.log){
+      this.minLogLevel = options.log.level || 'info';
     }
     
     // Ensure log directory exists

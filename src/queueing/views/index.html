@@ -749,8 +749,17 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Queue Analytics</h1>
+                <h1 class="page-title">Queue Management</h1>
                 <p class="page-subtitle">Monitor and analyze queue performance</p>
+            </div>
+
+             <!-- Bootstrap 5 Alerts -->
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
 
             <!-- Tabs -->
@@ -859,13 +868,6 @@
 
                 <!-- Data Operations Tab -->
                 <div class="tab-pane fade" id="data" role="tabpanel">
-                    <div class="alert alert-success" id="successAlert">
-                        <strong>Success!</strong> <span id="successMessage"></span>
-                    </div>
-
-                    <div class="alert alert-error" id="errorAlert">
-                        <strong>Error!</strong> <span id="errorMessage"></span>
-                    </div>
 
                     <!-- Enqueue Form -->
                     <div class="card">
@@ -1285,6 +1287,7 @@
 
         // Load analytics on page load
         window.addEventListener('load', () => {
+            checkStatus();
             loadAnalytics();
             // Auto-refresh every 30 seconds
             setInterval(loadAnalytics, 30000);

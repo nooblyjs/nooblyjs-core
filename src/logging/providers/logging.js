@@ -24,7 +24,7 @@ class logging {
    */
   constructor(options, eventEmitter) {
     this.eventEmitter_ = eventEmitter;
-    if (options && options.log.level){
+    if (options && options.log){
       this.minLogLevel = options.log.level || 'info';
     }
   }
