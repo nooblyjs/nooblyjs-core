@@ -19,9 +19,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} auth - The authentication provider instance
+ * @param {Object=} analytics - Analytics module instance for tracking auth activity
  * @return {void}
  */
-module.exports = (options, eventEmitter, auth) => {
+module.exports = (options, eventEmitter, auth, analytics) => {
   if (options['express-app'] && auth) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
@@ -355,6 +356,21 @@ module.exports = (options, eventEmitter, auth) => {
             success: true,
             message: 'Google login successful',
             data: result
+          });
+        })
+      );
+    }
+
+    if (analytics) {
+      app.get(
+        '/services/authservice/api/analytics',
+        asyncHandler(async (req, res) => {
+          const limit = parseInt(req.query.limit, 10);
+          const recentLimit = parseInt(req.query.recentLimit, 10);
+          res.status(200).json({
+            overview: analytics.getOverview(),
+            topUsers: analytics.getTopUsers(Number.isNaN(limit) ? 10 : limit),
+            topRecent: analytics.getTopByRecency(Number.isNaN(recentLimit) ? 100 : recentLimit)
           });
         })
       );

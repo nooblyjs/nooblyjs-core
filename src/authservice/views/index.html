@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
     <style>
-        /* Custom CSS for professional look */
         :root {
             --custom-primary: #0066cc;
             --custom-secondary: #6c757d;
@@ -21,8 +20,12 @@
             background-color: #f8f9fa;
         }
 
+        .app-container {
+            display: flex;
+        }
+
         .sidebar {
-            background-color: white;
+            background-color: #fff;
             border-right: 1px solid #dee2e6;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             width: 280px;
@@ -31,82 +34,8 @@
             flex-direction: column;
         }
 
-        .logo {
-            color: var(--custom-primary);
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .logo .subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .nav-section-header {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            color: #212529;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid #f8f9fa;
-        }
-
-        .nav-item:hover {
-            background-color: #f8f9fa;
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            background-color: var(--custom-primary);
-            color: white;
-            border-left-color: #0052a3;
-        }
-
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: auto;
-        }
-
-        .status-dot.online {
-            background-color: var(--custom-success);
-        }
-
-        .status-dot.offline {
-            background-color: var(--custom-danger);
-        }
-
         .main-content {
-            background-color: white;
+            background-color: #fff;
             min-height: 100vh;
             flex: 1;
             padding: 2rem;
@@ -131,11 +60,6 @@
             font-size: 1.125rem;
         }
 
-        .app-container {
-            display: flex;
-        }
-
-        /* Alert Styles */
         .alert {
             padding: 1rem;
             margin-bottom: 1rem;
@@ -160,9 +84,33 @@
             border-color: #f5c2c7;
         }
 
-        /* Card Styles */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
+        }
+
         .card {
-            background-color: white;
+            background-color: #fff;
             border: 1px solid #dee2e6;
             border-radius: 0.375rem;
             margin-bottom: 1.5rem;
@@ -186,14 +134,62 @@
         .card-subtitle {
             margin: 0.25rem 0 0 0;
             color: #6c757d;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         .card-content {
             padding: 1.5rem;
         }
 
-        /* Form Styles */
+        .metrics-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-item {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .summary-item h5 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--custom-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .list-group-item .badge {
+            font-size: 0.85rem;
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
+
         .form-group {
             margin-bottom: 1rem;
         }
@@ -206,432 +202,54 @@
         }
 
         .form-input {
-            display: block;
             width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #212529;
-            background-color: white;
+            padding: 0.625rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .form-input:focus {
-            color: #212529;
-            background-color: white;
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .helper-text {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-bottom: 0;
             font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #212529;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .btn:hover {
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            color: white;
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        .btn-primary:hover {
-            color: white;
-            background-color: #0052a3;
-            border-color: #004785;
-        }
-
-        .btn-secondary {
-            color: white;
-            background-color: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-        }
-
-        .btn-secondary:hover {
-            color: white;
-            background-color: #565e64;
-            border-color: #4c5258;
-        }
-
-        .btn-error {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-error:hover {
-            color: white;
-            background-color: #bb2d3b;
-            border-color: #b02a37;
         }
 
         .btn-group {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 1rem;
         }
 
-        /* Response Styles */
         .response-container {
             margin-top: 1rem;
             padding: 1rem;
             background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
             border-radius: 0.375rem;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', Courier, monospace;
         }
 
         .response-title {
             font-weight: 600;
-            color: #212529;
             margin-bottom: 0.5rem;
         }
 
         .response-content {
-            background-color: white;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
             white-space: pre-wrap;
-            word-break: break-all;
+            word-break: break-word;
+            margin: 0;
+            font-size: 0.95rem;
         }
 
-        /* Validation Styles */
-        .validation-message {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-        }
-
-        .validation-success {
-            color: var(--custom-success);
-        }
-
-        .validation-error {
-            color: var(--custom-danger);
-        }
-
-        .json-valid {
-            border-color: var(--custom-success);
-        }
-
-        .json-invalid {
-            border-color: var(--custom-danger);
-        }
-
-        /* Loading States */
         .loading {
             opacity: 0.6;
             pointer-events: none;
-        }
-
-        /* Analytics Table Styles (for caching service) */
-        .analytics-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .analytics-info {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh {
-            background-color: var(--custom-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh:hover {
-            background-color: #0052a3;
-        }
-
-        .analytics-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .analytics-table th,
-        .analytics-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .analytics-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .sortable:hover {
-            background-color: #e9ecef;
-        }
-
-        .sort-asc::after {
-            content: " ↑";
-        }
-
-        .sort-desc::after {
-            content: " ↓";
-        }
-
-        .no-data {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-        }
-
-        .key-cell {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-        }
-
-        .hits-cell {
-            font-weight: 600;
-            color: var(--custom-primary);
-        }
-
-        .date-cell {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        /* Swagger UI Integration Styles */
-        #swagger-ui {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        #swagger-ui .swagger-ui {
-            max-width: none;
-        }
-
-        #swagger-ui .topbar {
-            display: none;
-        }
-
-        #swagger-ui .info {
-            margin: 20px 0;
-        }
-
-        #swagger-ui .info .title {
-            font-size: 1.5rem;
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .scheme-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        #swagger-ui .opblock-tag {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        #swagger-ui .opblock {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        #swagger-ui .opblock.is-open .opblock-summary {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        #swagger-ui .opblock .opblock-summary-method {
-            border-radius: 0.375rem;
-            font-weight: 600;
-        }
-
-        #swagger-ui .opblock.opblock-post .opblock-summary-method {
-            background: var(--custom-success);
-        }
-
-        #swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: var(--custom-primary);
-        }
-
-        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
-            background: var(--custom-danger);
-        }
-
-        #swagger-ui .opblock.opblock-put .opblock-summary-method {
-            background: #fd7e14;
-        }
-
-        #swagger-ui .btn {
-            border-radius: 0.375rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        #swagger-ui .btn.execute {
-            background: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        #swagger-ui .btn.execute:hover {
-            background: #0052a3;
-            border-color: #004785;
-        }
-
-        #swagger-ui .btn.btn-clear {
-            background: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-            color: white;
-        }
-
-        #swagger-ui .btn.btn-clear:hover {
-            background: #565e64;
-            border-color: #4c5258;
-        }
-
-        #swagger-ui .parameters-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        #swagger-ui .parameter__name {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui input[type="text"],
-        #swagger-ui textarea,
-        #swagger-ui select {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        #swagger-ui input[type="text"]:focus,
-        #swagger-ui textarea:focus,
-        #swagger-ui select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: 0;
-        }
-
-        #swagger-ui .response-col_status {
-            font-weight: 600;
-        }
-
-        #swagger-ui .response-col_status.response-undocumented {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .response .response-col_status {
-            color: var(--custom-success);
-        }
-
-        #swagger-ui .responses-inner h4 {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui .highlight-code {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model .property {
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .prop-type {
-            color: var(--custom-secondary);
-        }
-
-        /* Ensure proper responsiveness */
-        #swagger-ui .wrapper {
-            max-width: 100%;
-            overflow-x: auto;
-        }
-
-        #swagger-ui .swagger-ui table {
-            table-layout: auto;
-            width: 100%;
-        }
-
-        /* Fix potential z-index issues */
-        #swagger-ui .dialog-ux {
-            z-index: 1050;
-        }
-
-        #swagger-ui .model-box-control:focus {
-            outline: 2px solid var(--custom-primary);
-            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </nav>
+        <nav class="sidebar" id="navigation-sidebar"></nav>
 
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Authentication Management</h1>
-                <p class="page-subtitle">Manage users, roles, and authentication sessions</p>
+                <p class="page-subtitle">Manage users, sessions, and view login analytics</p>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -642,201 +260,342 @@
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
 
-            <!-- User Registration Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">User Registration</h2>
-                    <p class="card-subtitle">Create a new user account</p>
-                </div>
-                <div class="card-content">
-                    <form id="registerForm">
-                        <div class="form-group">
-                            <label class="form-label" for="regUsername">Username</label>
-                            <input type="text" id="regUsername" class="form-input" placeholder="Enter username" required>
-                            <div class="helper-text">Unique username for the account</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="regEmail">Email Address</label>
-                            <input type="email" id="regEmail" class="form-input" placeholder="user@example.com" required>
-                            <div class="helper-text">Email address for the user</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="regPassword">Password</label>
-                            <input type="password" id="regPassword" class="form-input" placeholder="Enter secure password" required>
-                            <div class="helper-text">Password must be at least 6 characters</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="regRole">Role</label>
-                            <select id="regRole" class="form-input">
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                                <option value="guest">Guest</option>
-                            </select>
-                            <div class="helper-text">User role and permissions level</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Register User</button>
-                            <button type="button" class="btn btn-secondary" onclick="clearForm('registerForm')">Clear Form</button>
-                        </div>
-                    </form>
-                    <div id="registerResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Registration Response:</div>
-                        <div id="registerResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data Operations
+                    </button>
+                </li>
+            </ul>
 
-            <!-- User Authentication Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">User Login</h2>
-                    <p class="card-subtitle">Authenticate user and create session</p>
-                </div>
-                <div class="card-content">
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label class="form-label" for="loginUsername">Username</label>
-                            <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" required>
-                            <div class="helper-text">Username to authenticate</div>
+            <div class="tab-content" id="authTabContent">
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title">Authentication Overview</h2>
+                                <p class="card-subtitle">Snapshot of login success and failures</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="spinner-border spinner-border-sm text-secondary d-none" id="analyticsSpinner" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" id="analyticsRefreshButton">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="loginPassword">Password</label>
-                            <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
-                            <div class="helper-text">User password</div>
+                        <div class="card-content">
+                            <div class="metrics-summary">
+                                <div class="summary-item">
+                                    <h5>Total Users Tracked</h5>
+                                    <div class="summary-value" id="totalUsers">0</div>
+                                    <div class="summary-meta">Users with login activity</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Total Logins</h5>
+                                    <div class="summary-value" id="totalLogins">0</div>
+                                    <div class="summary-meta">Successful authentications</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Failed Logins</h5>
+                                    <div class="summary-value" id="totalFailures">0</div>
+                                    <div class="summary-meta">Failed authentication attempts</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Last Login</h5>
+                                    <div class="summary-value" id="lastLogin">—</div>
+                                    <div class="summary-meta">Most recent login time</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Login</button>
-                            <button type="button" class="btn btn-secondary" onclick="fillDefaultAdmin()">Use Admin</button>
-                            <button type="button" class="btn btn-secondary" onclick="fillDefaultUser()">Use User</button>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">Top Users by Activity</h2>
+                            <p class="card-subtitle">Most active users ranked by successful logins</p>
                         </div>
-                    </form>
-                    <div id="loginResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Authentication Result:</div>
-                        <div id="loginResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Session Management -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Session Management</h2>
-                    <p class="card-subtitle">Validate or invalidate user sessions</p>
-                </div>
-                <div class="card-content">
-                    <form id="sessionForm">
-                        <div class="form-group">
-                            <label class="form-label" for="sessionToken">Session Token</label>
-                            <input type="text" id="sessionToken" class="form-input" placeholder="Enter session token">
-                            <div class="helper-text">Session token from login response</div>
+                        <div class="card-content">
+                            <div class="list-group list-group-flush" id="topUsersList">
+                                <div class="list-group-item text-center text-muted py-3">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading analytics...
+                                </div>
+                            </div>
                         </div>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-primary" onclick="validateSession()">Validate Session</button>
-                            <button type="button" class="btn btn-error" onclick="logoutSession()">Logout Session</button>
-                            <button type="button" class="btn btn-secondary" onclick="clearSessionToken()">Clear Token</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">Recent User Activity</h2>
+                            <p class="card-subtitle">Top 100 users ordered by last login time</p>
                         </div>
-                    </form>
-                    <div id="sessionResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Session Status:</div>
-                        <div id="sessionResponseContent" class="response-content"></div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="sortable" onclick="sortTable('username')">
+                                                <span id="sort-username">Username</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('loginCount')">
+                                                <span id="sort-loginCount">Count of Logins</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('failedCount')">
+                                                <span id="sort-failedCount">Count of Failed Logins</span>
+                                            </th>
+                                            <th class="sortable" onclick="sortTable('lastLogin')">
+                                                <span id="sort-lastLogin">Date Last Login</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading analytics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="usersRowCount">0</span> users displayed
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- User Management -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">User Management</h2>
-                    <p class="card-subtitle">View, update, and delete user accounts</p>
-                </div>
-                <div class="card-content">
-                    <div class="form-group">
-                        <label class="form-label" for="userUsername">Username</label>
-                        <input type="text" id="userUsername" class="form-input" placeholder="Enter username to manage">
-                        <div class="helper-text">Username of the account to manage</div>
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Registration</h2>
+                            <p class="card-subtitle">Create a new user account</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="registerForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="registerUsername">Username</label>
+                                    <input type="text" id="registerUsername" class="form-input" placeholder="Enter username" required>
+                                    <div class="helper-text">Unique username for the new account</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="registerEmail">Email</label>
+                                    <input type="email" id="registerEmail" class="form-input" placeholder="Enter email" required>
+                                    <div class="helper-text">User email address</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="registerPassword">Password</label>
+                                    <input type="password" id="registerPassword" class="form-input" placeholder="Enter password" required>
+                                    <div class="helper-text">Password for the new account</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="registerRole">Role</label>
+                                    <select id="registerRole" class="form-input">
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="guest">Guest</option>
+                                    </select>
+                                    <div class="helper-text">Role assigned to the user</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Register User</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultRegistration()">Use Defaults</button>
+                                </div>
+                            </form>
+                            <div id="registerResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Registration Response:</div>
+                                <div id="registerResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="getUser()">Get User</button>
-                        <button type="button" class="btn btn-primary" onclick="getAllUsers()">List All Users</button>
-                        <button type="button" class="btn btn-error" onclick="deleteUser()">Delete User</button>
-                    </div>
-                    <div id="userResponse" class="response-container" style="display: none;">
-                        <div class="response-title">User Information:</div>
-                        <div id="userResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Role Management -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Role Management</h2>
-                    <p class="card-subtitle">Assign roles and view role memberships</p>
-                </div>
-                <div class="card-content">
-                    <div class="form-group">
-                        <label class="form-label" for="roleUsername">Username</label>
-                        <input type="text" id="roleUsername" class="form-input" placeholder="Enter username">
-                        <div class="helper-text">Username to assign role to</div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Login</h2>
+                            <p class="card-subtitle">Authenticate user and create session</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="loginForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="loginUsername">Username</label>
+                                    <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" required>
+                                    <div class="helper-text">Username to authenticate</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="loginPassword">Password</label>
+                                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
+                                    <div class="helper-text">User password</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Login</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultAdmin()">Use Admin</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultUser()">Use User</button>
+                                </div>
+                            </form>
+                            <div id="loginResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Authentication Result:</div>
+                                <div id="loginResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="assignRole">Role</label>
-                        <select id="assignRole" class="form-input">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                            <option value="guest">Guest</option>
-                        </select>
-                        <div class="helper-text">Role to assign to the user</div>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="assignRole()">Assign Role</button>
-                        <button type="button" class="btn btn-secondary" onclick="listRoles()">List All Roles</button>
-                        <button type="button" class="btn btn-secondary" onclick="getUsersInRole()">Users in Role</button>
-                    </div>
-                    <div id="roleResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Role Management:</div>
-                        <div id="roleResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Service Status -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check authentication service status and statistics</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
-                        <button type="button" class="btn btn-secondary" onclick="refreshAll()">Refresh All Data</button>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Session Management</h2>
+                            <p class="card-subtitle">Validate or invalidate user sessions</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="sessionForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="sessionToken">Session Token</label>
+                                    <input type="text" id="sessionToken" class="form-input" placeholder="Enter session token">
+                                    <div class="helper-text">Session token from login response</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary" onclick="validateSession()">Validate Session</button>
+                                    <button type="button" class="btn btn-error" onclick="logoutSession()">Logout Session</button>
+                                    <button type="button" class="btn btn-secondary" onclick="clearSessionToken()">Clear Token</button>
+                                </div>
+                            </form>
+                            <div id="sessionResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Session Status:</div>
+                                <div id="sessionResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Authentication service</p>
-                </div>
-                <div class="card-content">
-                    <div id="swagger-ui"></div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Management</h2>
+                            <p class="card-subtitle">View, update, and delete user accounts</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="form-group">
+                                <label class="form-label" for="userUsername">Username</label>
+                                <input type="text" id="userUsername" class="form-input" placeholder="Enter username to manage">
+                                <div class="helper-text">Username of the account to manage</div>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="getUser()">Get User</button>
+                                <button type="button" class="btn btn-primary" onclick="getAllUsers()">List All Users</button>
+                                <button type="button" class="btn btn-error" onclick="deleteUser()">Delete User</button>
+                            </div>
+                            <div id="userResponse" class="response-container" style="display: none;">
+                                <div class="response-title">User Information:</div>
+                                <div id="userResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Role Management</h2>
+                            <p class="card-subtitle">Assign roles and view role memberships</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="form-group">
+                                <label class="form-label" for="roleUsername">Username</label>
+                                <input type="text" id="roleUsername" class="form-input" placeholder="Enter username">
+                                <div class="helper-text">Username to assign role to</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="assignRole">Role</label>
+                                <select id="assignRole" class="form-input">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="guest">Guest</option>
+                                </select>
+                                <div class="helper-text">Role to assign to the user</div>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="assignRole()">Assign Role</button>
+                                <button type="button" class="btn btn-secondary" onclick="listRoles()">List All Roles</button>
+                                <button type="button" class="btn btn-secondary" onclick="getUsersInRole()">Users in Role</button>
+                            </div>
+                            <div id="roleResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Role Management:</div>
+                                <div id="roleResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check authentication service status and statistics</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                                <button type="button" class="btn btn-secondary" onclick="refreshAll()">Refresh All Data</button>
+                            </div>
+                            <div id="statusResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">API Documentation</h2>
+                            <p class="card-subtitle">Interactive API documentation for Authentication service</p>
+                        </div>
+                        <div class="card-content">
+                            <div id="swagger-ui"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="/services/js/navigation.js"></script>
     <script>
-        // Utility functions
+        NooblyNavigation.renderNavigation('navigation-sidebar', 'authservice');
+    </script>
+    <script>
+        const numberFormatter = new Intl.NumberFormat();
+        let analyticsData = [];
+        let currentSort = { column: 'loginCount', direction: 'desc' };
+
+        function formatNumber(value) {
+            if (typeof value !== 'number' || !Number.isFinite(value)) {
+                return '0';
+            }
+            return numberFormatter.format(value);
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '—';
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return value;
+            }
+            return date.toLocaleString();
+        }
+
         function showAlert(message, type = 'success') {
             const alertElement = document.getElementById(type + 'Alert');
             const messageElement = document.getElementById(type + 'Message');
+            if (!alertElement || !messageElement) return;
             messageElement.textContent = message;
             alertElement.classList.add('show');
             setTimeout(() => alertElement.classList.remove('show'), 5000);
@@ -845,44 +604,21 @@
         function showResponse(containerId, contentId, data) {
             const container = document.getElementById(containerId);
             const content = document.getElementById(contentId);
+            if (!container || !content) return;
             content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
             container.style.display = 'block';
         }
 
-        function setLoading(formId, isLoading) {
-            const form = document.getElementById(formId);
-            if (isLoading) {
-                form.classList.add('loading');
-            } else {
-                form.classList.remove('loading');
-            }
+        function setLoading(elementId, isLoading) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            element.classList.toggle('loading', Boolean(isLoading));
         }
 
-        function clearForm(formId) {
-            document.getElementById(formId).reset();
-        }
-
-        function fillDefaultAdmin() {
-            document.getElementById('loginUsername').value = 'admin';
-            document.getElementById('loginPassword').value = 'admin123';
-        }
-
-        function fillDefaultUser() {
-            document.getElementById('loginUsername').value = 'user';
-            document.getElementById('loginPassword').value = 'user123';
-        }
-
-        function clearSessionToken() {
-            document.getElementById('sessionToken').value = '';
-        }
-
-        // API functions
         async function makeRequest(url, method = 'GET', body = null) {
             const options = {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Content-Type': 'application/json' }
             };
 
             if (body) {
@@ -890,32 +626,250 @@
             }
 
             const response = await fetch(url, options);
-            const contentType = response.headers.get('content-type');
+            const contentType = response.headers.get('content-type') || '';
+            const payload = contentType.includes('application/json')
+                ? await response.json()
+                : await response.text();
 
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                return await response.text();
+            if (!response.ok) {
+                throw new Error(
+                    typeof payload === 'string' && payload
+                        ? payload
+                        : `Request failed with status ${response.status}`
+                );
+            }
+
+            return payload;
+        }
+
+        function toggleAnalyticsLoading(isLoading) {
+            const spinner = document.getElementById('analyticsSpinner');
+            const button = document.getElementById('analyticsRefreshButton');
+            if (spinner) spinner.classList.toggle('d-none', !isLoading);
+            if (button) button.disabled = Boolean(isLoading);
+        }
+
+        function setAnalyticsPlaceholders() {
+            const list = document.getElementById('topUsersList');
+            const tableBody = document.getElementById('usersTableBody');
+            const rowCount = document.getElementById('usersRowCount');
+
+            if (list) {
+                list.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-3">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading analytics...
+                    </div>`;
+            }
+
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading analytics...
+                        </td>
+                    </tr>`;
+            }
+
+            if (rowCount) {
+                rowCount.textContent = '0';
             }
         }
 
-        // Form handlers
+        function renderOverview(overview) {
+            const { totalUsers = 0, totalLogins = 0, totalFailures = 0, lastLoginAt = null } = overview || {};
+            const totalUsersEl = document.getElementById('totalUsers');
+            const totalLoginsEl = document.getElementById('totalLogins');
+            const totalFailuresEl = document.getElementById('totalFailures');
+            const lastLoginEl = document.getElementById('lastLogin');
+
+            if (totalUsersEl) totalUsersEl.textContent = formatNumber(totalUsers);
+            if (totalLoginsEl) totalLoginsEl.textContent = formatNumber(totalLogins);
+            if (totalFailuresEl) totalFailuresEl.textContent = formatNumber(totalFailures);
+            if (lastLoginEl) lastLoginEl.textContent = formatDate(lastLoginAt);
+        }
+
+        function renderTopUsers(topUsers) {
+            const list = document.getElementById('topUsersList');
+            if (!list) return;
+
+            list.innerHTML = '';
+
+            if (!topUsers || topUsers.length === 0) {
+                list.innerHTML = '<div class="list-group-item text-muted">No user activity recorded yet.</div>';
+                return;
+            }
+
+            topUsers.forEach((user, index) => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                const details = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'fw-semibold';
+                name.textContent = `${index + 1}. ${user.username}`;
+
+                const meta = document.createElement('div');
+                meta.className = 'text-muted small';
+                meta.textContent = `Logins: ${formatNumber(user.loginCount || 0)} • Failures: ${formatNumber(user.failedCount || 0)} • Last login: ${formatDate(user.lastLogin)}`;
+
+                details.appendChild(name);
+                details.appendChild(meta);
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary rounded-pill';
+                badge.textContent = formatNumber(user.loginCount || 0);
+
+                item.appendChild(details);
+                item.appendChild(badge);
+                list.appendChild(item);
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, (m) => map[m]);
+        }
+
+        function renderUsersTable(users) {
+            const tableBody = document.getElementById('usersTableBody');
+            const rowCount = document.getElementById('usersRowCount');
+            if (!tableBody) return;
+
+            if (!users || users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle fs-4"></i>
+                            <p class="mb-0 mt-2">No user activity recorded yet.</p>
+                        </td>
+                    </tr>`;
+                if (rowCount) rowCount.textContent = '0';
+                return;
+            }
+
+            tableBody.innerHTML = users.map((user) => `
+                <tr>
+                    <td class="key-cell">${escapeHtml(user.username)}</td>
+                    <td class="hits-cell">${formatNumber(user.loginCount || 0)}</td>
+                    <td class="hits-cell">${formatNumber(user.failedCount || 0)}</td>
+                    <td class="date-cell">${formatDate(user.lastLogin)}</td>
+                </tr>
+            `).join('');
+
+            if (rowCount) {
+                rowCount.textContent = String(users.length);
+            }
+        }
+
+        function sortTable(column) {
+            if (!analyticsData || analyticsData.length === 0) {
+                renderUsersTable([]);
+                return;
+            }
+
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc';
+            }
+
+            document.querySelectorAll('.sortable span').forEach((span) => {
+                span.parentElement.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            const sortElement = document.getElementById(`sort-${column}`);
+            if (sortElement) {
+                sortElement.parentElement.classList.add(
+                    currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc'
+                );
+            }
+
+            analyticsData.sort((a, b) => {
+                if (column === 'username') {
+                    const aVal = (a.username || '').toLowerCase();
+                    const bVal = (b.username || '').toLowerCase();
+                    return currentSort.direction === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                }
+
+                if (column === 'lastLogin') {
+                    const aTime = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+                    const bTime = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+                    return currentSort.direction === 'asc' ? aTime - bTime : bTime - aTime;
+                }
+
+                const aVal = a[column] || 0;
+                const bVal = b[column] || 0;
+                return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+
+            renderUsersTable(analyticsData);
+        }
+
+        async function loadAnalytics() {
+            toggleAnalyticsLoading(true);
+            setAnalyticsPlaceholders();
+
+            try {
+                const response = await fetch('/services/authservice/api/analytics');
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+                const data = await response.json();
+
+                renderOverview(data.overview || {});
+                renderTopUsers(data.topUsers || []);
+
+                analyticsData = data.topRecent || [];
+                sortTable(currentSort.column);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showAlert('Error loading analytics: ' + error.message, 'error');
+            } finally {
+                toggleAnalyticsLoading(false);
+            }
+        }
+
+        function fillDefaultRegistration() {
+            document.getElementById('registerUsername').value = 'user_' + Math.random().toString(36).substring(2, 7);
+            document.getElementById('registerEmail').value = `user${Date.now()}@example.com`;
+            document.getElementById('registerPassword').value = 'password123';
+            document.getElementById('registerRole').value = 'user';
+        }
+
+        function fillDefaultAdmin() {
+            document.getElementById('loginUsername').value = 'admin';
+            document.getElementById('loginPassword').value = 'admin';
+        }
+
+        function fillDefaultUser() {
+            document.getElementById('loginUsername').value = 'user';
+            document.getElementById('loginPassword').value = 'password';
+        }
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const userData = {
-                username: document.getElementById('regUsername').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value,
-                role: document.getElementById('regRole').value
+            const payload = {
+                username: document.getElementById('registerUsername').value,
+                email: document.getElementById('registerEmail').value,
+                password: document.getElementById('registerPassword').value,
+                role: document.getElementById('registerRole').value
             };
 
             try {
                 setLoading('registerForm', true);
-                const result = await makeRequest('/services/authservice/api/register', 'POST', userData);
+                const result = await makeRequest('/services/authservice/api/register', 'POST', payload);
                 showResponse('registerResponse', 'registerResponseContent', result);
                 showAlert('User registered successfully!');
-                clearForm('registerForm');
+                loadAnalytics();
             } catch (error) {
                 showAlert('Error registering user: ' + error.message, 'error');
                 showResponse('registerResponse', 'registerResponseContent', 'Error: ' + error.message);
@@ -926,23 +880,22 @@
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const loginData = {
+            const payload = {
                 username: document.getElementById('loginUsername').value,
                 password: document.getElementById('loginPassword').value
             };
 
             try {
                 setLoading('loginForm', true);
-                const result = await makeRequest('/services/authservice/api/login', 'POST', loginData);
+                const result = await makeRequest('/services/authservice/api/login', 'POST', payload);
                 showResponse('loginResponse', 'loginResponseContent', result);
-                if (result.data && result.data.session) {
+                if (result?.data?.session?.token) {
                     document.getElementById('sessionToken').value = result.data.session.token;
                     showAlert(`Login successful! Session expires: ${new Date(result.data.session.expiresAt).toLocaleString()}`);
                 } else {
                     showAlert('Login successful!');
                 }
-                clearForm('loginForm');
+                loadAnalytics();
             } catch (error) {
                 showAlert('Error during login: ' + error.message, 'error');
                 showResponse('loginResponse', 'loginResponseContent', 'Error: ' + error.message);
@@ -961,7 +914,7 @@
             try {
                 const result = await makeRequest('/services/authservice/api/validate', 'POST', { token });
                 showResponse('sessionResponse', 'sessionResponseContent', result);
-                if (result.data) {
+                if (result.success) {
                     showAlert(`Session valid! User: ${result.data.username}, Role: ${result.data.role}`);
                 } else {
                     showAlert('Session validated successfully!');
@@ -982,12 +935,17 @@
             try {
                 const result = await makeRequest('/services/authservice/api/logout', 'POST', { token });
                 showResponse('sessionResponse', 'sessionResponseContent', result);
-                document.getElementById('sessionToken').value = '';
                 showAlert('Logged out successfully!');
+                document.getElementById('sessionToken').value = '';
             } catch (error) {
                 showAlert('Error during logout: ' + error.message, 'error');
                 showResponse('sessionResponse', 'sessionResponseContent', 'Error: ' + error.message);
             }
+        }
+
+        function clearSessionToken() {
+            document.getElementById('sessionToken').value = '';
+            showAlert('Session token cleared');
         }
 
         async function getUser() {
@@ -1035,6 +993,7 @@
                 showResponse('userResponse', 'userResponseContent', result);
                 showAlert(`User "${username}" deleted successfully`);
                 document.getElementById('userUsername').value = '';
+                loadAnalytics();
             } catch (error) {
                 showAlert('Error deleting user: ' + error.message, 'error');
                 showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
@@ -1102,7 +1061,8 @@
                 await Promise.all([
                     checkStatus(),
                     getAllUsers(),
-                    listRoles()
+                    listRoles(),
+                    loadAnalytics()
                 ]);
                 showAlert('All data refreshed successfully');
             } catch (error) {
@@ -1110,639 +1070,54 @@
             }
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        const analyticsRefreshButton = document.getElementById('analyticsRefreshButton');
+        if (analyticsRefreshButton) {
+            analyticsRefreshButton.addEventListener('click', () => loadAnalytics());
+        }
+
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', () => {
+            loadAnalytics();
+        });
+
+        document.getElementById('data-tab')?.addEventListener('shown.bs.tab', () => {
             checkStatus();
         });
 
-        // Swagger UI setup
-        const spec = {
-            openapi: '3.0.0',
-            info: {
-                title: 'Authentication API',
-                description: 'REST API for authentication and user management with session-based authentication',
-                version: '1.0.0'
-            },
-            servers: [
-                { url: '/services/authservice/api', description: 'Authentication API' }
-            ],
-            components: {
-                securitySchemes: {
-                    ApiKeyAuth: {
-                        type: 'apiKey',
-                        in: 'header',
-                        name: 'x-api-key',
-                        description: 'API key for authentication. Can also be provided via Authorization header (Bearer token) or api_key query parameter.'
-                    },
-                    BearerAuth: {
-                        type: 'http',
-                        scheme: 'bearer',
-                        description: 'API key provided as Bearer token in Authorization header'
-                    }
-                },
-                schemas: {
-                    UserRegistration: {
-                        type: 'object',
-                        required: ['username', 'email', 'password'],
-                        properties: {
-                            username: { type: 'string', example: 'johndoe' },
-                            email: { type: 'string', format: 'email', example: 'john@example.com' },
-                            password: { type: 'string', minLength: 6, example: 'secretpassword' },
-                            role: { type: 'string', enum: ['admin', 'user', 'guest'], default: 'user', example: 'user' }
-                        }
-                    },
-                    LoginCredentials: {
-                        type: 'object',
-                        required: ['username', 'password'],
-                        properties: {
-                            username: { type: 'string', example: 'johndoe' },
-                            password: { type: 'string', example: 'secretpassword' }
-                        }
-                    },
-                    User: {
-                        type: 'object',
-                        properties: {
-                            id: { type: 'string', example: 'usr_123456789' },
-                            username: { type: 'string', example: 'johndoe' },
-                            email: { type: 'string', format: 'email', example: 'john@example.com' },
-                            role: { type: 'string', example: 'user' },
-                            isActive: { type: 'boolean', example: true },
-                            createdAt: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
-                            lastLogin: { type: 'string', format: 'date-time', nullable: true, example: '2023-01-15T10:30:00.000Z' }
-                        }
-                    }
-                }
-            },
-            security: [
-                { ApiKeyAuth: [] },
-                { BearerAuth: [] }
-            ],
-            paths: {
-                '/register': {
-                    post: {
-                        summary: 'Register new user',
-                        description: 'Create a new user account',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: { $ref: '#/components/schemas/UserRegistration' }
-                                }
-                            }
-                        },
-                        responses: {
-                            '201': {
-                                description: 'User created successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'User created successfully' },
-                                                data: { $ref: '#/components/schemas/User' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '400': {
-                                description: 'Bad request - validation error',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'Username already exists' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '401': {
-                                description: 'Unauthorized - Invalid or missing API key',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                error: { type: 'string', example: 'Unauthorized' },
-                                                message: { type: 'string', example: 'API key is required' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/login': {
-                    post: {
-                        summary: 'User login',
-                        description: 'Authenticate user and create session',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: { $ref: '#/components/schemas/LoginCredentials' }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Login successful',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'Login successful' },
-                                                data: {
-                                                    type: 'object',
-                                                    properties: {
-                                                        user: { $ref: '#/components/schemas/User' },
-                                                        session: {
-                                                            type: 'object',
-                                                            properties: {
-                                                                token: { type: 'string', example: 'sess_abc123def456' },
-                                                                expiresAt: { type: 'string', format: 'date-time', example: '2023-01-16T10:30:00.000Z' }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '401': {
-                                description: 'Invalid credentials',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'Invalid credentials' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/logout': {
-                    post: {
-                        summary: 'User logout',
-                        description: 'Invalidate user session',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            token: { type: 'string', description: 'Session token to invalidate' }
-                                        },
-                                        required: ['token']
-                                    }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Logout successful',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'Logout successful' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/validate': {
-                    post: {
-                        summary: 'Validate session',
-                        description: 'Validate if a session token is still active',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            token: { type: 'string', description: 'Session token to validate' }
-                                        },
-                                        required: ['token']
-                                    }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Session valid',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'Session valid' },
-                                                data: {
-                                                    type: 'object',
-                                                    properties: {
-                                                        token: { type: 'string', example: 'sess_abc123def456' },
-                                                        username: { type: 'string', example: 'johndoe' },
-                                                        role: { type: 'string', example: 'user' },
-                                                        expiresAt: { type: 'string', format: 'date-time', example: '2023-01-16T10:30:00.000Z' }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '401': {
-                                description: 'Invalid or expired session',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'Invalid session' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/users': {
-                    get: {
-                        summary: 'List all users',
-                        description: 'Retrieve a list of all users (admin access required)',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'Users retrieved successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                data: {
-                                                    type: 'array',
-                                                    items: { $ref: '#/components/schemas/User' }
-                                                },
-                                                total: { type: 'integer', example: 10 }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '401': {
-                                description: 'Unauthorized',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'Unauthorized' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/users/{username}': {
-                    get: {
-                        summary: 'Get user by username',
-                        description: 'Retrieve user information for the specified username',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        parameters: [
-                            {
-                                name: 'username',
-                                in: 'path',
-                                required: true,
-                                schema: { type: 'string' },
-                                description: 'Username to retrieve'
-                            }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'User found',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                data: { $ref: '#/components/schemas/User' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '404': {
-                                description: 'User not found',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'User not found' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    delete: {
-                        summary: 'Delete user',
-                        description: 'Delete a user account',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        parameters: [
-                            {
-                                name: 'username',
-                                in: 'path',
-                                required: true,
-                                schema: { type: 'string' },
-                                description: 'Username to delete'
-                            }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'User deleted successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'User deleted successfully' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '404': {
-                                description: 'User not found',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'User not found' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/users/{username}/role': {
-                    post: {
-                        summary: 'Assign role to user',
-                        description: 'Assign a role to the specified user',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        parameters: [
-                            {
-                                name: 'username',
-                                in: 'path',
-                                required: true,
-                                schema: { type: 'string' },
-                                description: 'Username to assign role to'
-                            }
-                        ],
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            role: { type: 'string', enum: ['admin', 'user', 'guest'], description: 'Role to assign' }
-                                        },
-                                        required: ['role']
-                                    }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Role assigned successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                message: { type: 'string', example: 'Role assigned successfully' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '404': {
-                                description: 'User not found',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: false },
-                                                error: { type: 'string', example: 'User not found' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/roles': {
-                    get: {
-                        summary: 'List all roles',
-                        description: 'Retrieve a list of all available roles',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'Roles retrieved successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                data: {
-                                                    type: 'array',
-                                                    items: { type: 'string' },
-                                                    example: ['admin', 'user', 'guest']
-                                                },
-                                                total: { type: 'integer', example: 3 }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/roles/{role}/users': {
-                    get: {
-                        summary: 'Get users in role',
-                        description: 'Retrieve all users assigned to the specified role',
-                        security: [
-                            { ApiKeyAuth: [] },
-                            { BearerAuth: [] }
-                        ],
-                        parameters: [
-                            {
-                                name: 'role',
-                                in: 'path',
-                                required: true,
-                                schema: { type: 'string' },
-                                description: 'Role name'
-                            }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'Users in role retrieved successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                data: {
-                                                    type: 'array',
-                                                    items: { $ref: '#/components/schemas/User' }
-                                                },
-                                                total: { type: 'integer', example: 5 }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/status': {
-                    get: {
-                        summary: 'Service status',
-                        description: 'Check if the authentication service is running (No API key required)',
-                        responses: {
-                            '200': {
-                                description: 'Service is running',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                success: { type: 'boolean', example: true },
-                                                data: {
-                                                    type: 'object',
-                                                    properties: {
-                                                        service: { type: 'string', example: 'auth' },
-                                                        provider: { type: 'string', example: 'memory' },
-                                                        users: { type: 'integer', example: 42 },
-                                                        activeSessions: { type: 'integer', example: 15 },
-                                                        roles: { type: 'integer', example: 3 },
-                                                        uptime: { type: 'number', example: 3600.5 }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
+        window.addEventListener('load', () => {
+            loadAnalytics();
+            checkStatus();
+            initializeSwagger();
+        });
 
-        // Initialize Swagger UI
-        window.onload = function() {
+        function initializeSwagger() {
+            const spec = {
+                openapi: '3.0.0',
+                info: {
+                    title: 'Authentication API',
+                    description: 'REST API for authentication operations',
+                    version: '1.0.0'
+                },
+                servers: [{ url: '/services/authservice/api', description: 'Auth API' }]
+            };
+
             try {
-                const ui = SwaggerUIBundle({
-                    spec: spec,
+                SwaggerUIBundle({
+                    spec,
                     dom_id: '#swagger-ui',
                     deepLinking: true,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIBundle.presets.standalone
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
-                    tryItOutEnabled: true,
-                    requestInterceptor: (request) => {
-                        // Add any headers or modify request if needed
-                        return request;
-                    },
-                    responseInterceptor: (response) => {
-                        // Handle response if needed
-                        return response;
-                    },
-                    onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
-                    },
-                    onFailure: (error) => {
-                        console.error('Swagger UI failed to load:', error);
-                    }
+                    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.presets.standalone],
+                    plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+                    layout: 'BaseLayout',
+                    tryItOutEnabled: true
                 });
-
-                window.ui = ui;
             } catch (error) {
                 console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
+                const swaggerContainer = document.getElementById('swagger-ui');
+                if (swaggerContainer) {
+                    swaggerContainer.innerHTML = '<p class="text-danger">Error loading API documentation. Please refresh the page.</p>';
+                }
             }
-        };
-    </script>
-    <script src="/services/js/navigation.js"></script>
-    <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'authservice');
+        }
     </script>
 </body>
 </html>

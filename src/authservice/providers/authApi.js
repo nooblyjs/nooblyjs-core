@@ -68,8 +68,13 @@ class AuthApi {
         this.eventEmitter_.emit('auth:login', { user: response.data });
       return response.data;
     } catch (error) {
-      if (this.eventEmitter_)
+      if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:error', { operation: 'login', error: error.message });
+        this.eventEmitter_.emit('auth:login-failed', {
+          username: credentials && credentials.username,
+          error: error.message
+        });
+      }
       throw error;
     }
   }

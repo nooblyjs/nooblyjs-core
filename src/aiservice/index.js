@@ -16,6 +16,7 @@ const AIApi = require('./provider/aiApi');
 
 const Routes = require('./routes');
 const Views = require('./views');
+const AIPromptAnalytics = require('./modules/analytics');
 
 /**
  * Creates an AI service instance with the specified provider and dependency injection.
@@ -37,6 +38,7 @@ function createAIService(type, options, eventEmitter) {
   const cache = dependencies.caching;
   const workflow = dependencies.workflow;
   const queueing = dependencies.queueing;
+  const analytics = new AIPromptAnalytics(eventEmitter);
 
   let aiservice;
 
@@ -94,9 +96,11 @@ function createAIService(type, options, eventEmitter) {
 
   // Store all dependencies for potential use by provider
   aiservice.dependencies = dependencies;
+  aiservice.promptAnalytics = analytics;
+  aiservice.getPromptAnalytics = () => analytics.getAnalytics();
 
   // Initialize routes and views for the AI service
-  Routes(options, eventEmitter, aiservice);
+  Routes(options, eventEmitter, aiservice, analytics);
   Views(options, eventEmitter, aiservice);
 
   return aiservice;

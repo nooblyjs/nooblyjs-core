@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +9,6 @@
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
     <style>
-        /* Custom CSS for professional look */
         :root {
             --custom-primary: #0066cc;
             --custom-secondary: #6c757d;
@@ -22,8 +20,12 @@
             background-color: #f8f9fa;
         }
 
+        .app-container {
+            display: flex;
+        }
+
         .sidebar {
-            background-color: white;
+            background-color: #fff;
             border-right: 1px solid #dee2e6;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             width: 280px;
@@ -32,83 +34,8 @@
             flex-direction: column;
         }
 
-        .logo {
-            color: var(--custom-primary);
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .logo .subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .nav-section-header {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            color: #212529;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid #f8f9fa;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            background-color: #f8f9fa;
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            background-color: var(--custom-primary);
-            color: white;
-            border-left-color: #0052a3;
-        }
-
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: auto;
-        }
-
-        .status-dot.online {
-            background-color: var(--custom-success);
-        }
-
-        .status-dot.offline {
-            background-color: var(--custom-danger);
-        }
-
         .main-content {
-            background-color: white;
+            background-color: #fff;
             min-height: 100vh;
             flex: 1;
             padding: 2rem;
@@ -133,11 +60,6 @@
             font-size: 1.125rem;
         }
 
-        .app-container {
-            display: flex;
-        }
-
-        /* Alert Styles */
         .alert {
             padding: 1rem;
             margin-bottom: 1rem;
@@ -162,9 +84,8 @@
             border-color: #f5c2c7;
         }
 
-        /* Card Styles */
         .card {
-            background-color: white;
+            background-color: #fff;
             border: 1px solid #dee2e6;
             border-radius: 0.375rem;
             margin-bottom: 1.5rem;
@@ -188,148 +109,76 @@
         .card-subtitle {
             margin: 0.25rem 0 0 0;
             color: #6c757d;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         .card-content {
             padding: 1.5rem;
         }
 
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1rem;
+        .metrics-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
         }
 
-        .form-label {
-            display: block;
+        .metrics-summary .summary-item {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .metrics-summary .summary-item h5 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #6c757d;
             margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #212529;
         }
 
-        .form-input {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #212529;
-            background-color: white;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        .metrics-summary .summary-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--custom-primary);
+            margin-bottom: 0.25rem;
         }
 
-        .form-input:focus {
-            color: #212529;
-            background-color: white;
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .helper-text {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
+        .metrics-summary .summary-meta {
+            font-size: 0.85rem;
             color: #6c757d;
         }
 
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #212529;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
         }
 
-        .btn:hover {
-            text-decoration: none;
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .btn-primary {
-            color: white;
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
         }
 
-        .btn-primary:hover {
-            color: white;
-            background-color: #0052a3;
-            border-color: #004785;
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
         }
 
-        .btn-secondary {
-            color: white;
-            background-color: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-        }
-
-        .btn-secondary:hover {
-            color: white;
-            background-color: #565e64;
-            border-color: #4c5258;
-        }
-
-        .btn-error {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-error:hover {
-            color: white;
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* Response Styles */
-        .response-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        .response-title {
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 0.5rem;
-        }
-
-        .response-content {
-            background-color: white;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        .helper-text {
             font-size: 0.875rem;
-            white-space: pre-wrap;
-            word-break: break-all;
+            color: #6c757d;
+            margin-top: 0.25rem;
         }
 
-        /* Validation Styles */
         .validation-message {
             margin-top: 0.25rem;
             font-size: 0.875rem;
@@ -351,258 +200,92 @@
             border-color: var(--custom-danger);
         }
 
-        /* Loading States */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .response-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .response-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .response-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
         .loading {
             opacity: 0.6;
             pointer-events: none;
         }
 
-        /* Analytics Table Styles (for caching service) */
-        .analytics-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+        .list-group-item .badge {
+            font-size: 0.85rem;
         }
 
-        .analytics-info {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh {
-            background-color: var(--custom-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh:hover {
-            background-color: #0052a3;
-        }
-
-        .analytics-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .analytics-table th,
-        .analytics-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .analytics-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .sortable:hover {
-            background-color: #e9ecef;
-        }
-
-        .sort-asc::after {
-            content: " ↑";
-        }
-
-        .sort-desc::after {
-            content: " ↓";
-        }
-
-        .no-data {
+        .loading-row {
             text-align: center;
             color: #6c757d;
-            font-style: italic;
         }
 
-        .key-cell {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
         }
 
-        .hits-cell {
-            font-weight: 600;
-            color: var(--custom-primary);
-        }
-
-        .date-cell {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        /* Swagger UI Integration Styles */
-        #swagger-ui {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        #swagger-ui .swagger-ui {
-            max-width: none;
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
         }
 
         #swagger-ui .topbar {
             display: none;
         }
 
-        #swagger-ui .info {
-            margin: 20px 0;
-        }
-
         #swagger-ui .info .title {
             font-size: 1.5rem;
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .scheme-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        #swagger-ui .opblock-tag {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        #swagger-ui .opblock {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        #swagger-ui .opblock.is-open .opblock-summary {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        #swagger-ui .opblock .opblock-summary-method {
-            border-radius: 0.375rem;
-            font-weight: 600;
-        }
-
-        #swagger-ui .opblock.opblock-post .opblock-summary-method {
-            background: var(--custom-success);
-        }
-
-        #swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: var(--custom-primary);
-        }
-
-        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
-            background: var(--custom-danger);
-        }
-
-        #swagger-ui .opblock.opblock-put .opblock-summary-method {
-            background: #fd7e14;
-        }
-
-        #swagger-ui .btn {
-            border-radius: 0.375rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        #swagger-ui .btn.execute {
-            background: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        #swagger-ui .btn.execute:hover {
-            background: #0052a3;
-            border-color: #004785;
-        }
-
-        #swagger-ui .btn.btn-clear {
-            background: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-            color: white;
-        }
-
-        #swagger-ui .btn.btn-clear:hover {
-            background: #565e64;
-            border-color: #4c5258;
-        }
-
-        #swagger-ui .parameters-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        #swagger-ui .parameter__name {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui input[type="text"],
-        #swagger-ui textarea,
-        #swagger-ui select {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        #swagger-ui input[type="text"]:focus,
-        #swagger-ui textarea:focus,
-        #swagger-ui select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: 0;
-        }
-
-        #swagger-ui .response-col_status {
-            font-weight: 600;
-        }
-
-        #swagger-ui .response-col_status.response-undocumented {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .response .response-col_status {
-            color: var(--custom-success);
-        }
-
-        #swagger-ui .responses-inner h4 {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui .highlight-code {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model .property {
-            color: var(--custom-primary);
         }
 
         #swagger-ui .prop-type {
             color: var(--custom-secondary);
         }
 
-        /* Ensure proper responsiveness */
         #swagger-ui .wrapper {
             max-width: 100%;
             overflow-x: auto;
@@ -613,7 +296,6 @@
             width: 100%;
         }
 
-        /* Fix potential z-index issues */
         #swagger-ui .dialog-ux {
             z-index: 1050;
         }
@@ -626,14 +308,12 @@
 </head>
 <body>
     <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </nav>
+        <nav class="sidebar" id="navigation-sidebar"></nav>
 
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Notification Management</h1>
-                <p class="page-subtitle">Send notifications to users or systems</p>
+                <p class="page-subtitle">Monitor topics, subscribers, and notification activity</p>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -644,81 +324,215 @@
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
 
-            <!-- Send Notification Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Send Notification</h2>
-                    <p class="card-subtitle">Send a new notification</p>
-                </div>
-                <div class="card-content">
-                    <form id="sendForm">
-                        <div class="form-group">
-                            <label class="form-label" for="sendMessage">Message (JSON)</label>
-                            <textarea id="sendMessage" class="form-input form-textarea" placeholder='{"channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification."}' required></textarea>
-                            <div id="sendValidation" class="validation-message" style="display: none;"></div>
-                            <div class="helper-text">Enter a valid JSON object for the notification</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Send Notification</button>
-                            <button type="button" class="btn btn-secondary" onclick="formatJSON('sendMessage')">Format JSON</button>
-                            <button type="button" class="btn btn-secondary" onclick="loadExample('sendMessage')">Load Example</button>
-                        </div>
-                    </form>
-                    <div id="sendResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="sendResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <ul class="nav nav-tabs mb-4" id="notifyingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+            </ul>
 
-            <!-- Status Check -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check notifying service status</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+            <div class="tab-content" id="notifyingTabContent">
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title">Notification Overview</h2>
+                                <p class="card-subtitle">Aggregate insight into topics and messages</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="spinner-border spinner-border-sm text-secondary d-none" id="analyticsRefreshSpinner" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" id="analyticsRefreshButton">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="metrics-summary">
+                                <div class="summary-item">
+                                    <h5>Total Topics</h5>
+                                    <div class="summary-value" id="totalTopics">0</div>
+                                    <div class="summary-meta">Distinct topics created</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Total Subscribers</h5>
+                                    <div class="summary-value" id="totalSubscribers">0</div>
+                                    <div class="summary-meta">Subscribers across all topics</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Total Notifications</h5>
+                                    <div class="summary-value" id="totalNotifications">0</div>
+                                    <div class="summary-meta">Messages delivered to topics</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Last Notification</h5>
+                                    <div class="summary-value" id="lastNotification">—</div>
+                                    <div class="summary-meta">Most recent publish time</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Notifying service</p>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">Top Topics by Activity</h2>
+                            <p class="card-subtitle">Top 10 topics ranked by notifications delivered</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="list-group list-group-flush" id="topTopicsList">
+                                <div class="list-group-item loading-row">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading topics...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">Top Topics (Last Activity)</h2>
+                            <p class="card-subtitle">Latest 100 topics ordered by last publish time</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Topic Name</th>
+                                            <th>Count of Subscribers</th>
+                                            <th>Count of Posts</th>
+                                            <th>Date Last Post</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="topicsTableBody">
+                                        <tr class="loading-row">
+                                            <td colspan="4">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading topics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="topicsRowCount">0</span> topics displayed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div id="swagger-ui"></div>
+
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Send Notification</h2>
+                            <p class="card-subtitle">Send a new notification payload</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="sendForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="sendMessage">Message (JSON)</label>
+                                    <textarea id="sendMessage" class="form-input form-textarea" placeholder='{"channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification."}' required></textarea>
+                                    <div id="sendValidation" class="validation-message" style="display: none;"></div>
+                                    <div class="helper-text">Enter a valid JSON object for the notification</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Send Notification</button>
+                                    <button type="button" class="btn btn-secondary" id="formatSendButton">Format JSON</button>
+                                    <button type="button" class="btn btn-secondary" id="exampleSendButton">Load Example</button>
+                                </div>
+                            </form>
+                            <div id="sendResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="sendResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check notifying service status</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-secondary" id="statusButton">Check Status</button>
+                            </div>
+                            <div id="statusResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">API Documentation</h2>
+                            <p class="card-subtitle">Interactive API documentation for Notifying service</p>
+                        </div>
+                        <div class="card-content">
+                            <div id="swagger-ui"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
         NooblyNavigation.renderNavigation('navigation-sidebar', 'notifying');
     </script>
     <script>
-        // JSON validation
+        const numberFormatter = new Intl.NumberFormat();
+
+        function formatNumber(value) {
+            if (typeof value !== 'number' || !Number.isFinite(value)) {
+                return '0';
+            }
+            return numberFormatter.format(value);
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '—';
+            }
+            try {
+                return new Date(value).toLocaleString();
+            } catch (error) {
+                return value;
+            }
+        }
+
         function validateJSON(elementId) {
             const element = document.getElementById(elementId);
             const validation = document.getElementById(elementId.replace('Message', 'Validation'));
+            if (!element || !validation) {
+                return true;
+            }
+
             const value = element.value.trim();
-            
+
             if (!value) {
                 element.classList.remove('json-valid', 'json-invalid');
                 validation.style.display = 'none';
                 return true;
             }
-            
+
             try {
                 JSON.parse(value);
                 element.classList.remove('json-invalid');
@@ -727,51 +541,22 @@
                 validation.className = 'validation-message validation-success';
                 validation.style.display = 'block';
                 return true;
-            } catch (e) {
+            } catch (error) {
                 element.classList.remove('json-valid');
                 element.classList.add('json-invalid');
-                validation.textContent = '✗ Invalid JSON: ' + e.message;
+                validation.textContent = '✗ Invalid JSON: ' + error.message;
                 validation.className = 'validation-message validation-error';
                 validation.style.display = 'block';
                 return false;
             }
         }
 
-        // Real-time validation
-        document.getElementById('sendMessage').addEventListener('input', () => validateJSON('sendMessage'));
-
-        // Format JSON
-        function formatJSON(elementId) {
-            const element = document.getElementById(elementId);
-            try {
-                const parsed = JSON.parse(element.value);
-                element.value = JSON.stringify(parsed, null, 2);
-                validateJSON(elementId);
-            } catch (e) {
-                showAlert('Invalid JSON cannot be formatted', 'error');
-            }
-        }
-
-        // Load example
-        function loadExample(elementId) {
-            const examples = {
-                sendMessage: {
-                    "channel": "sms",
-                    "recipient": "+1234567890",
-                    "body": "Your package has been shipped!"
-                }
-            };
-            
-            if (examples[elementId]) {
-                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
-                validateJSON(elementId);
-            }
-        }
-
-        // Utility functions
         function showAlert(message, type = 'success') {
             const alertElement = document.getElementById(type + 'Alert');
             const messageElement = document.getElementById(type + 'Message');
+            if (!alertElement || !messageElement) {
+                return;
+            }
             messageElement.textContent = message;
             alertElement.classList.add('show');
             setTimeout(() => alertElement.classList.remove('show'), 5000);
@@ -780,66 +565,223 @@
         function showResponse(containerId, contentId, data) {
             const container = document.getElementById(containerId);
             const content = document.getElementById(contentId);
+            if (!container || !content) {
+                return;
+            }
             content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
             container.style.display = 'block';
         }
 
-        function setLoading(formId, isLoading) {
-            const form = document.getElementById(formId);
-            if (isLoading) {
-                form.classList.add('loading');
-            } else {
-                form.classList.remove('loading');
+        function setLoading(elementId, isLoading) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                return;
             }
+            element.classList.toggle('loading', Boolean(isLoading));
         }
 
-        // API functions
         async function makeRequest(url, method = 'GET', body = null) {
             const options = {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
             };
-            
+
             if (body) {
                 options.body = JSON.stringify(body);
             }
-            
+
             const response = await fetch(url, options);
-            const contentType = response.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                return await response.text();
+            const contentType = response.headers.get('content-type') || '';
+            const payload = contentType.includes('application/json')
+                ? await response.json()
+                : await response.text();
+
+            if (!response.ok) {
+                throw new Error(
+                    typeof payload === 'string' && payload
+                        ? payload
+                        : `Request failed with status ${response.status}`,
+                );
+            }
+
+            return payload;
+        }
+
+        function toggleAnalyticsLoading(isLoading) {
+            const button = document.getElementById('analyticsRefreshButton');
+            const spinner = document.getElementById('analyticsRefreshSpinner');
+            if (button) {
+                button.disabled = Boolean(isLoading);
+            }
+            if (spinner) {
+                spinner.classList.toggle('d-none', !isLoading);
             }
         }
 
-        // Form handlers
-        document.getElementById('sendForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const message = document.getElementById('sendMessage').value;
-            
-            if (!validateJSON('sendMessage')) {
-                showAlert('Please enter a valid JSON notification message', 'error');
+        function setAnalyticsPlaceholders() {
+            const list = document.getElementById('topTopicsList');
+            const tableBody = document.getElementById('topicsTableBody');
+            if (list) {
+                list.innerHTML = `
+                    <div class="list-group-item loading-row">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading topics...
+                    </div>`;
+            }
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr class="loading-row">
+                        <td colspan="4">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading topics...
+                        </td>
+                    </tr>`;
+            }
+            const rowCount = document.getElementById('topicsRowCount');
+            if (rowCount) {
+                rowCount.textContent = '0';
+            }
+        }
+
+        async function fetchAnalytics(url) {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed request with status ${response.status}`);
+            }
+            return response.json();
+        }
+
+        function renderOverview(data) {
+            const {
+                topics = 0,
+                subscribers = 0,
+                notifications = 0,
+                lastNotificationAt = null,
+            } = data || {};
+
+            const totalTopics = document.getElementById('totalTopics');
+            const totalSubscribers = document.getElementById('totalSubscribers');
+            const totalNotifications = document.getElementById('totalNotifications');
+            const lastNotification = document.getElementById('lastNotification');
+
+            if (totalTopics) totalTopics.textContent = formatNumber(topics);
+            if (totalSubscribers) totalSubscribers.textContent = formatNumber(subscribers);
+            if (totalNotifications) totalNotifications.textContent = formatNumber(notifications);
+            if (lastNotification) lastNotification.textContent = formatDate(lastNotificationAt);
+        }
+
+        function renderTopTopics(topics) {
+            const list = document.getElementById('topTopicsList');
+            if (!list) {
                 return;
             }
-            
-            try {
-                setLoading('sendForm', true);
-                const parsedMessage = JSON.parse(message);
-                const result = await makeRequest(`/services/notifying/api/send`, 'POST', parsedMessage);
-                showResponse('sendResponse', 'sendResponseContent', result);
-                showAlert(`Notification sent successfully`);
-            } catch (error) {
-                showAlert('Error sending notification: ' + error.message, 'error');
-                showResponse('sendResponse', 'sendResponseContent', 'Error: ' + error.message);
-            } finally {
-                setLoading('sendForm', false);
+
+            list.innerHTML = '';
+
+            if (!topics || topics.length === 0) {
+                list.innerHTML = '<div class="list-group-item text-muted">No topics captured yet.</div>';
+                return;
             }
-        });
+
+            topics.forEach((topic, index) => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                const details = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'fw-semibold';
+                name.textContent = `${index + 1}. ${topic.topic}`;
+
+                const meta = document.createElement('div');
+                meta.className = 'text-muted small';
+                meta.textContent = `Subscribers: ${formatNumber(topic.subscriberCount)} • Posts: ${formatNumber(topic.notificationCount)} • Last post: ${formatDate(topic.lastNotificationAt)}`;
+
+                details.appendChild(name);
+                details.appendChild(meta);
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary rounded-pill';
+                badge.textContent = formatNumber(topic.notificationCount);
+
+                item.appendChild(details);
+                item.appendChild(badge);
+
+                list.appendChild(item);
+            });
+        }
+
+        function renderTopicsTable(topics) {
+            const tableBody = document.getElementById('topicsTableBody');
+            const rowCount = document.getElementById('topicsRowCount');
+            if (!tableBody) {
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            if (!topics || topics.length === 0) {
+                tableBody.innerHTML = `
+                    <tr class="loading-row">
+                        <td colspan="4">No topic activity recorded yet.</td>
+                    </tr>`;
+                if (rowCount) {
+                    rowCount.textContent = '0';
+                }
+                return;
+            }
+
+            topics.forEach((topic) => {
+                const row = document.createElement('tr');
+
+                const topicCell = document.createElement('td');
+                topicCell.textContent = topic.topic;
+
+                const subscribersCell = document.createElement('td');
+                subscribersCell.textContent = formatNumber(topic.subscriberCount);
+
+                const notificationsCell = document.createElement('td');
+                notificationsCell.textContent = formatNumber(topic.notificationCount);
+
+                const lastPostCell = document.createElement('td');
+                lastPostCell.textContent = formatDate(topic.lastNotificationAt);
+
+                row.appendChild(topicCell);
+                row.appendChild(subscribersCell);
+                row.appendChild(notificationsCell);
+                row.appendChild(lastPostCell);
+                tableBody.appendChild(row);
+            });
+
+            if (rowCount) {
+                rowCount.textContent = String(topics.length);
+            }
+        }
+
+        async function loadAnalytics() {
+            toggleAnalyticsLoading(true);
+            setAnalyticsPlaceholders();
+            try {
+                const [overview, topTopicsPayload, topicsPayload] = await Promise.all([
+                    fetchAnalytics('/services/notifying/api/analytics/overview'),
+                    fetchAnalytics('/services/notifying/api/analytics/top-topics?limit=10'),
+                    fetchAnalytics('/services/notifying/api/analytics/topics?limit=100'),
+                ]);
+
+                renderOverview(overview);
+                renderTopTopics((topTopicsPayload && topTopicsPayload.topics) || []);
+                renderTopicsTable((topicsPayload && topicsPayload.topics) || []);
+            } catch (error) {
+                showAlert('Error loading analytics: ' + error.message, 'error');
+            } finally {
+                toggleAnalyticsLoading(false);
+            }
+        }
 
         async function checkStatus() {
             try {
@@ -852,106 +794,186 @@
             }
         }
 
-        // Swagger UI setup
-        const spec = {
-            openapi: '3.0.0',
-            info: {
-                title: 'Notifying API',
-                description: 'REST API for notification operations',
-                version: '1.0.0'
-            },
-            servers: [
-                { url: '/services/notifying/api', description: 'Notifying API' }
-            ],
-            paths: {
-                '/send': {
-                    post: {
-                        summary: 'Send a notification',
-                        description: 'Sends a new notification',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: { type: 'object' },
-                                    example: { "channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification." }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Notification sent successfully',
-                                content: {
-                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
-                        }
-                    }
+        function initializeSwagger() {
+            const spec = {
+                openapi: '3.0.0',
+                info: {
+                    title: 'Notifying API',
+                    description: 'REST API for notification operations',
+                    version: '1.0.0',
                 },
-                '/status': {
-                    get: {
-                        summary: 'Service status',
-                        description: 'Check if the notifying service is running',
-                        responses: {
-                            '200': {
-                                description: 'Service is running',
+                servers: [{ url: '/services/notifying/api', description: 'Notifying API' }],
+                paths: {
+                    '/send': {
+                        post: {
+                            summary: 'Send a notification',
+                            description: 'Sends a new notification',
+                            requestBody: {
+                                required: true,
                                 content: {
                                     'application/json': {
-                                        schema: { type: 'string', example: 'notifying api running' }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
+                                        schema: { type: 'object' },
+                                        example: {
+                                            channel: 'email',
+                                            recipient: 'test@test.com',
+                                            subject: 'Hello!',
+                                            body: 'This is a test notification.',
+                                        },
+                                    },
+                                },
+                            },
+                            responses: {
+                                '200': {
+                                    description: 'Notification sent successfully',
+                                    content: {
+                                        'text/plain': { schema: { type: 'string', example: 'OK' } },
+                                    },
+                                },
+                                '500': {
+                                    description: 'Server error',
+                                    content: {
+                                        'text/plain': { schema: { type: 'string' } },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    '/status': {
+                        get: {
+                            summary: 'Service status',
+                            description: 'Check if the notifying service is running',
+                            responses: {
+                                '200': {
+                                    description: 'Service is running',
+                                    content: {
+                                        'application/json': {
+                                            schema: { type: 'string', example: 'notifying api running' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    '/analytics/overview': {
+                        get: {
+                            summary: 'Analytics overview',
+                            description: 'Retrieve summary analytics for topics and notifications',
+                            responses: {
+                                '200': {
+                                    description: 'Overview loaded',
+                                    content: {
+                                        'application/json': {
+                                            schema: { type: 'object' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
 
-        // Initialize Swagger UI
-        window.onload = function() {
-            checkStatus();
             try {
-            checkStatus();
-                const ui = SwaggerUIBundle({
-                    spec: spec,
+                SwaggerUIBundle({
+                    spec,
                     dom_id: '#swagger-ui',
                     deepLinking: true,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIBundle.presets.standalone
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
+                    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.presets.standalone],
+                    plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+                    layout: 'BaseLayout',
                     tryItOutEnabled: true,
-                    requestInterceptor: (request) => {
-                        // Add any headers or modify request if needed
-                        return request;
-                    },
-                    responseInterceptor: (response) => {
-                        // Handle response if needed
-                        return response;
-                    },
-                    onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
-                    },
-                    onFailure: (error) => {
-                        console.error('Swagger UI failed to load:', error);
-                    }
                 });
-
-                window.ui = ui;
             } catch (error) {
                 console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
+                const swaggerContainer = document.getElementById('swagger-ui');
+                if (swaggerContainer) {
+                    swaggerContainer.innerHTML =
+                        '<p class="text-danger">Error loading API documentation. Please refresh the page.</p>';
+                }
             }
-        };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendMessageInput = document.getElementById('sendMessage');
+            if (sendMessageInput) {
+                sendMessageInput.addEventListener('input', () => validateJSON('sendMessage'));
+            }
+
+            const formatButton = document.getElementById('formatSendButton');
+            if (formatButton) {
+                formatButton.addEventListener('click', () => {
+                    const element = document.getElementById('sendMessage');
+                    if (!element) {
+                        return;
+                    }
+                    try {
+                        const parsed = JSON.parse(element.value);
+                        element.value = JSON.stringify(parsed, null, 2);
+                        validateJSON('sendMessage');
+                    } catch (error) {
+                        showAlert('Invalid JSON cannot be formatted', 'error');
+                    }
+                });
+            }
+
+            const exampleButton = document.getElementById('exampleSendButton');
+            if (exampleButton) {
+                exampleButton.addEventListener('click', () => {
+                    const element = document.getElementById('sendMessage');
+                    if (!element) {
+                        return;
+                    }
+                    const example = {
+                        channel: 'sms',
+                        recipient: '+1234567890',
+                        body: 'Your package has been shipped!',
+                    };
+                    element.value = JSON.stringify(example, null, 2);
+                    validateJSON('sendMessage');
+                });
+            }
+
+            const sendForm = document.getElementById('sendForm');
+            if (sendForm) {
+                sendForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    if (!validateJSON('sendMessage')) {
+                        showAlert('Please enter a valid JSON notification message', 'error');
+                        return;
+                    }
+
+                    try {
+                        setLoading('sendForm', true);
+                        const payload = JSON.parse(document.getElementById('sendMessage').value);
+                        const result = await makeRequest('/services/notifying/api/send', 'POST', payload);
+                        showResponse('sendResponse', 'sendResponseContent', result);
+                        showAlert('Notification sent successfully');
+                    } catch (error) {
+                        showAlert('Error sending notification: ' + error.message, 'error');
+                        showResponse('sendResponse', 'sendResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('sendForm', false);
+                    }
+                });
+            }
+
+            const statusButton = document.getElementById('statusButton');
+            if (statusButton) {
+                statusButton.addEventListener('click', () => checkStatus());
+            }
+
+            const refreshButton = document.getElementById('analyticsRefreshButton');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', () => loadAnalytics());
+            }
+        });
+
+        window.addEventListener('load', () => {
+            loadAnalytics();
+            checkStatus();
+            initializeSwagger();
+        });
     </script>
 </body>
 </html>

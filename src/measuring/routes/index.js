@@ -18,9 +18,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} measuring - The measuring provider instance with metric methods
+ * @param {Object} analytics - Analytics module for measurement insights
  * @return {void}
  */
-module.exports = (options, eventEmitter, measuring) => {
+module.exports = (options, eventEmitter, measuring, analytics) => {
   if (options['express-app'] && measuring) {
     const app = options['express-app'];
 
@@ -34,15 +35,22 @@ module.exports = (options, eventEmitter, measuring) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/measuring/api/add', (req, res) => {
-      const {metric, value} = req.body;
-      if (metric && value) {
-        measuring
-          .add(metric, value)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
-      } else {
-        res.status(400).send('Bad Request: Missing metric or value');
+    app.post('/services/measuring/api/add', async (req, res) => {
+      const { metric, value } = req.body || {};
+
+      if (typeof metric !== 'string' || metric.trim() === '') {
+        return res.status(400).send('Bad Request: Missing metric');
+      }
+
+      if (value === undefined || value === null || Number.isNaN(Number(value))) {
+        return res.status(400).send('Bad Request: Missing or invalid value');
+      }
+
+      try {
+        await Promise.resolve(measuring.add(metric, Number(value)));
+        res.status(200).send('OK');
+      } catch (err) {
+        res.status(500).send(err.message);
       }
     });
 
@@ -57,14 +65,23 @@ module.exports = (options, eventEmitter, measuring) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/measuring/api/list/:metric/:datestart/:dateend',
-        (req, res) => {
-          measuring
-            .list(req.params.metric, new Date(req.params.datestart),
-                new Date(req.params.dateend))
-            .then((value) => res.status(200).json(value))
-            .catch((err) => res.status(500).send(err.message));
-        });
+    app.get(
+      '/services/measuring/api/list/:metric/:datestart/:dateend',
+      async (req, res) => {
+        try {
+          const measures = await Promise.resolve(
+            measuring.list(
+              req.params.metric,
+              new Date(req.params.datestart),
+              new Date(req.params.dateend)
+            )
+          );
+          res.status(200).json(measures);
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
+      }
+    );
 
     /**
      * GET /services/measuring/api/total/:metric/:datestart/:dateend
@@ -77,14 +94,23 @@ module.exports = (options, eventEmitter, measuring) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/measuring/api/total/:metric/:datestart/:dateend',
-        (req, res) => {
-          measuring
-            .total(req.params.metric, new Date(req.params.datestart),
-                new Date(req.params.dateend))
-            .then((value) => res.status(200).json(value))
-            .catch((err) => res.status(500).send(err.message));
-        });
+    app.get(
+      '/services/measuring/api/total/:metric/:datestart/:dateend',
+      async (req, res) => {
+        try {
+          const total = await Promise.resolve(
+            measuring.total(
+              req.params.metric,
+              new Date(req.params.datestart),
+              new Date(req.params.dateend)
+            )
+          );
+          res.status(200).json(total);
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
+      }
+    );
 
     /**
      * GET /services/measuring/api/average/:metric/:datestart/:dateend
@@ -97,14 +123,23 @@ module.exports = (options, eventEmitter, measuring) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/measuring/api/average/:metric/:datestart/:dateend',
-        (req, res) => {
-          measuring
-            .average(req.params.metric, new Date(req.params.datestart),
-                new Date(req.params.dateend))
-            .then((value) => res.status(200).json(value))
-            .catch((err) => res.status(500).send(err.message));
-        });
+    app.get(
+      '/services/measuring/api/average/:metric/:datestart/:dateend',
+      async (req, res) => {
+        try {
+          const average = await Promise.resolve(
+            measuring.average(
+              req.params.metric,
+              new Date(req.params.datestart),
+              new Date(req.params.dateend)
+            )
+          );
+          res.status(200).json(average);
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
+      }
+    );
 
     /**
      * GET /services/measuring/api/status
@@ -117,6 +152,49 @@ module.exports = (options, eventEmitter, measuring) => {
     app.get('/services/measuring/api/status', (req, res) => {
       eventEmitter.emit('api-measuring-status', 'measuring api running');
       res.status(200).json('measuring api running');
+    });
+
+    /**
+     * GET /services/measuring/api/analytics/summary
+     * Provides aggregate analytics for dashboard consumption.
+     *
+     * @param {express.Request} req
+     * @param {express.Response} res
+     * @return {void}
+     */
+    app.get('/services/measuring/api/analytics/summary', (req, res) => {
+      if (!analytics) {
+        return res.status(503).json({
+          error: 'Analytics module not available'
+        });
+      }
+
+      const countLimit = Number.parseInt(req.query.topLimit, 10);
+      const recentLimit = Number.parseInt(req.query.recentLimit, 10);
+      const historyLimit = Number.parseInt(req.query.historyLimit, 10);
+
+      try {
+        res.status(200).json({
+          totals: {
+            uniqueMetrics: analytics.getUniqueMetricCount(),
+            totalMeasurements: analytics.getMeasurementCount()
+          },
+          topByActivity: analytics.getTopMetricsByCount(
+            Number.isNaN(countLimit) ? 10 : Math.min(countLimit, 100)
+          ),
+          topByRecency: analytics.getTopMetricsByRecency(
+            Number.isNaN(recentLimit) ? 100 : Math.min(recentLimit, 250)
+          ),
+          recentHistory: analytics.getRecentHistory(
+            Number.isNaN(historyLimit) ? 25 : Math.min(historyLimit, 250)
+          )
+        });
+      } catch (err) {
+        res.status(500).json({
+          error: 'Failed to generate analytics summary',
+          message: err.message
+        });
+      }
     });
   }
 };

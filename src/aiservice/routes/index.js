@@ -17,9 +17,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} aiService - The AI provider instance
+ * @param {Object=} analytics - Prompt analytics module instance
  * @return {void}
  */
-module.exports = (options, eventEmitter, aiService) => {
+module.exports = (options, eventEmitter, aiService, analytics) => {
   if (options['express-app'] && aiService) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
@@ -53,17 +54,63 @@ module.exports = (options, eventEmitter, aiService) => {
           });
         }
 
-        const { prompt, options = {} } = req.body;
+        const { prompt, options = {}, username } = req.body;
 
         if (!prompt || typeof prompt !== 'string') {
           return res.status(400).json({ error: 'Prompt is required and must be a string' });
         }
 
-        const response = await aiService.prompt(prompt, options);
-        eventEmitter.emit('api-ai-prompt', { prompt, response });
+        const effectiveUsername =
+          (username && String(username).trim()) ||
+          (options && typeof options.username === 'string' && options.username.trim()) ||
+          (req.user && req.user.username) ||
+          'anonymous';
+
+        const promptOptions = {
+          ...options,
+          username: effectiveUsername
+        };
+
+        const response = await aiService.prompt(prompt, promptOptions);
+
+        const usage = response?.usage || {};
+        const promptTokens =
+          usage.promptTokens ?? usage.prompt_tokens ?? usage.inputTokens ?? usage.input_tokens ?? 0;
+        const completionTokens =
+          usage.completionTokens ?? usage.completion_tokens ?? usage.outputTokens ?? usage.output_tokens ?? 0;
+        const totalTokens =
+          usage.totalTokens ?? usage.total_tokens ?? promptTokens + completionTokens;
+
+        if (analytics) {
+          analytics.recordPrompt({
+            prompt,
+            username: effectiveUsername,
+            promptTokens,
+            completionTokens,
+            totalTokens,
+            model: response?.model || promptOptions.model || null,
+            provider: response?.provider || aiService.constructor.name || null,
+            timestamp: Date.now()
+          });
+        }
+
+        if (eventEmitter) {
+          eventEmitter.emit('ai:prompt:complete', {
+            prompt,
+            username: effectiveUsername,
+            usage,
+            model: response?.model,
+            provider: response?.provider,
+            response
+          });
+          eventEmitter.emit('api-ai-prompt', { prompt, username: effectiveUsername, response });
+        }
+
         res.status(200).json(response);
       } catch (error) {
-        eventEmitter.emit('api-ai-error', { error: error.message });
+        if (eventEmitter) {
+          eventEmitter.emit('api-ai-error', { error: error.message });
+        }
         res.status(500).json({ error: error.message });
       }
     });
@@ -74,11 +121,29 @@ module.exports = (options, eventEmitter, aiService) => {
      */
     app.get('/services/ai/api/analytics', (req, res) => {
       try {
-        const analytics = aiService.getAnalytics();
-        eventEmitter.emit('api-ai-analytics', analytics);
-        res.status(200).json(analytics);
+        const limit = parseInt(req.query.limit, 10);
+        const recentLimit = parseInt(req.query.recentLimit, 10);
+        let payload;
+
+        if (analytics) {
+          payload = analytics.getAnalytics({
+            limit: Number.isNaN(limit) ? undefined : limit,
+            recentLimit: Number.isNaN(recentLimit) ? undefined : recentLimit
+          });
+        } else if (typeof aiService.getAnalytics === 'function') {
+          payload = aiService.getAnalytics();
+        } else {
+          payload = {};
+        }
+
+        if (eventEmitter) {
+          eventEmitter.emit('api-ai-analytics', payload);
+        }
+        res.status(200).json(payload);
       } catch (error) {
-        eventEmitter.emit('api-ai-error', { error: error.message });
+        if (eventEmitter) {
+          eventEmitter.emit('api-ai-error', { error: error.message });
+        }
         res.status(500).json({ error: error.message });
       }
     });

@@ -926,6 +926,9 @@
                                             <th class="sortable" onclick="sortTable('term')">
                                                 <span id="sort-term">Search Term</span>
                                             </th>
+                                            <th class="sortable" onclick="sortTable('index')">
+                                                <span id="sort-index">Index</span>
+                                            </th>
                                             <th class="sortable" onclick="sortTable('callCount')">
                                                 <span id="sort-callCount">Call Count</span>
                                             </th>
@@ -939,7 +942,7 @@
                                     </thead>
                                     <tbody id="analyticsTableBody">
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted py-4">
+                                            <td colspan="5" class="text-center text-muted py-4">
                                                 <div class="spinner-border spinner-border-sm me-2" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
@@ -1541,6 +1544,12 @@
                     return currentSort.direction === 'asc'
                         ? aVal.localeCompare(bVal)
                         : bVal.localeCompare(aVal);
+                } else if (column === 'index') {
+                    aVal = (a.index || '').toString();
+                    bVal = (b.index || '').toString();
+                    return currentSort.direction === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
                 } else if (column === 'lastCalled') {
                     aVal = a.lastCalled ? new Date(a.lastCalled).getTime() : 0;
                     bVal = b.lastCalled ? new Date(b.lastCalled).getTime() : 0;
@@ -1562,7 +1571,7 @@
             if (!analyticsData || analyticsData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
+                        <td colspan="5" class="text-center text-muted py-4">
                             <i class="bi bi-info-circle fs-4"></i>
                             <p class="mb-0 mt-2">No analytics data available</p>
                         </td>
@@ -1574,10 +1583,12 @@
             // Build table rows
             const rows = analyticsData.map(item => {
                 const lastCalled = item.lastCalled ? new Date(item.lastCalled).toLocaleString() : 'N/A';
+                const indexName = item.index ? escapeHtml(item.index) : 'default';
 
                 return `
                     <tr>
                         <td class="key-cell">${escapeHtml(item.term)}</td>
+                        <td class="key-cell">${indexName}</td>
                         <td class="hits-cell">${item.callCount || 0}</td>
                         <td class="hits-cell">${item.totalResults || 0}</td>
                         <td class="date-cell">${lastCalled}</td>
@@ -1594,7 +1605,7 @@
             // Show loading state
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
+                    <td colspan="5" class="text-center text-muted py-4">
                         <div class="spinner-border spinner-border-sm me-2" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -1608,14 +1619,17 @@
 
             if (data) {
                 updateStatsCards(data);
-                analyticsData = data.searchTerms || [];
+                analyticsData = (data.searchTerms || []).map(entry => ({
+                    ...entry,
+                    index: entry.index || (data.operations && data.operations.index) || 'default'
+                }));
 
                 // Sort by call count by default
                 sortTable('callCount');
             } else {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center text-danger py-4">
+                        <td colspan="5" class="text-center text-danger py-4">
                             <i class="bi bi-exclamation-triangle fs-4"></i>
                             <p class="mb-0 mt-2">Error loading analytics data. Make sure authToken is set in localStorage.</p>
                         </td>

@@ -15,130 +15,225 @@
  */
 class SearchingAnalytics {
   constructor() {
-    // Map to store search term analytics: searchTerm -> { term, count, totalResults, lastCalled }
-    this.searchTerms = new Map();
-
-    // Operation counters
-    this.operations = {
-      adds: 0,
-      reads: 0,
-      deletes: 0,
-      searches: 0
-    };
+    /** @private @type {Map<string, {operations: Object, searchTerms: Map<string, Object>}>} */
+    this.analyticsByIndex_ = new Map();
   }
 
   /**
-   * Track an add operation
+   * Ensures analytics storage exists for an index.
+   * @param {string} indexName
+   * @return {{operations: Object, searchTerms: Map<string, Object>}}
+   * @private
    */
-  trackAdd() {
-    this.operations.adds++;
+  getIndexAnalytics_(indexName) {
+    const resolved = this.normalizeIndex_(indexName);
+    if (!this.analyticsByIndex_.has(resolved)) {
+      this.analyticsByIndex_.set(resolved, {
+        operations: { adds: 0, reads: 0, deletes: 0, searches: 0 },
+        searchTerms: new Map()
+      });
+    }
+    return this.analyticsByIndex_.get(resolved);
   }
 
   /**
-   * Track a read operation
+   * Normalizes an index name to a consistent string.
+   * @param {string=} indexName
+   * @return {string}
+   * @private
    */
-  trackRead() {
-    this.operations.reads++;
+  normalizeIndex_(indexName) {
+    if (typeof indexName === 'string') {
+      const trimmed = indexName.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+    return 'default';
   }
 
   /**
-   * Track a delete operation
+   * Updates counters for a specific operation.
+   * @param {string} field
+   * @param {string=} indexName
+   * @private
    */
-  trackDelete() {
-    this.operations.deletes++;
+  incrementOperation_(field, indexName) {
+    const analytics = this.getIndexAnalytics_(indexName);
+    analytics.operations[field]++;
+  }
+
+  trackAdd(indexName) {
+    this.incrementOperation_('adds', indexName);
+  }
+
+  trackRead(indexName) {
+    this.incrementOperation_('reads', indexName);
+  }
+
+  trackDelete(indexName) {
+    this.incrementOperation_('deletes', indexName);
+  }
+
+  trackSearch(searchTerm, resultCount = 0, indexName) {
+    if (!searchTerm) {
+      return;
+    }
+
+    this.incrementOperation_('searches', indexName);
+    this.updateSearchTermStats_(searchTerm, resultCount, indexName);
   }
 
   /**
-   * Track a search operation
-   * @param {string} searchTerm - The search term used
-   * @param {number} resultCount - Number of results returned
+   * Updates search term statistics for a specific index key.
+   * @param {string} searchTerm
+   * @param {number} resultCount
+   * @param {string=} indexName
+   * @private
    */
-  trackSearch(searchTerm, resultCount = 0) {
-    if (!searchTerm) return;
-
-    this.operations.searches++;
-
-    // Normalize search term (trim and lowercase for consistency)
+  updateSearchTermStats_(searchTerm, resultCount, indexName) {
     const normalizedTerm = searchTerm.trim().toLowerCase();
+    const resolvedIndex = this.normalizeIndex_(indexName);
+    const analyticsBucket = this.getIndexAnalytics_(resolvedIndex);
+    const termMap = analyticsBucket.searchTerms;
 
-    if (!this.searchTerms.has(normalizedTerm)) {
-      this.searchTerms.set(normalizedTerm, {
-        term: searchTerm.trim(), // Keep original case for display
+    if (!termMap.has(normalizedTerm)) {
+      termMap.set(normalizedTerm, {
+        term: searchTerm.trim(),
+        callCount: 0,
         count: 0,
         totalResults: 0,
-        lastCalled: new Date().toISOString()
+        lastCalled: null,
+        index: resolvedIndex
       });
     }
 
-    const stats = this.searchTerms.get(normalizedTerm);
-    stats.count++;
-    stats.totalResults += resultCount;
+    const stats = termMap.get(normalizedTerm);
+    stats.callCount++;
+    stats.count = stats.callCount;
+    stats.totalResults += resultCount || 0;
     stats.lastCalled = new Date().toISOString();
   }
 
   /**
-   * Get search term analytics sorted by count
-   * @param {number} [limit=100] - Maximum number of entries to return
-   * @return {Array<Object>} Array of search term analytics objects
+   * Gets search term analytics.
+   * @param {number=} limit
+   * @param {string=} indexName
+   * @return {Array<Object>}
    */
-  getSearchTermAnalytics(limit = 100) {
-    // Convert map to array
-    const analyticsArray = Array.from(this.searchTerms.values());
+  getSearchTermAnalytics(limit = 100, indexName) {
+    const effectiveLimit = Number.isInteger(limit) && limit > 0 ? limit : 100;
+    let analyticsArray = [];
 
-    // Sort by count descending
-    analyticsArray.sort((a, b) => b.count - a.count);
+    if (indexName) {
+      const termsMap = this.getIndexAnalytics_(indexName).searchTerms;
+      analyticsArray = Array.from(termsMap.values());
+    } else {
+      this.analyticsByIndex_.forEach((bucket, idxName) => {
+        bucket.searchTerms.forEach((value) => {
+          analyticsArray.push({
+            term: value.term,
+            callCount: value.callCount,
+            count: value.callCount,
+            totalResults: value.totalResults,
+            lastCalled: value.lastCalled,
+            index: idxName
+          });
+        });
+      });
+    }
 
-    // Return top entries up to the limit
-    return analyticsArray.slice(0, limit);
+    analyticsArray.sort((a, b) => b.callCount - a.callCount);
+    return analyticsArray.slice(0, effectiveLimit);
   }
 
   /**
-   * Get operation statistics
-   * @return {Object} Statistics object
+   * Gets operation statistics.
+   * @param {string=} indexName
+   * @return {Object}
    */
-  getOperationStats() {
+  getOperationStats(indexName) {
+    if (indexName) {
+      const normalized = this.normalizeIndex_(indexName);
+      const data = this.getIndexAnalytics_(normalized);
+      return {
+        ...data.operations,
+        totalSearchTerms: data.searchTerms.size,
+        index: normalized
+      };
+    }
+
+    const aggregate = { adds: 0, reads: 0, deletes: 0, searches: 0 };
+    let termCount = 0;
+
+    this.analyticsByIndex_.forEach((bucket) => {
+      aggregate.adds += bucket.operations.adds;
+      aggregate.reads += bucket.operations.reads;
+      aggregate.deletes += bucket.operations.deletes;
+      aggregate.searches += bucket.operations.searches;
+      termCount += bucket.searchTerms.size;
+    });
+
     return {
-      ...this.operations,
-      totalSearchTerms: this.searchTerms.size
+      ...aggregate,
+      totalSearchTerms: termCount
     };
   }
 
   /**
-   * Get all analytics data
-   * @return {Object} Complete analytics data
+   * Gets combined analytics payload.
+   * @param {Object=} options
+   * @param {string=} options.searchContainer
+   * @param {number=} options.limit
+   * @return {Object}
    */
-  getAllAnalytics() {
+  getAllAnalytics(options = {}) {
+    const { searchContainer, limit } = options;
     return {
-      operations: this.getOperationStats(),
-      searchTerms: this.getSearchTermAnalytics(100)
+      operations: this.getOperationStats(searchContainer),
+      searchTerms: this.getSearchTermAnalytics(limit, searchContainer),
+      indexes: this.getIndexSummaries_()
     };
   }
 
   /**
-   * Clear all analytics data
+   * Provides lightweight per-index summary metadata.
+   * @return {Array<Object>}
+   * @private
    */
+  getIndexSummaries_() {
+    const summaries = [];
+    this.analyticsByIndex_.forEach((bucket, idxName) => {
+      summaries.push({
+        index: idxName,
+        operations: { ...bucket.operations },
+        totalSearchTerms: bucket.searchTerms.size
+      });
+    });
+    return summaries;
+  }
+
   clear() {
-    this.searchTerms.clear();
-    this.operations = {
-      adds: 0,
-      reads: 0,
-      deletes: 0,
-      searches: 0
-    };
+    this.analyticsByIndex_.clear();
   }
 
-  /**
-   * Get analytics for a specific search term
-   * @param {string} searchTerm - The search term to get analytics for
-   * @return {Object|null} Analytics object or null if not found
-   */
-  getTermAnalytics(searchTerm) {
+  getTermAnalytics(searchTerm, indexName) {
+    if (!searchTerm) {
+      return null;
+    }
     const normalizedTerm = searchTerm.trim().toLowerCase();
-    return this.searchTerms.get(normalizedTerm) || null;
+    if (indexName) {
+      const bucket = this.getIndexAnalytics_(indexName).searchTerms;
+      return bucket.get(normalizedTerm) || null;
+    }
+
+    for (const bucket of this.analyticsByIndex_.values()) {
+      if (bucket.searchTerms.has(normalizedTerm)) {
+        return bucket.searchTerms.get(normalizedTerm);
+      }
+    }
+    return null;
   }
 }
 
-// Create singleton instance
-const searchingAnalytics = new SearchingAnalytics();
-
-module.exports = searchingAnalytics;
+module.exports = new SearchingAnalytics();

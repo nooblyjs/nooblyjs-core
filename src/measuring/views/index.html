@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +9,6 @@
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
     <style>
-        /* Custom CSS for professional look */
         :root {
             --custom-primary: #0066cc;
             --custom-secondary: #6c757d;
@@ -22,8 +20,12 @@
             background-color: #f8f9fa;
         }
 
+        .app-container {
+            display: flex;
+        }
+
         .sidebar {
-            background-color: white;
+            background-color: #fff;
             border-right: 1px solid #dee2e6;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             width: 280px;
@@ -32,83 +34,8 @@
             flex-direction: column;
         }
 
-        .logo {
-            color: var(--custom-primary);
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .logo .subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .nav-section-header {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            color: #212529;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid #f8f9fa;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            background-color: #f8f9fa;
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            background-color: var(--custom-primary);
-            color: white;
-            border-left-color: #0052a3;
-        }
-
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: auto;
-        }
-
-        .status-dot.online {
-            background-color: var(--custom-success);
-        }
-
-        .status-dot.offline {
-            background-color: var(--custom-danger);
-        }
-
         .main-content {
-            background-color: white;
+            background-color: #fff;
             min-height: 100vh;
             flex: 1;
             padding: 2rem;
@@ -133,11 +60,6 @@
             font-size: 1.125rem;
         }
 
-        .app-container {
-            display: flex;
-        }
-
-        /* Alert Styles */
         .alert {
             padding: 1rem;
             margin-bottom: 1rem;
@@ -162,9 +84,8 @@
             border-color: #f5c2c7;
         }
 
-        /* Card Styles */
         .card {
-            background-color: white;
+            background-color: #fff;
             border: 1px solid #dee2e6;
             border-radius: 0.375rem;
             margin-bottom: 1.5rem;
@@ -195,414 +116,130 @@
             padding: 1.5rem;
         }
 
-        /* Form Styles */
+        .metrics-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .metrics-summary .summary-item {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .metrics-summary .summary-item h5 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-summary .summary-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--custom-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-summary .summary-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
         .form-group {
             margin-bottom: 1rem;
         }
 
         .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #212529;
+            font-weight: 600;
         }
 
         .form-input {
-            display: block;
             width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #212529;
-            background-color: white;
+            padding: 0.625rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .form-input:focus {
-            color: #212529;
-            background-color: white;
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            font-size: 1rem;
         }
 
         .form-textarea {
-            min-height: 100px;
-            resize: vertical;
+            min-height: 120px;
         }
 
         .helper-text {
-            margin-top: 0.25rem;
             font-size: 0.875rem;
             color: #6c757d;
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #212529;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .btn:hover {
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            color: white;
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        .btn-primary:hover {
-            color: white;
-            background-color: #0052a3;
-            border-color: #004785;
-        }
-
-        .btn-secondary {
-            color: white;
-            background-color: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-        }
-
-        .btn-secondary:hover {
-            color: white;
-            background-color: #565e64;
-            border-color: #4c5258;
-        }
-
-        .btn-error {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-error:hover {
-            color: white;
-            background-color: #bb2d3b;
-            border-color: #b02a37;
+            margin-top: 0.25rem;
         }
 
         .btn-group {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 1rem;
         }
 
-        /* Response Styles */
         .response-container {
             margin-top: 1rem;
             padding: 1rem;
             background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
             border-radius: 0.375rem;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', Courier, monospace;
         }
 
         .response-title {
             font-weight: 600;
-            color: #212529;
             margin-bottom: 0.5rem;
         }
 
         .response-content {
-            background-color: white;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
             white-space: pre-wrap;
-            word-break: break-all;
+            word-break: break-word;
+            margin: 0;
+            font-size: 0.95rem;
         }
 
-        /* Validation Styles */
-        .validation-message {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-        }
-
-        .validation-success {
-            color: var(--custom-success);
-        }
-
-        .validation-error {
-            color: var(--custom-danger);
-        }
-
-        .json-valid {
-            border-color: var(--custom-success);
-        }
-
-        .json-invalid {
-            border-color: var(--custom-danger);
-        }
-
-        /* Loading States */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Analytics Table Styles (for caching service) */
-        .analytics-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .analytics-info {
+        table th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
             color: #6c757d;
-            font-size: 0.875rem;
         }
 
-        .analytics-refresh {
-            background-color: var(--custom-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh:hover {
-            background-color: #0052a3;
-        }
-
-        .analytics-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .analytics-table th,
-        .analytics-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .analytics-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .sortable:hover {
-            background-color: #e9ecef;
-        }
-
-        .sort-asc::after {
-            content: " ↑";
-        }
-
-        .sort-desc::after {
-            content: " ↓";
-        }
-
-        .no-data {
+        .loading-row {
             text-align: center;
             color: #6c757d;
-            font-style: italic;
-        }
-
-        .key-cell {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-        }
-
-        .hits-cell {
-            font-weight: 600;
-            color: var(--custom-primary);
-        }
-
-        .date-cell {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        /* Swagger UI Integration Styles */
-        #swagger-ui {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        #swagger-ui .swagger-ui {
-            max-width: none;
         }
 
         #swagger-ui .topbar {
             display: none;
         }
 
-        #swagger-ui .info {
-            margin: 20px 0;
-        }
-
         #swagger-ui .info .title {
             font-size: 1.5rem;
-            color: var(--custom-primary);
         }
 
-        #swagger-ui .scheme-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        #swagger-ui .opblock-tag {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        #swagger-ui .opblock {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        #swagger-ui .opblock.is-open .opblock-summary {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        #swagger-ui .opblock .opblock-summary-method {
-            border-radius: 0.375rem;
-            font-weight: 600;
-        }
-
-        #swagger-ui .opblock.opblock-post .opblock-summary-method {
-            background: var(--custom-success);
-        }
-
-        #swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: var(--custom-primary);
-        }
-
-        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
-            background: var(--custom-danger);
-        }
-
-        #swagger-ui .opblock.opblock-put .opblock-summary-method {
-            background: #fd7e14;
-        }
-
-        #swagger-ui .btn {
-            border-radius: 0.375rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        #swagger-ui .btn.execute {
-            background: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        #swagger-ui .btn.execute:hover {
-            background: #0052a3;
-            border-color: #004785;
-        }
-
-        #swagger-ui .btn.btn-clear {
-            background: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-            color: white;
-        }
-
-        #swagger-ui .btn.btn-clear:hover {
-            background: #565e64;
-            border-color: #4c5258;
-        }
-
-        #swagger-ui .parameters-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        #swagger-ui .parameter__name {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui input[type="text"],
-        #swagger-ui textarea,
-        #swagger-ui select {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        #swagger-ui input[type="text"]:focus,
-        #swagger-ui textarea:focus,
-        #swagger-ui select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: 0;
-        }
-
-        #swagger-ui .response-col_status {
-            font-weight: 600;
-        }
-
-        #swagger-ui .response-col_status.response-undocumented {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .response .response-col_status {
-            color: var(--custom-success);
-        }
-
-        #swagger-ui .responses-inner h4 {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui .highlight-code {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model .property {
-            color: var(--custom-primary);
+        #swagger-ui .info p,
+        #swagger-ui .info li {
+            font-size: 0.95rem;
         }
 
         #swagger-ui .prop-type {
             color: var(--custom-secondary);
         }
 
-        /* Ensure proper responsiveness */
         #swagger-ui .wrapper {
             max-width: 100%;
             overflow-x: auto;
@@ -613,7 +250,6 @@
             width: 100%;
         }
 
-        /* Fix potential z-index issues */
         #swagger-ui .dialog-ux {
             z-index: 1050;
         }
@@ -621,6 +257,31 @@
         #swagger-ui .model-box-control:focus {
             outline: 2px solid var(--custom-primary);
             outline-offset: 2px;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--custom-primary);
+            border-bottom-color: var(--custom-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--custom-primary);
+            background-color: transparent;
+            border-bottom-color: var(--custom-primary);
         }
     </style>
 </head>
@@ -633,7 +294,7 @@
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Measuring Management</h1>
-                <p class="page-subtitle">Record and analyze measurements</p>
+                <p class="page-subtitle">Track and analyze metrics activity</p>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -644,72 +305,187 @@
                 <strong>Error!</strong> <span id="errorMessage"></span>
             </div>
 
-            <!-- Record Measurement Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Record Measurement</h2>
-                    <p class="card-subtitle">Record a new measurement value</p>
-                </div>
-                <div class="card-content">
-                    <form id="measureForm">
-                        <div class="form-group">
-                            <label class="form-label" for="measureName">Name</label>
-                            <input type="text" id="measureName" class="form-input" placeholder="Enter measurement name" required>
-                            <div class="helper-text">Unique name for the measurement (e.g., response_time)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="measureValue">Value</label>
-                            <input type="number" id="measureValue" class="form-input" placeholder="Enter measurement value" required>
-                            <div class="helper-text">The numeric value of the measurement</div>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Record Measurement</button>
-                        </div>
-                    </form>
-                    <div id="measureResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="measureResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <ul class="nav nav-tabs mb-4" id="measuringTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+            </ul>
 
-            <!-- Status Check -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check measuring service status</p>
-                </div>
-                <div class="card-content">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
-                    </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
-                    </div>
-                </div>
-            </div>
+            <div class="tab-content" id="measuringTabContent">
 
-            <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Measuring service</p>
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h2 class="card-title">Metrics Overview</h2>
+                                    <p class="card-subtitle">Live insight into measurement capture activity</p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="spinner-border spinner-border-sm text-secondary d-none" id="dashboardSpinner" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="metrics-summary">
+                                <div class="summary-item">
+                                    <h5>Total Measurements</h5>
+                                    <div class="summary-value" id="totalMeasurements">0</div>
+                                    <div class="summary-meta">All metrics captured since startup</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Unique Metrics</h5>
+                                    <div class="summary-value" id="totalUniqueMetrics">0</div>
+                                    <div class="summary-meta">Distinct metric names observed</div>
+                                </div>
+                                <div class="summary-item">
+                                    <h5>Last Captured Metric</h5>
+                                    <div class="summary-value" id="lastMetricName">—</div>
+                                    <div class="summary-meta" id="lastMetricTimestamp">No activity recorded</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Top Metrics by Activity</h2>
+                                    <p class="card-subtitle">Most frequently captured metrics (top 10)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="list-group list-group-flush" id="topMetricsList">
+                                <div class="list-group-item loading-row">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading metrics...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="card-title">Top Metrics (Last Activity)</h2>
+                                    <p class="card-subtitle">Latest 100 metrics ordered by last capture time</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Metric Name</th>
+                                            <th>Count of Metrics</th>
+                                            <th>Date Last Captured</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="metricsTableBody">
+                                        <tr class="loading-row">
+                                            <td colspan="3">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading metrics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="metricsRowCount">0</span> metrics displayed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div id="swagger-ui"></div>
+
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Record Measurement</h2>
+                            <p class="card-subtitle">Record a new measurement value</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="measureForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="measureName">Name</label>
+                                    <input type="text" id="measureName" class="form-input" placeholder="Enter measurement name" required>
+                                    <div class="helper-text">Unique name for the measurement (e.g., response_time)</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="measureValue">Value</label>
+                                    <input type="number" id="measureValue" class="form-input" placeholder="Enter measurement value" required>
+                                    <div class="helper-text">The numeric value of the measurement</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Record Measurement</button>
+                                </div>
+                            </form>
+                            <div id="measureResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="measureResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check measuring service status</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                            </div>
+                            <div id="statusResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">API Documentation</h2>
+                            <p class="card-subtitle">Interactive API documentation for Measuring service</p>
+                        </div>
+                        <div class="card-content">
+                            <div id="swagger-ui"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
     <script>
         NooblyNavigation.renderNavigation('navigation-sidebar', 'measuring');
     </script>
     <script>
-        // Utility functions
         function showAlert(message, type = 'success') {
             const alertElement = document.getElementById(type + 'Alert');
             const messageElement = document.getElementById(type + 'Message');
@@ -727,6 +503,7 @@
 
         function setLoading(formId, isLoading) {
             const form = document.getElementById(formId);
+            if (!form) return;
             if (isLoading) {
                 form.classList.add('loading');
             } else {
@@ -734,41 +511,162 @@
             }
         }
 
-        // API functions
+        function toggleDashboardSpinner(isLoading) {
+            const spinner = document.getElementById('dashboardSpinner');
+            if (!spinner) return;
+            spinner.classList.toggle('d-none', !isLoading);
+        }
+
         async function makeRequest(url, method = 'GET', body = null) {
             const options = {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             };
-            
+
             if (body) {
                 options.body = JSON.stringify(body);
             }
-            
+
             const response = await fetch(url, options);
             const contentType = response.headers.get('content-type');
-            
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error(errorMessage || 'Request failed');
+            }
+
             if (contentType && contentType.includes('application/json')) {
                 return await response.json();
-            } else {
-                return await response.text();
+            }
+
+            return await response.text();
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) {
+                return '—';
+            }
+            const date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) {
+                return '—';
+            }
+            return date.toLocaleString();
+        }
+
+        async function refreshDashboard() {
+            toggleDashboardSpinner(true);
+
+            const topMetricsList = document.getElementById('topMetricsList');
+            const metricsTableBody = document.getElementById('metricsTableBody');
+            const metricsRowCount = document.getElementById('metricsRowCount');
+
+            if (topMetricsList) {
+                topMetricsList.innerHTML = `
+                    <div class="list-group-item loading-row">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading metrics...
+                    </div>
+                `;
+            }
+
+            if (metricsTableBody) {
+                metricsTableBody.innerHTML = `
+                    <tr class="loading-row">
+                        <td colspan="3">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading metrics...
+                        </td>
+                    </tr>
+                `;
+            }
+
+            try {
+                const summary = await makeRequest('/services/measuring/api/analytics/summary');
+
+                document.getElementById('totalMeasurements').textContent = summary?.totals?.totalMeasurements ?? 0;
+                document.getElementById('totalUniqueMetrics').textContent = summary?.totals?.uniqueMetrics ?? 0;
+
+                const mostRecentMetric = summary?.topByRecency?.[0];
+                document.getElementById('lastMetricName').textContent = mostRecentMetric?.metric ?? '—';
+                document.getElementById('lastMetricTimestamp').textContent = mostRecentMetric
+                    ? `Last captured ${formatDate(mostRecentMetric.lastCaptured)}`
+                    : 'No activity recorded';
+
+                if (topMetricsList) {
+                    const topMetrics = summary?.topByActivity ?? [];
+                    if (topMetrics.length === 0) {
+                        topMetricsList.innerHTML = `
+                            <div class="list-group-item">
+                                <span>No metrics recorded yet.</span>
+                            </div>
+                        `;
+                    } else {
+                        topMetricsList.innerHTML = topMetrics.map((metric, index) => `
+                            <div class="list-group-item">
+                                <div>
+                                    <strong>${index + 1}. ${metric.metric}</strong>
+                                    <div class="metric-meta">Last captured ${formatDate(metric.lastCaptured)}</div>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">${metric.count}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                if (metricsTableBody) {
+                    const recentMetrics = summary?.topByRecency ?? [];
+                    if (recentMetrics.length === 0) {
+                        metricsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No metrics recorded yet.</td>
+                            </tr>
+                        `;
+                    } else {
+                        metricsTableBody.innerHTML = recentMetrics.map((metric) => `
+                            <tr>
+                                <td>${metric.metric}</td>
+                                <td>${metric.count}</td>
+                                <td>${formatDate(metric.lastCaptured)}</td>
+                            </tr>
+                        `).join('');
+                    }
+                    metricsRowCount.textContent = recentMetrics.length;
+                }
+            } catch (error) {
+                showAlert('Failed to load analytics: ' + error.message, 'error');
+            } finally {
+                toggleDashboardSpinner(false);
             }
         }
 
-        // Form handlers
         document.getElementById('measureForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const name = document.getElementById('measureName').value;
-            const value = document.getElementById('measureValue').value;
-            
+
+            const name = document.getElementById('measureName').value.trim();
+            const value = Number(document.getElementById('measureValue').value);
+
+            if (!name) {
+                showAlert('Metric name is required', 'error');
+                return;
+            }
+
+            if (Number.isNaN(value)) {
+                showAlert('Metric value must be numeric', 'error');
+                return;
+            }
+
             try {
                 setLoading('measureForm', true);
-                const result = await makeRequest(`/services/measuring/api/measure`, 'POST', { name, value });
+                const result = await makeRequest('/services/measuring/api/add', 'POST', { metric: name, value });
                 showResponse('measureResponse', 'measureResponseContent', result);
                 showAlert(`Measurement recorded successfully for: ${name}`);
+                refreshDashboard();
             } catch (error) {
                 showAlert('Error recording measurement: ' + error.message, 'error');
                 showResponse('measureResponse', 'measureResponseContent', 'Error: ' + error.message);
@@ -788,7 +686,6 @@
             }
         }
 
-        // Swagger UI setup
         const spec = {
             openapi: '3.0.0',
             info: {
@@ -800,10 +697,10 @@
                 { url: '/services/measuring/api', description: 'Measuring API' }
             ],
             paths: {
-                '/measure': {
+                '/add': {
                     post: {
                         summary: 'Record a measurement',
-                        description: 'Records a new measurement value for a given name',
+                        description: 'Records a new measurement value for a given metric name',
                         requestBody: {
                             required: true,
                             content: {
@@ -811,11 +708,12 @@
                                     schema: {
                                         type: 'object',
                                         properties: {
-                                            name: { type: 'string' },
+                                            metric: { type: 'string' },
                                             value: { type: 'number' }
-                                        }
+                                        },
+                                        required: ['metric', 'value']
                                     },
-                                    example: { "name": "response_time", "value": 250 }
+                                    example: { "metric": "response_time", "value": 250 }
                                 }
                             }
                         },
@@ -826,11 +724,11 @@
                                     'text/plain': { schema: { type: 'string', example: 'OK' } }
                                 }
                             },
+                            '400': {
+                                description: 'Bad request'
+                            },
                             '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
+                                description: 'Server error'
                             }
                         }
                     }
@@ -850,50 +748,108 @@
                             }
                         }
                     }
+                },
+                '/analytics/summary': {
+                    get: {
+                        summary: 'Analytics summary',
+                        description: 'Retrieves dashboard data including top metrics and totals',
+                        parameters: [
+                            {
+                                name: 'topLimit',
+                                in: 'query',
+                                schema: { type: 'integer', minimum: 1, maximum: 100 },
+                                required: false,
+                                description: 'Maximum number of top metrics to return (default 10)'
+                            },
+                            {
+                                name: 'recentLimit',
+                                in: 'query',
+                                schema: { type: 'integer', minimum: 1, maximum: 250 },
+                                required: false,
+                                description: 'Maximum number of recent metrics to return (default 100)'
+                            }
+                        ],
+                        responses: {
+                            '200': {
+                                description: 'Analytics summary payload',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                totals: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        uniqueMetrics: { type: 'integer' },
+                                                        totalMeasurements: { type: 'integer' }
+                                                    }
+                                                },
+                                                topByActivity: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            metric: { type: 'string' },
+                                                            count: { type: 'integer' },
+                                                            lastCaptured: { type: 'string', format: 'date-time' }
+                                                        }
+                                                    }
+                                                },
+                                                topByRecency: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            metric: { type: 'string' },
+                                                            count: { type: 'integer' },
+                                                            lastCaptured: { type: 'string', format: 'date-time' }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        example: {
+                                            totals: { uniqueMetrics: 5, totalMeasurements: 123 },
+                                            topByActivity: [
+                                                { metric: 'response_time', count: 42, lastCaptured: '2024-06-01T12:30:00.000Z' }
+                                            ],
+                                            topByRecency: [
+                                                { metric: 'payload_size', count: 10, lastCaptured: '2024-06-01T12:45:00.000Z' }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            '503': {
+                                description: 'Analytics module unavailable'
+                            },
+                            '500': {
+                                description: 'Server error'
+                            }
+                        }
+                    }
                 }
             }
         };
 
-        // Initialize Swagger UI
-        window.onload = function() {
+        window.addEventListener('load', () => {
+            refreshDashboard();
             checkStatus();
-            try {
-            checkStatus();
-                const ui = SwaggerUIBundle({
-                    spec: spec,
-                    dom_id: '#swagger-ui',
-                    deepLinking: true,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIBundle.presets.standalone
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
-                    tryItOutEnabled: true,
-                    requestInterceptor: (request) => {
-                        // Add any headers or modify request if needed
-                        return request;
-                    },
-                    responseInterceptor: (response) => {
-                        // Handle response if needed
-                        return response;
-                    },
-                    onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
-                    },
-                    onFailure: (error) => {
-                        console.error('Swagger UI failed to load:', error);
-                    }
-                });
-
-                window.ui = ui;
-            } catch (error) {
-                console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
-            }
-        };
+            const ui = SwaggerUIBundle({
+                spec: spec,
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.presets.standalone
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "BaseLayout",
+                tryItOutEnabled: true
+            });
+        });
     </script>
 </body>
 </html>

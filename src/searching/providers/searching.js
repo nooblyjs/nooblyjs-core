@@ -29,7 +29,7 @@ class SearchService {
     /** @private @const {!Map<string, !Map<string, !Object>>} Map of index names to data maps */
     this.indexes = new Map();
     /** @private @const {string} Default index name */
-    this.defaultIndex_ = options.defaultIndex || 'default';
+    this.defaultIndex_ = this.normalizeIndexName_(options.defaultIndex);
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
     /** @private {Object} Queueing service instance */
@@ -57,16 +57,18 @@ class SearchService {
    * @return {Map<string, Object>} The index data map.
    */
   getIndex_(searchContainer) {
-    if (!this.indexes.has(searchContainer)) {
-      this.indexes.set(searchContainer, new Map());
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+
+    if (!this.indexes.has(resolvedContainer)) {
+      this.indexes.set(resolvedContainer, new Map());
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('search:index:created', {
-          searchContainer,
+          searchContainer: resolvedContainer,
           totalIndexes: this.indexes.size
         });
       }
     }
-    return this.indexes.get(searchContainer);
+    return this.indexes.get(resolvedContainer);
   }
 
   /**
@@ -92,7 +94,8 @@ class SearchService {
    */
   async add(key, jsonObject, searchContainer = this.defaultIndex_) {
     // Track add operation
-    analytics.trackAdd();
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    analytics.trackAdd(resolvedContainer);
 
     // If queueing is enabled, add to queue for batch processing
     if (this.queueService_) {
@@ -100,14 +103,14 @@ class SearchService {
         operation: 'add',
         key,
         data: jsonObject,
-        searchContainer,
+        searchContainer: resolvedContainer,
         timestamp: new Date().toISOString()
       });
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('search:queued', {
           operation: 'add',
           key,
-          searchContainer,
+          searchContainer: resolvedContainer,
           queueName: this.QUEUE_INDEXING_
         });
       }
@@ -115,7 +118,7 @@ class SearchService {
     }
 
     // Direct add if no queueing
-    return this.addDirect_(key, jsonObject, searchContainer);
+    return this.addDirect_(key, jsonObject, resolvedContainer);
   }
 
   /**
@@ -127,21 +130,22 @@ class SearchService {
    * @private
    */
   async addDirect_(key, jsonObject, searchContainer = this.defaultIndex_) {
-    const index = this.getIndex_(searchContainer);
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    const index = this.getIndex_(resolvedContainer);
 
     if (index.has(key)) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('search:add:error', {
           jsonObject: jsonObject,
           key: key,
-          searchContainer,
+          searchContainer: resolvedContainer,
           error: 'Key already exists.',
         });
       return false;
     }
     index.set(key, jsonObject);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('search:add', { jsonObject: jsonObject, key, searchContainer });
+      this.eventEmitter_.emit('search:add', { jsonObject: jsonObject, key, searchContainer: resolvedContainer });
     return true;
   }
 
@@ -152,12 +156,16 @@ class SearchService {
    * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false if the key was not found.
    */
   async remove(key, searchContainer = this.defaultIndex_) {
-    const index = this.getIndex_(searchContainer);
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    if (!this.indexes.has(resolvedContainer)) {
+      return false;
+    }
+    const index = this.indexes.get(resolvedContainer);
     const removed = index.delete(key);
     if (removed) {
-      analytics.trackDelete();
+      analytics.trackDelete(resolvedContainer);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:remove', { key, searchContainer });
+        this.eventEmitter_.emit('search:remove', { key, searchContainer: resolvedContainer });
     }
     return removed;
   }
@@ -173,11 +181,19 @@ class SearchService {
     const results = [];
     if (!searchTerm) {
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer, results });
+        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer: this.normalizeIndexName_(searchContainer), results });
       return results;
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const index = this.getIndex_(searchContainer);
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    const index = this.indexes.get(resolvedContainer);
+
+    if (!index) {
+      analytics.trackSearch(searchTerm, 0, resolvedContainer);
+      if (this.eventEmitter_)
+        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer: resolvedContainer, results });
+      return results;
+    }
 
     for (const [key, obj] of index.entries()) {
       let found = false;
@@ -206,10 +222,10 @@ class SearchService {
     }
 
     // Track search operation with term and result count
-    analytics.trackSearch(searchTerm, results.length);
+    analytics.trackSearch(searchTerm, results.length, resolvedContainer);
 
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('search:search', { searchTerm, searchContainer, results });
+      this.eventEmitter_.emit('search:search', { searchTerm, searchContainer: resolvedContainer, results });
     return results;
   }
 
@@ -223,10 +239,11 @@ class SearchService {
   async getStats(searchContainer) {
     if (searchContainer) {
       // Return stats for specific index
-      const index = this.getIndex_(searchContainer);
+      const resolvedContainer = this.normalizeIndexName_(searchContainer);
+      const index = this.indexes.get(resolvedContainer);
       const stats = {
-        searchContainer,
-        indexedItems: index.size,
+        searchContainer: resolvedContainer,
+        indexedItems: index ? index.size : 0,
         queueName: this.QUEUE_INDEXING_,
         queueSize: 0
       };
@@ -277,9 +294,13 @@ class SearchService {
    * @return {Object} Statistics object for the specified index.
    */
   getIndexStats(searchContainer) {
-    const index = this.getIndex_(searchContainer);
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    if (!this.indexes.has(resolvedContainer)) {
+      return null;
+    }
+    const index = this.indexes.get(resolvedContainer);
     return {
-      searchContainer,
+      searchContainer: resolvedContainer,
       size: index.size,
       keys: Array.from(index.keys())
     };
@@ -291,13 +312,17 @@ class SearchService {
    * @return {boolean} True if the index was cleared successfully.
    */
   clearIndex(searchContainer) {
-    const index = this.getIndex_(searchContainer);
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+    if (!this.indexes.has(resolvedContainer)) {
+      return false;
+    }
+    const index = this.indexes.get(resolvedContainer);
     const previousSize = index.size;
     index.clear();
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('search:index:cleared', {
-        searchContainer,
+        searchContainer: resolvedContainer,
         previousSize
       });
     }
@@ -312,20 +337,22 @@ class SearchService {
    * @throws {Error} If attempting to delete the default index.
    */
   deleteIndex(searchContainer) {
-    if (searchContainer === this.defaultIndex_) {
+    const resolvedContainer = this.normalizeIndexName_(searchContainer);
+
+    if (resolvedContainer === this.defaultIndex_) {
       throw new Error('Cannot delete the default index');
     }
 
-    if (!this.indexes.has(searchContainer)) {
+    if (!this.indexes.has(resolvedContainer)) {
       return false;
     }
 
-    const deletedSize = this.indexes.get(searchContainer).size;
-    const deleted = this.indexes.delete(searchContainer);
+    const deletedSize = this.indexes.get(resolvedContainer).size;
+    const deleted = this.indexes.delete(resolvedContainer);
 
     if (deleted && this.eventEmitter_) {
       this.eventEmitter_.emit('search:index:deleted', {
-        searchContainer,
+        searchContainer: resolvedContainer,
         deletedSize,
         remainingIndexes: this.indexes.size
       });
@@ -424,6 +451,21 @@ class SearchService {
         this.eventEmitter_.emit('search:indexing:stopped');
       }
     }
+  }
+  /**
+   * Normalizes an index name ensuring a valid string.
+   * @param {string=} searchContainer
+   * @return {string}
+   * @private
+   */
+  normalizeIndexName_(searchContainer) {
+    if (typeof searchContainer === 'string') {
+      const trimmed = searchContainer.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+    return this.defaultIndex_ || 'default';
   }
 }
 

@@ -18,9 +18,10 @@
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} notifier - The notification provider instance
+ * @param {Object=} analytics - Analytics module for topic statistics
  * @return {void}
  */
-module.exports = (options, eventEmitter, notifier) => {
+module.exports = (options, eventEmitter, notifier, analytics) => {
   if (options['express-app'] && notifier) {
     const app = options['express-app'];
 
@@ -126,5 +127,49 @@ module.exports = (options, eventEmitter, notifier) => {
       eventEmitter.emit('api-notifying-status', 'notifying api running');
       res.status(200).json('notifying api running');
     });
+
+    if (analytics) {
+      app.get('/services/notifying/api/analytics/overview', (req, res) => {
+        try {
+          const overview = analytics.getOverview();
+          res.status(200).json(overview);
+        } catch (error) {
+          res.status(500).json({
+            error: 'Failed to retrieve notifying overview',
+            message: error.message,
+          });
+        }
+      });
+
+      app.get('/services/notifying/api/analytics/top-topics', (req, res) => {
+        try {
+          const limit = parseInt(req.query.limit, 10);
+          const topics = analytics.getTopTopics(Number.isNaN(limit) ? undefined : limit);
+          res.status(200).json({
+            topics,
+          });
+        } catch (error) {
+          res.status(500).json({
+            error: 'Failed to retrieve top topics',
+            message: error.message,
+          });
+        }
+      });
+
+      app.get('/services/notifying/api/analytics/topics', (req, res) => {
+        try {
+          const limit = parseInt(req.query.limit, 10);
+          const topics = analytics.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
+          res.status(200).json({
+            topics,
+          });
+        } catch (error) {
+          res.status(500).json({
+            error: 'Failed to retrieve topic list',
+            message: error.message,
+          });
+        }
+      });
+    }
   }
 };

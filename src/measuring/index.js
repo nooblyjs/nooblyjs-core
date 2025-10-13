@@ -12,6 +12,7 @@
 
 const MeasuringService = require('./provider/measuring');
 const MeasuringApi = require('./providers/measuringApi');
+const MeasuringAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -26,6 +27,7 @@ const Views = require('./views');
 function createMeasuringService(type, options, eventEmitter) {
   // Create measuring service instance
   let measuring;
+  const analytics = new MeasuringAnalytics(eventEmitter);
 
   switch (type) {
     case 'api':
@@ -38,7 +40,7 @@ function createMeasuringService(type, options, eventEmitter) {
   }
   
   // Initialize routes and views for the measuring service
-  Routes(options, eventEmitter, measuring);
+  Routes(options, eventEmitter, measuring, analytics);
   Views(options, eventEmitter, measuring);
   
   return measuring;

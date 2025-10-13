@@ -13,6 +13,7 @@ const NotificationService = require('./provider/notifying');
 const NotifyingApi = require('./providers/notifyingApi');
 const Routes = require('./routes');
 const Views = require('./views');
+const NotifyingAnalytics = require('./modules/analytics');
 
 /**
  * Creates a notification service instance with messaging capabilities.
@@ -25,6 +26,7 @@ const Views = require('./views');
 function createNotificationService(type, options, eventEmitter) {
   // Create notification service instance
   let notifying;
+  let analytics = null;
 
   switch (type) {
     case 'api':
@@ -35,9 +37,10 @@ function createNotificationService(type, options, eventEmitter) {
       notifying = new NotificationService(options, eventEmitter);
       break;
   }
-  
+  analytics = new NotifyingAnalytics(eventEmitter, notifying);
+
   // Initialize routes and views for the notification service
-  Routes(options, eventEmitter, notifying);
+  Routes(options, eventEmitter, notifying, analytics);
   Views(options, eventEmitter, notifying);
     
   return notifying;

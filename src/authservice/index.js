@@ -17,6 +17,7 @@ const AuthApi = require('./providers/authApi');
 
 const Routes = require('./routes');
 const Views = require('./views');
+const AuthAnalytics = require('./modules/analytics');
 
 /**
  * Creates an authentication service instance with the specified provider.
@@ -29,6 +30,7 @@ const Views = require('./views');
  */
 function createAuth(type, options, eventEmitter) {
   let auth;
+  const analytics = new AuthAnalytics(eventEmitter);
 
   // Create auth instance based on provider type
   switch (type) {
@@ -51,7 +53,7 @@ function createAuth(type, options, eventEmitter) {
   }
 
   // Initialize routes and views for the auth service
-  Routes(options, eventEmitter, auth);
+  Routes(options, eventEmitter, auth, analytics);
   Views(options, eventEmitter, auth);
 
   return auth;

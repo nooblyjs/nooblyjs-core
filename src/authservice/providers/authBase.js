@@ -84,11 +84,17 @@ class AuthBase {
     const user = this.users_.get(username);
 
     if (!user || !user.isActive) {
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:login-failed', { username });
+      }
       throw new Error('Invalid credentials');
     }
 
     const isValid = await this.verifyPassword_(password, user.password);
     if (!isValid) {
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:login-failed', { username });
+      }
       throw new Error('Invalid credentials');
     }
 

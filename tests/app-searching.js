@@ -72,6 +72,81 @@ async function generateRandomPeople(count) {
   return people;
 }
 
+const cityNames = ['London', 'New York', 'Tokyo', 'Sydney', 'Toronto', 'Paris', 'Madrid', 'Berlin', 'Dubai', 'Singapore'];
+const placeTypes = ['Airport', 'Museum', 'Restaurant', 'Library', 'Park', 'University', 'Café', 'Stadium', 'Hotel', 'Theatre'];
+const transactionTypes = ['purchase', 'refund', 'subscription', 'transfer', 'invoice'];
+const transactionStatuses = ['pending', 'completed', 'failed', 'refunded', 'processing'];
+const currencies = ['USD', 'GBP', 'EUR', 'JPY', 'AUD', 'CAD'];
+
+async function generateRandomPlaces(count) {
+  const places = [];
+  for (let i = 0; i < count; i++) {
+    places.push({
+      name: `${getRandomElement(placeTypes)} ${getRandomElement(cityNames)}`,
+      type: getRandomElement(placeTypes),
+      city: getRandomElement(cityNames),
+      country: getRandomElement(countries),
+      description: `Popular ${getRandomElement(placeTypes).toLowerCase()} located in ${getRandomElement(cityNames)}`
+    });
+  }
+  return places;
+}
+
+async function generateRandomTransactions(count) {
+  const transactions = [];
+  for (let i = 0; i < count; i++) {
+    transactions.push({
+      transactionId: `txn-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      type: getRandomElement(transactionTypes),
+      status: getRandomElement(transactionStatuses),
+      currency: getRandomElement(currencies),
+      amount: Number((Math.random() * 5000 + 10).toFixed(2)),
+      description: `Auto-generated ${getRandomElement(transactionTypes)} transaction`
+    });
+  }
+  return transactions;
+}
+
+const addedDocuments = [];
+
+function pickSearchTermForDocument(entry) {
+  if (!entry || !entry.doc) {
+    return null;
+  }
+
+  switch (entry.index) {
+    case 'people':
+      return getRandomElement([
+        entry.doc.firstname,
+        entry.doc.lastname,
+        entry.doc.country
+      ]);
+    case 'places':
+      return getRandomElement([
+        entry.doc.name,
+        entry.doc.type,
+        entry.doc.city,
+        entry.doc.country
+      ]);
+    case 'transactions':
+      return getRandomElement([
+        entry.doc.transactionId,
+        entry.doc.type,
+        entry.doc.status,
+        entry.doc.currency
+      ]);
+    default:
+      return null;
+  }
+}
+
+function trimDocumentHistory() {
+  const MAX_TRACKED = 3000;
+  if (addedDocuments.length > MAX_TRACKED) {
+    addedDocuments.splice(0, addedDocuments.length - MAX_TRACKED);
+  }
+}
+
 app.listen(3001, async () => {
   logger.info('Server running on port 3001');
   logger.info('Visit: http://localhost:3001/ (redirects to /services)');
@@ -79,27 +154,34 @@ app.listen(3001, async () => {
   logger.info('Register page at: http://localhost:3001/services/authservice/views/register.html');
   logger.info('Activities folder: ./activities');
 
-  // Start the built-in indexing processor (runs every 5 seconds, processes up to 100 items per batch)
   await searching.startIndexing(5, 100);
   logger.info('Started search indexing processor (runs every 5 seconds, batch size: 100)');
 
-  // Function to perform random searches
+  const addDocumentsToIndex = async (indexName, documents) => {
+    let added = 0;
+    for (const doc of documents) {
+      const key = `${indexName}-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
+      await searching.add(key, doc, indexName);
+      addedDocuments.push({ index: indexName, key, doc });
+      added++;
+    }
+    logger.info(`Queued ${added} documents for index "${indexName}"`);
+    trimDocumentHistory();
+  };
+
   const performRandomSearches = async () => {
-    const searchTerms = [
-      ...firstNames,
-      ...lastNames,
-      ...countries,
-      'age:25', 'age:30', 'age:40', 'age:50',
-      'John Smith', 'Jane Williams', 'Michael Brown'
-    ];
+    const searchPools = {
+      people: [...firstNames, ...lastNames, ...countries],
+      places: [...cityNames, ...placeTypes, ...countries],
+      transactions: [...transactionTypes, ...transactionStatuses, ...currencies]
+    };
 
     try {
-      for (let i = 0; i < 10; i++) {
-        const searchTerm = getRandomElement(searchTerms);
-        const results = await searching.search(searchTerm, { limit: 10 });
-        logger.info(`Search for "${searchTerm}": found ${results.length} results`);
-
-        // Small delay between searches
+      for (let i = 0; i < 9; i++) {
+        const index = getRandomElement(Object.keys(searchPools));
+        const searchTerm = getRandomElement(searchPools[index]);
+        const results = await searching.search(searchTerm, index);
+        logger.info(`[${index}] Search for "${searchTerm}": found ${results.length} results`);
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (error) {
@@ -107,90 +189,79 @@ app.listen(3001, async () => {
     }
   };
 
-  // Store keys for later deletion
-  const addedKeys = [];
-
-  // Function to perform random read operations
   const performRandomReads = async () => {
-    if (addedKeys.length === 0) return;
+    if (addedDocuments.length === 0) return;
 
     try {
-      const numReads = Math.min(5, addedKeys.length);
-      logger.info(`Performing ${numReads} random read operations...`);
+      const attempts = Math.min(6, addedDocuments.length);
+      logger.info(`Performing ${attempts} random read operations...`);
 
-      for (let i = 0; i < numReads; i++) {
-        const randomKey = getRandomElement(addedKeys);
-        // Read operation via search (simulating a get/read)
-        await searching.search(randomKey);
-        logger.info(`Read operation for key: ${randomKey}`);
+      for (let i = 0; i < attempts; i++) {
+        const entry = getRandomElement(addedDocuments);
+        const searchTerm = pickSearchTermForDocument(entry);
 
-        // Small delay between reads
-        await new Promise(resolve => setTimeout(resolve, 50));
+        if (!searchTerm) {
+          continue;
+        }
+
+        await searching.search(searchTerm, entry.index);
+        logger.info(`Read simulation for index "${entry.index}" using term "${searchTerm}"`);
+        await new Promise(resolve => setTimeout(resolve, 75));
       }
     } catch (error) {
       logger.error('Error performing random reads:', error.message);
     }
   };
 
-  // Function to perform random delete operations
   const performRandomDeletes = async () => {
-    if (addedKeys.length === 0) return;
+    if (addedDocuments.length === 0) return;
 
     try {
-      const numDeletes = Math.min(3, addedKeys.length);
-      logger.info(`Performing ${numDeletes} random delete operations...`);
+      const deletions = Math.min(4, addedDocuments.length);
+      logger.info(`Performing ${deletions} random delete operations...`);
 
-      for (let i = 0; i < numDeletes; i++) {
-        const randomIndex = Math.floor(Math.random() * addedKeys.length);
-        const keyToDelete = addedKeys[randomIndex];
+      for (let i = 0; i < deletions; i++) {
+        const randomIndex = Math.floor(Math.random() * addedDocuments.length);
+        const { key, index } = addedDocuments[randomIndex];
 
-        const deleted = await searching.remove(keyToDelete);
+        const deleted = await searching.remove(key, index);
         if (deleted) {
-          logger.info(`Deleted document with key: ${keyToDelete}`);
-          // Remove from our tracking array
-          addedKeys.splice(randomIndex, 1);
+          logger.info(`Deleted document ${key} from index "${index}"`);
+          addedDocuments.splice(randomIndex, 1);
         }
 
-        // Small delay between deletes
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 75));
       }
     } catch (error) {
       logger.error('Error performing random deletes:', error.message);
     }
   };
 
-  // Function to add random people to the search queue
-  const addRandomPeople = async () => {
+  const addRandomData = async () => {
     try {
-      const stats = await searching.getStats();
-      logger.info(`Adding 1000 random people. Current stats: ${stats.indexedItems} indexed, ${stats.queueSize} in queue`);
+      const aggregatedStats = await searching.getStats();
+      logger.info(`Current stats -> indexes: ${aggregatedStats.totalIndexes}, indexed items: ${aggregatedStats.totalIndexedItems}, queue size: ${aggregatedStats.queueSize}`);
 
-      const people = await generateRandomPeople(1000);
-      let added = 0;
+      await addDocumentsToIndex('people', await generateRandomPeople(300));
+      await addDocumentsToIndex('places', await generateRandomPlaces(150));
+      await addDocumentsToIndex('transactions', await generateRandomTransactions(200));
 
-      for (const person of people) {
-        const key = `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await searching.add(key, person);
-        addedKeys.push(key); // Track the key
-        added++;
-      }
+      const peopleStats = await searching.getStats('people');
+      const placesStats = await searching.getStats('places');
+      const transactionStats = await searching.getStats('transactions');
 
-      logger.info(`Queued ${added} people for indexing`);
+      logger.info(`Index stats -> people: ${peopleStats.indexedItems || peopleStats.size}, places: ${placesStats.indexedItems || placesStats.size}, transactions: ${transactionStats.indexedItems || transactionStats.size}`);
 
-      // Perform random operations after adding people
       await performRandomSearches();
       await performRandomReads();
       await performRandomDeletes();
     } catch (error) {
-      logger.error('Error adding random people:', error.message);
+      logger.error('Error generating random data batches:', error.message);
     }
   };
 
-  // Add initial batch
-  await addRandomPeople();
+  await addRandomData();
 
-  // Schedule adding random people every 10 seconds
-  setInterval(addRandomPeople, 1000);
-
-  logger.info('Scheduled random people generation every 10 seconds (1000 people per batch)');
+  setInterval(addRandomData, 10000);
+  logger.info('Scheduled random data generation every 10 seconds across people, places, and transactions indexes');
 });
