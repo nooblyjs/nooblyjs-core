@@ -134,7 +134,7 @@ class AuthFile extends AuthBase {
 
     try {
       await this.createUser({
-        username: 'admin',
+        username: 'administrator',
         email: 'admin@localhost',
         password: adminPassword,
         role: 'admin'
