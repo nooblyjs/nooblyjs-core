@@ -45,7 +45,6 @@ class SimpleDbDataRingProvider {
       accessKeyId: options.accessKeyId,
       secretAccessKey: options.secretAccessKey,
     });
-    /** @private @const {AWS.SimpleDB} */
     this.sdb = new AWS.SimpleDB();
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;

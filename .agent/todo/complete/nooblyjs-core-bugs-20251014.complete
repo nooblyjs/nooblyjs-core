@@ -1,0 +1,14 @@
+# Bugs
+
+-[x] Cache Service UI -  Move status alert out of data operations
+-[x] Dataservice Service UI -  Move status alert out of data operations
+-[x] Queue Service UI -  Move status alert out of data operations
+
+# Features
+
+- [x] Logging level filters
+- [x] Measuring Manager Analytics and Dashboard
+- [x] Authentication Manager Analytics and Dasjboard
+- [x] AI Manager Analytics and Dashboard
+
+
