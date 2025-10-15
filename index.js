@@ -7,9 +7,25 @@ const EventEmitter = require('events');
 const express = require('express');
 const path = require('path');
 
-const { createApiKeyAuthMiddleware, generateApiKey} = require('./src/middleware/apiKeyAuth');
-const { createServicesAuthMiddleware } = require('./src/middleware/servicesAuth');
+const {
+  createApiKeyAuthMiddleware,
+  createServicesAuthMiddleware,
+  generateApiKey
+} = require('./src/authservice/middleware');
+
 const systemMonitoring = require('./src/views/modules/monitoring');
+
+const ensureArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.slice();
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return [value.trim()];
+  }
+
+  return [];
+};
 
 class ServiceRegistry {
 
@@ -44,27 +60,84 @@ class ServiceRegistry {
 
     //this.debug_emitter(this.eventEmitter, "ServiceRegistry");
 
+    const {
+      security: incomingSecurityConfig = {},
+      ...legacyOptions
+    } = globalOptions;
+
+    const apiKeyAuthConfig = {
+      ...(incomingSecurityConfig.apiKeyAuth || {})
+    };
+
+    const apiKeys = ensureArray(
+      apiKeyAuthConfig.apiKeys !== undefined
+        ? apiKeyAuthConfig.apiKeys
+        : legacyOptions.apiKeys
+    );
+
+    const requireApiKey =
+      typeof apiKeyAuthConfig.requireApiKey === 'boolean'
+        ? apiKeyAuthConfig.requireApiKey
+        : typeof legacyOptions.requireApiKey === 'boolean'
+          ? legacyOptions.requireApiKey
+          : apiKeys.length > 0;
+
+    const hasCustomExcludePaths =
+      apiKeyAuthConfig.excludePaths !== undefined ||
+      legacyOptions.excludePaths !== undefined;
+
+    const excludePaths = hasCustomExcludePaths
+      ? ensureArray(
+          apiKeyAuthConfig.excludePaths !== undefined
+            ? apiKeyAuthConfig.excludePaths
+            : legacyOptions.excludePaths
+        )
+      : undefined;
+
+    const normalizedSecurityConfig = {
+      ...incomingSecurityConfig,
+      apiKeyAuth: {
+        ...apiKeyAuthConfig,
+        apiKeys,
+        requireApiKey,
+        excludePaths
+      }
+    };
+
     // Assign the passed global options
     this.globalOptions = {
       'express-app': expressApp,
-      ...globalOptions,
+      ...legacyOptions,
+      security: normalizedSecurityConfig
     };
+
+    this.globalOptions.apiKeys = apiKeys;
+    this.globalOptions.requireApiKey = requireApiKey;
+
+    if (hasCustomExcludePaths) {
+      this.globalOptions.excludePaths = excludePaths;
+    } else {
+      delete this.globalOptions.excludePaths;
+    }
+
+    this.securityConfig = normalizedSecurityConfig;
 
     // Initialize service dependencies
     this.initializeServiceDependencies();
 
     // Setup API key authentication if configured
-    if (globalOptions.apiKeys && globalOptions.apiKeys.length > 0) {
+    if (apiKeys.length > 0 || requireApiKey === false) {
+      const middlewareOptions = {
+        apiKeys,
+        requireApiKey
+      };
+
+      if (excludePaths) {
+        middlewareOptions.excludePaths = excludePaths;
+      }
+
       this.authMiddleware = createApiKeyAuthMiddleware(
-        {
-          apiKeys: globalOptions.apiKeys,
-          requireApiKey: globalOptions.requireApiKey !== false,
-          excludePaths: globalOptions.excludePaths || [
-            '/services/*/status',
-            '/services/',
-            '/services/*/views/*',
-          ],
-        },
+        middlewareOptions,
         this.eventEmitter,
       );
 
@@ -73,10 +146,21 @@ class ServiceRegistry {
 
       // Log API key authentication setup
       this.eventEmitter.emit('api-auth-setup', {
-        message: 'API key authentication enabled',
-        keyCount: globalOptions.apiKeys.length,
-        requireApiKey: globalOptions.requireApiKey !== false,
+        message: 'API key authentication configured',
+        keyCount: apiKeys.length,
+        requireApiKey,
+        excludePaths
       });
+    } else {
+      this.authMiddleware = null;
+      delete this.globalOptions.authMiddleware;
+
+      if (requireApiKey) {
+        this.eventEmitter.emit('api-auth-warning', {
+          message: 'API key authentication requested but no API keys provided',
+          requireApiKey
+        });
+      }
     }
 
     // Initialize services auth middleware

@@ -1,28 +1,24 @@
-/**
- * @fileoverview Services Authentication Middleware
- * Middleware to protect the /services route using the authservice for authentication.
- * Redirects unauthenticated users to login page.
- * @author NooblyJS Team
- * @version 1.0.0
- * @since 1.0.0
- */
-
 'use strict';
+
+/**
+ * @fileoverview Authenticated services middleware
+ * Protects /services routes by validating sessions through the authservice.
+ *
+ * @module authservice/middleware/services
+ */
 
 /**
  * Creates authentication middleware for protecting the services page.
  * Validates user session tokens and redirects to login if not authenticated.
+ *
  * @param {Object} serviceRegistry - The service registry instance
  * @returns {Function} Express middleware function
  */
 function createServicesAuthMiddleware(serviceRegistry) {
   return async (req, res, next) => {
     try {
-      // Skip authentication for login-related paths, but check if user is already authenticated
       if (req.path.includes('/login') || req.path.includes('/register')) {
-        // For login page, check if user is already authenticated
         if (req.path.includes('/login')) {
-          // Check for token in query parameters (from return URLs)
           const token = req.query.authToken || req.headers.authorization?.substring(7);
 
           if (token) {
@@ -31,44 +27,37 @@ function createServicesAuthMiddleware(serviceRegistry) {
               const session = await authService.validateSession(token);
 
               if (session && session.username) {
-                // User is already authenticated, redirect to services
                 return res.redirect('/services/');
               }
             } catch (error) {
-              // Token is invalid, continue to show login page
+              // Ignore invalid tokens so login page can render
             }
           }
         }
         return next();
       }
 
-      // Check for token first before serving auth check page
       let token = null;
-
-      // Check Authorization header
       const authHeader = req.headers.authorization;
+
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
       }
 
-      // Check query parameter (from client-side redirect)
       if (!token && req.query.authToken) {
         token = req.query.authToken;
       }
 
-      // Check session cookie
       if (!token && req.session && req.session.authToken) {
         token = req.session.authToken;
       }
 
-      // If we have a token, validate it server-side
       if (token) {
         try {
           const authService = serviceRegistry.authservice();
           const session = await authService.validateSession(token);
 
           if (session && session.username) {
-            // Valid token - add user info and continue
             req.user = {
               id: session.userId,
               username: session.username,
@@ -82,9 +71,7 @@ function createServicesAuthMiddleware(serviceRegistry) {
         }
       }
 
-      // For browser requests without valid token, serve auth check page
       if (req.method === 'GET' && req.headers.accept && req.headers.accept.includes('text/html')) {
-        // Serve an authentication check page that will validate tokens client-side
         return res.send(`
           <!DOCTYPE html>
           <html>
@@ -104,7 +91,6 @@ function createServicesAuthMiddleware(serviceRegistry) {
               if (!authToken) {
                 window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
               } else {
-                // Validate token with server
                 fetch('/services/authservice/api/validate', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -113,7 +99,6 @@ function createServicesAuthMiddleware(serviceRegistry) {
                 .then(response => response.json())
                 .then(result => {
                   if (result.success) {
-                    // Token is valid, redirect with token parameter for server validation
                     window.location.href = window.location.pathname + '?authToken=' + authToken;
                   } else {
                     localStorage.removeItem('authToken');
@@ -133,7 +118,6 @@ function createServicesAuthMiddleware(serviceRegistry) {
         `);
       }
 
-      // If we reach here, no valid token was found
       return redirectToLogin(req, res);
     } catch (error) {
       console.error('Services auth middleware error:', error);
@@ -152,4 +136,6 @@ function redirectToLogin(req, res) {
   res.redirect(`/services/authservice/views/login.html?returnUrl=${returnUrl}`);
 }
 
-module.exports = { createServicesAuthMiddleware };
+module.exports = {
+  createServicesAuthMiddleware
+};

@@ -3180,7 +3180,7 @@ const apiKey = serviceRegistry.generateApiKey(32); // 32-character key
 const shortKey = serviceRegistry.generateApiKey(16); // 16-character key
 
 // Validate API key format
-const { isValidApiKeyFormat } = require('noobly-core/src/middleware/apiKeyAuth');
+const { isValidApiKeyFormat } = require('noobly-core/src/authservice/middleware');
 console.log(isValidApiKeyFormat('abc123')); // false (too short)
 console.log(isValidApiKeyFormat('A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6')); // true
 ```

@@ -33,6 +33,8 @@ class AuthBase {
     this.roles_.set('admin', []);
     this.roles_.set('user', []);
     this.roles_.set('guest', []);
+
+    this.getAuthStrategy = this.getAuthStrategy.bind(this);
   }
 
   /**
@@ -371,6 +373,50 @@ class AuthBase {
   getSafeUser_(user) {
     const { password, ...safeUser } = user;
     return safeUser;
+  }
+
+  /**
+   * Returns a passport strategy factory when supported by the provider.
+   * Providers that do not integrate with passport should override this method.
+   * @return {?Function} Strategy factory or null if unsupported.
+   */
+  getAuthStrategy() {
+    let LocalStrategy;
+    try {
+      ({ Strategy: LocalStrategy } = require('passport-local'));
+    } catch (error) {
+      return null;
+    }
+
+    const strategy = new LocalStrategy(
+      {
+        usernameField: 'username',
+        passwordField: 'password'
+      },
+      async (username, password, done) => {
+        try {
+          const result = await this.authenticateUser(username, password);
+          return done(null, result.user, { session: result.session });
+        } catch (error) {
+          return done(null, false, { message: error.message });
+        }
+      }
+    );
+
+    return {
+      strategy,
+      serializeUser: (user, done) => {
+        done(null, user.username);
+      },
+      deserializeUser: async (username, done) => {
+        try {
+          const user = await this.getUser(username);
+          done(null, user);
+        } catch (error) {
+          done(error, null);
+        }
+      }
+    };
   }
 }
 

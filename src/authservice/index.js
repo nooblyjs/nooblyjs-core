@@ -18,6 +18,7 @@ const AuthApi = require('./providers/authApi');
 const Routes = require('./routes');
 const Views = require('./views');
 const AuthAnalytics = require('./modules/analytics');
+const middleware = require('./middleware');
 
 /**
  * Creates an authentication service instance with the specified provider.
@@ -58,5 +59,13 @@ function createAuth(type, options, eventEmitter) {
 
   return auth;
 }
+
+// Expose middleware helpers directly from authservice factory
+createAuth.middleware = middleware;
+createAuth.createApiKeyAuthMiddleware = middleware.createApiKeyAuthMiddleware;
+createAuth.generateApiKey = middleware.generateApiKey;
+createAuth.isValidApiKeyFormat = middleware.isValidApiKeyFormat;
+createAuth.createServicesAuthMiddleware = middleware.createServicesAuthMiddleware;
+createAuth.configurePassport = middleware.configurePassport;
 
 module.exports = createAuth;

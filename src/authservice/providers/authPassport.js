@@ -27,8 +27,6 @@ class AuthPassport extends AuthBase {
     super(options, eventEmitter);
 
     this.passport_ = null;
-    this.LocalStrategy_ = null;
-
     this.initializePassport_();
 
     if (this.eventEmitter_) {
@@ -46,44 +44,26 @@ class AuthPassport extends AuthBase {
   initializePassport_() {
     try {
       this.passport_ = require('passport');
-      this.LocalStrategy_ = require('passport-local').Strategy;
+      const strategyConfig = super.getAuthStrategy();
 
-      // Configure local strategy
-      this.passport_.use(new this.LocalStrategy_(
-        {
-          usernameField: 'username',
-          passwordField: 'password'
-        },
-        async (username, password, done) => {
-          try {
-            const result = await this.authenticateUser(username, password);
-            return done(null, result.user, { session: result.session });
-          } catch (error) {
-            return done(null, false, { message: error.message });
-          }
+      if (strategyConfig && typeof strategyConfig === 'object') {
+        const {
+          strategy,
+          serializeUser,
+          deserializeUser
+        } = strategyConfig;
+
+        if (strategy) {
+          this.passport_.use(strategy);
         }
-      ));
 
-      // Serialize user for session
-      this.passport_.serializeUser((user, done) => {
-        done(null, user.username);
-      });
-
-      // Deserialize user from session
-      this.passport_.deserializeUser(async (username, done) => {
-        try {
-          const user = await this.getUser(username);
-          done(null, user);
-        } catch (error) {
-          done(error, null);
+        if (typeof serializeUser === 'function') {
+          this.passport_.serializeUser(serializeUser);
         }
-      });
 
-      // Initialize passport with express app if provided
-      if (this.options_['express-app']) {
-        const app = this.options_['express-app'];
-        app.use(this.passport_.initialize());
-        app.use(this.passport_.session());
+        if (typeof deserializeUser === 'function') {
+          this.passport_.deserializeUser(deserializeUser);
+        }
       }
 
     } catch (error) {
@@ -182,6 +162,14 @@ class AuthPassport extends AuthBase {
       passportAvailable: !!this.passport_,
       strategy: 'local'
     };
+  }
+
+  /**
+   * Provides a factory that yields the passport strategy and serializers.
+   * @return {?Function} Factory function returning strategy configuration.
+   */
+  getAuthStrategy() {
+    return super.getAuthStrategy();
   }
 }
 

@@ -14,10 +14,18 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
 const serviceRegistry = require('./index');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
+const { configurePassport } = require('./src/authservice/middleware');
+
+const parseCommaSeparated = (value = '') =>
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 const app = express();
 app.use(bodyParser.json());
@@ -34,10 +42,39 @@ app.use(session({
   }
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+const configuredApiKeys = parseCommaSeparated(
+  process.env.NOOBLY_API_KEYS || process.env.API_KEYS || process.env.API_KEY || ''
+);
+
+let generatedDevApiKey = null;
+if (configuredApiKeys.length === 0 && process.env.NODE_ENV !== 'production') {
+  generatedDevApiKey = serviceRegistry.generateApiKey();
+  configuredApiKeys.push(generatedDevApiKey);
+  console.warn('[NooblyJS] Generated development API key. Set NOOBLY_API_KEYS to override this value.');
+}
+
 const eventEmitter = new EventEmitter();
-serviceRegistry.initialize(app, eventEmitter);
+serviceRegistry.initialize(app, eventEmitter, {
+  apiKeys: configuredApiKeys,
+  requireApiKey: configuredApiKeys.length > 0,
+  excludePaths: [
+    '/services/*/status',
+    '/services/',
+    '/services/*/views/*',
+    '/services/authservice/api/login',
+    '/services/authservice/api/register'
+  ]
+});
 
 const log = serviceRegistry.logger('file');
+if (generatedDevApiKey) {
+  log.warn('Development API key generated automatically for local testing', {
+    keyPrefix: `${generatedDevApiKey.slice(0, 6)}...`
+  });
+}
 const cache = serviceRegistry.cache('inmemory');
 const dataservice = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
@@ -86,6 +123,27 @@ const authservice = serviceRegistry.authservice('file', {
   dataDir: './data/auth'
 });
 
+const strategyFactory = authservice.getAuthStrategy
+configurePassport(strategyFactory, passport);
+
+const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
+
+app.get('/api/secure/ping', apiAuthMiddleware, (req, res) => {
+  res.json({
+    ok: true,
+    authorized: Boolean(req.apiKey),
+    keyPrefix: req.apiKey ? `${req.apiKey.slice(0, 6)}...` : null
+  });
+});
+
+if (serviceRegistry.servicesAuthMiddleware) {
+  app.get('/services/protected/ping', serviceRegistry.servicesAuthMiddleware, (req, res) => {
+    res.json({
+      ok: true,
+      user: req.user ? req.user.username : null
+    });
+  });
+}
 
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));

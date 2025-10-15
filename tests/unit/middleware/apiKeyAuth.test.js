@@ -13,7 +13,11 @@
 'use strict';
 
 const EventEmitter = require('events');
-const { createApiKeyAuthMiddleware, generateApiKey, isValidApiKeyFormat } = require('../../../src/middleware/apiKeyAuth');
+const {
+  createApiKeyAuthMiddleware,
+  generateApiKey,
+  isValidApiKeyFormat
+} = require('../../../src/authservice/middleware');
 
 /**
  * Test suite for API Key Authentication middleware.
