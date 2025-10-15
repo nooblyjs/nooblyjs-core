@@ -19,7 +19,6 @@ const { v4: uuidv4 } = require('uuid');
 const serviceRegistry = require('./index');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
-const { configurePassport } = require('./src/authservice/middleware');
 
 const parseCommaSeparated = (value = '') =>
   value
@@ -56,8 +55,9 @@ if (configuredApiKeys.length === 0 && process.env.NODE_ENV !== 'production') {
   console.warn('[NooblyJS] Generated development API key. Set NOOBLY_API_KEYS to override this value.');
 }
 
-const eventEmitter = new EventEmitter();
-serviceRegistry.initialize(app, eventEmitter, {
+var options = { 
+  logDir:  path.join(__dirname, './.noobly-core/', 'logs'),
+  dataDir : path.join(__dirname, './.noobly-core/', 'data'),
   apiKeys: configuredApiKeys,
   requireApiKey: configuredApiKeys.length > 0,
   excludePaths: [
@@ -66,8 +66,12 @@ serviceRegistry.initialize(app, eventEmitter, {
     '/services/*/views/*',
     '/services/authservice/api/login',
     '/services/authservice/api/register'
-  ]
-});
+  ],
+  'express-app': app
+};
+
+const eventEmitter = new EventEmitter();
+serviceRegistry.initialize(app, eventEmitter, options);
 
 const log = serviceRegistry.logger('file');
 if (generatedDevApiKey) {
@@ -75,6 +79,7 @@ if (generatedDevApiKey) {
     keyPrefix: `${generatedDevApiKey.slice(0, 6)}...`
   });
 }
+
 const cache = serviceRegistry.cache('inmemory');
 const dataservice = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
@@ -118,10 +123,7 @@ if (!aiservice) {
   }
 }
 
-const authservice = serviceRegistry.authservice('file', {
-  'express-app': app,
-  dataDir: './data/auth'
-});
+const authservice = serviceRegistry.authservice('file');
 
 /*
  * Example: Enable Google OAuth by switching providers.
@@ -134,19 +136,8 @@ const authservice = serviceRegistry.authservice('file', {
 //   callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
 // });
 
-const strategyFactory = authservice && typeof authservice.getAuthStrategy === 'function'
-  ? authservice.getAuthStrategy
-  : null;
-
-if (strategyFactory) {
-  try {
-    configurePassport(strategyFactory, passport);
-  } catch (error) {
-    log.warn(`Passport configuration skipped: ${error.message}`);
-  }
-} else {
-  log.info('Passport strategy not available for current auth provider.');
-}
+const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
+configurePassport(passport);
 
 const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
 

@@ -13,11 +13,6 @@
       },
       "buttons": [
         {
-          "text": "Login",
-          "href": "login.html",
-          "type": "primary"
-        },
-        {
           "text": "Documentation",
           "href": "documentation.html",
           "type": "outline"
@@ -467,21 +462,15 @@
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
         { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "/services" },
-        { "text": "Login", "href": "login.html" }
+        { "text": "Services", "href": "/services" }
       ]
     },
     "mobileMenu": {
       "links": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" },
-        { "text": "Login", "href": "login.html" }
-      ],
-      "cta": {
-        "text": "Login",
-        "href": "login.html"
-      }
+        { "text": "Contact", "href": "contact.html" }
+      ]
     },
     "footer": {
       "logo": {

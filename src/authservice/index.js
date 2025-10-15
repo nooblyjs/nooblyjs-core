@@ -21,6 +21,22 @@ const AuthAnalytics = require('./modules/analytics');
 const middleware = require('./middleware');
 
 /**
+ * Creates a helper that curries the passport configuration with the provided
+ * strategy configuration or factory. This is useful when consumers want a
+ * composable interface instead of pulling middleware directly.
+ *
+ * @param {(Function|Object)} strategyFactoryOrConfig Strategy factory or config object
+ * @returns {{configurePassport: function(Object=): Object}} Configurator wrapper
+ */
+function passportConfigurator(strategyFactoryOrConfig) {
+  return {
+    configurePassport(passportInstance) {
+      return middleware.configurePassport(strategyFactoryOrConfig, passportInstance);
+    }
+  };
+}
+
+/**
  * Creates an authentication service instance with the specified provider.
  * Automatically configures routes and views for the auth service.
  * @param {string} type - The auth provider type ('passport', 'google', 'memory', 'file', 'api')
@@ -57,6 +73,19 @@ function createAuth(type, options, eventEmitter) {
   Routes(options, eventEmitter, auth, analytics);
   Views(options, eventEmitter, auth);
 
+  // Attach passport configurator helper directly on the auth instance for convenience
+  auth.passportConfigurator = function attachPassportConfigurator(customStrategyFactory) {
+    const resolvedFactory =
+      customStrategyFactory ||
+      (typeof this.getAuthStrategy === 'function' ? this.getAuthStrategy : null);
+
+    if (!resolvedFactory) {
+      throw new Error('Passport configurator requested but no strategy factory available for this provider.');
+    }
+
+    return passportConfigurator(resolvedFactory);
+  };
+
   return auth;
 }
 
@@ -67,5 +96,6 @@ createAuth.generateApiKey = middleware.generateApiKey;
 createAuth.isValidApiKeyFormat = middleware.isValidApiKeyFormat;
 createAuth.createServicesAuthMiddleware = middleware.createServicesAuthMiddleware;
 createAuth.configurePassport = middleware.configurePassport;
+createAuth.passportConfigurator = passportConfigurator;
 
 module.exports = createAuth;

@@ -12,7 +12,7 @@
 # Caching Features
 
 - [ ] Memcached Caching Provider testing
-- [ ] REDIS Caching Provider testing
+- [ ] Redis Caching Provider testing
 - [ ] API Caching Provider testing
 - [ ] Distributed caching testing
 - [ ] Ensure all Unit testing is in place

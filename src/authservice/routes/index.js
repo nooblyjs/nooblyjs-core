@@ -26,6 +26,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
   if (options['express-app'] && auth) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
+    const requireAuthenticatedSession = createSessionAwareAuthGuard(auth, authMiddleware);
 
     // Helper function to handle async route errors
     const asyncHandler = (fn) => (req, res, next) => {
@@ -149,7 +150,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/users',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const users = await auth.listUsers();
         res.status(200).json({
@@ -171,7 +172,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/users/:username',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const user = await auth.getUser(req.params.username);
         res.status(200).json({
@@ -193,7 +194,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.put(
       '/services/authservice/api/users/:username',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const user = await auth.updateUser(req.params.username, req.body);
         eventEmitter.emit('auth:user-updated-api', { username: req.params.username });
@@ -216,7 +217,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.delete(
       '/services/authservice/api/users/:username',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         await auth.deleteUser(req.params.username);
         eventEmitter.emit('auth:user-deleted-api', { username: req.params.username });
@@ -240,7 +241,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.post(
       '/services/authservice/api/users/:username/role',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const { role } = req.body;
         await auth.addUserToRole(req.params.username, role);
@@ -265,7 +266,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/roles',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const roles = await auth.listRoles();
         res.status(200).json({
@@ -287,7 +288,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/roles/:role/users',
-      authMiddleware || ((req, res, next) => next()),
+      requireAuthenticatedSession,
       asyncHandler(async (req, res) => {
         const users = await auth.getUsersInRole(req.params.role);
         res.status(200).json({
@@ -364,6 +365,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     if (analytics) {
       app.get(
         '/services/authservice/api/analytics',
+        requireAuthenticatedSession,
         asyncHandler(async (req, res) => {
           const limit = parseInt(req.query.limit, 10);
           const recentLimit = parseInt(req.query.recentLimit, 10);
@@ -390,3 +392,89 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     });
   }
 };
+
+/**
+ * Creates middleware that accepts either a valid session token issued by the auth
+ * provider or a valid API key via the existing auth middleware.
+ *
+ * @param {Object} authProvider - Auth provider instance
+ * @param {Function} apiKeyMiddleware - Middleware enforcing API keys
+ * @returns {Function} Express middleware
+ */
+function createSessionAwareAuthGuard(authProvider, apiKeyMiddleware) {
+  return async (req, res, next) => {
+    const token = extractAuthToken(req);
+
+    if (token) {
+      try {
+        const session = await authProvider.validateSession(token);
+        req.authToken = token;
+        req.authSession = session;
+        if (!req.user) {
+          req.user = {
+            id: session.userId,
+            username: session.username,
+            role: session.role
+          };
+        }
+        return next();
+      } catch (error) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired session token',
+          message: error.message || 'Session validation failed'
+        });
+      }
+    }
+
+    if (typeof apiKeyMiddleware === 'function') {
+      return apiKeyMiddleware(req, res, next);
+    }
+
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+      message: 'Provide a valid session token or API key.'
+    });
+  };
+}
+
+/**
+ * Extracts a session token from the incoming request.
+ *
+ * @param {import('express').Request} req - Express request
+ * @returns {?string} Session token if present
+ */
+function extractAuthToken(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+
+  if (typeof authHeader === 'string') {
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (bearerMatch) {
+      return bearerMatch[1].trim();
+    }
+
+    const tokenMatch = authHeader.match(/^Token\s+(.+)$/i);
+    if (tokenMatch) {
+      return tokenMatch[1].trim();
+    }
+  }
+
+  if (typeof req.headers['x-auth-token'] === 'string') {
+    return req.headers['x-auth-token'].trim();
+  }
+
+  if (req.query && typeof req.query.authToken === 'string') {
+    return req.query.authToken;
+  }
+
+  if (req.body && typeof req.body === 'object' && typeof req.body.authToken === 'string') {
+    return req.body.authToken;
+  }
+
+  if (req.session && typeof req.session.authToken === 'string') {
+    return req.session.authToken;
+  }
+
+  return null;
+}

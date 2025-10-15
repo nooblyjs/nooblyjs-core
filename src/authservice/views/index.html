@@ -241,18 +241,92 @@
             pointer-events: none;
         }
 
-        .user-action-buttons {
+        .user-operations-toolbar {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+
+        .user-create-panel {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .user-item {
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: #fff;
+        }
+
+        .user-item-info {
+            flex: 1 1 240px;
+        }
+
+        .user-item-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
-            justify-content: flex-end;
+            font-size: 1rem;
         }
 
-        .inline-password-input {
-            max-width: 180px;
+        .user-item-email {
+            color: #6c757d;
+            font-size: 0.95rem;
         }
 
-        tr.editing {
+        .user-item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.3rem;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        .user-action-buttons {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+        }
+
+        .user-action-buttons .btn-icon {
+            border-color: #adb5bd;
+            color: #495057;
+        }
+
+        .user-action-buttons .btn-icon.btn-danger {
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .user-item.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .user-item.editing {
             background-color: #fff3cd;
         }
 
@@ -400,78 +474,75 @@
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
                     <div class="card" id="userOperationsCard">
-                        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <div>
-                                <h2 class="card-title mb-0">User Data Operations</h2>
-                                <p class="card-subtitle">Create, edit, and remove users inline</p>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <div class="spinner-border spinner-border-sm text-secondary d-none" id="userTableSpinner" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="refreshUsersButton">
-                                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                                </button>
-                            </div>
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">User Data Operations</h2>
+                            <p class="card-subtitle">Create, edit, and remove users inline</p>
                         </div>
                         <div class="card-content">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle" id="userManagementTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="min-width: 140px;">Username</th>
-                                            <th style="min-width: 220px;">Email</th>
-                                            <th style="min-width: 110px;">Role</th>
-                                            <th style="min-width: 110px;">Status</th>
-                                            <th style="min-width: 160px;">Created</th>
-                                            <th style="min-width: 160px;">Last Login</th>
-                                            <th class="text-end" style="min-width: 260px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="table-secondary" id="userCreateRow">
-                                            <td>
-                                                <input type="text" class="form-control form-control-sm" id="createUserUsername" placeholder="Username" required>
-                                            </td>
-                                            <td>
-                                                <input type="email" class="form-control form-control-sm" id="createUserEmail" placeholder="Email" required>
-                                            </td>
-                                            <td>
-                                                <select class="form-select form-select-sm" id="createUserRole"></select>
-                                            </td>
-                                            <td>
-                                                <select class="form-select form-select-sm" id="createUserStatus">
-                                                    <option value="true" selected>Active</option>
-                                                    <option value="false">Inactive</option>
-                                                </select>
-                                            </td>
-                                            <td class="text-muted">—</td>
-                                            <td class="text-muted">—</td>
-                                            <td class="text-end">
-                                                <div class="user-action-buttons">
-                                                    <input type="text" class="form-control form-control-sm inline-password-input" id="createUserPassword" placeholder="Password">
-                                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="generateCreatePasswordButton">
-                                                        <i class="bi bi-magic"></i> Generate
-                                                    </button>
-                                                    <button type="button" class="btn btn-primary btn-sm" id="createUserButton">
-                                                        <i class="bi bi-person-plus"></i> Create
-                                                    </button>
-                                                </div>
-                                                <div class="form-text text-muted text-end mt-2" id="createPasswordHelper"></div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tbody id="userManagementTableBody">
-                                        <tr id="userTablePlaceholder">
-                                            <td colspan="7" class="text-center text-muted py-4">
-                                                <div class="spinner-border spinner-border-sm me-2" role="status">
-                                                    <span class="visually-hidden">Loading...</span>
-                                                </div>
-                                                Loading users...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="user-operations-toolbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <div class="spinner-border spinner-border-sm text-secondary d-none" id="userTableSpinner" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="refreshUsersButton">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" id="toggleCreateUserButton">
+                                    <i class="bi bi-person-plus"></i> Create User
+                                </button>
+                            </div>
+                            <div id="userCreatePanel" class="user-create-panel bg-light p-3 mb-3 d-none">
+                                <form id="createUserForm" class="user-create-form">
+                                    <div class="row g-3">
+                                    <div class="col-md-4">
+                                            <label for="createUserUsername" class="form-label mb-1">Username</label>
+                                            <input type="text" class="form-control form-control-sm" id="createUserUsername" placeholder="Username" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="createUserEmail" class="form-label mb-1">Email</label>
+                                            <input type="email" class="form-control form-control-sm" id="createUserEmail" placeholder="Email" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="createUserRole" class="form-label mb-1">Role</label>
+                                            <select class="form-select form-select-sm" id="createUserRole"></select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="createUserStatus" class="form-label mb-1">Status</label>
+                                            <select class="form-select form-select-sm" id="createUserStatus">
+                                                <option value="true" selected>Active</option>
+                                                <option value="false">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 align-items-end mt-0">
+                                        <div class="col-md-4">
+                                            <label for="createUserPassword" class="form-label mb-1">Password</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control" id="createUserPassword" placeholder="Password">
+                                                <button type="button" class="btn btn-outline-secondary" id="generateCreatePasswordButton" title="Generate secure password">
+                                                    <i class="bi bi-magic"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8 d-flex justify-content-end gap-2">
+                                            <button type="submit" class="btn btn-primary btn-sm" id="createUserSubmitButton">
+                                                <i class="bi bi-person-check"></i> Save User
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="cancelCreateUserButton">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted mt-2" id="createPasswordHelper"></div>
+                                </form>
+                            </div>
+                            <div id="userListContainer">
+                                <div id="userList" class="user-list"></div>
+                                <div id="userListEmpty" class="text-muted text-center py-4 d-none">
+                                    <i class="bi bi-people-fill me-2"></i>
+                                    No users found.
+                                </div>
                             </div>
                             <div class="response-container mt-3" id="userTableResponse" style="display: none;">
                                 <div class="response-title">Operation Result:</div>
@@ -1241,6 +1312,12 @@
                 credentials: 'same-origin'
             };
 
+            const authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                options.headers.Authorization = `Bearer ${authToken}`;
+                options.headers['x-auth-token'] = authToken;
+            }
+
             if (body) {
                 options.body = JSON.stringify(body);
             }
@@ -1442,11 +1519,7 @@
             setAnalyticsPlaceholders();
 
             try {
-                const response = await fetch('/services/authservice/api/analytics');
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`);
-                }
-                const data = await response.json();
+                const data = await makeRequest('/services/authservice/api/analytics');
 
                 renderOverview(data.overview || {});
                 renderTopUsers(data.topUsers || []);

@@ -77,10 +77,11 @@ if (!aiservice) {
   }
 }
 
-serviceRegistry.authservice('file', {
+const authservice = serviceRegistry.authservice('file', {
   'express-app': app,
   dataDir: './data/auth'
 });
+// authservice.passportConfigurator(...) is available if passport setup is needed in custom hosts.
 
 app.get('/api/secure/ping', (req, res) => {
   res.json({ ok: true, authorized: true });

@@ -123,7 +123,7 @@ class AuthFile extends AuthBase {
     console.log('\n' + '='.repeat(80));
     console.log('🔐 DEFAULT ADMIN USER CREATED');
     console.log('='.repeat(80));
-    console.log('Username: admin');
+    console.log('Username: administrator');
     console.log('Email: admin@localhost');
     console.log(`Password: ${adminPassword}`);
     console.log('='.repeat(80));
