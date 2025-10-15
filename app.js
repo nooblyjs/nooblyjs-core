@@ -123,8 +123,30 @@ const authservice = serviceRegistry.authservice('file', {
   dataDir: './data/auth'
 });
 
-const strategyFactory = authservice.getAuthStrategy
-configurePassport(strategyFactory, passport);
+/*
+ * Example: Enable Google OAuth by switching providers.
+ * Uncomment the block below and supply your credentials when ready.
+ */
+// const authservice = serviceRegistry.authservice('google', {
+//   'express-app': app,
+//   clientID: process.env.GOOGLE_CLIENT_ID,
+//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//   callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+// });
+
+const strategyFactory = authservice && typeof authservice.getAuthStrategy === 'function'
+  ? authservice.getAuthStrategy
+  : null;
+
+if (strategyFactory) {
+  try {
+    configurePassport(strategyFactory, passport);
+  } catch (error) {
+    log.warn(`Passport configuration skipped: ${error.message}`);
+  }
+} else {
+  log.info('Passport strategy not available for current auth provider.');
+}
 
 const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
 

@@ -69,6 +69,10 @@ class ServiceRegistry {
       ...(incomingSecurityConfig.apiKeyAuth || {})
     };
 
+    const servicesAuthConfig = {
+      ...(incomingSecurityConfig.servicesAuth || {})
+    };
+
     const apiKeys = ensureArray(
       apiKeyAuthConfig.apiKeys !== undefined
         ? apiKeyAuthConfig.apiKeys
@@ -94,6 +98,11 @@ class ServiceRegistry {
         )
       : undefined;
 
+    const requireServicesLogin =
+      typeof servicesAuthConfig.requireLogin === 'boolean'
+        ? servicesAuthConfig.requireLogin
+        : true;
+
     const normalizedSecurityConfig = {
       ...incomingSecurityConfig,
       apiKeyAuth: {
@@ -101,6 +110,10 @@ class ServiceRegistry {
         apiKeys,
         requireApiKey,
         excludePaths
+      },
+      servicesAuth: {
+        ...servicesAuthConfig,
+        requireLogin: requireServicesLogin
       }
     };
 
@@ -164,7 +177,16 @@ class ServiceRegistry {
     }
 
     // Initialize services auth middleware
-    this.servicesAuthMiddleware = createServicesAuthMiddleware(this);
+    const servicesAuthRequired = normalizedSecurityConfig.servicesAuth.requireLogin !== false;
+
+    if (servicesAuthRequired) {
+      this.servicesAuthMiddleware = createServicesAuthMiddleware(this);
+    } else {
+      this.servicesAuthMiddleware = (req, res, next) => next();
+      this.eventEmitter.emit('services-auth-disabled', {
+        message: 'Services authentication disabled by configuration'
+      });
+    }
 
     // Serve the service registry landing page (protected) - MUST come before static middleware
     this.expressApp.get('/services/', this.servicesAuthMiddleware, (req, res) => {

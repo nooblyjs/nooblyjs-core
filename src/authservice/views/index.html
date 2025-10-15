@@ -240,6 +240,26 @@
             opacity: 0.6;
             pointer-events: none;
         }
+
+        .user-action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .inline-password-input {
+            max-width: 180px;
+        }
+
+        tr.editing {
+            background-color: #fff3cd;
+        }
+
+        #userPasswordFeedback code,
+        #createPasswordHelper code {
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -379,46 +399,85 @@
                 </div>
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">User Registration</h2>
-                            <p class="card-subtitle">Create a new user account</p>
+                    <div class="card" id="userOperationsCard">
+                        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <h2 class="card-title mb-0">User Data Operations</h2>
+                                <p class="card-subtitle">Create, edit, and remove users inline</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="spinner-border spinner-border-sm text-secondary d-none" id="userTableSpinner" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="refreshUsersButton">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
                         </div>
                         <div class="card-content">
-                            <form id="registerForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="registerUsername">Username</label>
-                                    <input type="text" id="registerUsername" class="form-input" placeholder="Enter username" required>
-                                    <div class="helper-text">Unique username for the new account</div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="registerEmail">Email</label>
-                                    <input type="email" id="registerEmail" class="form-input" placeholder="Enter email" required>
-                                    <div class="helper-text">User email address</div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="registerPassword">Password</label>
-                                    <input type="password" id="registerPassword" class="form-input" placeholder="Enter password" required>
-                                    <div class="helper-text">Password for the new account</div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="registerRole">Role</label>
-                                    <select id="registerRole" class="form-input">
-                                        <option value="user">User</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="guest">Guest</option>
-                                    </select>
-                                    <div class="helper-text">Role assigned to the user</div>
-                                </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Register User</button>
-                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultRegistration()">Use Defaults</button>
-                                </div>
-                            </form>
-                            <div id="registerResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Registration Response:</div>
-                                <div id="registerResponseContent" class="response-content"></div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle" id="userManagementTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="min-width: 140px;">Username</th>
+                                            <th style="min-width: 220px;">Email</th>
+                                            <th style="min-width: 110px;">Role</th>
+                                            <th style="min-width: 110px;">Status</th>
+                                            <th style="min-width: 160px;">Created</th>
+                                            <th style="min-width: 160px;">Last Login</th>
+                                            <th class="text-end" style="min-width: 260px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-secondary" id="userCreateRow">
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="createUserUsername" placeholder="Username" required>
+                                            </td>
+                                            <td>
+                                                <input type="email" class="form-control form-control-sm" id="createUserEmail" placeholder="Email" required>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" id="createUserRole"></select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" id="createUserStatus">
+                                                    <option value="true" selected>Active</option>
+                                                    <option value="false">Inactive</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-end">
+                                                <div class="user-action-buttons">
+                                                    <input type="text" class="form-control form-control-sm inline-password-input" id="createUserPassword" placeholder="Password">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="generateCreatePasswordButton">
+                                                        <i class="bi bi-magic"></i> Generate
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary btn-sm" id="createUserButton">
+                                                        <i class="bi bi-person-plus"></i> Create
+                                                    </button>
+                                                </div>
+                                                <div class="form-text text-muted text-end mt-2" id="createPasswordHelper"></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody id="userManagementTableBody">
+                                        <tr id="userTablePlaceholder">
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading users...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <div class="response-container mt-3" id="userTableResponse" style="display: none;">
+                                <div class="response-title">Operation Result:</div>
+                                <pre class="response-content" id="userTableResponseContent"></pre>
+                            </div>
+                            <div class="small text-muted mt-3 d-none text-end" id="userPasswordFeedback"></div>
                         </div>
                     </div>
 
@@ -473,29 +532,6 @@
                             <div id="sessionResponse" class="response-container" style="display: none;">
                                 <div class="response-title">Session Status:</div>
                                 <div id="sessionResponseContent" class="response-content"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">User Management</h2>
-                            <p class="card-subtitle">View, update, and delete user accounts</p>
-                        </div>
-                        <div class="card-content">
-                            <div class="form-group">
-                                <label class="form-label" for="userUsername">Username</label>
-                                <input type="text" id="userUsername" class="form-input" placeholder="Enter username to manage">
-                                <div class="helper-text">Username of the account to manage</div>
-                            </div>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary" onclick="getUser()">Get User</button>
-                                <button type="button" class="btn btn-primary" onclick="getAllUsers()">List All Users</button>
-                                <button type="button" class="btn btn-error" onclick="deleteUser()">Delete User</button>
-                            </div>
-                            <div id="userResponse" class="response-container" style="display: none;">
-                                <div class="response-title">User Information:</div>
-                                <div id="userResponseContent" class="response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -573,6 +609,9 @@
         const numberFormatter = new Intl.NumberFormat();
         let analyticsData = [];
         let currentSort = { column: 'loginCount', direction: 'desc' };
+        const DEFAULT_ROLE_OPTIONS = ['admin', 'user', 'guest'];
+        let roleOptions = [...DEFAULT_ROLE_OPTIONS];
+        let userTableData = [];
 
         function formatNumber(value) {
             if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -590,6 +629,586 @@
                 return value;
             }
             return date.toLocaleString();
+        }
+
+        function capitalize(value) {
+            if (!value) {
+                return '';
+            }
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        function escapeAttribute(value) {
+            return String(value ?? '').replace(/"/g, '&quot;');
+        }
+
+        function formatRole(role) {
+            return capitalize(role || 'user');
+        }
+
+        function populateRoleOptions(selectElement, selectedRole) {
+            if (!selectElement) {
+                return;
+            }
+            const optionsHtml = roleOptions.map((role) => {
+                const isSelected = role === selectedRole ? ' selected' : '';
+                return `<option value="${escapeHtml(role)}"${isSelected}>${escapeHtml(capitalize(role))}</option>`;
+            }).join('');
+            selectElement.innerHTML = optionsHtml;
+        }
+
+        function updateCreatePasswordHelper(message, password) {
+            const helper = document.getElementById('createPasswordHelper');
+            if (!helper) {
+                return;
+            }
+
+            if (!message) {
+                helper.innerHTML = '';
+                return;
+            }
+
+            const passwordMarkup = password ? ` <code>${escapeHtml(password)}</code>` : '';
+            helper.innerHTML = `${escapeHtml(message)}${passwordMarkup}`;
+        }
+
+        function setPasswordFeedback(username, password) {
+            const feedback = document.getElementById('userPasswordFeedback');
+            if (!feedback) {
+                return;
+            }
+
+            if (!password) {
+                feedback.classList.add('d-none');
+                feedback.innerHTML = '';
+                return;
+            }
+
+            const label = username
+                ? `Temporary password for ${escapeHtml(username)}`
+                : 'Generated password';
+
+            feedback.innerHTML = `${label}: <code>${escapeHtml(password)}</code>`;
+            feedback.classList.remove('d-none');
+        }
+
+        function setUserCreationBusy(isBusy) {
+            const row = document.getElementById('userCreateRow');
+            if (!row) {
+                return;
+            }
+            row.classList.toggle('loading', Boolean(isBusy));
+            row.querySelectorAll('input, select, button').forEach((element) => {
+                element.disabled = Boolean(isBusy);
+            });
+        }
+
+        function setRowBusy(row, isBusy) {
+            if (!row) {
+                return;
+            }
+            row.classList.toggle('loading', Boolean(isBusy));
+            row.querySelectorAll('input, select, button').forEach((element) => {
+                element.disabled = Boolean(isBusy);
+            });
+        }
+
+        function findUserRow(username) {
+            const tableBody = document.getElementById('userManagementTableBody');
+            if (!tableBody) {
+                return null;
+            }
+            return Array.from(tableBody.querySelectorAll('tr[data-username]')).find(
+                (row) => row.dataset.username === username
+            ) || null;
+        }
+
+        function isUnauthorized(error) {
+            return Boolean(error && Number(error.status) === 401);
+        }
+
+        function showAuthRequiredAlert() {
+            showAlert('Please sign in with an authorized account to manage users.', 'error');
+        }
+
+        function renderUserRow(user) {
+            const username = escapeHtml(user.username);
+            const email = user.email ? escapeHtml(user.email) : '—';
+            const roleLabel = escapeHtml(formatRole(user.role));
+            const statusBadge = user.isActive
+                ? '<span class="badge text-bg-success">Active</span>'
+                : '<span class="badge text-bg-secondary">Inactive</span>';
+            const createdAt = escapeHtml(formatDate(user.createdAt));
+            const lastLogin = escapeHtml(formatDate(user.lastLogin));
+
+            return `
+                <tr data-username="${username}">
+                    <td>${username}</td>
+                    <td>${email}</td>
+                    <td>${roleLabel}</td>
+                    <td>${statusBadge}</td>
+                    <td>${createdAt}</td>
+                    <td>${lastLogin}</td>
+                    <td class="text-end">
+                        <div class="user-action-buttons">
+                            <button type="button" class="btn btn-outline-primary btn-sm js-user-edit">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm js-user-reset">
+                                <i class="bi bi-shield-lock"></i> Reset Password
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm js-user-delete">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function renderUserManagementTable(users, options = {}) {
+            const tableBody = document.getElementById('userManagementTableBody');
+            const spinner = document.getElementById('userTableSpinner');
+            if (!tableBody) {
+                return;
+            }
+
+            if (spinner) {
+                spinner.classList.toggle('d-none', !options.loading);
+            }
+
+            if (options.loading) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading users...
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            if (!users || users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-people-fill me-2"></i>
+                            No users found.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = users.map((user) => renderUserRow(user)).join('');
+        }
+
+        function enterUserEditMode(username) {
+            if (!username) {
+                return;
+            }
+
+            renderUserManagementTable(userTableData);
+            const row = findUserRow(username);
+            const user = userTableData.find((item) => item.username === username);
+
+            if (!row || !user) {
+                return;
+            }
+
+            const createdAt = escapeHtml(formatDate(user.createdAt));
+            const lastLogin = escapeHtml(formatDate(user.lastLogin));
+
+            row.classList.add('editing');
+            row.innerHTML = `
+                <td>${escapeHtml(user.username)}</td>
+                <td>
+                    <input type="email" class="form-control form-control-sm user-edit-email" value="${escapeAttribute(user.email || '')}" placeholder="Email">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm user-edit-role"></select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm user-edit-status">
+                        <option value="true"${user.isActive ? ' selected' : ''}>Active</option>
+                        <option value="false"${user.isActive ? '' : ' selected'}>Inactive</option>
+                    </select>
+                </td>
+                <td>${createdAt}</td>
+                <td>${lastLogin}</td>
+                <td class="text-end">
+                    <div class="user-action-buttons">
+                        <button type="button" class="btn btn-success btn-sm js-user-save">
+                            <i class="bi bi-check2"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm js-user-cancel">
+                            <i class="bi bi-x"></i> Cancel
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            populateRoleOptions(row.querySelector('.user-edit-role'), user.role);
+        }
+
+        async function saveUserEdits(username) {
+            if (!username) {
+                return;
+            }
+
+            const row = findUserRow(username);
+            if (!row) {
+                return;
+            }
+
+            const emailInput = row.querySelector('.user-edit-email');
+            const roleSelect = row.querySelector('.user-edit-role');
+            const statusSelect = row.querySelector('.user-edit-status');
+
+            const payload = {
+                email: emailInput ? emailInput.value.trim() : undefined,
+                role: roleSelect ? roleSelect.value : undefined,
+                isActive: statusSelect ? statusSelect.value !== 'false' : undefined
+            };
+
+            Object.keys(payload).forEach((key) => {
+                if (payload[key] === undefined || payload[key] === '') {
+                    delete payload[key];
+                }
+            });
+
+            try {
+                setRowBusy(row, true);
+                const result = await makeRequest(
+                    `/services/authservice/api/users/${encodeURIComponent(username)}`,
+                    'PUT',
+                    payload
+                );
+                showUserTableResponse(result);
+                showAlert(`User "${username}" updated successfully`);
+                await loadUserManagement();
+            } catch (error) {
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error updating user: ' + error.message, 'error');
+                }
+                showUserTableResponse(error && error.payload ? error.payload : `Error: ${error.message}`);
+            } finally {
+                if (row.isConnected) {
+                    setRowBusy(row, false);
+                }
+            }
+        }
+
+        async function deleteUserByUsername(username) {
+            if (!username) {
+                return;
+            }
+
+            const row = findUserRow(username);
+            if (!row) {
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+                return;
+            }
+
+            try {
+                setRowBusy(row, true);
+                const result = await makeRequest(
+                    `/services/authservice/api/users/${encodeURIComponent(username)}`,
+                    'DELETE'
+                );
+                showUserTableResponse(result);
+                showAlert(`User "${username}" deleted successfully`);
+                await loadUserManagement();
+            } catch (error) {
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error deleting user: ' + error.message, 'error');
+                }
+                showUserTableResponse(error && error.payload ? error.payload : `Error: ${error.message}`);
+            } finally {
+                if (row.isConnected) {
+                    setRowBusy(row, false);
+                }
+            }
+        }
+
+        function randomIndex(max) {
+            if (max <= 0) {
+                return 0;
+            }
+
+            if (window.crypto && window.crypto.getRandomValues) {
+                const array = new Uint32Array(1);
+                window.crypto.getRandomValues(array);
+                return array[0] % max;
+            }
+
+            return Math.floor(Math.random() * max);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i -= 1) {
+                const j = randomIndex(i + 1);
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateSecurePassword(length = 12) {
+            const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijkmnopqrstuvwxyz';
+            const digits = '23456789';
+            const symbols = '!@#$%^&*';
+            const pools = [uppercase, lowercase, digits, symbols];
+            const allCharacters = uppercase + lowercase + digits + symbols;
+            const passwordChars = pools.map((pool) => pool[randomIndex(pool.length)]);
+
+            for (let i = passwordChars.length; i < length; i += 1) {
+                passwordChars.push(allCharacters[randomIndex(allCharacters.length)]);
+            }
+
+            return shuffleArray(passwordChars).join('');
+        }
+
+        async function resetUserPassword(username) {
+            if (!username) {
+                return;
+            }
+
+            const row = findUserRow(username);
+            const password = generateSecurePassword();
+
+            try {
+                if (row) {
+                    setRowBusy(row, true);
+                }
+                const result = await makeRequest(
+                    `/services/authservice/api/users/${encodeURIComponent(username)}`,
+                    'PUT',
+                    { password }
+                );
+                showUserTableResponse(result);
+                showAlert(`Password reset for "${username}"`);
+                setPasswordFeedback(username, password);
+                await loadUserManagement();
+            } catch (error) {
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error resetting password: ' + error.message, 'error');
+                }
+                showUserTableResponse(error && error.payload ? error.payload : `Error: ${error.message}`);
+            } finally {
+                if (row && row.isConnected) {
+                    setRowBusy(row, false);
+                }
+            }
+        }
+
+        async function handleCreateUser() {
+            const usernameInput = document.getElementById('createUserUsername');
+            const emailInput = document.getElementById('createUserEmail');
+            const passwordInput = document.getElementById('createUserPassword');
+            const roleSelect = document.getElementById('createUserRole');
+            const statusSelect = document.getElementById('createUserStatus');
+
+            if (!usernameInput || !emailInput || !passwordInput || !roleSelect || !statusSelect) {
+                return;
+            }
+
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const role = roleSelect.value || (roleOptions[0] || 'user');
+            let password = passwordInput.value.trim();
+            const isActive = statusSelect.value !== 'false';
+
+            if (!username || !email) {
+                showAlert('Username and email are required to create a user', 'error');
+                return;
+            }
+
+            if (!password) {
+                password = generateSecurePassword();
+                passwordInput.value = password;
+                updateCreatePasswordHelper('Generated a strong password automatically', password);
+            }
+
+            const payload = { username, email, password, role, isActive };
+
+            try {
+                setUserCreationBusy(true);
+                const result = await makeRequest('/services/authservice/api/register', 'POST', payload);
+                showUserTableResponse(result);
+                showAlert(`User "${username}" created successfully`);
+                setPasswordFeedback(username, password);
+                updateCreatePasswordHelper(`User "${username}" created with password`, password);
+
+                usernameInput.value = '';
+                emailInput.value = '';
+                passwordInput.value = '';
+                statusSelect.value = 'true';
+                roleSelect.value = role;
+
+                await loadUserManagement();
+            } catch (error) {
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error creating user: ' + error.message, 'error');
+                }
+                showUserTableResponse(error && error.payload ? error.payload : `Error: ${error.message}`);
+            } finally {
+                setUserCreationBusy(false);
+            }
+        }
+
+        function handleGenerateCreatePassword() {
+            const passwordInput = document.getElementById('createUserPassword');
+            if (!passwordInput) {
+                return;
+            }
+
+            const password = generateSecurePassword();
+            passwordInput.value = password;
+            updateCreatePasswordHelper('Generated password ready to use', password);
+            setPasswordFeedback(null, password);
+        }
+
+        function showUserTableResponse(data) {
+            const container = document.getElementById('userTableResponse');
+            const content = document.getElementById('userTableResponseContent');
+            if (!container || !content) {
+                return;
+            }
+
+            content.textContent = typeof data === 'object'
+                ? JSON.stringify(data, null, 2)
+                : String(data);
+            container.style.display = 'block';
+        }
+
+        async function loadUserManagement() {
+            const tableBody = document.getElementById('userManagementTableBody');
+            if (!tableBody) {
+                return;
+            }
+
+            renderUserManagementTable([], { loading: true });
+
+            try {
+                const result = await makeRequest('/services/authservice/api/users');
+                userTableData = Array.isArray(result.data) ? result.data : [];
+                renderUserManagementTable(userTableData);
+            } catch (error) {
+                renderUserManagementTable([]);
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error loading users: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function preloadRoleOptions() {
+            const defaultRole = roleOptions.includes('user') ? 'user' : (roleOptions[0] || 'user');
+
+            try {
+                const result = await makeRequest('/services/authservice/api/roles');
+                if (Array.isArray(result.data) && result.data.length) {
+                    roleOptions = result.data;
+                }
+            } catch (error) {
+                if (isUnauthorized(error)) {
+                    console.info('Role listing requires authentication; using default role options.');
+                } else {
+                    console.warn('Unable to load roles', error);
+                    showAlert('Error retrieving available roles: ' + error.message, 'error');
+                }
+            } finally {
+                const createSelect = document.getElementById('createUserRole');
+                const resolvedDefault = roleOptions.includes('user') ? 'user' : (roleOptions[0] || defaultRole);
+                populateRoleOptions(createSelect, resolvedDefault);
+
+                const assignRoleSelect = document.getElementById('assignRole');
+                if (assignRoleSelect) {
+                    const previousValue = assignRoleSelect.value;
+                    const selection = roleOptions.includes(previousValue)
+                        ? previousValue
+                        : resolvedDefault;
+                    populateRoleOptions(assignRoleSelect, selection);
+                }
+            }
+        }
+
+        async function handleUserTableClick(event) {
+            const button = event.target.closest('button');
+            if (!button) {
+                return;
+            }
+
+            const row = button.closest('tr[data-username]');
+            if (!row) {
+                return;
+            }
+
+            const username = row.dataset.username;
+
+            if (button.classList.contains('js-user-edit')) {
+                enterUserEditMode(username);
+            } else if (button.classList.contains('js-user-save')) {
+                await saveUserEdits(username);
+            } else if (button.classList.contains('js-user-cancel')) {
+                renderUserManagementTable(userTableData);
+            } else if (button.classList.contains('js-user-delete')) {
+                await deleteUserByUsername(username);
+            } else if (button.classList.contains('js-user-reset')) {
+                await resetUserPassword(username);
+            }
+        }
+
+        function initializeUserOperations() {
+            const refreshButton = document.getElementById('refreshUsersButton');
+            const createButton = document.getElementById('createUserButton');
+            const generateButton = document.getElementById('generateCreatePasswordButton');
+            const tableBody = document.getElementById('userManagementTableBody');
+
+            populateRoleOptions(
+                document.getElementById('createUserRole'),
+                roleOptions.includes('user') ? 'user' : (roleOptions[0] || 'user')
+            );
+
+            if (refreshButton) {
+                refreshButton.addEventListener('click', () => {
+                    loadUserManagement();
+                });
+            }
+
+            if (createButton) {
+                createButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    handleCreateUser();
+                });
+            }
+
+            if (generateButton) {
+                generateButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    handleGenerateCreatePassword();
+                });
+            }
+
+            if (tableBody) {
+                tableBody.addEventListener('click', (event) => {
+                    handleUserTableClick(event);
+                });
+            }
         }
 
         function showAlert(message, type = 'success') {
@@ -618,7 +1237,8 @@
         async function makeRequest(url, method = 'GET', body = null) {
             const options = {
                 method,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
             };
 
             if (body) {
@@ -632,11 +1252,14 @@
                 : await response.text();
 
             if (!response.ok) {
-                throw new Error(
+                const error = new Error(
                     typeof payload === 'string' && payload
                         ? payload
                         : `Request failed with status ${response.status}`
                 );
+                error.status = response.status;
+                error.payload = payload;
+                throw error;
             }
 
             return payload;
@@ -838,13 +1461,6 @@
             }
         }
 
-        function fillDefaultRegistration() {
-            document.getElementById('registerUsername').value = 'user_' + Math.random().toString(36).substring(2, 7);
-            document.getElementById('registerEmail').value = `user${Date.now()}@example.com`;
-            document.getElementById('registerPassword').value = 'password123';
-            document.getElementById('registerRole').value = 'user';
-        }
-
         function fillDefaultAdmin() {
             document.getElementById('loginUsername').value = 'admin';
             document.getElementById('loginPassword').value = 'admin';
@@ -854,29 +1470,6 @@
             document.getElementById('loginUsername').value = 'user';
             document.getElementById('loginPassword').value = 'password';
         }
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                username: document.getElementById('registerUsername').value,
-                email: document.getElementById('registerEmail').value,
-                password: document.getElementById('registerPassword').value,
-                role: document.getElementById('registerRole').value
-            };
-
-            try {
-                setLoading('registerForm', true);
-                const result = await makeRequest('/services/authservice/api/register', 'POST', payload);
-                showResponse('registerResponse', 'registerResponseContent', result);
-                showAlert('User registered successfully!');
-                loadAnalytics();
-            } catch (error) {
-                showAlert('Error registering user: ' + error.message, 'error');
-                showResponse('registerResponse', 'registerResponseContent', 'Error: ' + error.message);
-            } finally {
-                setLoading('registerForm', false);
-            }
-        });
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -948,58 +1541,6 @@
             showAlert('Session token cleared');
         }
 
-        async function getUser() {
-            const username = document.getElementById('userUsername').value;
-            if (!username) {
-                showAlert('Please enter a username', 'error');
-                return;
-            }
-
-            try {
-                const result = await makeRequest(`/services/authservice/api/users/${encodeURIComponent(username)}`);
-                showResponse('userResponse', 'userResponseContent', result);
-                showAlert(`User found: ${username}`);
-            } catch (error) {
-                showAlert('Error retrieving user: ' + error.message, 'error');
-                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
-            }
-        }
-
-        async function getAllUsers() {
-            try {
-                const result = await makeRequest('/services/authservice/api/users');
-                showResponse('userResponse', 'userResponseContent', result);
-                const count = result.data ? result.data.length : 0;
-                showAlert(`Retrieved ${count} users`);
-            } catch (error) {
-                showAlert('Error retrieving users: ' + error.message, 'error');
-                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
-            }
-        }
-
-        async function deleteUser() {
-            const username = document.getElementById('userUsername').value;
-            if (!username) {
-                showAlert('Please enter a username to delete', 'error');
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
-                return;
-            }
-
-            try {
-                const result = await makeRequest(`/services/authservice/api/users/${encodeURIComponent(username)}`, 'DELETE');
-                showResponse('userResponse', 'userResponseContent', result);
-                showAlert(`User "${username}" deleted successfully`);
-                document.getElementById('userUsername').value = '';
-                loadAnalytics();
-            } catch (error) {
-                showAlert('Error deleting user: ' + error.message, 'error');
-                showResponse('userResponse', 'userResponseContent', 'Error: ' + error.message);
-            }
-        }
-
         async function assignRole() {
             const username = document.getElementById('roleUsername').value;
             const role = document.getElementById('assignRole').value;
@@ -1014,7 +1555,11 @@
                 showResponse('roleResponse', 'roleResponseContent', result);
                 showAlert(`Role "${role}" assigned to user "${username}"`);
             } catch (error) {
-                showAlert('Error assigning role: ' + error.message, 'error');
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error assigning role: ' + error.message, 'error');
+                }
                 showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
             }
         }
@@ -1024,9 +1569,24 @@
                 const result = await makeRequest('/services/authservice/api/roles');
                 showResponse('roleResponse', 'roleResponseContent', result);
                 const count = result.data ? result.data.length : 0;
+                if (Array.isArray(result.data) && result.data.length) {
+                    roleOptions = result.data;
+                    const defaultRole = roleOptions.includes('user') ? 'user' : roleOptions[0];
+                    populateRoleOptions(document.getElementById('createUserRole'), defaultRole);
+                    const assignRoleSelect = document.getElementById('assignRole');
+                    if (assignRoleSelect) {
+                        const previousValue = assignRoleSelect.value;
+                        const selectedRole = roleOptions.includes(previousValue) ? previousValue : defaultRole;
+                        populateRoleOptions(assignRoleSelect, selectedRole);
+                    }
+                }
                 showAlert(`Found ${count} roles`);
             } catch (error) {
-                showAlert('Error retrieving roles: ' + error.message, 'error');
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error retrieving roles: ' + error.message, 'error');
+                }
                 showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
             }
         }
@@ -1040,7 +1600,11 @@
                 const count = result.data ? result.data.length : 0;
                 showAlert(`Found ${count} users in "${role}" role`);
             } catch (error) {
-                showAlert('Error retrieving users in role: ' + error.message, 'error');
+                if (isUnauthorized(error)) {
+                    showAuthRequiredAlert();
+                } else {
+                    showAlert('Error retrieving users in role: ' + error.message, 'error');
+                }
                 showResponse('roleResponse', 'roleResponseContent', 'Error: ' + error.message);
             }
         }
@@ -1060,7 +1624,7 @@
             try {
                 await Promise.all([
                     checkStatus(),
-                    getAllUsers(),
+                    loadUserManagement(),
                     listRoles(),
                     loadAnalytics()
                 ]);
@@ -1081,11 +1645,16 @@
 
         document.getElementById('data-tab')?.addEventListener('shown.bs.tab', () => {
             checkStatus();
+            loadUserManagement();
+            preloadRoleOptions();
         });
 
         window.addEventListener('load', () => {
+            initializeUserOperations();
             loadAnalytics();
             checkStatus();
+            preloadRoleOptions();
+            loadUserManagement();
             //initializeSwagger();
         });
 

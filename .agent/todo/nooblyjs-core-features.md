@@ -2,7 +2,6 @@
 
 - [ ] Service Registry: Allow for multiple instantiations of services
 
-
 # Logging Features
 
 - [ ] Ensure all Unit testing is in place
