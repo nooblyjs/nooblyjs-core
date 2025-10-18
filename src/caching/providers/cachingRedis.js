@@ -23,9 +23,17 @@ class CacheRedis {
    * @throws {Error} When Redis connection fails.
    */
   constructor(options, eventEmitter) {
+
+    this.settings = {};
+    this.settings.desciption = "The following settings are needed for this provider"
+    this.settings.list = [
+      {setting: "redisdurl", type: "string", values : ['127.0.01']}
+    ];
+    this.settings.redisdurl = options.redisdurl || this.settings.redisdurl || '127.0.01';
+
     const defaultOptions = {
       port: 6379,
-      host: '127.0.0.1',
+      host: this.settings.redisdurl,
       family: 4,
       keepAlive: true,
       lazyConnect: true,
@@ -43,7 +51,6 @@ class CacheRedis {
     /** @private @const {!Redis} */
     this.client_ = new Redis({
       ...defaultOptions,
-      // Connection pooling configuration
       lazyConnect: true,
       enableOfflineQueue: false,
       maxRetriesPerRequest: 3,
@@ -64,6 +71,25 @@ class CacheRedis {
     this.maxAnalyticsEntries_ = 100;
     
     this.setupConnectionHandlers_();
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**

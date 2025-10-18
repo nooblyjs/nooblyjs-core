@@ -26,27 +26,50 @@ class CacheFile {
    * @param {EventEmitter=} eventEmitter Optional event emitter for cache events.
    */
   constructor(options = {}, eventEmitter) {
-    /** @private @const {string} */
-    this.cacheDir_ = options.cacheDir || './.cache';
+
+    this.settings = {};
+    this.settings.desciption = "The following settings are needed for this provider"
+    this.settings.list = [
+      {setting: "cachedir", type: "string", values : ['./.cache']}
+    ];
+    this.settings.cachedir = options.cacheDir || this.settings.cachedir || './.cache';
+
     this.eventEmitter_ = eventEmitter;
-    /** @private @const {!Map<string, {key: string, hits: number, lastHit: Date}>} */
     this.analytics_ = new Map();
-    /** @private @const {number} */
     this.maxAnalyticsEntries_ = options.maxAnalyticsEntries || 100;
     
-    this.initializeCacheDir_();
+    this.initializeCacheDir();
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**
    * Initializes the cache directory if it doesn't exist.
    * @private
    */
-  async initializeCacheDir_() {
+  async initializeCacheDir() {
     try {
-      await fs.access(this.cacheDir_);
+      await fs.access(this.settings.cachedir);
     } catch (error) {
       if (error.code === 'ENOENT') {
-        await fs.mkdir(this.cacheDir_, { recursive: true });
+        await fs.mkdir(this.settings.cachedir, { recursive: true });
       }
     }
   }
@@ -59,7 +82,7 @@ class CacheFile {
    */
   getFilePath_(key) {
     const hash = crypto.createHash('sha256').update(key).digest('hex');
-    return path.join(this.cacheDir_, `${hash}.json`);
+    return path.join(this.settings.cachedir, `${hash}.json`);
   }
 
   /**
@@ -77,7 +100,7 @@ class CacheFile {
     };
 
     try {
-      await this.initializeCacheDir_();
+      await this.initializeCacheDir();
       await fs.writeFile(filePath, JSON.stringify(cacheEntry, null, 2), 'utf8');
       this.trackOperation_(key);
       if (this.eventEmitter_)
@@ -156,11 +179,11 @@ class CacheFile {
    */
   async clear() {
     try {
-      const files = await fs.readdir(this.cacheDir_);
+      const files = await fs.readdir(this.settings.cachedir);
       const jsonFiles = files.filter(file => file.endsWith('.json'));
       
       await Promise.all(
-        jsonFiles.map(file => fs.unlink(path.join(this.cacheDir_, file)))
+        jsonFiles.map(file => fs.unlink(path.join(this.settings.cachedir, file)))
       );
 
       this.analytics_.clear();
@@ -178,12 +201,12 @@ class CacheFile {
    */
   async getStats() {
     try {
-      const files = await fs.readdir(this.cacheDir_);
+      const files = await fs.readdir(this.settings.cachedir);
       const jsonFiles = files.filter(file => file.endsWith('.json'));
       
       let totalSize = 0;
       for (const file of jsonFiles) {
-        const filePath = path.join(this.cacheDir_, file);
+        const filePath = path.join(this.settings.cachedir, file);
         const stats = await fs.stat(filePath);
         totalSize += stats.size;
       }

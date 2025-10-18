@@ -20,10 +20,34 @@ class Cache {
    * @param {EventEmitter=} eventEmitter Optional event emitter for cache events.
    */
   constructor(options, eventEmitter) {
+
+    this.settings = {};
+    this.settings.desciption = "There are no settings for this provider"
+    this.settings.list = [];
+
     this.cache_ = {};
     this.eventEmitter_ = eventEmitter;
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 100;
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**

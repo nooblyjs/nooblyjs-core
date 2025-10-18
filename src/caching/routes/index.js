@@ -156,5 +156,45 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(500).json({ error: error.message });
       }
     });
+
+        /**
+     * GET /services/caching/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/caching/api/settings', (req, res) => {
+      try {
+        const settings = cache.getSettings().then((settings)=> res.status(200).json(settings));
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({
+          error: 'Failed to retrieve settings',
+          message: err.message
+        });
+      }
+    });
+
+     /**
+     * POST /services/caching/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/caching/api/settings', (req, res) => {
+      const message = req.body;
+      if (message) {
+        cache
+          .saveSettings(message)
+          .then(() => res.status(200).send('OK'))
+          .catch((err) => res.status(500).send(err.message));
+      } else {
+        res.status(400).send('Bad Request: Missing settings');
+      }
+    });
   }
 };

@@ -19,14 +19,18 @@ class CacheMemcached {
   /**
    * Initializes the Memcached client with connection options and analytics.
    * @param {Object} options The connection options for the Memcached client.
-   * @param {string} options.url The Memcached connection URL.
+   * @param {string} options.memcachedurl The Memcached connection URL.
    * @param {EventEmitter=} eventEmitter Optional event emitter for cache events.
    * @throws {Error} When Memcached connection URL is not provided.
    */
   constructor(options, eventEmitter) {
-    if (!options || !options.url) {
-      throw new Error('Memcached connection URL is required.');
-    }
+  
+    this.settings = {};
+    this.settings.desciption = "The following settings are needed for this provider"
+    this.settings.list = [
+      {setting: "memcachedurl", type: "string", values : ['http://localhost:11211']}
+    ];
+    this.settings.memcachedurl = options.memcachedurl || this.settings.memcachedurl || 'http://localhost:11211';
 
     const defaultOptions = {
       poolSize: 10,
@@ -41,7 +45,7 @@ class CacheMemcached {
     };
 
     /** @private @const {!Client} */
-    this.client_ = Client.create(defaultOptions.url, {
+    this.client_ = Client.create(this.settings.memcachedurl, {
       poolSize: defaultOptions.poolSize,
       timeout: defaultOptions.timeout,
       retries: defaultOptions.retries,
@@ -58,12 +62,29 @@ class CacheMemcached {
     this.connectionAttempts_ = 0;
     this.maxConnectionAttempts_ = 5;
 
-    /** @private @const {!Map<string, {key: string, hits: number, lastHit: Date}>} */
     this.analytics_ = new Map();
-    /** @private @const {number} */
     this.maxAnalyticsEntries_ = 100;
 
     this.setupConnectionHandlers_();
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**

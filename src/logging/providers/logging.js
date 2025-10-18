@@ -23,9 +23,34 @@ class logging {
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options, eventEmitter) {
+    this.settings = {};
+    this.settings.desciption = "The only setting that is needed is the minloglevel"
+     this.settings.list = [
+      {setting: "minLogLevel", type: "list", values : ['error', 'warn', 'info', 'log']}
+    ];
     this.eventEmitter_ = eventEmitter;
     if (options && options.log){
-      this.minLogLevel = options.log.level || 'info';
+      this.settings.minLogLevel = options.log.level || 'info';
+      console.log(this.settings.minLogLevel);
+    }
+  }
+
+    /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
     }
   }
 
@@ -36,6 +61,8 @@ class logging {
    */
   determineLogLevelPriority(level) {
     const levels = ['error', 'warn', 'info', 'log'];
+    console.log(levels.indexOf(level));
+    console.log(level);
     return levels.indexOf(level);
   }
 
@@ -45,11 +72,12 @@ class logging {
    * @returns 
    */
   shouldLog(level) {
-    if (!this.minLogLevel) {
-      return true; // No minimum level set, log everything
+    if (!this.settings.minLogLevel) {
+      return true; 
     }
     const messagePriority = this.determineLogLevelPriority(level);
     const minPriority = this.determineLogLevelPriority(this.minLogLevel);
+    console.log(messagePriority <= minPriority);
     return messagePriority <= minPriority;
   } 
 

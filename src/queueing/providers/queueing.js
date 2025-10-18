@@ -14,17 +14,37 @@
  * Provides methods for enqueueing, dequeueing, and checking queue size.
  * @class
  */
-class InMemoryQueue {
+class Queueing {
   /**
    * Initializes the in-memory queue with empty storage.
    * @param {Object=} options Configuration options (unused in this implementation).
    * @param {EventEmitter=} eventEmitter Optional event emitter for queue events.
    */
   constructor(options, eventEmitter) {
-    /** @private @const {!Map<string, Array<*>>} */
+    this.settings = {};
+    this.settings.desciption = "There are no settings defined for the in memory queue"
+
     this.queues_ = new Map();
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+  }
+
+    /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**
@@ -96,4 +116,4 @@ class InMemoryQueue {
   }
 }
 
-module.exports = InMemoryQueue;
+module.exports = Queueing;
