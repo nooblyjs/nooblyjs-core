@@ -4,7 +4,35 @@
 
 ## Overview
 
-This document outlines a sophisticated service hierarchy where NooblyJS services can leverage other services to enhance functionality, improve performance, and reduce code duplication. The architecture follows a layered dependency model that prevents circular dependencies while enabling powerful service composition.
+This document outlines the complete service dependency architecture for **nooblyjs-core v1.0.14+**. The architecture implements a sophisticated 5-level service hierarchy (Levels 0-4) where services leverage other services through automatic dependency injection. This layered approach prevents circular dependencies while enabling powerful service composition.
+
+### Key Architectural Features
+
+- **13 Services** organized across 5 dependency levels (0-4)
+- **Automatic Dependency Injection** via ServiceRegistry singleton
+- **Topological Sorting** for correct initialization order
+- **Circular Dependency Prevention** with graph validation
+- **Singleton Pattern** - One instance per `service:provider` combination
+- **Recursive Dependency Resolution** - Dependencies are auto-created
+- **Multiple Provider Support** - Memory, Redis, S3, API, and more
+- **RESTful APIs** - Auto-generated at `/services/{service}/api/*`
+- **Event-Driven Architecture** - Global EventEmitter for communication
+
+### Architecture Summary
+
+```
+Level 4: Integration Services    (aiservice, authservice, notifying)
+            ↓
+Level 3: Application Services    (workflow, searching, scheduling)
+            ↓
+Level 2: Business Logic Services (working, measuring, dataservice)
+            ↓
+Level 1: Infrastructure Services (caching, filing, queueing)
+            ↓
+Level 0: Foundation Services     (logging)
+```
+
+This architecture transforms nooblyjs-core from a collection of isolated services into a cohesive, enterprise-ready platform where services work together seamlessly while maintaining clean separation of concerns.
 
 ---
 
@@ -23,87 +51,111 @@ This document outlines a sophisticated service hierarchy where NooblyJS services
 **Services:**
 - **Logging** - Fundamental logging capabilities
 
-### **Level 1: Foundation Services** (No Dependencies)
-*These services provide core functionality and cannot depend on other NooblyJS services*
+### **Level 1: Infrastructure Services** (Depend on Logging)
+*Core infrastructure that uses logging for operations tracking*
 
 ```
  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
- │   Filing    │  │   Caching   │  │  Queueing   │ 
+ │   Filing    │  │   Caching   │  │  Queueing   │
  │  (Storage)  │  │   (Cache)   │  │  (Queues)   │
- └─────────────┘  └─────────────┘  └─────────────┘
+ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+        │                │                │
+        └────────────────┼────────────────┘
+                         │
+                   ┌─────▼─────┐
+                   │  Logging  │
+                   │ (Level 0) │
+                   └───────────┘
 ```
 
 **Services:**
-- **Filing** - File system operations
-- **Caching** - Caching system operations
-- **Queueing** - Queueing operations
+- **Filing** - File system operations (depends on: logging)
+- **Caching** - Caching system operations (depends on: logging)
+- **Queueing** - Queueing operations (depends on: logging)
 
 **Characteristics:**
-- Self-contained with no internal dependencies
+- Use logging for operation tracking and debugging
 - Provide essential infrastructure capabilities
-- Can use external libraries but not other NooblyJS services
+- Can use external libraries and logging service
 
 ---
 
-### **Level 2: Infrastructure Services** (Use Foundation Services)
-*Core infrastructure that enhances foundation services*
+### **Level 2: Business Logic Services** (Use Infrastructure Services)
+*Services that build on infrastructure capabilities*
 
 ```
-          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
-          │ Dataservice │  │   Working   │  │  Measuring  │ 
-          │             │  │             │  │             │ 
-          └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ 
-                 │                │                │               
-        ┌────────┘──────────┐─────┘─────────┐──────┘─────────┐
-        │                   │               │                │ 
-┌───────▼───────┐   ┌───────▼───────┐ ┌─────▼───────┐  ┌─────▼───────┐
-│    Logging    │   │    Filing     │ │   Caching   │  │   Queues    │ 
-│   (Level 0)   │   │   (Level 1)   │ │  (Level 1)  │  │  (Level 1)  │
-└───────────────┘   └───────────────┘ └─────────────┘  └─────────────┘  
+          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+          │ Dataservice │  │   Working   │  │  Measuring  │
+          │             │  │             │  │             │
+          └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+                 │                │                │
+        ┌────────┴──────┐    ┌────┴────┬──────────┴──────┐
+        │               │    │         │                 │
+┌───────▼───────┐ ┌─────▼─────┐ ┌─────▼─────┐  ┌────────▼────────┐
+│    Logging    │ │   Filing  │ │  Logging  │  │  Logging        │
+│   (Level 0)   │ │ (Level 1) │ │ (Level 0) │  │  (Level 0)      │
+└───────────────┘ └───────────┘ └───────────┘  └─────────────────┘
+                                ┌─────▼─────┐  ┌────────▼────────┐
+                                │  Queueing │  │    Queueing     │
+                                │ (Level 1) │  │   (Level 1)     │
+                                └───────────┘  └─────────────────┘
+                                ┌─────▼─────┐  ┌────────▼────────┐
+                                │  Caching  │  │    Caching      │
+                                │ (Level 1) │  │   (Level 1)     │
+                                └───────────┘  └─────────────────┘
 ```
 
 **Services:**
-- **Dataservice** - Uses logging and filing for data operations
-- **Working** - Uses logging for job execution tracking
-- **Measuring** - Basic metrics collection
+- **Dataservice** - Uses logging and filing for data persistence (depends on: logging, filing)
+- **Working** - Uses logging, queueing, caching for job execution (depends on: logging, queueing, caching)
+- **Measuring** - Metrics collection with logging, queueing, caching (depends on: logging, queueing, caching)
 
 **Example Usage:**
 ```javascript
-// Caching service logs cache operations
-await cache.set(key, value);
-// Internally: logger.debug('Cache SET', { key, ttl });
-
-// DataServe logs data operations and uses filing for persistence
+// Dataservice logs operations and uses filing for persistence
 await dataStore.put('users', userData);
 // Internally: logger.info('Data stored', { container: 'users' });
 //            filing.write('data/users.json', serializedData);
+
+// Working service uses queueing and caching for job management
+await working.execute(scriptPath, args);
+// Internally: logger.info('Job started', { scriptPath });
+//            queueing.enqueue({ type: 'job', script: scriptPath });
+//            caching.set(`job:${jobId}:status`, 'running');
 ```
 
 ---
 
-### **Level 3: Business Logic Services** (Use Infrastructure Services)
-*Services that implement business logic using infrastructure capabilities*
+### **Level 3: Application Services** (Use Business Logic Services)
+*Services that orchestrate complex operations using business logic*
 
 ```
-        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ 
-        │ Scheduling  │  │  Searching  │  │  Workflow   │ 
+        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+        │ Scheduling  │  │  Searching  │  │  Workflow   │
         │             │  │             │  │             │
         └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
                │                │                │
-               └────────────────┼────────────────┘
-                                │
-         ┌──────────────┐───────┘────────┐────────────┐
-         │              │                │            │
-   ┌─────▼────┐  ┌──────▼──────┐  ┌────▼──────┐  ┌────▼──────┐
-   │ Caching  │  │ Dataservice │  │  Logging  │  │ Working   │
-   │ (Level 1)│  │ (Level 1)   │  │ (Level 0) │  │ (Level 1) │
-   └──────────┘  └─────────────┘  └───────────┘  └───────────┘
+     ┌─────────┴──┐    ┌────────┴────────┬───────┴────────┬─────────┐
+     │            │    │                 │                │         │
+┌────▼────┐ ┌────▼────┐ ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐ ┌──▼──────┐
+│ Logging │ │ Working │ │ Logging     │ │ Caching │ │Datasrvc │ │ Logging │
+│(Level 0)│ │(Level 2)│ │ (Level 0)   │ │(Level 1)│ │(Level 2)│ │(Level 0)│
+└─────────┘ └─────────┘ └─────────────┘ └─────────┘ └─────────┘ └─────────┘
+                         ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐
+                         │  Queueing   │ │ Working │ │Queueing │
+                         │  (Level 1)  │ │(Level 2)│ │(Level 1)│
+                         └─────────────┘ └─────────┘ └─────────┘
+                                         ┌────▼────────┐
+                                         │ Scheduling  │
+                                         │  (Level 3)  │
+                                         └─────────────┘
+
 ```
 
 **Services:**
-- **Workflow** - Uses queueing for step execution, scheduling for timed workflows, logging/measuring
-- **Scheduling** - Uses logging, measuring for performance metrics, queueing for job distribution
-- **Searching** - Uses caching for search results, dataservice for indexing, logging for queries
+- **Scheduling** - Task scheduling with logging and working (depends on: logging, working)
+- **Searching** - Full-text search with logging, caching, dataservice, queueing, working, scheduling (depends on: logging, caching, dataservice, queueing, working, scheduling)
+- **Workflow** - Multi-step workflows with logging, queueing, scheduling, measuring, working (depends on: logging, queueing, scheduling, measuring, working)
 
 **Example Usage:**
 ```javascript
@@ -139,30 +191,28 @@ class EnhancedQueue {
 
 ---
 
-### **Level 3: Application Services** (Use Business Logic Services)
-*High-level services that orchestrate business operations*
+### **Level 4: Integration Services** (Use Application Services)
+*High-level services that provide user-facing functionality*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐  
-│  Notifying  │  │ Authservice │  │  AIService  │  
-│             │  │             │  │             │  
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘  
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│  Notifying  │  │ Authservice │  │  AIService  │
+│             │  │             │  │             │
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
        │                │                │
-       └────────────────┼────────────────┘
-                        │
-         ┌──────────────┼──────────────┐
-         │              │              │
-   ┌─────▼────┐  ┌──────▼──────┐  ┌────▼─────┐
-   │Queueing  │  │ Scheduling  │  │ Caching  │
-   │(Level 2) │  │ (Level 2)   │  │(Level 1) │
-   └──────────┘  └─────────────┘  └──────────┘
+  ┌────┴───┬─────┐  ┌───┴────┬────┐  ┌──┴────┬──────┬─────────┐
+  │        │     │  │        │    │  │       │      │         │
+┌─▼──┐ ┌──▼──┐ ┌▼──┐ ┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌───▼────┐ ┌──▼──┐
+│Log │ │Queue│ │Sch │ │ Log │ │Cache│ │Data │ │ Log │ │ Cache  │ │Wflow│ │Queue│
+│(L0)│ │(L1) │ │(L3)│ │(L0) │ │(L1) │ │(L2) │ │(L0) │ │  (L1)  │ │(L3) │ │(L1) │
+└────┘ └─────┘ └────┘ └─────┘ └─────┘ └─────┘ └─────┘ └────────┘ └─────┘ └─────┘
 ```
 
 **Services:**
 
-- **Notifying** - Uses queueing for async delivery, scheduling for delayed notifications
-- **AuthService** - Uses caching for sessions, dataservice for user storage
-- **AIService** - Uses workflow for complex AI pipelines, caching for responses, queueing for async processing
+- **Notifying** - Pub/sub notifications with logging, queueing, scheduling (depends on: logging, queueing, scheduling)
+- **Authservice** - Authentication/authorization with logging, caching, dataservice (depends on: logging, caching, dataservice)
+- **AIService** - LLM integration with logging, caching, workflow, queueing (depends on: logging, caching, workflow, queueing)
 
 ---
 
@@ -179,77 +229,119 @@ class ServiceRegistry {
   }
 
   /**
-   * Define service dependencies
+   * Initialize service dependencies (called once during initialization)
    */
-  defineDependencies() {
-    // Level 0 services (no dependencies)
+  initializeServiceDependencies() {
+    if (this.dependenciesInitialized) {
+      return;
+    }
+
+    // Level 0 services (Foundation - No dependencies)
     this.serviceDependencies.set('logging', []);
-    this.serviceDependencies.set('filing', []);
-    
 
-    // Level 1 services
+    // Level 1 services (Infrastructure - Use foundation services)
+    this.serviceDependencies.set('filing', ['logging']);
     this.serviceDependencies.set('caching', ['logging']);
+    this.serviceDependencies.set('queueing', ['logging']);
+
+    // Level 2 services (Business Logic - Use infrastructure services)
     this.serviceDependencies.set('dataservice', ['logging', 'filing']);
-    this.serviceDependencies.set('working', ['logging']);
-    this.serviceDependencies.set('measuring', ['logging']]);
+    this.serviceDependencies.set('working', ['logging', 'queueing', 'caching']);
+    this.serviceDependencies.set('measuring', ['logging', 'queueing', 'caching']);
 
-    // Level 2 services
-    this.serviceDependencies.set('queueing', ['logging', 'caching', 'dataservice']);
-    this.serviceDependencies.set('scheduling', ['logging', 'measuring', 'queueing']);
-    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice']);
+    // Level 3 services (Application - Use business logic services)
+    this.serviceDependencies.set('scheduling', ['logging', 'working']);
+    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice', 'queueing', 'working', 'scheduling']);
+    this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring', 'working']);
 
-    // Level 3 services
-    this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring']);
+    // Level 4 services (Integration - Use application services)
     this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
     this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
-
-    // Level 4 services
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
+
+    this.dependenciesInitialized = true;
   }
 
   /**
-   * Initialize services in dependency order
+   * Initialize the service registry with Express app and event emitter
    */
-  async initializeServices(config) {
-    this.defineDependencies();
-    const initOrder = this.getInitializationOrder();
-
-    for (const serviceName of initOrder) {
-      if (config.services[serviceName]?.enabled) {
-        await this.initializeService(serviceName, config.services[serviceName]);
-      }
-    }
-  }
-
-  /**
-   * Get service with dependencies injected
-   */
-  getService(serviceName, providerType = 'memory', options = {}) {
-    if (!this.services.has(serviceName)) {
-      const dependencies = this.getDependentServices(serviceName);
-      const serviceFactory = require(`./src/${serviceName}`);
-
-      const service = serviceFactory(providerType, {
-        ...options,
-        dependencies
-      }, this.eventEmitter);
-
-      this.services.set(serviceName, service);
+  initialize(app, eventEmitter = null, options = {}) {
+    if (this.initialized) {
+      throw new Error('ServiceRegistry already initialized');
     }
 
-    return this.services.get(serviceName);
+    this.app = app;
+    this.eventEmitter = eventEmitter || new EventEmitter();
+    this.globalOptions = options;
+
+    // Initialize dependency map
+    this.initializeServiceDependencies();
+
+    // Validate no circular dependencies
+    this.validateDependencies();
+
+    this.initialized = true;
   }
 
   /**
-   * Get dependent services for injection
+   * Get service with dependencies injected (Singleton Pattern)
+   * Services are cached using key: serviceName:providerType
    */
-  getDependentServices(serviceName) {
+  getService(serviceName, providerType = null, explicitOptions = {}) {
+    if (!this.initialized) {
+      throw new Error('ServiceRegistry must be initialized before getting services');
+    }
+
+    // Determine provider type
+    const actualProviderType = providerType || this.getDefaultProviderType(serviceName);
+
+    // Singleton key: serviceName:providerType
+    const serviceKey = `${serviceName}:${actualProviderType}`;
+
+    // Return cached instance if exists
+    if (this.services.has(serviceKey)) {
+      return this.services.get(serviceKey);
+    }
+
+    // Resolve dependencies recursively
+    const dependencies = this.resolveDependencies(serviceName, actualProviderType);
+
+    // Load service factory
+    const serviceFactory = require(`./src/${serviceName}`);
+
+    // Merge options
+    const serviceOptions = {
+      ...this.globalOptions,
+      ...explicitOptions,
+      dependencies,
+      'express-app': this.app
+    };
+
+    // Create service instance
+    const service = serviceFactory(actualProviderType, serviceOptions, this.eventEmitter);
+
+    // Cache the instance
+    this.services.set(serviceKey, service);
+
+    return service;
+  }
+
+  /**
+   * Resolve dependencies for a service (recursive)
+   */
+  resolveDependencies(serviceName, requestedProviderType = 'memory') {
     const dependencies = {};
-    const requiredServices = this.serviceDependencies.get(serviceName) || [];
+    const requiredDependencies = this.serviceDependencies.get(serviceName) || [];
 
-    for (const depService of requiredServices) {
-      if (this.services.has(depService)) {
-        dependencies[depService] = this.services.get(depService);
+    for (const depServiceName of requiredDependencies) {
+      const depProviderType = this.getDefaultProviderType(depServiceName);
+      const depServiceKey = `${depServiceName}:${depProviderType}`;
+
+      if (this.services.has(depServiceKey)) {
+        dependencies[depServiceName] = this.services.get(depServiceKey);
+      } else {
+        // Recursively create dependency
+        dependencies[depServiceName] = this.getService(depServiceName, depProviderType);
       }
     }
 
@@ -257,27 +349,90 @@ class ServiceRegistry {
   }
 
   /**
-   * Calculate initialization order using topological sort
+   * Get default provider type for a service
    */
-  getInitializationOrder() {
+  getDefaultProviderType(serviceName) {
+    const defaults = {
+      logging: 'memory',
+      caching: 'memory',
+      filing: 'local',
+      dataservice: 'memory',
+      queueing: 'memory',
+      working: 'memory',
+      measuring: 'memory',
+      scheduling: 'memory',
+      searching: 'memory',
+      workflow: 'memory',
+      notifying: 'memory',
+      authservice: 'memory',
+      aiservice: 'claude'
+    };
+
+    return defaults[serviceName] || 'memory';
+  }
+
+  /**
+   * Validate dependencies for circular references
+   */
+  validateDependencies() {
     const visited = new Set();
-    const temp = new Set();
+    const visiting = new Set();
+
+    const visit = (serviceName) => {
+      if (visiting.has(serviceName)) {
+        throw new Error(`Circular dependency detected involving service: ${serviceName}`);
+      }
+
+      if (visited.has(serviceName)) {
+        return;
+      }
+
+      visiting.add(serviceName);
+
+      const deps = this.serviceDependencies.get(serviceName) || [];
+      for (const dep of deps) {
+        if (!this.serviceDependencies.has(dep)) {
+          throw new Error(`Service '${serviceName}' depends on unknown service '${dep}'`);
+        }
+        visit(dep);
+      }
+
+      visiting.delete(serviceName);
+      visited.add(serviceName);
+    };
+
+    for (const serviceName of this.serviceDependencies.keys()) {
+      visit(serviceName);
+    }
+  }
+
+  /**
+   * Calculate service initialization order using topological sort
+   */
+  getServiceInitializationOrder() {
+    const visited = new Set();
+    const visiting = new Set();
     const order = [];
 
     const visit = (serviceName) => {
-      if (temp.has(serviceName)) {
-        throw new Error(`Circular dependency detected involving ${serviceName}`);
+      if (visiting.has(serviceName)) {
+        throw new Error(`Circular dependency detected involving service: ${serviceName}`);
       }
-      if (!visited.has(serviceName)) {
-        temp.add(serviceName);
-        const deps = this.serviceDependencies.get(serviceName) || [];
-        for (const dep of deps) {
-          visit(dep);
-        }
-        temp.delete(serviceName);
-        visited.add(serviceName);
-        order.push(serviceName);
+
+      if (visited.has(serviceName)) {
+        return;
       }
+
+      visiting.add(serviceName);
+
+      const deps = this.serviceDependencies.get(serviceName) || [];
+      for (const dep of deps) {
+        visit(dep);
+      }
+
+      visiting.delete(serviceName);
+      visited.add(serviceName);
+      order.push(serviceName);
     };
 
     for (const serviceName of this.serviceDependencies.keys()) {
@@ -286,6 +441,20 @@ class ServiceRegistry {
 
     return order;
   }
+
+  /**
+   * Convenience methods for getting services
+   * Example: serviceRegistry.caching('redis') returns a caching service with redis provider
+   */
+  caching(providerType = null, options = {}) {
+    return this.getService('caching', providerType, options);
+  }
+
+  filing(providerType = null, options = {}) {
+    return this.getService('filing', providerType, options);
+  }
+
+  // ... similar methods for all 13 services
 }
 ```
 
@@ -653,41 +822,150 @@ class EnhancedWorkflowService {
 
 ---
 
-## 📋 **Implementation Roadmap**
+## 📊 **Complete Service Dependency Table**
 
-### **Phase 1: Foundation (Week 1-2)**
-1. Implement dependency injection in ServiceRegistry
-2. Add topological sorting for initialization order
-3. Create enhanced base service pattern
+| Level | Service      | Dependencies                                                      | Provider Support            |
+|-------|--------------|-------------------------------------------------------------------|-----------------------------|
+| 0     | logging      | none                                                              | memory, file, api           |
+| 1     | filing       | logging                                                           | local, ftp, s3, api         |
+| 1     | caching      | logging                                                           | memory, redis, memcached, file, api |
+| 1     | queueing     | logging                                                           | memory, api                 |
+| 2     | dataservice  | logging, filing                                                   | memory, simpledb, file, api |
+| 2     | working      | logging, queueing, caching                                        | memory, api                 |
+| 2     | measuring    | logging, queueing, caching                                        | memory, api                 |
+| 3     | scheduling   | logging, working                                                  | memory, api                 |
+| 3     | searching    | logging, caching, dataservice, queueing, working, scheduling      | memory, api                 |
+| 3     | workflow     | logging, queueing, scheduling, measuring, working                 | memory, api                 |
+| 4     | notifying    | logging, queueing, scheduling                                     | memory, api                 |
+| 4     | authservice  | logging, caching, dataservice                                     | memory, api                 |
+| 4     | aiservice    | logging, caching, workflow, queueing                              | claude, chatgpt, ollama, api|
 
-### **Phase 2: Level 1 Enhancement (Week 3-4)**
-1. Enhance Caching service with logging
-2. Enhance DataServe with logging and filing
-3. Enhance Working service with logging
+## 📋 **Current Implementation Status**
 
-### **Phase 3: Level 2 Enhancement (Week 5-8)**
-1. Create EnhancedQueueService with persistence and caching
-2. Enhance Scheduling with queueing and metrics
-3. Enhance Searching with caching and persistence
+### **✅ Completed (v1.0.14+)**
+1. **ServiceRegistry with Dependency Injection** - Fully implemented
+   - Singleton pattern with `serviceName:providerType` keys
+   - Automatic dependency resolution with recursive creation
+   - Topological sort for initialization order
+   - Circular dependency validation
+   - 13 services across 5 dependency levels (0-4)
 
-### **Phase 4: Level 3 Enhancement (Week 9-12)**
-1. Create EnhancedWorkflowService with queueing and scheduling
-2. Enhance Notifying with queueing
-3. Enhance AuthService with caching and persistence
+2. **All Services Enhanced with Dependencies**
+   - All services support dependency injection
+   - Logging integrated across all services
+   - Caching, queueing, and filing used where appropriate
+   - Working, measuring, scheduling, workflow orchestration working
 
-### **Phase 5: Integration (Week 13-16)**
-1. Full integration testing
-2. Performance optimization
-3. Documentation and examples
+3. **Provider Architecture**
+   - Memory providers for all services
+   - Redis and Memcached for caching
+   - S3 and FTP for filing
+   - SimpleDB and file-based storage for dataservice
+   - Claude, ChatGPT, Ollama for AI service
+   - API provider for distributed/enterprise deployments
+
+4. **RESTful API Layer**
+   - Auto-generated routes at `/services/{service}/api/*`
+   - Status endpoints for all services
+   - CRUD operations following RESTful conventions
+
+5. **Security & Authentication**
+   - API key authentication
+   - Session-based authentication with Passport
+   - RBAC (Role-Based Access Control)
+   - OAuth 2.0 integration (Google, GitHub)
+   - Password hashing and validation
+
+### **🚀 Future Enhancements (Roadmap)**
+
+#### **v1.1.x - Performance Optimization**
+1. Connection pooling for Redis/Memcached
+2. Lazy loading of service dependencies
+3. Service health checks and auto-recovery
+4. Metrics dashboard for all services
+
+#### **v1.2.x - Advanced Features**
+1. Distributed tracing across services
+2. Service mesh architecture
+3. Advanced queueing features (priority, delay, retry)
+4. Multi-region support for filing service
+
+#### **v2.0+ - Enterprise Features**
+1. Service versioning and backward compatibility
+2. Blue-green deployment support
+3. A/B testing framework
+4. Advanced analytics and reporting
 
 ---
 
 ## 🎯 **Best Practices**
 
-1. **Graceful Degradation**: Services should work even if dependencies are unavailable
-2. **Configuration-Driven**: Dependencies should be configurable
-3. **Circular Dependency Prevention**: Use dependency injection and careful design
-4. **Performance Monitoring**: Track the impact of service dependencies
-5. **Fallback Mechanisms**: Provide fallback behavior when dependencies fail
+### 1. Service Initialization
+- **Always initialize ServiceRegistry before getting services**
+  ```javascript
+  serviceRegistry.initialize(app, eventEmitter, options);
+  const cache = serviceRegistry.caching('redis'); // Correct
+  ```
+- **Never get services before initialization** - Will throw error
+- **Use singleton pattern** - Call `serviceRegistry.caching('redis')` multiple times returns same instance
 
-This architecture transforms NooblyJS from a collection of isolated services into a cohesive, enterprise-ready platform where services work together to provide enhanced capabilities while maintaining clean separation of concerns.
+### 2. Dependency Management
+- **Trust automatic dependency injection** - Don't manually wire dependencies
+- **Use default providers for dependencies** - ServiceRegistry automatically selects memory/local providers
+- **Avoid circular dependencies** - Architecture validates at startup
+- **Respect dependency levels** - Lower-level services cannot depend on higher-level ones
+
+### 3. Provider Selection
+- **Development**: Use `memory` providers for fast local development
+- **Production**: Use `redis`, `s3`, `api` providers for scalability
+- **Testing**: Use `memory` providers for isolated, fast tests
+- **Distributed**: Use `api` provider to connect to remote service instances
+
+### 4. Error Handling
+- **Graceful degradation** - Services should work even if optional dependencies fail
+- **Log all errors** - All services have access to logging dependency
+- **Use event emitter** - Emit events for critical failures
+- **Validate dependencies** - Use `validateDependencies()` to catch issues early
+
+### 5. Performance Optimization
+- **Cache frequently accessed data** - Use caching service dependencies
+- **Queue heavy operations** - Use queueing service for async processing
+- **Monitor metrics** - Use measuring service to track performance
+- **Use appropriate providers** - Memory for speed, Redis for distributed caching
+
+### 6. Testing
+- **Test with memory providers** - Fast, isolated unit tests
+- **Test dependency injection** - Verify dependencies are correctly injected
+- **Test initialization order** - Verify topological sort works correctly
+- **Integration tests** - Test with real providers (Redis, S3)
+
+### 7. Production Deployment
+- **Set environment variables** - Configure providers via env vars
+- **Monitor service health** - Use `/services/{service}/api/status` endpoints
+- **Scale horizontally** - Use Redis/API providers for stateless scaling
+- **Implement circuit breakers** - Prevent cascade failures
+
+---
+
+## 📚 **Additional Resources**
+
+- **Usage Guide**: `/docs/nooblyjs-core-usage-guide.md` - Comprehensive human-readable guide
+- **Quick Reference**: `/docs/nooblyjs-core-usage-guide-concise.md` - AI-optimized quick reference
+- **Requirements**: `/docs/nooblyjs-core-requirements-document.md` - Product requirements
+- **Main Documentation**: `CLAUDE.md` - Project overview and commands
+- **README**: `README.md` - Getting started and API reference
+
+---
+
+## 🔚 **Conclusion**
+
+The nooblyjs-core dependency architecture provides a robust, scalable foundation for building enterprise Node.js applications. By leveraging automatic dependency injection, topological sorting, and a clear 5-level hierarchy, developers can build complex systems with confidence that dependencies are correctly managed and circular references are prevented.
+
+**Key Takeaways:**
+- 13 services across 5 levels (0-4)
+- Automatic dependency injection via ServiceRegistry
+- Singleton pattern prevents duplicate instances
+- Topological sort ensures correct initialization
+- Multiple providers for flexibility (memory, redis, s3, api)
+- RESTful APIs auto-generated for all services
+- Production-ready with security, authentication, and monitoring

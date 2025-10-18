@@ -1,23 +1,55 @@
-# NooblyJS Core - Technical Usage Guide
+# NooblyJS Core - Complete Usage Guide
+
+**Version:** 1.0.14+
+**Package:** `noobly-core` on npm
+**Repository:** https://github.com/nooblyjs/nooblyjs-core
 
 ## Overview
 
-This comprehensive guide covers all aspects of using the NooblyJS Core framework, from basic setup to advanced configurations. Whether you're building APIs, web applications, or microservices, this guide provides practical examples and patterns for leveraging all framework capabilities.
+NooblyJS Core is a comprehensive, modular Node.js backend framework that provides **13 enterprise-grade services** through a unified Service Registry architecture. Built for scalability, it supports multiple provider backends (memory, Redis, MongoDB, S3, etc.) and enables both monolithic and distributed microservices architectures.
+
+**Key Features:**
+- 🏗️ **Service Registry Pattern** - Singleton services with dependency injection
+- 🔌 **Pluggable Providers** - Switch between memory, Redis, S3, MongoDB, and more
+- 🌐 **Enterprise API Architecture** - Remote service consumption for distributed systems
+- 🔐 **Built-in Security** - API key authentication, session management, RBAC, OAuth
+- 📊 **Real-time Analytics** - Built-in monitoring and metrics for services
+- 🎨 **Web Dashboards** - Service management UIs at `/services/`
+- 🤖 **AI Integration** - Claude, ChatGPT, and Ollama support with token tracking
+- 📝 **Auto-generated APIs** - RESTful endpoints for all services
 
 ---
 
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
+   - [Installation](#installation)
+   - [Quick Start Examples](#quick-start-examples)
+   - [Directory Structure](#directory-structure)
 2. [Service Registry Architecture](#service-registry-architecture)
-3. [API Usage](#api-usage)
-4. [Programmatic Usage](#programmatic-usage)
-5. [Web Interface](#web-interface)
+   - [Core Concepts](#core-concepts)
+   - [All 13 Services Overview](#all-13-services-overview)
+   - [Dependency Hierarchy](#dependency-hierarchy)
+3. [Configuration](#configuration)
+   - [Initialization Options](#initialization-options)
+   - [Environment Variables](#environment-variables)
+   - [Security Configuration](#security-configuration)
+4. [API Usage](#api-usage)
+   - [Authentication Methods](#authentication-methods)
+   - [Service Endpoints](#service-endpoints)
+5. [Programmatic Usage](#programmatic-usage)
+   - [Service-by-Service Guide](#service-by-service-guide)
+   - [Real-World Examples](#real-world-examples)
 6. [Authentication & Security](#authentication--security)
-7. [Service Reference](#service-reference)
-8. [Configuration](#configuration)
-9. [Deployment](#deployment)
-10. [Testing](#testing)
+   - [API Key Authentication](#api-key-authentication)
+   - [Session-Based Authentication](#session-based-authentication)
+   - [OAuth Integration](#oauth-integration)
+7. [Enterprise Architecture](#enterprise-architecture)
+   - [API Providers](#api-providers)
+   - [Distributed Systems](#distributed-systems)
+8. [Web Interface](#web-interface)
+9. [Testing](#testing)
+10. [Deployment](#deployment)
 11. [Best Practices](#best-practices)
 12. [Troubleshooting](#troubleshooting)
 
@@ -31,13 +63,18 @@ This comprehensive guide covers all aspects of using the NooblyJS Core framework
 # Install from npm
 npm install noobly-core
 
-# Clone and run locally
-git clone https://github.com/StephenBooysen/nooblyjs-core.git
+# Or clone and run the example application
+git clone https://github.com/nooblyjs/nooblyjs-core.git
 cd nooblyjs-core
 npm install
+npm start  # Runs on http://localhost:3001
 ```
 
-### Quick Start - Basic Usage
+### Quick Start Examples
+
+#### Example 1: Minimal Setup
+
+The simplest way to get started with NooblyJS Core:
 
 ```javascript
 const express = require('express');
@@ -46,25 +83,130 @@ const serviceRegistry = require('noobly-core');
 const app = express();
 app.use(express.json());
 
-// Initialize the service registry
+// STEP 1: Initialize the service registry (REQUIRED FIRST)
 serviceRegistry.initialize(app);
 
-// Get services
+// STEP 2: Get services you need
 const cache = serviceRegistry.cache('memory');
-const logger = serviceRegistry.logger('console');
+const logger = serviceRegistry.logger('file');
 const dataService = serviceRegistry.dataService('memory');
 
-// Use services programmatically
-await cache.put('user:123', { name: 'John', email: 'john@example.com' });
-const user = await cache.get('user:123');
-logger.info('Retrieved user:', user);
+// STEP 3: Use services programmatically
+async function demo() {
+  // Caching - key-value storage with TTL
+  await cache.put('user:123', { name: 'John', email: 'john@example.com' }, 3600);
+  const user = await cache.get('user:123');
+  logger.info('Retrieved user from cache:', user);
+
+  // DataService - UUID-based document storage
+  const uuid = await dataService.add('users', {
+    name: 'Jane',
+    email: 'jane@example.com',
+    role: 'admin'
+  });
+  logger.info('Created user with UUID:', uuid);
+}
 
 app.listen(3000, () => {
-  logger.info('Server running on port 3000');
+  console.log('Server running on http://localhost:3000');
+  console.log('Service dashboard: http://localhost:3000/services/');
+  demo();
 });
 ```
 
-### Quick Start - With API Keys
+#### Example 2: Production Setup with Security
+
+Complete production-ready setup with API keys and authentication:
+
+```javascript
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Setup session middleware (required for auth service)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-this-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Parse API keys from environment
+const apiKeys = (process.env.NOOBLY_API_KEYS || '').split(',').filter(Boolean);
+
+// Initialize service registry with security
+serviceRegistry.initialize(app, null, {
+  logDir: './.noobly-core/logs',
+  dataDir: './.noobly-core/data',
+  apiKeys: apiKeys,
+  requireApiKey: apiKeys.length > 0,
+  excludePaths: [
+    '/services/*/status',           // Allow status checks
+    '/services/',                    // Allow dashboard access
+    '/services/authservice/api/login',
+    '/services/authservice/api/register'
+  ]
+});
+
+// Get services
+const log = serviceRegistry.logger('file');
+const cache = serviceRegistry.cache('redis', {
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT) || 6379
+});
+const dataService = serviceRegistry.dataService('file');
+const auth = serviceRegistry.authservice('file');
+
+// Configure Passport authentication
+const { configurePassport } = auth.passportConfigurator(auth.getAuthStrategy);
+configurePassport(passport);
+
+// Middleware to require authentication
+function requireAuth(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: 'Authentication required' });
+}
+
+// Example protected endpoint
+app.get('/api/protected/data', requireAuth, async (req, res) => {
+  try {
+    const data = await dataService.jsonFindByCriteria('items', {
+      userId: req.user.id
+    });
+    res.json(data);
+  } catch (error) {
+    log.error('Error fetching data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  log.info(`Server running on port ${PORT}`);
+  if (apiKeys.length === 0) {
+    log.warn('No API keys configured. Set NOOBLY_API_KEYS environment variable.');
+  } else {
+    log.info(`API protection enabled with ${apiKeys.length} key(s)`);
+  }
+});
+```
+
+#### Example 3: AI-Powered Application
+
+Using the AI service for intelligent features:
 
 ```javascript
 const express = require('express');
@@ -73,23 +215,66 @@ const serviceRegistry = require('noobly-core');
 const app = express();
 app.use(express.json());
 
-// Generate API keys
-const apiKey = serviceRegistry.generateApiKey();
-console.log('Generated API Key:', apiKey);
+serviceRegistry.initialize(app);
 
-// Initialize with security
-serviceRegistry.initialize(app, {
-  apiKeys: [apiKey],
-  requireApiKey: true,
-  excludePaths: [
-    '/services/*/status',
-    '/services/',
-    '/services/*/views/*'
-  ]
+const log = serviceRegistry.logger('file');
+const aiservice = serviceRegistry.aiservice('claude', {
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-3-5-sonnet-20241022',
+  tokensStorePath: './data/ai-tokens.json'
+});
+
+// AI-powered content generation
+app.post('/api/ai/generate', async (req, res) => {
+  try {
+    const { prompt, maxTokens = 1000 } = req.body;
+
+    const response = await aiservice.prompt(prompt, {
+      maxTokens,
+      temperature: 0.7
+    });
+
+    log.info('AI response generated', {
+      tokens: response.usage.totalTokens,
+      cost: response.usage.estimatedCost
+    });
+
+    res.json({
+      content: response.content,
+      usage: response.usage
+    });
+  } catch (error) {
+    log.error('AI generation failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get AI usage analytics
+app.get('/api/ai/analytics', (req, res) => {
+  const analytics = aiservice.getAnalytics();
+  res.json(analytics);
 });
 
 app.listen(3000);
 ```
+
+### Directory Structure
+
+After installation, your project should have:
+
+```
+your-project/
+├── node_modules/
+│   └── noobly-core/           # Installed package
+├── .noobly-core/              # Created at runtime
+│   ├── logs/                  # Log files
+│   └── data/                  # Persistent data
+├── .env                       # Environment variables
+├── app.js                     # Your application
+└── package.json
+```
+
+The framework automatically creates `.noobly-core/` directory for logs and data when using file-based providers.
 
 ---
 
@@ -97,45 +282,116 @@ app.listen(3000);
 
 ### Core Concepts
 
-The NooblyJS Core implements a **Service Registry Pattern** with the following principles:
+NooblyJS Core implements a **Service Registry Pattern** with sophisticated features:
 
-- **Singleton Pattern**: One instance per service type/provider combination
-- **Provider Pattern**: Multiple backend implementations for each service
-- **Event-Driven**: Global EventEmitter for inter-service communication
-- **RESTful APIs**: Consistent HTTP endpoints for all services
-
-### Service Lifecycle
+#### 1. **Singleton Pattern**
+Each service/provider combination is cached as a singleton. Getting the same service twice returns the same instance:
 
 ```javascript
-// 1. Initialize registry (once)
-serviceRegistry.initialize(app, eventEmitter, options);
-
-// 2. Get service instances (cached as singletons)
-const cache = serviceRegistry.cache('redis', { host: 'localhost', port: 6379 });
-
-// 3. Use services
-await cache.put('key', 'value');
-
-// 4. Services are automatically configured with routes and middleware
+const cache1 = serviceRegistry.cache('redis', {host: 'localhost'});
+const cache2 = serviceRegistry.cache('redis', {host: 'localhost'});
+// cache1 === cache2 (same instance)
 ```
 
-### Available Services
+#### 2. **Dependency Injection**
+Services automatically receive their dependencies based on a 4-level hierarchy. You don't manually inject dependencies:
 
-| Service | Purpose | Providers | API Endpoints |
-|---------|---------|-----------|---------------|
-| **caching** | High-performance caching | memory, redis, memcached, **api** | `/services/caching/api/*` |
-| **dataservice** | Database-style JSON document storage with UUIDs | memory, simpledb, file, mongodb, documentdb, **api** | `/services/dataservice/api/*` |
-| **filing** | File management | local, ftp, s3, git, gcp, sync, **api** | `/services/filing/api/*` |
-| **logging** | Application logging | console, file, **api** | `/services/logging/api/*` |
-| **aiservice** | AI/LLM integration | claude, chatgpt, ollama, **api** | `/services/ai/api/*` |
-| **authservice** | Authentication & user management | passport, google, memory, file, **api** | `/services/authservice/api/*` |
-| **measuring** | Metrics & performance monitoring | memory, **api** | `/services/measuring/api/*` |
-| **notifying** | Pub/sub notifications | memory, **api** | `/services/notifying/api/*` |
-| **queueing** | Task queue management | memory, **api** | `/services/queueing/api/*` |
-| **searching** | Full-text search | memory, **api** | `/services/searching/api/*` |
-| **workflow** | Multi-step workflow orchestration | memory, **api** | `/services/workflow/api/*` |
-| **working** | Background job execution | memory, **api** | `/services/working/api/*` |
-| **scheduling** | Task scheduling | memory | `/services/scheduling/api/*` |
+```javascript
+// When you get the search service, it automatically gets:
+// - logging, caching, dataservice, queueing, working, and scheduling
+const searching = serviceRegistry.searching('memory');
+```
+
+#### 3. **Provider Pattern**
+Each service supports multiple backend implementations that you can switch seamlessly:
+
+```javascript
+// Development: use in-memory provider
+const cache = serviceRegistry.cache('memory');
+
+// Production: switch to Redis without changing your code
+const cache = serviceRegistry.cache('redis', {
+  host: process.env.REDIS_HOST,
+  port: 6379
+});
+```
+
+#### 4. **Auto-generated REST APIs**
+Every service automatically exposes RESTful endpoints at `/services/{service}/api/*`:
+
+```javascript
+// After initialization, all these endpoints are live:
+// POST /services/caching/api/put/:key
+// GET /services/caching/api/get/:key
+// POST /services/dataservice/api/:container
+// etc.
+```
+
+#### 5. **Event-Driven Architecture**
+All services communicate via a global EventEmitter for loose coupling:
+
+```javascript
+const eventEmitter = serviceRegistry.getEventEmitter();
+
+eventEmitter.on('cache:put', (data) => {
+  console.log('Cache updated:', data.key);
+});
+
+eventEmitter.on('ai:usage', (data) => {
+  console.log('AI tokens used:', data.tokens, 'Cost:', data.cost);
+});
+```
+
+### All 13 Services Overview
+
+| # | Service | Method | Purpose | Best Providers |
+|---|---------|--------|---------|----------------|
+| 1 | **Logging** | `.logger(provider, options)` | Application logging with levels | `file`, `memory`, `api` |
+| 2 | **Caching** | `.cache(provider, options)` | High-performance key-value caching with TTL | `redis`, `memcached`, `memory`, `api` |
+| 3 | **Filing** | `.filing(provider, options)` | File upload/download/management | `s3`, `local`, `gcp`, `git`, `api` |
+| 4 | **Queueing** | `.queue(provider, options)` | FIFO task queue management | `memory`, `api` |
+| 5 | **DataService** | `.dataService(provider, options)` | UUID-based JSON document storage | `mongodb`, `file`, `memory`, `api` |
+| 6 | **Working** | `.working(provider, options)` | Background task execution with worker threads | `memory`, `api` |
+| 7 | **Measuring** | `.measuring(provider, options)` | Metrics collection and aggregation | `memory`, `api` |
+| 8 | **Scheduling** | `.scheduling(provider, options)` | Cron-like task scheduling | `memory` |
+| 9 | **Searching** | `.searching(provider, options)` | Full-text search and indexing | `memory`, `file`, `api` |
+| 10 | **Workflow** | `.workflow(provider, options)` | Multi-step workflow orchestration | `memory`, `api` |
+| 11 | **Notifying** | `.notifying(provider, options)` | Pub/sub messaging system | `memory`, `api` |
+| 12 | **Auth Service** | `.authservice(provider, options)` | User authentication, RBAC, OAuth | `file`, `passport`, `google`, `api` |
+| 13 | **AI Service** | `.aiservice(provider, options)` | LLM integration with analytics | `claude`, `chatgpt`, `ollama`, `api` |
+
+### Dependency Hierarchy
+
+Services are organized in a 4-level hierarchy. Lower-level services have no dependencies; higher-level services depend on lower levels.
+
+#### **Level 0: Foundation** (No Dependencies)
+- **Logging** - Base logging for all services
+
+#### **Level 1: Infrastructure** (Depend on Foundation)
+- **Caching** - Depends on: `logging`
+- **Filing** - Depends on: `logging`
+- **Queueing** - Depends on: `logging`
+
+#### **Level 2: Business Logic** (Depend on Infrastructure)
+- **DataService** - Depends on: `logging`, `filing`
+- **Working** - Depends on: `logging`, `queueing`, `caching`
+- **Measuring** - Depends on: `logging`, `queueing`, `caching`
+
+#### **Level 3: Application** (Depend on Business Logic)
+- **Scheduling** - Depends on: `logging`, `working`
+- **Searching** - Depends on: `logging`, `caching`, `dataservice`, `queueing`, `working`, `scheduling`
+- **Workflow** - Depends on: `logging`, `queueing`, `scheduling`, `measuring`, `working`
+
+#### **Level 4: Integration** (Depend on Application)
+- **Notifying** - Depends on: `logging`, `queueing`, `scheduling`
+- **Auth Service** - Depends on: `logging`, `caching`, `dataservice`
+- **AI Service** - Depends on: `logging`, `caching`, `workflow`, `queueing`
+
+**Why This Matters:**
+- Dependencies are injected automatically in the correct order
+- You can't create circular dependencies (framework prevents it)
+- Services initialize in topological order
+- Lower-level services can be used independently
 
 ---
 

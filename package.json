@@ -33,6 +33,7 @@
   "scripts": {
     "start": "node ./app.js",
     "dev:web": "nodemon --watch ./src ./app.js",
+    "dev:web:noauth": "nodemon --watch ./src ./app.js",
     "test": "jest",
     "test-load": "node ./tests-load/",
     "kill": "kill -9 $(lsof -t -i:3001)"
