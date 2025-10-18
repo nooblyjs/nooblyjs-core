@@ -29,6 +29,7 @@ class LoggingApi {
     this.settings = {};
     this.settings.desciption = "The distributed caching module requires api connections"
     this.settings.list = [
+      {setting: "minLogLevel", type: "list", values : ['error', 'warn', 'info', 'log']},
       {setting: "url", type: "string", values : ['e.g. http:/logging.nooblyjs.com']},
       {setting: "apikey", type: "string", values : ['Please speak to you admin for this key']}
     ];
