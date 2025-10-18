@@ -25,16 +25,22 @@ class loggingFile {
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options = {}, eventEmitter) {
-
-    this.logDir_ = options.logDir || './.logs';
+    this.settings = {};
+    this.settings.desciption = "The setting that are needed is the minloglevel and logDir"
+    this.settings.list = [
+      {setting: "minLogLevel", type: "list", values : ['error', 'warn', 'info', 'log']}, 
+      {setting: "logDir", type: "string", values : ['/.logs/']}
+    ];
+    this.settings.logDir = options.logDir || './.logs';
+    
     const defaultFilename = options.filename || this.generateDefaultFilename_();
     this.filename_ = path.isAbsolute(defaultFilename) 
       ? defaultFilename 
-      : path.join(this.logDir_, defaultFilename);
+      : path.join(this.settings.logDir, defaultFilename);
     this.eventEmitter_ = eventEmitter;
     
     if (options && options.log){
-      this.minLogLevel = options.log.level || 'info';
+      this.settings.minLogLevel = options.log.level || 'info';
     }
     
     // Ensure log directory exists
@@ -57,8 +63,8 @@ class loggingFile {
    * @returns 
    */
   shouldLog(level) {
-    if (!this.minLogLevel) {
-      return true; // No minimum level set, log everything
+    if (!this.settings.minLogLevel) {
+      return true; 
     }
     const messagePriority = this.determineLogLevelPriority(level);
     const minPriority = this.determineLogLevelPriority(this.minLogLevel);
@@ -85,12 +91,12 @@ class loggingFile {
    */
   initializeLogDir_() {
     try {
-      if (!fs.existsSync(this.logDir_)) {
-        fs.mkdirSync(this.logDir_, { recursive: true });
+      if (!fs.existsSync(this.settings.logDir)) {
+        fs.mkdirSync(this.settings.logDir, { recursive: true });
       }
     } catch (error) {
       // If we can't create the directory, fall back to current directory
-      console.warn(`Could not create log directory ${this.logDir_}: ${error.message}`);
+      console.warn(`Could not create log directory ${this.settings.logDir}: ${error.message}`);
     }
   }
 
@@ -165,6 +171,26 @@ class loggingFile {
     if (this.eventEmitter_)
       this.eventEmitter_.emit('log:log', { filename: this.filename_, message: message });
   }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
+  }
+
 }
 
 module.exports = loggingFile;

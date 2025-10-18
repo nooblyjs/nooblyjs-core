@@ -25,6 +25,11 @@ class QueueingApi {
    * @param {EventEmitter=} eventEmitter Optional event emitter for queueing events.
    */
   constructor(options = {}, eventEmitter) {
+
+    this.settings = {};
+    this.settings.desciption = "There are no settings for this provider. The api provider controls the settings."
+    this.settings.list = [];
+
     this.apiRoot = options.apiRoot || 'http://localhost:3000';
     this.apiKey = options.apiKey || null;
     this.timeout = options.timeout || 10000;
@@ -36,6 +41,25 @@ class QueueingApi {
       timeout: this.timeout,
       headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
     });
+  }
+
+    /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**

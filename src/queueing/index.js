@@ -10,7 +10,7 @@
 
 'use strict';
 
-const InMemoryQueue = require('./providers/InMemoryQueue');
+const Queueing = require('./providers/queueing');
 const QueueingApi = require('./providers/queueingApi');
 const QueueAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
@@ -44,7 +44,7 @@ function createQueue(type, options, eventEmitter) {
       break;
     case 'memory':
     default:
-      queue = new InMemoryQueue(providerOptions, eventEmitter);
+      queue = new Queueing(providerOptions, eventEmitter);
       break;
   }
 
