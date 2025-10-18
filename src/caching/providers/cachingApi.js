@@ -26,21 +26,25 @@ class CacheApi {
    */
   constructor(options = {}, eventEmitter) {
 
-    this.settings = {};
-    this.settings.desciption = "There are no settings for this provider. The api provider controls the settings."
-    this.settings.list = [];
+ this.settings = {};
 
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
-    this.timeout = options.timeout || 5000;
-    this.eventEmitter_ = eventEmitter;
-
-    // Configure axios instance
-    this.client = axios.create({
-      baseURL: this.apiRoot,
-      timeout: this.timeout,
-      headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
-    });
+     this.settings.desciption = "The distributed caching module requires api connections"
+     this.settings.list = [
+       {setting: "url", type: "string", values : ['e.g. http:/logging.nooblyjs.com']},
+       {setting: "apikey", type: "string", values : ['Please speak to you admin for this key']}
+     ];
+     this.settings.api = options.api || 'http://localhost:3000';
+     this.settings.apikey = options.apiKey || null;
+     this.timeout = options.timeout || 5000;
+ 
+     this.eventEmitter_ = eventEmitter;
+ 
+     // Configure axios instance
+     this.client = axios.create({
+       baseURL: this.settings.api,
+       timeout: this.timeout,
+       headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
+     });
   }
 
   /**

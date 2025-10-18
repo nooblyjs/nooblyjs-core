@@ -67,7 +67,7 @@ class loggingFile {
       return true; 
     }
     const messagePriority = this.determineLogLevelPriority(level);
-    const minPriority = this.determineLogLevelPriority(this.minLogLevel);
+    const minPriority = this.determineLogLevelPriority(this.settings.minLogLevel);
     return messagePriority <= minPriority;
   } 
 

@@ -61,8 +61,6 @@ class logging {
    */
   determineLogLevelPriority(level) {
     const levels = ['error', 'warn', 'info', 'log'];
-    console.log(levels.indexOf(level));
-    console.log(level);
     return levels.indexOf(level);
   }
 
@@ -76,8 +74,7 @@ class logging {
       return true; 
     }
     const messagePriority = this.determineLogLevelPriority(level);
-    const minPriority = this.determineLogLevelPriority(this.minLogLevel);
-    console.log(messagePriority <= minPriority);
+    const minPriority = this.determineLogLevelPriority(this.settings.minLogLevel);
     return messagePriority <= minPriority;
   } 
 

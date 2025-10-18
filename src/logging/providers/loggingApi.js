@@ -25,20 +25,25 @@ class LoggingApi {
    * @param {EventEmitter=} eventEmitter Optional event emitter for logging events.
    */
   constructor(options = {}, eventEmitter) {
-    this.settings = {};
-    this.settings.desciption = "There are no settings for this provider. The api provider controls the settings."
-    this.settings.list = [];
 
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
+    this.settings = {};
+    this.settings.desciption = "The distributed caching module requires api connections"
+    this.settings.list = [
+      {setting: "minLogLevel", type: "list", values : ['error', 'warn', 'info', 'log']},
+      {setting: "url", type: "string", values : ['e.g. http:/logging.nooblyjs.com']},
+      {setting: "apikey", type: "string", values : ['Please speak to you admin for this key']}
+    ];
+    this.settings.api = options.api || 'http://localhost:3000';
+    this.settings.apikey = options.apiKey || null;
     this.timeout = options.timeout || 5000;
+
     this.eventEmitter_ = eventEmitter;
 
     // Configure axios instance
     this.client = axios.create({
-      baseURL: this.apiRoot,
+      baseURL: this.settings.api,
       timeout: this.timeout,
-      headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
+      headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
     });
   }
 
@@ -80,6 +85,30 @@ class LoggingApi {
     }
   }
 
+    /**
+   * Determines the priority of a log level.
+   * @param {} level 
+   * @returns 
+   */
+  determineLogLevelPriority(level) {
+    const levels = ['error', 'warn', 'info', 'log'];
+    return levels.indexOf(level);
+  }
+
+  /**
+   * Determines if a message should be logged based on its level and the minimum log level.
+   * @param {*} level 
+   * @returns 
+   */
+  shouldLog(level) {
+    if (!this.settings.minLogLevel) {
+      return true; 
+    }
+    const messagePriority = this.determineLogLevelPriority(level);
+    const minPriority = this.determineLogLevelPriority(this.settings.minLogLevel);
+    return messagePriority <= minPriority;
+  } 
+
   /**
    * Logs an info message via the remote logging API.
    * @param {string} message The log message.
@@ -87,6 +116,9 @@ class LoggingApi {
    * @return {Promise<void>} A promise that resolves when the log is sent.
    */
   async info(message, meta = {}) {
+    if (!this.shouldLog('info')) {
+      return;
+    }
     return this.log('info', message, meta);
   }
 
@@ -97,6 +129,9 @@ class LoggingApi {
    * @return {Promise<void>} A promise that resolves when the log is sent.
    */
   async warn(message, meta = {}) {
+    if (!this.shouldLog('warn')) {
+      return;
+    }
     return this.log('warn', message, meta);
   }
 
@@ -107,17 +142,23 @@ class LoggingApi {
    * @return {Promise<void>} A promise that resolves when the log is sent.
    */
   async error(message, meta = {}) {
+    if (!this.shouldLog('error')) {
+      return;
+    }
     return this.log('error', message, meta);
   }
 
   /**
-   * Logs a debug message via the remote logging API.
+   * Logs a log message via the remote logging API.
    * @param {string} message The log message.
    * @param {Object=} meta Additional metadata.
    * @return {Promise<void>} A promise that resolves when the log is sent.
    */
-  async debug(message, meta = {}) {
-    return this.log('debug', message, meta);
+  async log(message, meta = {}) {
+    if (!this.shouldLog('log')) {
+      return;
+    }
+    return this.log('log', message, meta);
   }
 
   /**

@@ -9,8 +9,11 @@
  */
 
 'use strict';
+
 const SearchService = require('./providers/searching.js');
+const SearchFileService = require('./providers/searchingFile.js');
 const SearchingApi = require('./providers/searchingApi');
+
 const Routes = require('./routes');
 const Views = require('./views');
 
@@ -42,7 +45,10 @@ function createSearchService(type, options, eventEmitter) {
     case 'api':
       searching = new SearchingApi(providerOptions, eventEmitter);
       break;
-    case 'default':
+    case 'files':
+      searching = new SearchFileService(providerOptions, eventEmitter, dependencies);
+      break;
+      case 'default':
     default:
       searching = new SearchService(providerOptions, eventEmitter, dependencies);
       break;
