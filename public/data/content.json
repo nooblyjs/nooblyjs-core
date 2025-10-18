@@ -5,16 +5,21 @@
       "description": "Not Just Another Accelerator Framework"
     },
     "hero": {
-      "title": "Noobly JS",
-      "subtitle": "Not Just Another Accelerator Framework - Your AI-Powered Development Assistant",
+      "title": "NooblyJS Core",
+      "subtitle": "A Powerful Set of Modular Node.js Backend Services - Build Scalable Applications with Ease",
       "image": {
         "src": "robot-hero-main.jpg",
-        "alt": "NooblyJS Robot Assistant - Your AI-Powered Development Companion"
+        "alt": "NooblyJS Core - Modular Backend Services Framework"
       },
       "buttons": [
         {
-          "text": "Documentation",
+          "text": "Get Started",
           "href": "documentation.html",
+          "type": "primary"
+        },
+        {
+          "text": "View on GitHub",
+          "href": "https://github.com/nooblyjs/nooblyjs-core",
           "type": "outline"
         }
       ]
@@ -64,9 +69,13 @@
           "title": "Caching Service",
           "href": "/services",
           "description": "High-performance caching with Redis, Memcached, and in-memory providers for lightning-fast data access."
-        },
+        },        
         {
-          "badge": "<i class=\"bi bi-server\"></i> Storage"
+          "badge": "<i class=\"bi bi-server\"></i> Storage",
+          "badgeType": "default",
+          "title": "Data Service",
+          "href": "dataservice.html",
+          "description": "Comprehensive data management with local, mongodb, dynamodb and cosmo options for secure data handling."
         },        {
           "badge": "<i class=\"bi bi-folder-fill\"></i> Files",
           "badgeType": "outline",
@@ -82,7 +91,7 @@
           "description": "Advanced logging capabilities with console and file outputs for comprehensive application monitoring."
         },
         {
-"badge": "<i class=\"bi bi-graph-up\"></i> Analytics",
+          "badge": "<i class=\"bi bi-graph-up\"></i> Analytics",
           "title": "Measuring Service",
           "href": "measuring.html",
           "description": "Real-time metrics collection and analysis for performance insights and system optimization."
@@ -139,7 +148,7 @@
     },
     "testimonial": {
       "text": "Noobly JS and its robot companion have revolutionized our development process. What used to take weeks now takes days. The framework's intelligent automation and powerful features make it an indispensable tool for any serious developer.",
-      "author": "— Sarah Chen, Lead Developer at RoboTech Corp"
+      "author": "— Stephen Booysen, Architect"
     },
     "footer": {
       "about": {

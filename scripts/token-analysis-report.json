@@ -1,0 +1,2376 @@
+{
+  "timestamp": "2025-10-18T14:45:49.841Z",
+  "summary": {
+    "totalFiles": 202,
+    "totalLines": 60366,
+    "totalChars": 1968504,
+    "totalTokens": 427542,
+    "avgTokens": 2117,
+    "refactorCandidates": 46,
+    "criticalFiles": 7,
+    "highPriorityFiles": 39
+  },
+  "byExtension": {
+    ".json": {
+      "count": 6,
+      "tokens": 116626,
+      "lines": 15298
+    },
+    ".md": {
+      "count": 14,
+      "tokens": 67245,
+      "lines": 9536
+    },
+    ".js": {
+      "count": 182,
+      "tokens": 243671,
+      "lines": 35532
+    }
+  },
+  "files": [
+    {
+      "path": "/workspaces/nooblyjs-core/package-lock.json",
+      "relativePath": "package-lock.json",
+      "extension": ".json",
+      "lines": 14697,
+      "chars": 541310,
+      "tokens": 112455,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/docs/nooblyjs-core-usage-guide.md",
+      "relativePath": "docs/nooblyjs-core-usage-guide.md",
+      "extension": ".md",
+      "lines": 4671,
+      "chars": 127064,
+      "tokens": 28815,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/docs/nooblyjs-core-usage-guide-concise.md",
+      "relativePath": "docs/nooblyjs-core-usage-guide-concise.md",
+      "extension": ".md",
+      "lines": 1303,
+      "chars": 34526,
+      "tokens": 8347,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.agent/architecture/nooblyjs-core-dependency-architecture.md",
+      "relativePath": ".agent/architecture/nooblyjs-core-dependency-architecture.md",
+      "extension": ".md",
+      "lines": 971,
+      "chars": 33405,
+      "tokens": 7101,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/docs/nooblyjs-core-requirements-document.md",
+      "relativePath": "docs/nooblyjs-core-requirements-document.md",
+      "extension": ".md",
+      "lines": 684,
+      "chars": 27139,
+      "tokens": 6704,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.agent/architecture/nooblyjs-core-enhancement-recommendations.md",
+      "relativePath": ".agent/architecture/nooblyjs-core-enhancement-recommendations.md",
+      "extension": ".md",
+      "lines": 741,
+      "chars": 24621,
+      "tokens": 6110,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/routes/index.js",
+      "relativePath": "src/filing/routes/index.js",
+      "extension": ".js",
+      "lines": 766,
+      "chars": 25249,
+      "tokens": 5125,
+      "needsRefactor": true,
+      "severity": "CRITICAL"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/searching/search.test.js",
+      "relativePath": "tests/unit/searching/search.test.js",
+      "extension": ".js",
+      "lines": 578,
+      "chars": 21336,
+      "tokens": 4701,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/index.js",
+      "relativePath": "index.js",
+      "extension": ".js",
+      "lines": 644,
+      "chars": 20766,
+      "tokens": 4590,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/filing/filing.test.js",
+      "relativePath": "tests/unit/filing/filing.test.js",
+      "extension": ".js",
+      "lines": 526,
+      "chars": 18220,
+      "tokens": 3963,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingGCP.js",
+      "relativePath": "src/filing/providers/filingGCP.js",
+      "extension": ".js",
+      "lines": 591,
+      "chars": 18887,
+      "tokens": 3875,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataserviceDocumentDB.js",
+      "relativePath": "src/dataservice/providers/dataserviceDocumentDB.js",
+      "extension": ".js",
+      "lines": 549,
+      "chars": 17645,
+      "tokens": 3652,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/dataservice/dataservice.test.js",
+      "relativePath": "tests/unit/dataservice/dataservice.test.js",
+      "extension": ".js",
+      "lines": 487,
+      "chars": 17176,
+      "tokens": 3615,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/public/data/content.json",
+      "relativePath": "public/data/content.json",
+      "extension": ".json",
+      "lines": 488,
+      "chars": 18185,
+      "tokens": 3596,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingGit.js",
+      "relativePath": "src/filing/providers/filingGit.js",
+      "extension": ".js",
+      "lines": 591,
+      "chars": 16596,
+      "tokens": 3516,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/providers/working.js",
+      "relativePath": "src/working/providers/working.js",
+      "extension": ".js",
+      "lines": 523,
+      "chars": 16667,
+      "tokens": 3447,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/index.js",
+      "relativePath": "src/filing/index.js",
+      "extension": ".js",
+      "lines": 436,
+      "chars": 14641,
+      "tokens": 3291,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/providers/searchingFile.js",
+      "relativePath": "src/searching/providers/searchingFile.js",
+      "extension": ".js",
+      "lines": 466,
+      "chars": 15281,
+      "tokens": 3285,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/providers/searching.js",
+      "relativePath": "src/searching/providers/searching.js",
+      "extension": ".js",
+      "lines": 466,
+      "chars": 15273,
+      "tokens": 3283,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/http/httpLoadTest.js",
+      "relativePath": "tests/load/http/httpLoadTest.js",
+      "extension": ".js",
+      "lines": 618,
+      "chars": 17496,
+      "tokens": 3172,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/routes/index.js",
+      "relativePath": "src/authservice/routes/index.js",
+      "extension": ".js",
+      "lines": 481,
+      "chars": 15018,
+      "tokens": 3098,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/README.md",
+      "relativePath": "README.md",
+      "extension": ".md",
+      "lines": 372,
+      "chars": 12550,
+      "tokens": 3078,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/scripts/count-tokens.js",
+      "relativePath": "scripts/count-tokens.js",
+      "extension": ".js",
+      "lines": 401,
+      "chars": 13175,
+      "tokens": 3005,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataserviceMongoDB.js",
+      "relativePath": "src/dataservice/providers/dataserviceMongoDB.js",
+      "extension": ".js",
+      "lines": 454,
+      "chars": 14417,
+      "tokens": 2959,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/dataservice/dataserviceDocumentDB.test.js",
+      "relativePath": "tests/unit/dataservice/dataserviceDocumentDB.test.js",
+      "extension": ".js",
+      "lines": 416,
+      "chars": 13191,
+      "tokens": 2885,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/CLAUDE.md",
+      "relativePath": "CLAUDE.md",
+      "extension": ".md",
+      "lines": 263,
+      "chars": 11860,
+      "tokens": 2829,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/modules/filingSyncProvider.js",
+      "relativePath": "src/filing/modules/filingSyncProvider.js",
+      "extension": ".js",
+      "lines": 413,
+      "chars": 12312,
+      "tokens": 2662,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authBase.js",
+      "relativePath": "src/authservice/providers/authBase.js",
+      "extension": ".js",
+      "lines": 424,
+      "chars": 11481,
+      "tokens": 2500,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/index.js",
+      "relativePath": "tests/load/index.js",
+      "extension": ".js",
+      "lines": 261,
+      "chars": 9985,
+      "tokens": 2339,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authFile.js",
+      "relativePath": "src/authservice/providers/authFile.js",
+      "extension": ".js",
+      "lines": 376,
+      "chars": 10771,
+      "tokens": 2338,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/dataservice/documentdbLoadTest.js",
+      "relativePath": "tests/load/dataservice/documentdbLoadTest.js",
+      "extension": ".js",
+      "lines": 272,
+      "chars": 10270,
+      "tokens": 2320,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/routes/index.js",
+      "relativePath": "src/searching/routes/index.js",
+      "extension": ".js",
+      "lines": 309,
+      "chars": 10863,
+      "tokens": 2302,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/providers/cachingMemcached.js",
+      "relativePath": "src/caching/providers/cachingMemcached.js",
+      "extension": ".js",
+      "lines": 386,
+      "chars": 10788,
+      "tokens": 2288,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/integration/apiKeyIntegration.disabled.js",
+      "relativePath": "tests/unit/integration/apiKeyIntegration.disabled.js",
+      "extension": ".js",
+      "lines": 347,
+      "chars": 11175,
+      "tokens": 2278,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/workflow/workflow.test.js",
+      "relativePath": "tests/unit/workflow/workflow.test.js",
+      "extension": ".js",
+      "lines": 320,
+      "chars": 10284,
+      "tokens": 2258,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/caching/fileLoadTest.js",
+      "relativePath": "tests/load/caching/fileLoadTest.js",
+      "extension": ".js",
+      "lines": 269,
+      "chars": 9599,
+      "tokens": 2226,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/dataservice/dataserviceMongoDB.test.js",
+      "relativePath": "tests/unit/dataservice/dataserviceMongoDB.test.js",
+      "extension": ".js",
+      "lines": 317,
+      "chars": 9907,
+      "tokens": 2166,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-searching.js",
+      "relativePath": "tests/implementation/app-searching.js",
+      "extension": ".js",
+      "lines": 268,
+      "chars": 9515,
+      "tokens": 2161,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/routes/index.js",
+      "relativePath": "src/dataservice/routes/index.js",
+      "extension": ".js",
+      "lines": 257,
+      "chars": 9816,
+      "tokens": 2142,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/caching/cacheFile.test.js",
+      "relativePath": "tests/unit/caching/cacheFile.test.js",
+      "extension": ".js",
+      "lines": 281,
+      "chars": 9291,
+      "tokens": 2098,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/authservice/loadTest.js",
+      "relativePath": "tests/load/authservice/loadTest.js",
+      "extension": ".js",
+      "lines": 342,
+      "chars": 9661,
+      "tokens": 2093,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/modules/analytics.js",
+      "relativePath": "src/caching/modules/analytics.js",
+      "extension": ".js",
+      "lines": 358,
+      "chars": 9780,
+      "tokens": 2076,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/README.md",
+      "relativePath": "tests/load/README.md",
+      "extension": ".md",
+      "lines": 307,
+      "chars": 8672,
+      "tokens": 2072,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/serviceRegistry.test.js",
+      "relativePath": "tests/unit/serviceRegistry.test.js",
+      "extension": ".js",
+      "lines": 329,
+      "chars": 9792,
+      "tokens": 2068,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/modules/analytics.js",
+      "relativePath": "src/queueing/modules/analytics.js",
+      "extension": ".js",
+      "lines": 331,
+      "chars": 9474,
+      "tokens": 2031,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/authservice/authservice.test.js",
+      "relativePath": "tests/unit/authservice/authservice.test.js",
+      "extension": ".js",
+      "lines": 263,
+      "chars": 8895,
+      "tokens": 2011,
+      "needsRefactor": true,
+      "severity": "HIGH"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/middleware/apiKeyAuth.test.js",
+      "relativePath": "tests/unit/middleware/apiKeyAuth.test.js",
+      "extension": ".js",
+      "lines": 303,
+      "chars": 9469,
+      "tokens": 1972,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-dataservice.js",
+      "relativePath": "tests/implementation/app-dataservice.js",
+      "extension": ".js",
+      "lines": 245,
+      "chars": 8334,
+      "tokens": 1961,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/measuring/measuring.test.js",
+      "relativePath": "tests/unit/measuring/measuring.test.js",
+      "extension": ".js",
+      "lines": 246,
+      "chars": 8624,
+      "tokens": 1955,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/index.js",
+      "relativePath": "src/workflow/index.js",
+      "extension": ".js",
+      "lines": 292,
+      "chars": 9091,
+      "tokens": 1939,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/modules/analytics.js",
+      "relativePath": "src/notifying/modules/analytics.js",
+      "extension": ".js",
+      "lines": 329,
+      "chars": 8935,
+      "tokens": 1905,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/sync/MetadataStore.js",
+      "relativePath": "src/filing/sync/MetadataStore.js",
+      "extension": ".js",
+      "lines": 318,
+      "chars": 8604,
+      "tokens": 1865,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/dataservice/mongodbLoadTest.js",
+      "relativePath": "tests/load/dataservice/mongodbLoadTest.js",
+      "extension": ".js",
+      "lines": 207,
+      "chars": 8028,
+      "tokens": 1830,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/working/working.test.js",
+      "relativePath": "tests/unit/working/working.test.js",
+      "extension": ".js",
+      "lines": 269,
+      "chars": 8341,
+      "tokens": 1797,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authGoogle.js",
+      "relativePath": "src/authservice/providers/authGoogle.js",
+      "extension": ".js",
+      "lines": 287,
+      "chars": 8286,
+      "tokens": 1749,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-filing.js",
+      "relativePath": "tests/implementation/app-filing.js",
+      "extension": ".js",
+      "lines": 228,
+      "chars": 7620,
+      "tokens": 1730,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/aiservice/aiservice.test.js",
+      "relativePath": "tests/unit/aiservice/aiservice.test.js",
+      "extension": ".js",
+      "lines": 254,
+      "chars": 7885,
+      "tokens": 1710,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingFtp.js",
+      "relativePath": "src/filing/providers/filingFtp.js",
+      "extension": ".js",
+      "lines": 273,
+      "chars": 8343,
+      "tokens": 1690,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/providers/cachingFile.js",
+      "relativePath": "src/caching/providers/cachingFile.js",
+      "extension": ".js",
+      "lines": 275,
+      "chars": 7805,
+      "tokens": 1684,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/sync/CommitQueue.js",
+      "relativePath": "src/filing/sync/CommitQueue.js",
+      "extension": ".js",
+      "lines": 280,
+      "chars": 7667,
+      "tokens": 1678,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/scheduling/scheduler.test.js",
+      "relativePath": "tests/unit/scheduling/scheduler.test.js",
+      "extension": ".js",
+      "lines": 215,
+      "chars": 7274,
+      "tokens": 1676,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/notifying/notification.test.js",
+      "relativePath": "tests/unit/notifying/notification.test.js",
+      "extension": ".js",
+      "lines": 218,
+      "chars": 7223,
+      "tokens": 1636,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/modules/analytics.js",
+      "relativePath": "src/workflow/modules/analytics.js",
+      "extension": ".js",
+      "lines": 250,
+      "chars": 7307,
+      "tokens": 1582,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataservicefiles.js",
+      "relativePath": "src/dataservice/providers/dataservicefiles.js",
+      "extension": ".js",
+      "lines": 206,
+      "chars": 7217,
+      "tokens": 1568,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/providers/cachingRedis.js",
+      "relativePath": "src/caching/providers/cachingRedis.js",
+      "extension": ".js",
+      "lines": 281,
+      "chars": 7209,
+      "tokens": 1541,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/modules/analytics.js",
+      "relativePath": "src/working/modules/analytics.js",
+      "extension": ".js",
+      "lines": 259,
+      "chars": 7183,
+      "tokens": 1539,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/filing/filing.disabled.js",
+      "relativePath": "tests/unit/filing/filing.disabled.js",
+      "extension": ".js",
+      "lines": 225,
+      "chars": 7390,
+      "tokens": 1536,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/modules/analytics.js",
+      "relativePath": "src/aiservice/modules/analytics.js",
+      "extension": ".js",
+      "lines": 259,
+      "chars": 7306,
+      "tokens": 1533,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/routes/index.js",
+      "relativePath": "src/queueing/routes/index.js",
+      "extension": ".js",
+      "lines": 213,
+      "chars": 7205,
+      "tokens": 1533,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/routes/index.js",
+      "relativePath": "src/logging/routes/index.js",
+      "extension": ".js",
+      "lines": 232,
+      "chars": 7251,
+      "tokens": 1507,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/working/worker.test.js",
+      "relativePath": "tests/unit/working/worker.test.js",
+      "extension": ".js",
+      "lines": 202,
+      "chars": 6651,
+      "tokens": 1485,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/index.js",
+      "relativePath": "src/dataservice/index.js",
+      "extension": ".js",
+      "lines": 197,
+      "chars": 6759,
+      "tokens": 1469,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/routes/index.js",
+      "relativePath": "src/measuring/routes/index.js",
+      "extension": ".js",
+      "lines": 201,
+      "chars": 7029,
+      "tokens": 1461,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/providers/loggingFile.js",
+      "relativePath": "src/logging/providers/loggingFile.js",
+      "extension": ".js",
+      "lines": 197,
+      "chars": 6418,
+      "tokens": 1447,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/dataservice/simpleDb.disabled.js",
+      "relativePath": "tests/unit/dataservice/simpleDb.disabled.js",
+      "extension": ".js",
+      "lines": 207,
+      "chars": 6786,
+      "tokens": 1432,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/routes/index.js",
+      "relativePath": "src/working/routes/index.js",
+      "extension": ".js",
+      "lines": 214,
+      "chars": 6825,
+      "tokens": 1414,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/aiservice/loadTest.js",
+      "relativePath": "tests/load/aiservice/loadTest.js",
+      "extension": ".js",
+      "lines": 218,
+      "chars": 6361,
+      "tokens": 1412,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/views/js/navigation.js",
+      "relativePath": "src/views/js/navigation.js",
+      "extension": ".js",
+      "lines": 197,
+      "chars": 7526,
+      "tokens": 1406,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/routes/index.js",
+      "relativePath": "src/caching/routes/index.js",
+      "extension": ".js",
+      "lines": 201,
+      "chars": 6678,
+      "tokens": 1402,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/modules/analytics.js",
+      "relativePath": "src/searching/modules/analytics.js",
+      "extension": ".js",
+      "lines": 240,
+      "chars": 6463,
+      "tokens": 1389,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/working/working-activities.test.js",
+      "relativePath": "tests/unit/working/working-activities.test.js",
+      "extension": ".js",
+      "lines": 212,
+      "chars": 6137,
+      "tokens": 1370,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/providers/logging.js",
+      "relativePath": "src/logging/providers/logging.js",
+      "extension": ".js",
+      "lines": 187,
+      "chars": 6034,
+      "tokens": 1358,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/queueing/inMemoryQueue.test.js",
+      "relativePath": "tests/unit/queueing/inMemoryQueue.test.js",
+      "extension": ".js",
+      "lines": 175,
+      "chars": 5832,
+      "tokens": 1333,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/routes/index.js",
+      "relativePath": "src/notifying/routes/index.js",
+      "extension": ".js",
+      "lines": 176,
+      "chars": 6257,
+      "tokens": 1317,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/providers/loggingApi.js",
+      "relativePath": "src/logging/providers/loggingApi.js",
+      "extension": ".js",
+      "lines": 183,
+      "chars": 5838,
+      "tokens": 1316,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/providers/workflowApi.js",
+      "relativePath": "src/workflow/providers/workflowApi.js",
+      "extension": ".js",
+      "lines": 163,
+      "chars": 5814,
+      "tokens": 1308,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/provider/aibase.js",
+      "relativePath": "src/aiservice/provider/aibase.js",
+      "extension": ".js",
+      "lines": 209,
+      "chars": 5944,
+      "tokens": 1306,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/routes/index.js",
+      "relativePath": "src/aiservice/routes/index.js",
+      "extension": ".js",
+      "lines": 201,
+      "chars": 6515,
+      "tokens": 1297,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/app.js",
+      "relativePath": "app.js",
+      "extension": ".js",
+      "lines": 170,
+      "chars": 5438,
+      "tokens": 1296,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataserviceApi.js",
+      "relativePath": "src/dataservice/providers/dataserviceApi.js",
+      "extension": ".js",
+      "lines": 157,
+      "chars": 5740,
+      "tokens": 1294,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingS3.js",
+      "relativePath": "src/filing/providers/filingS3.js",
+      "extension": ".js",
+      "lines": 198,
+      "chars": 6055,
+      "tokens": 1291,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataserviceSimpleDB.js",
+      "relativePath": "src/dataservice/providers/dataserviceSimpleDB.js",
+      "extension": ".js",
+      "lines": 167,
+      "chars": 5781,
+      "tokens": 1290,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/scheduling/modules/analytics.js",
+      "relativePath": "src/scheduling/modules/analytics.js",
+      "extension": ".js",
+      "lines": 232,
+      "chars": 6107,
+      "tokens": 1290,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/modules/analytics.js",
+      "relativePath": "src/logging/modules/analytics.js",
+      "extension": ".js",
+      "lines": 233,
+      "chars": 5973,
+      "tokens": 1272,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/scheduling/providers/scheduling.js",
+      "relativePath": "src/scheduling/providers/scheduling.js",
+      "extension": ".js",
+      "lines": 176,
+      "chars": 5882,
+      "tokens": 1271,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authApi.js",
+      "relativePath": "src/authservice/providers/authApi.js",
+      "extension": ".js",
+      "lines": 167,
+      "chars": 5673,
+      "tokens": 1263,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/app.js",
+      "relativePath": "tests/unit/app.js",
+      "extension": ".js",
+      "lines": 175,
+      "chars": 5146,
+      "tokens": 1248,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/routes/index.js",
+      "relativePath": "src/workflow/routes/index.js",
+      "extension": ".js",
+      "lines": 178,
+      "chars": 5922,
+      "tokens": 1245,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/providers/dataservice.js",
+      "relativePath": "src/dataservice/providers/dataservice.js",
+      "extension": ".js",
+      "lines": 155,
+      "chars": 5565,
+      "tokens": 1225,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/providers/queueingApi.js",
+      "relativePath": "src/queueing/providers/queueingApi.js",
+      "extension": ".js",
+      "lines": 155,
+      "chars": 5380,
+      "tokens": 1202,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingLocal.js",
+      "relativePath": "src/filing/providers/filingLocal.js",
+      "extension": ".js",
+      "lines": 159,
+      "chars": 5122,
+      "tokens": 1153,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/views/modules/monitoring.js",
+      "relativePath": "src/views/modules/monitoring.js",
+      "extension": ".js",
+      "lines": 214,
+      "chars": 5323,
+      "tokens": 1147,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/filing/s3Filing.disable.js",
+      "relativePath": "tests/unit/filing/s3Filing.disable.js",
+      "extension": ".js",
+      "lines": 170,
+      "chars": 5202,
+      "tokens": 1123,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/scheduling/routes/index.js",
+      "relativePath": "src/scheduling/routes/index.js",
+      "extension": ".js",
+      "lines": 151,
+      "chars": 5162,
+      "tokens": 1122,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/providers/measuringApi.js",
+      "relativePath": "src/measuring/providers/measuringApi.js",
+      "extension": ".js",
+      "lines": 130,
+      "chars": 4866,
+      "tokens": 1109,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/providers/searchingApi.js",
+      "relativePath": "src/searching/providers/searchingApi.js",
+      "extension": ".js",
+      "lines": 134,
+      "chars": 4754,
+      "tokens": 1073,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/providers/workingApi.js",
+      "relativePath": "src/working/providers/workingApi.js",
+      "extension": ".js",
+      "lines": 143,
+      "chars": 4779,
+      "tokens": 1070,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/providers/notifyingApi.js",
+      "relativePath": "src/notifying/providers/notifyingApi.js",
+      "extension": ".js",
+      "lines": 117,
+      "chars": 4600,
+      "tokens": 1066,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/providers/cachingApi.js",
+      "relativePath": "src/caching/providers/cachingApi.js",
+      "extension": ".js",
+      "lines": 140,
+      "chars": 4742,
+      "tokens": 1063,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/provider/measuring.js",
+      "relativePath": "src/measuring/provider/measuring.js",
+      "extension": ".js",
+      "lines": 151,
+      "chars": 4829,
+      "tokens": 1063,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/providers/filingApi.js",
+      "relativePath": "src/filing/providers/filingApi.js",
+      "extension": ".js",
+      "lines": 132,
+      "chars": 4614,
+      "tokens": 1039,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/modules/analytics.js",
+      "relativePath": "src/measuring/modules/analytics.js",
+      "extension": ".js",
+      "lines": 192,
+      "chars": 4791,
+      "tokens": 1028,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/authservice/authserviceApi.test.js",
+      "relativePath": "tests/unit/authservice/authserviceApi.test.js",
+      "extension": ".js",
+      "lines": 166,
+      "chars": 4617,
+      "tokens": 1021,
+      "needsRefactor": false,
+      "severity": "MEDIUM"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/caching/cacheMemcached.disable.js",
+      "relativePath": "tests/unit/caching/cacheMemcached.disable.js",
+      "extension": ".js",
+      "lines": 140,
+      "chars": 4440,
+      "tokens": 1000,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/sync/LocalWorkingStore.js",
+      "relativePath": "src/filing/sync/LocalWorkingStore.js",
+      "extension": ".js",
+      "lines": 160,
+      "chars": 4451,
+      "tokens": 995,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authPassport.js",
+      "relativePath": "src/authservice/providers/authPassport.js",
+      "extension": ".js",
+      "lines": 177,
+      "chars": 4669,
+      "tokens": 991,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/caching/cacheApi.test.js",
+      "relativePath": "tests/unit/caching/cacheApi.test.js",
+      "extension": ".js",
+      "lines": 173,
+      "chars": 4466,
+      "tokens": 988,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/modules/analytics.js",
+      "relativePath": "src/filing/modules/analytics.js",
+      "extension": ".js",
+      "lines": 187,
+      "chars": 4539,
+      "tokens": 981,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/middleware/services.js",
+      "relativePath": "src/authservice/middleware/services.js",
+      "extension": ".js",
+      "lines": 142,
+      "chars": 4980,
+      "tokens": 956,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/provider/aiollama.js",
+      "relativePath": "src/aiservice/provider/aiollama.js",
+      "extension": ".js",
+      "lines": 148,
+      "chars": 4293,
+      "tokens": 921,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/providers/caching.js",
+      "relativePath": "src/caching/providers/caching.js",
+      "extension": ".js",
+      "lines": 154,
+      "chars": 4131,
+      "tokens": 909,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/working/working-queues.test.js",
+      "relativePath": "tests/unit/working/working-queues.test.js",
+      "extension": ".js",
+      "lines": 129,
+      "chars": 3973,
+      "tokens": 906,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/dataservice/dataserviceApi.test.js",
+      "relativePath": "tests/unit/dataservice/dataserviceApi.test.js",
+      "extension": ".js",
+      "lines": 140,
+      "chars": 4010,
+      "tokens": 895,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/index.js",
+      "relativePath": "src/authservice/index.js",
+      "extension": ".js",
+      "lines": 102,
+      "chars": 3771,
+      "tokens": 894,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/index.js",
+      "relativePath": "src/aiservice/index.js",
+      "extension": ".js",
+      "lines": 110,
+      "chars": 3643,
+      "tokens": 847,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/caching/cacheRedis.disabled.js",
+      "relativePath": "tests/unit/caching/cacheRedis.disabled.js",
+      "extension": ".js",
+      "lines": 121,
+      "chars": 3716,
+      "tokens": 844,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/providers/queueing.js",
+      "relativePath": "src/queueing/providers/queueing.js",
+      "extension": ".js",
+      "lines": 120,
+      "chars": 3675,
+      "tokens": 839,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/modules/analytics.js",
+      "relativePath": "src/dataservice/modules/analytics.js",
+      "extension": ".js",
+      "lines": 164,
+      "chars": 3794,
+      "tokens": 818,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/provider/aiApi.js",
+      "relativePath": "src/aiservice/provider/aiApi.js",
+      "extension": ".js",
+      "lines": 108,
+      "chars": 3605,
+      "tokens": 813,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/middleware/apiKey.js",
+      "relativePath": "src/authservice/middleware/apiKey.js",
+      "extension": ".js",
+      "lines": 148,
+      "chars": 3770,
+      "tokens": 812,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/provider/notifying.js",
+      "relativePath": "src/notifying/provider/notifying.js",
+      "extension": ".js",
+      "lines": 108,
+      "chars": 3594,
+      "tokens": 781,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/logging/loggingFile.test.js",
+      "relativePath": "tests/unit/logging/loggingFile.test.js",
+      "extension": ".js",
+      "lines": 113,
+      "chars": 3352,
+      "tokens": 769,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/modules/analytics.js",
+      "relativePath": "src/authservice/modules/analytics.js",
+      "extension": ".js",
+      "lines": 150,
+      "chars": 3689,
+      "tokens": 754,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/index.js",
+      "relativePath": "src/searching/index.js",
+      "extension": ".js",
+      "lines": 89,
+      "chars": 3167,
+      "tokens": 740,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/app-noauth.js",
+      "relativePath": "app-noauth.js",
+      "extension": ".js",
+      "lines": 99,
+      "chars": 3099,
+      "tokens": 737,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/logging/loggingApi.test.js",
+      "relativePath": "tests/unit/logging/loggingApi.test.js",
+      "extension": ".js",
+      "lines": 145,
+      "chars": 3450,
+      "tokens": 730,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/index.js",
+      "relativePath": "src/working/index.js",
+      "extension": ".js",
+      "lines": 102,
+      "chars": 3126,
+      "tokens": 716,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/activities/searchIndexing.js",
+      "relativePath": "activities/searchIndexing.js",
+      "extension": ".js",
+      "lines": 117,
+      "chars": 3321,
+      "tokens": 714,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/index.js",
+      "relativePath": "src/caching/index.js",
+      "extension": ".js",
+      "lines": 97,
+      "chars": 3081,
+      "tokens": 711,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/index.js",
+      "relativePath": "src/queueing/index.js",
+      "extension": ".js",
+      "lines": 101,
+      "chars": 3071,
+      "tokens": 710,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-workflow.js",
+      "relativePath": "tests/implementation/app-workflow.js",
+      "extension": ".js",
+      "lines": 90,
+      "chars": 2846,
+      "tokens": 663,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-working.js",
+      "relativePath": "tests/implementation/app-working.js",
+      "extension": ".js",
+      "lines": 89,
+      "chars": 2805,
+      "tokens": 659,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/GEMINI.md",
+      "relativePath": "GEMINI.md",
+      "extension": ".md",
+      "lines": 83,
+      "chars": 2645,
+      "tokens": 639,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/AGENTS.md",
+      "relativePath": "AGENTS.md",
+      "extension": ".md",
+      "lines": 24,
+      "chars": 2519,
+      "tokens": 628,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/scheduling/index.js",
+      "relativePath": "src/scheduling/index.js",
+      "extension": ".js",
+      "lines": 78,
+      "chars": 2697,
+      "tokens": 628,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/caching/cache.test.js",
+      "relativePath": "tests/unit/caching/cache.test.js",
+      "extension": ".js",
+      "lines": 89,
+      "chars": 2713,
+      "tokens": 621,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/filing/loadTest.js",
+      "relativePath": "tests/load/filing/loadTest.js",
+      "extension": ".js",
+      "lines": 79,
+      "chars": 2513,
+      "tokens": 591,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-scheduler.js",
+      "relativePath": "tests/implementation/app-scheduler.js",
+      "extension": ".js",
+      "lines": 89,
+      "chars": 2539,
+      "tokens": 589,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/dataservice/loadTest.js",
+      "relativePath": "tests/load/dataservice/loadTest.js",
+      "extension": ".js",
+      "lines": 75,
+      "chars": 2460,
+      "tokens": 582,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/provider/aiclaude.js",
+      "relativePath": "src/aiservice/provider/aiclaude.js",
+      "extension": ".js",
+      "lines": 93,
+      "chars": 2593,
+      "tokens": 558,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/provider/aiopenai.js",
+      "relativePath": "src/aiservice/provider/aiopenai.js",
+      "extension": ".js",
+      "lines": 92,
+      "chars": 2541,
+      "tokens": 543,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/workflow/loadTest.js",
+      "relativePath": "tests/load/workflow/loadTest.js",
+      "extension": ".js",
+      "lines": 78,
+      "chars": 2294,
+      "tokens": 538,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/working/loadTest.js",
+      "relativePath": "tests/load/working/loadTest.js",
+      "extension": ".js",
+      "lines": 78,
+      "chars": 2306,
+      "tokens": 536,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/providers/workerScript.js",
+      "relativePath": "src/working/providers/workerScript.js",
+      "extension": ".js",
+      "lines": 69,
+      "chars": 2220,
+      "tokens": 530,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/logging/loadTest.js",
+      "relativePath": "tests/load/logging/loadTest.js",
+      "extension": ".js",
+      "lines": 72,
+      "chars": 2205,
+      "tokens": 524,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/scheduling/loadTest.js",
+      "relativePath": "tests/load/scheduling/loadTest.js",
+      "extension": ".js",
+      "lines": 70,
+      "chars": 2191,
+      "tokens": 519,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.agent/todo/nooblyjs-core-features.md",
+      "relativePath": ".agent/todo/nooblyjs-core-features.md",
+      "extension": ".md",
+      "lines": 65,
+      "chars": 2046,
+      "tokens": 509,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/providers/authMemory.js",
+      "relativePath": "src/authservice/providers/authMemory.js",
+      "extension": ".js",
+      "lines": 90,
+      "chars": 2242,
+      "tokens": 478,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/queueing/loadTest.js",
+      "relativePath": "tests/load/queueing/loadTest.js",
+      "extension": ".js",
+      "lines": 62,
+      "chars": 2004,
+      "tokens": 475,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/searching/loadTest.js",
+      "relativePath": "tests/load/searching/loadTest.js",
+      "extension": ".js",
+      "lines": 63,
+      "chars": 2013,
+      "tokens": 474,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/notifying/loadTest.js",
+      "relativePath": "tests/load/notifying/loadTest.js",
+      "extension": ".js",
+      "lines": 64,
+      "chars": 1971,
+      "tokens": 467,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/views/index.js",
+      "relativePath": "src/authservice/views/index.js",
+      "extension": ".js",
+      "lines": 55,
+      "chars": 1942,
+      "tokens": 459,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/caching/loadTest.js",
+      "relativePath": "tests/load/caching/loadTest.js",
+      "extension": ".js",
+      "lines": 62,
+      "chars": 1928,
+      "tokens": 457,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/package.json",
+      "relativePath": "package.json",
+      "extension": ".json",
+      "lines": 85,
+      "chars": 2067,
+      "tokens": 446,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/aiservice/views/index.js",
+      "relativePath": "src/aiservice/views/index.js",
+      "extension": ".js",
+      "lines": 57,
+      "chars": 1853,
+      "tokens": 441,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/logging/logging.test.js",
+      "relativePath": "tests/unit/logging/logging.test.js",
+      "extension": ".js",
+      "lines": 63,
+      "chars": 1849,
+      "tokens": 430,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/index.js",
+      "relativePath": "src/logging/index.js",
+      "extension": ".js",
+      "lines": 59,
+      "chars": 1817,
+      "tokens": 428,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/measuring/loadTest.js",
+      "relativePath": "tests/load/measuring/loadTest.js",
+      "extension": ".js",
+      "lines": 54,
+      "chars": 1784,
+      "tokens": 426,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/dataservice/views/index.js",
+      "relativePath": "src/dataservice/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1724,
+      "tokens": 416,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/caching/views/index.js",
+      "relativePath": "src/caching/views/index.js",
+      "extension": ".js",
+      "lines": 52,
+      "chars": 1721,
+      "tokens": 413,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/scheduling/views/index.js",
+      "relativePath": "src/scheduling/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1690,
+      "tokens": 407,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/views/index.js",
+      "relativePath": "src/measuring/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1675,
+      "tokens": 404,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/views/index.js",
+      "relativePath": "src/notifying/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1673,
+      "tokens": 403,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/notifying/index.js",
+      "relativePath": "src/notifying/index.js",
+      "extension": ".js",
+      "lines": 50,
+      "chars": 1688,
+      "tokens": 402,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/searching/views/index.js",
+      "relativePath": "src/searching/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1669,
+      "tokens": 402,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/views/index.js",
+      "relativePath": "src/workflow/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1658,
+      "tokens": 399,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/queueing/views/index.js",
+      "relativePath": "src/queueing/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1652,
+      "tokens": 398,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/logging/views/index.js",
+      "relativePath": "src/logging/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1639,
+      "tokens": 395,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/working/views/index.js",
+      "relativePath": "src/working/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1639,
+      "tokens": 395,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/filing/views/index.js",
+      "relativePath": "src/filing/views/index.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1624,
+      "tokens": 391,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/measuring/index.js",
+      "relativePath": "src/measuring/index.js",
+      "extension": ".js",
+      "lines": 50,
+      "chars": 1642,
+      "tokens": 390,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/activities/exampleTask.js",
+      "relativePath": "tests/activities/exampleTask.js",
+      "extension": ".js",
+      "lines": 56,
+      "chars": 1587,
+      "tokens": 372,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/activities/exampleTask-2.js",
+      "relativePath": "activities/exampleTask-2.js",
+      "extension": ".js",
+      "lines": 56,
+      "chars": 1578,
+      "tokens": 370,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/activities/exampleTask.js",
+      "relativePath": "activities/exampleTask.js",
+      "extension": ".js",
+      "lines": 56,
+      "chars": 1580,
+      "tokens": 370,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/working/exampleTask.js",
+      "relativePath": "tests/unit/working/exampleTask.js",
+      "extension": ".js",
+      "lines": 55,
+      "chars": 1543,
+      "tokens": 363,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/middleware/passport.js",
+      "relativePath": "src/authservice/middleware/passport.js",
+      "extension": ".js",
+      "lines": 45,
+      "chars": 1396,
+      "tokens": 333,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/scheduling/exampleScheduledTask.js",
+      "relativePath": "tests/unit/scheduling/exampleScheduledTask.js",
+      "extension": ".js",
+      "lines": 47,
+      "chars": 1343,
+      "tokens": 324,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-lite.js",
+      "relativePath": "tests/implementation/app-lite.js",
+      "extension": ".js",
+      "lines": 40,
+      "chars": 1138,
+      "tokens": 279,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-measuring.js",
+      "relativePath": "tests/implementation/app-measuring.js",
+      "extension": ".js",
+      "lines": 40,
+      "chars": 1138,
+      "tokens": 279,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/implementation/app-notifying.js",
+      "relativePath": "tests/implementation/app-notifying.js",
+      "extension": ".js",
+      "lines": 40,
+      "chars": 1138,
+      "tokens": 279,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/workflow/steps/exampleStep2.js",
+      "relativePath": "tests/unit/workflow/steps/exampleStep2.js",
+      "extension": ".js",
+      "lines": 30,
+      "chars": 959,
+      "tokens": 232,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/workflow/steps/exampleStep1.js",
+      "relativePath": "tests/unit/workflow/steps/exampleStep1.js",
+      "extension": ".js",
+      "lines": 30,
+      "chars": 948,
+      "tokens": 230,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/workflow/provider/workerRunner.js",
+      "relativePath": "src/workflow/provider/workerRunner.js",
+      "extension": ".js",
+      "lines": 31,
+      "chars": 904,
+      "tokens": 216,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.agent/todo/noobly-core-bugs.md",
+      "relativePath": ".agent/todo/noobly-core-bugs.md",
+      "extension": ".md",
+      "lines": 30,
+      "chars": 901,
+      "tokens": 215,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/unit/mocks/errorStep.js",
+      "relativePath": "tests/unit/mocks/errorStep.js",
+      "extension": ".js",
+      "lines": 30,
+      "chars": 840,
+      "tokens": 203,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/structuring/README.md",
+      "relativePath": "src/structuring/README.md",
+      "extension": ".md",
+      "lines": 13,
+      "chars": 474,
+      "tokens": 117,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/authservice/middleware/index.js",
+      "relativePath": "src/authservice/middleware/index.js",
+      "extension": ".js",
+      "lines": 17,
+      "chars": 339,
+      "tokens": 82,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/src/requesting/README.md",
+      "relativePath": "src/requesting/README.md",
+      "extension": ".md",
+      "lines": 9,
+      "chars": 325,
+      "tokens": 81,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.noobly-core/data/users.json",
+      "relativePath": ".noobly-core/data/users.json",
+      "extension": ".json",
+      "lines": 12,
+      "chars": 318,
+      "tokens": 71,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.claude/settings.local.json",
+      "relativePath": ".claude/settings.local.json",
+      "extension": ".json",
+      "lines": 11,
+      "chars": 222,
+      "tokens": 48,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/tests/load/working/mockWorkerScript.js",
+      "relativePath": "tests/load/working/mockWorkerScript.js",
+      "extension": ".js",
+      "lines": 1,
+      "chars": 62,
+      "tokens": 16,
+      "needsRefactor": false,
+      "severity": "LOW"
+    },
+    {
+      "path": "/workspaces/nooblyjs-core/.noobly-core/data/roles.json",
+      "relativePath": ".noobly-core/data/roles.json",
+      "extension": ".json",
+      "lines": 5,
+      "chars": 46,
+      "tokens": 10,
+      "needsRefactor": false,
+      "severity": "LOW"
+    }
+  ],
+  "refactoringCandidates": [
+    {
+      "path": "package-lock.json",
+      "tokens": 112455,
+      "lines": 14697,
+      "severity": "CRITICAL",
+      "recommendation": "📊 LARGE DATA: package-lock.json (112455 tokens, 14697 lines)\n   → Consider splitting into multiple JSON files\n   → Use external data files if this is configuration"
+    },
+    {
+      "path": "docs/nooblyjs-core-usage-guide.md",
+      "tokens": 28815,
+      "lines": 4671,
+      "severity": "CRITICAL",
+      "recommendation": "📄 SPLIT: docs/nooblyjs-core-usage-guide.md (28815 tokens, 4671 lines)\n   → Split into multiple smaller documents\n   → Create a table of contents with links\n   → Consider separating sections into individual files"
+    },
+    {
+      "path": "docs/nooblyjs-core-usage-guide-concise.md",
+      "tokens": 8347,
+      "lines": 1303,
+      "severity": "CRITICAL",
+      "recommendation": "📄 SPLIT: docs/nooblyjs-core-usage-guide-concise.md (8347 tokens, 1303 lines)\n   → Split into multiple smaller documents\n   → Create a table of contents with links\n   → Consider separating sections into individual files"
+    },
+    {
+      "path": ".agent/architecture/nooblyjs-core-dependency-architecture.md",
+      "tokens": 7101,
+      "lines": 971,
+      "severity": "CRITICAL",
+      "recommendation": "📄 SPLIT: .agent/architecture/nooblyjs-core-dependency-architecture.md (7101 tokens, 971 lines)\n   → Split into multiple smaller documents\n   → Create a table of contents with links\n   → Consider separating sections into individual files"
+    },
+    {
+      "path": "docs/nooblyjs-core-requirements-document.md",
+      "tokens": 6704,
+      "lines": 684,
+      "severity": "CRITICAL",
+      "recommendation": "📄 SPLIT: docs/nooblyjs-core-requirements-document.md (6704 tokens, 684 lines)\n   → Split into multiple smaller documents\n   → Create a table of contents with links\n   → Consider separating sections into individual files"
+    },
+    {
+      "path": ".agent/architecture/nooblyjs-core-enhancement-recommendations.md",
+      "tokens": 6110,
+      "lines": 741,
+      "severity": "CRITICAL",
+      "recommendation": "📄 SPLIT: .agent/architecture/nooblyjs-core-enhancement-recommendations.md (6110 tokens, 741 lines)\n   → Split into multiple smaller documents\n   → Create a table of contents with links\n   → Consider separating sections into individual files"
+    },
+    {
+      "path": "src/filing/routes/index.js",
+      "tokens": 5125,
+      "lines": 766,
+      "severity": "CRITICAL",
+      "recommendation": "🔧 REFACTOR: src/filing/routes/index.js (5125 tokens, 766 lines)\n   → Extract utility functions into separate modules\n   → Split large classes into smaller components\n   → Consider using composition over inheritance\n   → Move provider logic to separate files"
+    },
+    {
+      "path": "tests/unit/searching/search.test.js",
+      "tokens": 4701,
+      "lines": 578,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/searching/search.test.js (4701 tokens, 578 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "index.js",
+      "tokens": 4590,
+      "lines": 644,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: index.js (4590 tokens, 644 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/filing/filing.test.js",
+      "tokens": 3963,
+      "lines": 526,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/filing/filing.test.js (3963 tokens, 526 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/filing/providers/filingGCP.js",
+      "tokens": 3875,
+      "lines": 591,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/filing/providers/filingGCP.js (3875 tokens, 591 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/dataservice/providers/dataserviceDocumentDB.js",
+      "tokens": 3652,
+      "lines": 549,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/dataservice/providers/dataserviceDocumentDB.js (3652 tokens, 549 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/dataservice/dataservice.test.js",
+      "tokens": 3615,
+      "lines": 487,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/dataservice/dataservice.test.js (3615 tokens, 487 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "public/data/content.json",
+      "tokens": 3596,
+      "lines": 488,
+      "severity": "HIGH",
+      "recommendation": "📊 LARGE DATA: public/data/content.json (3596 tokens, 488 lines)\n   → Consider splitting into multiple JSON files\n   → Use external data files if this is configuration"
+    },
+    {
+      "path": "src/filing/providers/filingGit.js",
+      "tokens": 3516,
+      "lines": 591,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/filing/providers/filingGit.js (3516 tokens, 591 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/working/providers/working.js",
+      "tokens": 3447,
+      "lines": 523,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/working/providers/working.js (3447 tokens, 523 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/filing/index.js",
+      "tokens": 3291,
+      "lines": 436,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/filing/index.js (3291 tokens, 436 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/searching/providers/searchingFile.js",
+      "tokens": 3285,
+      "lines": 466,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/searching/providers/searchingFile.js (3285 tokens, 466 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/searching/providers/searching.js",
+      "tokens": 3283,
+      "lines": 466,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/searching/providers/searching.js (3283 tokens, 466 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/http/httpLoadTest.js",
+      "tokens": 3172,
+      "lines": 618,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/load/http/httpLoadTest.js (3172 tokens, 618 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/authservice/routes/index.js",
+      "tokens": 3098,
+      "lines": 481,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/authservice/routes/index.js (3098 tokens, 481 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "README.md",
+      "tokens": 3078,
+      "lines": 372,
+      "severity": "HIGH",
+      "recommendation": "📄 CONSIDER: README.md (3078 tokens, 372 lines)\n   → Add more section headers for better navigation\n   → Consider splitting if it continues to grow"
+    },
+    {
+      "path": "scripts/count-tokens.js",
+      "tokens": 3005,
+      "lines": 401,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: scripts/count-tokens.js (3005 tokens, 401 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/dataservice/providers/dataserviceMongoDB.js",
+      "tokens": 2959,
+      "lines": 454,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/dataservice/providers/dataserviceMongoDB.js (2959 tokens, 454 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/dataservice/dataserviceDocumentDB.test.js",
+      "tokens": 2885,
+      "lines": 416,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/dataservice/dataserviceDocumentDB.test.js (2885 tokens, 416 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "CLAUDE.md",
+      "tokens": 2829,
+      "lines": 263,
+      "severity": "HIGH",
+      "recommendation": "📄 CONSIDER: CLAUDE.md (2829 tokens, 263 lines)\n   → Add more section headers for better navigation\n   → Consider splitting if it continues to grow"
+    },
+    {
+      "path": "src/filing/modules/filingSyncProvider.js",
+      "tokens": 2662,
+      "lines": 413,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/filing/modules/filingSyncProvider.js (2662 tokens, 413 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/authservice/providers/authBase.js",
+      "tokens": 2500,
+      "lines": 424,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/authservice/providers/authBase.js (2500 tokens, 424 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/index.js",
+      "tokens": 2339,
+      "lines": 261,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/load/index.js (2339 tokens, 261 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/authservice/providers/authFile.js",
+      "tokens": 2338,
+      "lines": 376,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/authservice/providers/authFile.js (2338 tokens, 376 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/dataservice/documentdbLoadTest.js",
+      "tokens": 2320,
+      "lines": 272,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/load/dataservice/documentdbLoadTest.js (2320 tokens, 272 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/searching/routes/index.js",
+      "tokens": 2302,
+      "lines": 309,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/searching/routes/index.js (2302 tokens, 309 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/caching/providers/cachingMemcached.js",
+      "tokens": 2288,
+      "lines": 386,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/caching/providers/cachingMemcached.js (2288 tokens, 386 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/integration/apiKeyIntegration.disabled.js",
+      "tokens": 2278,
+      "lines": 347,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/integration/apiKeyIntegration.disabled.js (2278 tokens, 347 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/workflow/workflow.test.js",
+      "tokens": 2258,
+      "lines": 320,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/workflow/workflow.test.js (2258 tokens, 320 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/caching/fileLoadTest.js",
+      "tokens": 2226,
+      "lines": 269,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/load/caching/fileLoadTest.js (2226 tokens, 269 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/dataservice/dataserviceMongoDB.test.js",
+      "tokens": 2166,
+      "lines": 317,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/dataservice/dataserviceMongoDB.test.js (2166 tokens, 317 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/implementation/app-searching.js",
+      "tokens": 2161,
+      "lines": 268,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/implementation/app-searching.js (2161 tokens, 268 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/dataservice/routes/index.js",
+      "tokens": 2142,
+      "lines": 257,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/dataservice/routes/index.js (2142 tokens, 257 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/caching/cacheFile.test.js",
+      "tokens": 2098,
+      "lines": 281,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/caching/cacheFile.test.js (2098 tokens, 281 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/authservice/loadTest.js",
+      "tokens": 2093,
+      "lines": 342,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/load/authservice/loadTest.js (2093 tokens, 342 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/caching/modules/analytics.js",
+      "tokens": 2076,
+      "lines": 358,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/caching/modules/analytics.js (2076 tokens, 358 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/load/README.md",
+      "tokens": 2072,
+      "lines": 307,
+      "severity": "HIGH",
+      "recommendation": "📄 CONSIDER: tests/load/README.md (2072 tokens, 307 lines)\n   → Add more section headers for better navigation\n   → Consider splitting if it continues to grow"
+    },
+    {
+      "path": "tests/unit/serviceRegistry.test.js",
+      "tokens": 2068,
+      "lines": 329,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/serviceRegistry.test.js (2068 tokens, 329 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "src/queueing/modules/analytics.js",
+      "tokens": 2031,
+      "lines": 331,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: src/queueing/modules/analytics.js (2031 tokens, 331 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    },
+    {
+      "path": "tests/unit/authservice/authservice.test.js",
+      "tokens": 2011,
+      "lines": 263,
+      "severity": "HIGH",
+      "recommendation": "🔧 REVIEW: tests/unit/authservice/authservice.test.js (2011 tokens, 263 lines)\n   → Look for opportunities to extract functions\n   → Consider splitting if adding more features"
+    }
+  ]
+}

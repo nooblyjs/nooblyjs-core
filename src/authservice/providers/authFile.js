@@ -29,7 +29,13 @@ class AuthFile extends AuthBase {
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
 
-    this.dataDir_ = options.dataDir || path.join(process.cwd(), 'data', 'auth');
+    this.settings = {};
+    this.settings.desciption = "This provider exposes the nooblyjs file implementation settings"
+    this.settings.list = [
+      {setting: "datadir", type: "string", values : ['/data/']}
+    ]
+
+    this.dataDir_ = options.dataDir || this.settings.datadir || path.join(process.cwd(), 'data', 'auth');
     this.usersFile_ = path.join(this.dataDir_, 'users.json');
     this.rolesFile_ = path.join(this.dataDir_, 'roles.json');
     this.sessionsFile_ = path.join(this.dataDir_, 'sessions.json');
@@ -46,6 +52,26 @@ class AuthFile extends AuthBase {
       });
     }
   }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
+  }
+
 
   /**
    * Generates a cryptographically secure random password.
