@@ -17,7 +17,7 @@ const analytics = require('../modules/analytics');
  * Supports queue-based indexing with scheduled processing.
  * @class
  */
-class SearchService {
+class SearchFileService {
   /**
    * Initializes the search service with empty data storage.
    * @param {Object=} options Configuration options.
@@ -462,4 +462,4 @@ class SearchService {
   }
 }
 
-module.exports = SearchService;
+module.exports = SearchFileService;

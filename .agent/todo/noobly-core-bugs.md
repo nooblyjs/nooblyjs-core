@@ -18,7 +18,6 @@
   - [x] Queuing Provider settings
   - [x] Caching Provider settings
   - [ ] Filing Provider settings
-  - [ ] Fetching Provider settings
   
 ## Level 2
   - [ ] Dataservice Provider settings
