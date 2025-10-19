@@ -34,6 +34,18 @@ class SchedulerProvider {
     if (!this.worker_) {
       throw new Error('Working service is required for SchedulerProvider');
     }
+
+    // Settings configuration
+    this.settings = {};
+    this.settings.description = "Configuration settings for the scheduling service";
+    this.settings.list = [
+      { setting: 'maxConcurrentJobs', type: 'number', values: null },
+      { setting: 'retryAttempts', type: 'number', values: null },
+      { setting: 'jobTimeout', type: 'number', values: null }
+    ];
+    this.settings.maxConcurrentJobs = options.maxConcurrentJobs || 10;
+    this.settings.retryAttempts = options.retryAttempts || 3;
+    this.settings.jobTimeout = options.jobTimeout || 30000;
   }
 
   /**
@@ -169,6 +181,28 @@ class SchedulerProvider {
       return this.tasks_.has(taskName);
     }
     return this.tasks_.size > 0;
+  }
+
+  /**
+   * Get all settings for the scheduling service.
+   * @return {Promise<Object>} A promise that resolves to the settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save settings for the scheduling service.
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>} A promise that resolves when settings are saved.
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

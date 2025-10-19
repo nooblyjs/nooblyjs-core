@@ -758,6 +758,54 @@ module.exports = (options, eventEmitter, filing) => {
         res.status(500).json({ error: error.message });
       }
     });
+
+    /**
+     * GET /services/filing/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/filing/api/settings', (req, res) => {
+      try {
+        filing.getSettings()
+          .then((settings)=> res.status(200).json(settings))
+          .catch((err) => {
+            console.log(err);
+            res.status(500).json({
+              error: 'Failed to retrieve settings',
+              message: err.message
+            });
+          });
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({
+          error: 'Failed to retrieve settings',
+          message: err.message
+        });
+      }
+    });
+
+    /**
+     * POST /services/filing/api/settings
+     * Updates the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/filing/api/settings', (req, res) => {
+      const message = req.body;
+      if (message) {
+        filing
+          .saveSettings(message)
+          .then(() => res.status(200).send('OK'))
+          .catch((err) => res.status(500).send(err.message));
+      } else {
+        res.status(400).send('Bad Request: Missing settings');
+      }
+    });
   }
 };
 

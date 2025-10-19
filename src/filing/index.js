@@ -335,6 +335,20 @@ class FilingService {
     }
     throw new Error('Auto fetch is not supported by this provider');
   }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.provider.getSettings();
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    return this.provider.saveSettings(settings);
+  }
 }
 
 /**

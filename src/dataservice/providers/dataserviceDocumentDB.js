@@ -64,7 +64,19 @@ class DocumentDBDataServiceProvider {
     
     /** @private @const {Set<string>} */
     this.initializedContainers_ = new Set();
-    
+
+    // Settings for dataservice DocumentDB provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the DataService DocumentDB Provider";
+    this.settings.list = [
+      {setting: "connectionTimeout", type: "number", values: [30000]},
+      {setting: "queryTimeout", type: "number", values: [60000]},
+      {setting: "maxConnections", type: "number", values: [100]}
+    ];
+    this.settings.connectionTimeout = options.connectionTimeout || this.settings.list[0].values[0];
+    this.settings.queryTimeout = options.queryTimeout || this.settings.list[1].values[0];
+    this.settings.maxConnections = options.maxConnections || this.settings.list[2].values[0];
+
     // Initialize connection
     this.initializeConnection_();
   }
@@ -543,6 +555,25 @@ class DocumentDBDataServiceProvider {
       ssl: this.ssl_,
       status: this.status
     };
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

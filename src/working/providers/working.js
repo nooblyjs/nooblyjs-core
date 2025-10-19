@@ -58,6 +58,18 @@ class WorkerManager {
     /** @private @const {string} Queue name for error tasks */
     this.QUEUE_ERROR_ = 'noobly-core-working-error';
 
+    // Settings configuration
+    this.settings = {};
+    this.settings.description = "Configuration settings for the working service";
+    this.settings.list = [
+      { setting: 'workerTimeout', type: 'number', values: null },
+      { setting: 'maxQueueSize', type: 'number', values: null },
+      { setting: 'enableLogging', type: 'boolean', values: null }
+    ];
+    this.settings.workerTimeout = options.workerTimeout || 300000;
+    this.settings.maxQueueSize = options.maxQueueSize || 1000;
+    this.settings.enableLogging = options.enableLogging !== undefined ? options.enableLogging : true;
+
     // Start queue processor that checks every 1 second
     this.startQueueProcessor_();
   }
@@ -516,6 +528,28 @@ class WorkerManager {
    */
   async getTask(taskId) {
     return this.taskHistory_.get(taskId) || null;
+  }
+
+  /**
+   * Get all settings for the working service.
+   * @return {Promise<Object>} A promise that resolves to the settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save settings for the working service.
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>} A promise that resolves when settings are saved.
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

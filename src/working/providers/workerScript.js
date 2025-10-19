@@ -33,6 +33,18 @@ let userScript = null;
 /** @type {string} */
 let status = 'idle'; // idle, running, completed, error
 
+// Settings for working service worker script
+const settings = {};
+settings.description = "Configuration settings for the Working Service Worker Script";
+settings.list = [
+  {setting: "executionTimeout", type: "number", values: [300000]},
+  {setting: "maxMemory", type: "number", values: [512]},
+  {setting: "maxRetries", type: "number", values: [3]}
+];
+settings.executionTimeout = settings.list[0].values[0];
+settings.maxMemory = settings.list[1].values[0];
+settings.maxRetries = settings.list[2].values[0];
+
 /**
  * Updates the status of the worker and sends a message to the parent port.
  * @param {string} newStatus The new status of the worker.
@@ -64,5 +76,15 @@ parentPort.on('message', async (message) => {
     }
   } else if (message.type === 'getStatus') {
     parentPort.postMessage({ type: 'currentStatus', status: status });
+  } else if (message.type === 'getSettings') {
+    parentPort.postMessage({ type: 'settings', settings: settings });
+  } else if (message.type === 'saveSettings') {
+    for (let i = 0; i < settings.list.length; i++){
+      if (message.settings[settings.list[i].setting] != null){
+        settings[settings.list[i].setting] = message.settings[settings.list[i].setting];
+        console.log(settings.list[i].setting + ' changed to: ' + message.settings[settings.list[i].setting]);
+      }
+    }
+    parentPort.postMessage({ type: 'settingsSaved', settings: settings });
   }
 });

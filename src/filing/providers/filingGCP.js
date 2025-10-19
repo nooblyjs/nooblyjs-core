@@ -93,6 +93,18 @@ class GCPFilingProvider {
       }
       throw new Error(`GCP Storage initialization failed: ${error.message}`);
     }
+
+    // Settings for filing GCP provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Filing GCP Provider";
+    this.settings.list = [
+      {setting: "bucket", type: "string", values: [this.bucketName_]},
+      {setting: "location", type: "string", values: [this.location_]},
+      {setting: "maxUploadSize", type: "number", values: [104857600]}
+    ];
+    this.settings.bucket = options.bucket || this.settings.list[0].values[0];
+    this.settings.location = options.location || this.settings.list[1].values[0];
+    this.settings.maxUploadSize = options.maxUploadSize || this.settings.list[2].values[0];
   }
 
   /**
@@ -585,6 +597,25 @@ class GCPFilingProvider {
       stream.pipe(uploadStream);
       stream.on('error', reject);
     });
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

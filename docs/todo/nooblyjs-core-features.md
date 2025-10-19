@@ -1,6 +1,15 @@
 # Features (Service Registry)
 
-- [ ] Service Registry: Allow for multiple instantiations of services
+# Priority Items
+- [ ] Service specific activities (search) not running in downstream systems. We need a way to enable them
+  - [ ] Create indexing activity run by scheduler
+  - [ ] Create Worker output status archiving
+  - [ ] Create Workflow output status archving
+  - [ ] Create Filemanager icon and preview activities
+  - [ ] Create Dataservice index manager
+  - [ ] Create Notifications Data output arciving
+  - [ ] Create Scheduling Data output arciving
+  - [ ] Service Registry: Allow for multiple instantiations of services
 
 # Logging Features
 

@@ -25,17 +25,26 @@ class DataServiceApi {
    * @param {EventEmitter=} eventEmitter Optional event emitter for data events.
    */
   constructor(options = {}, eventEmitter) {
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
-    this.timeout = options.timeout || 10000;
-    this.eventEmitter_ = eventEmitter;
 
-    // Configure axios instance
-    this.client = axios.create({
-      baseURL: this.apiRoot,
-      timeout: this.timeout,
-      headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
-    });
+    this.settings = {};
+    this.settings.description = "Configuration settings for the DataService API Provider";
+    this.settings.list = [
+      {setting: "apiUrl", type: "string", values: ["http://localhost:3000"]},
+      {setting: "timeout", type: "number", values: [10000]},
+      {setting: "retryLimit", type: "number", values: [3]}
+    ];
+     this.settings.api = options.api || 'http://localhost:3000';
+     this.settings.apikey = options.apiKey || null;
+     this.timeout = options.timeout || 5000;
+
+     this.eventEmitter_ = eventEmitter;
+ 
+     // Configure axios instance
+     this.client = axios.create({
+       baseURL: this.settings.api,
+       timeout: this.timeout,
+       headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
+     });
   }
 
   /**
@@ -149,6 +158,25 @@ class DataServiceApi {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('data:error', { operation: 'query', collection, error: error.message });
       throw error;
+    }
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
     }
   }
 }

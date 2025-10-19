@@ -26,6 +26,18 @@ class NotificationService {
     this.options = options || {};
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings configuration
+    this.settings = {};
+    this.settings.description = "Configuration settings for the notifying service";
+    this.settings.list = [
+      { setting: 'maxSubscribers', type: 'number', values: null },
+      { setting: 'messageTimeout', type: 'number', values: null },
+      { setting: 'enableQueuing', type: 'boolean', values: null }
+    ];
+    this.settings.maxSubscribers = options.maxSubscribers || 100;
+    this.settings.messageTimeout = options.messageTimeout || 5000;
+    this.settings.enableQueuing = options.enableQueuing !== undefined ? options.enableQueuing : false;
   }
 
   /**
@@ -101,6 +113,28 @@ class NotificationService {
             });
         }
       });
+    }
+  }
+
+  /**
+   * Get all settings for the notifying service.
+   * @return {Promise<Object>} A promise that resolves to the settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save settings for the notifying service.
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>} A promise that resolves when settings are saved.
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
     }
   }
 }

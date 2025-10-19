@@ -117,7 +117,7 @@ class logging {
     }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const formattedMessage = this.formatMessage_(message, meta);
+    const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - INFO - ${device} - ${formattedMessage}`;
     console.log(logMessage);
     if (this.eventEmitter_)
@@ -136,7 +136,7 @@ class logging {
     }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const formattedMessage = this.formatMessage_(message, meta);
+    const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - WARN - ${device} - ${formattedMessage}`;
     console.warn(logMessage);
     if (this.eventEmitter_)
@@ -155,7 +155,7 @@ class logging {
     }
     const timestamp = new Date().toISOString();
     const device = os.hostname();
-    const formattedMessage = this.formatMessage_(message, meta);
+    const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - ERROR - ${device} - ${formattedMessage}`;
     console.error(logMessage);
     if (this.eventEmitter_)

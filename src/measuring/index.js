@@ -42,8 +42,15 @@ function createMeasuringService(type, options, eventEmitter) {
   // Initialize routes and views for the measuring service
   Routes(options, eventEmitter, measuring, analytics);
   Views(options, eventEmitter, measuring);
-  
-  return measuring;
+
+  // Expose settings methods (save provider methods before overwriting)
+  const providerGetSettings = measuring.getSettings.bind(measuring);
+  const providerSaveSettings = measuring.saveSettings.bind(measuring);
+  const service = measuring;
+  service.getSettings = providerGetSettings;
+  service.saveSettings = providerSaveSettings;
+
+  return service;
 }
 
 module.exports = createMeasuringService;

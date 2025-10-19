@@ -173,5 +173,53 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
         });
       }
     });
+
+    /**
+     * GET /services/workflow/api/settings
+     * Retrieves the settings for the workflow service.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/workflow/api/settings', (req, res) => {
+      try {
+        workflow.getSettings()
+          .then((settings) => res.status(200).json(settings))
+          .catch((err) => {
+            console.log(err);
+            res.status(500).json({
+              error: 'Failed to retrieve settings',
+              message: err.message
+            });
+          });
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({
+          error: 'Failed to retrieve settings',
+          message: err.message
+        });
+      }
+    });
+
+    /**
+     * POST /services/workflow/api/settings
+     * Saves the settings for the workflow service.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/workflow/api/settings', (req, res) => {
+      const message = req.body;
+      if (message) {
+        workflow
+          .saveSettings(message)
+          .then(() => res.status(200).send('OK'))
+          .catch((err) => res.status(500).send(err.message));
+      } else {
+        res.status(400).send('Bad Request: Missing settings');
+      }
+    });
   }
 };

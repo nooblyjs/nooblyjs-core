@@ -26,6 +26,18 @@ class LocalFilingProvider {
   constructor(options, eventEmitter) {
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings for filing service
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Filing Service";
+    this.settings.list = [
+      {setting: "uploadDir", type: "string", values: ['./.noobly-core/uploads']},
+      {setting: "maxFileSize", type: "number", values: [10485760]},
+      {setting: "allowedTypes", type: "string", values: ['*']}
+    ];
+    this.settings.uploadDir = options.uploadDir || this.settings.uploadDir || './.noobly-core/uploads';
+    this.settings.maxFileSize = options.maxFileSize || this.settings.maxFileSize || 10485760;
+    this.settings.allowedTypes = options.allowedTypes || this.settings.allowedTypes || '*';
   }
 
   /**
@@ -152,6 +164,25 @@ class LocalFilingProvider {
       writeStream.on('error', reject);
       stream.on('error', reject);
     });
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

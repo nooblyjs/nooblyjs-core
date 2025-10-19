@@ -54,10 +54,22 @@ class GitFilingProvider {
       path.join(this.localPath, '.git-queue'),
       eventEmitter
     );
-    
+
     this._fetchTimer = null;
     this._initialized = false;
     this._lockedFiles = new Set(); // Local file locking
+
+    // Settings for filing Git provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Filing Git Provider";
+    this.settings.list = [
+      {setting: "fetchInterval", type: "number", values: [30000]},
+      {setting: "autoFetch", type: "boolean", values: [true]},
+      {setting: "maxFileSize", type: "number", values: [10485760]}
+    ];
+    this.settings.fetchInterval = options.fetchInterval || this.settings.list[0].values[0];
+    this.settings.autoFetch = options.autoFetch !== undefined ? options.autoFetch : this.settings.list[1].values[0];
+    this.settings.maxFileSize = options.maxFileSize || this.settings.list[2].values[0];
   }
 
   /**
@@ -585,6 +597,25 @@ class GitFilingProvider {
   async cleanup() {
     this.stopAutoFetch();
     this._initialized = false;
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

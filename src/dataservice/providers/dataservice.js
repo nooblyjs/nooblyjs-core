@@ -22,10 +22,42 @@ class InMemoryDataServiceProvider {
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options, eventEmitter) {
-    /** @private @const {!Map<string, !Map<string, !Object>>} */
+
     this.containers = new Map(); // Map<containerName, Map<objectKey, object>>
-    /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings for data service
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Data Service";
+    this.settings.list = [
+      {setting: "dataDir", type: "string", values: ['./.noobly-core/data']},
+      {setting: "autoCreateContainers", type: "boolean", values: [true, false]},
+      {setting: "persistData", type: "boolean", values: [true, false]}
+    ];
+
+    this.settings.dataDir = options.dataDir || this.settings.dataDir || './.noobly-core/data';
+    this.settings.autoCreateContainers = options.autoCreateContainers !== undefined ? options.autoCreateContainers : true;
+    this.settings.persistData = options.persistData !== undefined ? options.persistData : false;
+
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 
   /**
@@ -149,6 +181,7 @@ class InMemoryDataServiceProvider {
       });
     return results;
   }
+
 }
 
 module.exports = InMemoryDataServiceProvider;
