@@ -31,6 +31,18 @@ class FileDataRingProvider {
     this.containers = new Map(); // Map<containerName, containerFilePath>
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings for dataservice file provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the DataService File Provider";
+    this.settings.list = [
+      {setting: "storageLocation", type: "string", values: ["./.data"]},
+      {setting: "maxFileSize", type: "number", values: [10485760]},
+      {setting: "autoBackup", type: "boolean", values: [false]}
+    ];
+    this.settings.storageLocation = options.storageLocation || this.settings.list[0].values[0];
+    this.settings.maxFileSize = options.maxFileSize || this.settings.list[1].values[0];
+    this.settings.autoBackup = options.autoBackup || this.settings.list[2].values[0];
   }
 
   /**
@@ -199,6 +211,25 @@ class FileDataRingProvider {
         results,
       });
     return results;
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

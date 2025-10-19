@@ -26,6 +26,10 @@ class AuthPassport extends AuthBase {
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
 
+    this.settings = {};
+    this.settings.desciption = "There are not settinsg for the noobly-core passpwrt auth implementation"
+    this.settings.list = []
+
     this.passport_ = null;
     this.initializePassport_();
 
@@ -36,6 +40,26 @@ class AuthPassport extends AuthBase {
       });
     }
   }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
+  }
+
 
   /**
    * Initializes passport with local strategy.

@@ -1,13 +1,12 @@
-# NooblyJS Core - Usage Guide
+# NooblyJS Core - AI Assistant Reference Guide
 
-## Quick Start
+> **Purpose**: This guide is optimized for AI assistants to help developers implement nooblyjs-core.
+> **Version**: 1.0.14+
+> **Package**: `noobly-core` on npm
 
-### Installation
-```bash
-npm install noobly-core
-```
+## Installation & Basic Setup
 
-### Basic Setup
+### Minimal Setup
 ```javascript
 const express = require('express');
 const serviceRegistry = require('noobly-core');
@@ -15,73 +14,217 @@ const serviceRegistry = require('noobly-core');
 const app = express();
 app.use(express.json());
 
-// Initialize registry
+// REQUIRED: Initialize registry first
 serviceRegistry.initialize(app);
 
-// Get services
+// Then get services
 const cache = serviceRegistry.cache('memory');
-const logger = serviceRegistry.logger('console');
+const logger = serviceRegistry.logger('file');
 const dataService = serviceRegistry.dataService('memory');
 
 app.listen(3000);
 ```
 
-### With API Keys
+### Production Setup with Security
 ```javascript
-const apiKey = serviceRegistry.generateApiKey();
-serviceRegistry.initialize(app, {
-  apiKeys: [apiKey],
-  requireApiKey: true,
-  excludePaths: ['/services/*/status', '/services/', '/services/*/views/*']
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Session for service UI authentication
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Initialize with security
+const apiKeys = (process.env.NOOBLY_API_KEYS || '').split(',').filter(Boolean);
+serviceRegistry.initialize(app, null, {
+  logDir: './.noobly-core/logs',
+  dataDir: './.noobly-core/data',
+  apiKeys: apiKeys,
+  requireApiKey: apiKeys.length > 0,
+  excludePaths: [
+    '/services/*/status',
+    '/services/',
+    '/services/authservice/api/login',
+    '/services/authservice/api/register'
+  ]
+});
+
+const log = serviceRegistry.logger('file');
+const auth = serviceRegistry.authservice('file');
+const { configurePassport } = auth.passportConfigurator(auth.getAuthStrategy);
+configurePassport(passport);
+
+app.listen(3000);
+```
+
+## Critical Implementation Rules
+
+1. **ALWAYS call `serviceRegistry.initialize(app)` BEFORE getting any services** - This is required
+2. **Service initialization signature**: `serviceRegistry.initialize(app, eventEmitter, options)`
+   - `app` (required): Express application instance
+   - `eventEmitter` (optional): Custom EventEmitter, or pass `null` to use built-in
+   - `options` (optional): Configuration object
+3. **Dependency injection is automatic** - Services get their dependencies automatically based on hierarchy
+4. **Singleton pattern** - Each `service:provider` combination is a singleton
+5. **API routes**: All services expose routes at `/services/{service}/api/*` (NOT `/api/{service}/*`)
+6. **Authentication**: Use `authservice` with passport for session-based auth; configure before routes
+
+## Service Registry Quick Reference
+
+### All 13 Services with Method Signatures
+
+| Service | Method | Providers | Key Dependencies |
+|---------|--------|-----------|------------------|
+| **aiservice** | `serviceRegistry.aiservice(provider, options)` | `claude`, `chatgpt`, `ollama`, `api` | logging, caching, workflow, queueing |
+| **authservice** | `serviceRegistry.authservice(provider, options)` | `file`, `memory`, `passport`, `google`, `api` | logging, caching, dataservice |
+| **caching** | `serviceRegistry.cache(provider, options)` | `memory`, `inmemory`, `redis`, `memcached`, `file`, `api` | logging |
+| **dataservice** | `serviceRegistry.dataService(provider, options)` | `memory`, `file`, `simpledb`, `mongodb`, `documentdb`, `api` | logging, filing |
+| **filing** | `serviceRegistry.filing(provider, options)` or `.filer()` | `local`, `ftp`, `s3`, `git`, `gcp`, `sync`, `api` | logging |
+| **logging** | `serviceRegistry.logger(provider, options)` | `memory`, `file`, `api` | none (foundation) |
+| **measuring** | `serviceRegistry.measuring(provider, options)` | `memory`, `api` | logging, queueing, caching |
+| **notifying** | `serviceRegistry.notifying(provider, options)` | `memory`, `api` | logging, queueing, scheduling |
+| **queueing** | `serviceRegistry.queue(provider, options)` | `memory`, `api` | logging |
+| **scheduling** | `serviceRegistry.scheduling(provider, options)` | `memory` | logging, working |
+| **searching** | `serviceRegistry.searching(provider, options)` | `memory`, `file`, `api` | logging, caching, dataservice, queueing, working, scheduling |
+| **workflow** | `serviceRegistry.workflow(provider, options)` | `memory`, `api` | logging, queueing, scheduling, measuring, working |
+| **working** | `serviceRegistry.working(provider, options)` | `memory`, `api` | logging, queueing, caching |
+
+### Service Dependency Hierarchy (Initialization Order)
+
+**Level 0 - Foundation**: logging
+**Level 1 - Infrastructure**: caching, filing, queueing
+**Level 2 - Business Logic**: dataservice, working, measuring
+**Level 3 - Application**: scheduling, searching, workflow
+**Level 4 - Integration**: notifying, authservice, aiservice
+
+## Common Provider Options
+
+### Logging Service
+```javascript
+// File provider
+serviceRegistry.logger('file', {
+  logDir: './.noobly-core/logs',  // or use options passed to initialize()
+  filename: 'app.log',
+  maxFiles: 5,
+  maxSize: '10m'
+});
+
+// Memory provider (default)
+serviceRegistry.logger('memory');
+```
+
+### Caching Service
+```javascript
+// Redis provider
+serviceRegistry.cache('redis', {
+  host: 'localhost',
+  port: 6379,
+  password: 'secret',
+  keyPrefix: 'myapp:',
+  db: 0
+});
+
+// Memory provider
+serviceRegistry.cache('memory'); // or 'inmemory'
+```
+
+### DataService
+```javascript
+// MongoDB provider
+serviceRegistry.dataService('mongodb', {
+  connectionString: 'mongodb://localhost:27017',
+  database: 'myapp'
+});
+
+// File provider
+serviceRegistry.dataService('file', {
+  dataDir: './.noobly-core/data'  // or use options passed to initialize()
 });
 ```
 
-## Service Registry Architecture
+### Filing Service
+```javascript
+// S3 provider
+serviceRegistry.filing('s3', {
+  bucket: 'my-bucket',
+  region: 'us-east-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 
-**Core Principles:**
-- Singleton Pattern: One instance per service type/provider
-- Provider Pattern: Multiple backends (memory, redis, s3, etc.)
-- Event-Driven: Global EventEmitter for inter-service communication
-- RESTful APIs: Consistent HTTP endpoints
-- Dependency Injection: Services automatically receive their dependencies
+// Local provider
+serviceRegistry.filing('local', {
+  baseDir: './uploads'
+});
+```
 
-### Available Services
+### AI Service
+```javascript
+// Claude provider
+serviceRegistry.aiservice('claude', {
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-3-5-sonnet-20241022',
+  tokensStorePath: './.noobly-core/ai-tokens.json'
+});
 
-| Service | Providers | Purpose |
-|---------|-----------|---------|
-| **aiservice** | claude, chatgpt, ollama, api | LLM integration with token tracking |
-| **authservice** | file, memory, passport, google, api | Authentication & user management |
-| **caching** | memory, redis, memcached, file, api | High-performance caching |
-| **dataservice** | memory, simpledb, file, mongodb, documentdb, api | JSON document storage with UUIDs |
-| **filing** | local, ftp, s3, git, gcp, sync, api | File management |
-| **logging** | console, file, api | Application logging |
-| **measuring** | memory, api | Metrics collection |
-| **notifying** | memory, api | Pub/sub messaging |
-| **queueing** | memory, api | Task queueing |
-| **scheduling** | memory | Task scheduling with worker threads |
-| **searching** | memory, api | Full-text search |
-| **workflow** | memory, api | Multi-step workflows |
-| **working** | memory, api | Background tasks with worker threads |
+// Ollama provider (local)
+serviceRegistry.aiservice('ollama', {
+  baseUrl: 'http://localhost:11434',
+  model: 'llama3.2'
+});
+```
 
-## API Usage
+### Authentication Service
+```javascript
+// File provider (recommended for production)
+serviceRegistry.authservice('file', {
+  dataDir: './.noobly-core/data'
+});
 
-### Authentication
-Five methods supported:
+// Memory provider (dev only)
+serviceRegistry.authservice('memory', {
+  createDefaultAdmin: true  // Creates admin:admin123 and user:user123
+});
+
+// Google OAuth provider
+serviceRegistry.authservice('google', {
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: '/auth/google/callback'
+});
+```
+
+## REST API Reference
+
+### API Authentication Methods
 ```bash
-# 1. x-api-key header
-curl -H "x-api-key: YOUR_KEY" ...
+# Method 1: x-api-key header (recommended)
+curl -H "x-api-key: YOUR_KEY" http://localhost:3000/services/caching/api/get/mykey
 
-# 2. Authorization Bearer
-curl -H "Authorization: Bearer YOUR_KEY" ...
+# Method 2: Authorization Bearer
+curl -H "Authorization: Bearer YOUR_KEY" http://localhost:3000/...
 
-# 3. Authorization ApiKey
-curl -H "Authorization: ApiKey YOUR_KEY" ...
+# Method 3: Query parameter
+curl "http://localhost:3000/services/caching/api/get/mykey?api_key=YOUR_KEY"
 
-# 4. Query parameter
-curl "...?api_key=YOUR_KEY"
+# Method 4: api-key header
+curl -H "api-key: YOUR_KEY" http://localhost:3000/...
 
-# 5. api-key header
-curl -H "api-key: YOUR_KEY" ...
+# Method 5: Authorization ApiKey
+curl -H "Authorization: ApiKey YOUR_KEY" http://localhost:3000/...
 ```
 
 ### Caching API
@@ -105,13 +248,14 @@ GET /services/caching/api/status
 
 ### DataService API
 
-Database-style storage with UUIDs and JSON search.
+**IMPORTANT**: DataService uses UUID-based storage, NOT simple key-value like caching.
 
 ```bash
-# Insert into container (returns UUID)
+# Insert document (returns UUID automatically)
 POST /services/dataservice/api/:container
-{"name": "John", "status": "active"}
-# Response: {"id": "uuid-here"}
+Content-Type: application/json
+{"name": "John", "status": "active", "profile": {"role": "developer"}}
+# Response: {"id": "550e8400-e29b-41d4-a716-446655440000"}
 
 # Retrieve by UUID
 GET /services/dataservice/api/:container/:uuid
@@ -119,16 +263,34 @@ GET /services/dataservice/api/:container/:uuid
 # Delete by UUID
 DELETE /services/dataservice/api/:container/:uuid
 
-# JSON Search - Custom predicate
+# JSON Search - Custom JavaScript predicate
 POST /services/dataservice/api/jsonFind/:container
-{"predicate": "obj.status === 'active'"}
+{"predicate": "obj.status === 'active' && obj.profile.role === 'developer'"}
 
-# JSON Search - By path
+# JSON Search - By nested path
 GET /services/dataservice/api/jsonFindByPath/:container/:path/:value
+# Example: GET /services/dataservice/api/jsonFindByPath/users/profile.role/developer
 
-# JSON Search - Multi-criteria
+# JSON Search - Multi-criteria (supports nested paths)
 POST /services/dataservice/api/jsonFindByCriteria/:container
-{"status": "active", "profile.role": "developer"}
+{"status": "active", "profile.role": "developer", "profile.department": "engineering"}
+```
+
+**Programmatic Usage**:
+```javascript
+// Insert returns UUID
+const uuid = await dataService.add('users', {name: 'John', email: 'john@example.com'});
+
+// Retrieve by UUID
+const user = await dataService.getByUuid('users', uuid);
+
+// Search examples
+const activeUsers = await dataService.jsonFind('users', user => user.status === 'active');
+const developers = await dataService.jsonFindByPath('users', 'profile.role', 'developer');
+const results = await dataService.jsonFindByCriteria('users', {
+  'status': 'active',
+  'profile.department': 'engineering'
+});
 ```
 
 ### Filing API
@@ -234,32 +396,225 @@ GET /services/ai/api/analytics
 GET /services/ai/api/status
 ```
 
-## Programmatic Usage
+## Implementation Patterns for Common Use Cases
 
-### Service Configuration
+### Pattern 1: Basic CRUD API
 ```javascript
-// Memory providers (dev/testing)
-const cache = serviceRegistry.cache('memory');
-const dataService = serviceRegistry.dataService('memory');
+const express = require('express');
+const serviceRegistry = require('noobly-core');
 
-// Production providers
+const app = express();
+app.use(express.json());
+
+// Initialize
+serviceRegistry.initialize(app, null, {
+  logDir: './logs',
+  dataDir: './data'
+});
+
+const log = serviceRegistry.logger('file');
+const dataService = serviceRegistry.dataService('file');
+
+// CRUD endpoints
+app.post('/api/items', async (req, res) => {
+  try {
+    const uuid = await dataService.add('items', req.body);
+    log.info('Item created', {uuid});
+    res.json({id: uuid, item: req.body});
+  } catch (error) {
+    log.error('Create failed', error);
+    res.status(500).json({error: error.message});
+  }
+});
+
+app.get('/api/items/:id', async (req, res) => {
+  try {
+    const item = await dataService.getByUuid('items', req.params.id);
+    if (!item) return res.status(404).json({error: 'Not found'});
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({error: error.message});
+  }
+});
+
+app.get('/api/items', async (req, res) => {
+  try {
+    const items = await dataService.jsonFindByCriteria('items', req.query);
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({error: error.message});
+  }
+});
+
+app.listen(3000);
+```
+
+### Pattern 2: Caching with Redis
+```javascript
 const cache = serviceRegistry.cache('redis', {
-  host: 'redis.example.com',
-  port: 6379,
-  password: 'password',
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD,
   keyPrefix: 'myapp:'
 });
 
-const dataService = serviceRegistry.dataService('simpledb', {
-  domain: 'myapp-data',
-  region: 'us-east-1'
-});
+// Cache-aside pattern
+async function getUser(userId) {
+  const cacheKey = `user:${userId}`;
+
+  // Try cache first
+  let user = await cache.get(cacheKey);
+  if (user) {
+    log.info('Cache hit', {userId});
+    return user;
+  }
+
+  // Cache miss - fetch from DB
+  log.info('Cache miss', {userId});
+  user = await dataService.getByUuid('users', userId);
+
+  if (user) {
+    // Store in cache for 1 hour
+    await cache.put(cacheKey, user, 3600);
+  }
+
+  return user;
+}
+```
+
+### Pattern 3: File Upload with S3
+```javascript
+const multer = require('multer');
+const upload = multer({storage: multer.memoryStorage()});
 
 const filing = serviceRegistry.filing('s3', {
-  bucket: 'myapp-files',
-  region: 'us-west-2',
+  bucket: process.env.S3_BUCKET,
+  region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  try {
+    const filename = `${Date.now()}_${req.file.originalname}`;
+    const filepath = `uploads/${filename}`;
+
+    // Upload to S3
+    const stream = require('stream').Readable.from(req.file.buffer);
+    await filing.create(filepath, stream);
+
+    // Store metadata in dataservice
+    const uuid = await dataService.add('files', {
+      filename,
+      filepath,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      uploadedAt: new Date().toISOString()
+    });
+
+    log.info('File uploaded', {uuid, filepath});
+    res.json({id: uuid, filepath});
+  } catch (error) {
+    log.error('Upload failed', error);
+    res.status(500).json({error: error.message});
+  }
+});
+```
+
+### Pattern 4: Authentication with Passport
+```javascript
+const session = require('express-session');
+const passport = require('passport');
+
+// Setup session
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {maxAge: 24 * 60 * 60 * 1000}
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Initialize auth service
+serviceRegistry.initialize(app, null, {
+  dataDir: './data',
+  logDir: './logs'
+});
+
+const auth = serviceRegistry.authservice('file');
+const log = serviceRegistry.logger('file');
+
+// Configure passport
+const {configurePassport} = auth.passportConfigurator(auth.getAuthStrategy);
+configurePassport(passport);
+
+// Auth middleware
+function requireAuth(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({error: 'Unauthorized'});
+}
+
+// Login endpoint
+app.post('/api/login', passport.authenticate('local'), (req, res) => {
+  log.info('User logged in', {username: req.user.username});
+  res.json({user: req.user});
+});
+
+// Protected endpoint
+app.get('/api/profile', requireAuth, (req, res) => {
+  res.json({user: req.user});
+});
+
+// Logout
+app.post('/api/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({error: err.message});
+    res.json({message: 'Logged out'});
+  });
+});
+```
+
+### Pattern 5: AI Integration with Claude
+```javascript
+const aiservice = serviceRegistry.aiservice('claude', {
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-3-5-sonnet-20241022',
+  tokensStorePath: './data/ai-tokens.json'
+});
+
+// Content generation endpoint
+app.post('/api/ai/generate', async (req, res) => {
+  try {
+    const {prompt, maxTokens = 1000} = req.body;
+
+    const response = await aiservice.prompt(prompt, {
+      maxTokens,
+      temperature: 0.7
+    });
+
+    log.info('AI response generated', {
+      tokens: response.usage.totalTokens,
+      cost: response.usage.estimatedCost
+    });
+
+    res.json({
+      content: response.content,
+      usage: response.usage
+    });
+  } catch (error) {
+    log.error('AI generation failed', error);
+    res.status(500).json({error: error.message});
+  }
+});
+
+// Get AI usage analytics
+app.get('/api/ai/analytics', (req, res) => {
+  const analytics = aiservice.getAnalytics();
+  res.json(analytics);
 });
 ```
 
@@ -794,27 +1149,154 @@ ANTHROPIC_API_KEY=...
 - Check script paths are absolute
 - Verify worker thread limits aren't exceeded
 
-## Error Response Format
+## Common Mistakes & Troubleshooting
 
-All APIs return consistent error responses:
+### ❌ Mistake 1: Not initializing registry before getting services
+```javascript
+// WRONG
+const cache = serviceRegistry.cache('memory');
+serviceRegistry.initialize(app);  // Too late!
 
-```json
-{
-  "error": "Error Type",
-  "message": "Detailed error message",
-  "code": "ERROR_CODE"
-}
+// CORRECT
+serviceRegistry.initialize(app);
+const cache = serviceRegistry.cache('memory');
 ```
 
-Common error codes:
-- `MISSING_API_KEY` - API key required but not provided
-- `INVALID_API_KEY` - API key invalid
-- `KEY_NOT_FOUND` - Cache/data key doesn't exist
-- `FILE_NOT_FOUND` - File doesn't exist
-- `VALIDATION_ERROR` - Input validation failed
+### ❌ Mistake 2: Using wrong API paths
+```javascript
+// WRONG - Old documentation might show this
+fetch('/api/caching/get/mykey')
+
+// CORRECT - All service APIs are under /services/
+fetch('/services/caching/api/get/mykey')
+```
+
+### ❌ Mistake 3: Treating dataService like caching
+```javascript
+// WRONG - dataService doesn't use simple keys
+await dataService.put('mykey', {data: 'value'});
+const data = await dataService.get('mykey');
+
+// CORRECT - dataService uses containers and UUIDs
+const uuid = await dataService.add('mycontainer', {data: 'value'});
+const data = await dataService.getByUuid('mycontainer', uuid);
+```
+
+### ❌ Mistake 4: Wrong provider names
+```javascript
+// WRONG - Provider names are case-sensitive and specific
+const cache = serviceRegistry.cache('Memory');      // Won't work
+const cache = serviceRegistry.cache('in-memory');   // Won't work
+
+// CORRECT
+const cache = serviceRegistry.cache('memory');      // Works
+const cache = serviceRegistry.cache('inmemory');    // Also works for caching
+```
+
+### ❌ Mistake 5: Missing authentication setup for authservice
+```javascript
+// WRONG - Passport not configured
+const auth = serviceRegistry.authservice('file');
+app.post('/login', passport.authenticate('local'), ...);  // Won't work!
+
+// CORRECT - Configure passport first
+const auth = serviceRegistry.authservice('file');
+const {configurePassport} = auth.passportConfigurator(auth.getAuthStrategy);
+configurePassport(passport);
+app.post('/login', passport.authenticate('local'), ...);
+```
+
+### ❌ Mistake 6: Forgetting dependencies exist
+```javascript
+// WRONG - Scheduling service needs working service
+const scheduling = serviceRegistry.scheduling('memory');
+// This might fail because working service dependency not initialized
+
+// CORRECT - Dependencies are automatic, but be aware
+serviceRegistry.initialize(app);
+// working service will be auto-created when you get scheduling
+const scheduling = serviceRegistry.scheduling('memory');
+```
+
+### ❌ Mistake 7: Wrong EventEmitter parameter
+```javascript
+// WRONG - Third parameter is options, not eventEmitter
+serviceRegistry.initialize(app, {apiKeys: ['key']}, myEventEmitter);
+
+// CORRECT - EventEmitter is second parameter
+serviceRegistry.initialize(app, myEventEmitter, {apiKeys: ['key']});
+
+// Or use null to use built-in EventEmitter
+serviceRegistry.initialize(app, null, {apiKeys: ['key']});
+```
+
+## Quick Reference Cheat Sheet
+
+### Service Initialization
+```javascript
+// Always this order:
+serviceRegistry.initialize(app, [eventEmitter], [options]);
+const service = serviceRegistry.serviceName(provider, options);
+```
+
+### Most Common Methods
+```javascript
+// Logging
+log.info(message, metadata);
+log.error(message, error);
+
+// Caching (key-value)
+await cache.put(key, value, ttlSeconds);
+const value = await cache.get(key);
+await cache.delete(key);
+
+// DataService (UUID-based)
+const uuid = await dataService.add(container, object);
+const object = await dataService.getByUuid(container, uuid);
+await dataService.remove(container, uuid);
+const results = await dataService.jsonFindByCriteria(container, {field: 'value'});
+
+// Filing
+await filing.create(path, stream);
+const stream = await filing.read(path);
+await filing.delete(path);
+
+// AI Service
+const response = await aiservice.prompt(prompt, {maxTokens, temperature});
+// response: {content, usage: {promptTokens, completionTokens, totalTokens, estimatedCost}}
+
+// Auth Service
+await auth.registerUser(username, password, email, roles);
+const result = await auth.authenticateUser(username, password);
+const user = await auth.getUserByUsername(username);
+```
+
+### Environment Variables Template
+```bash
+# Required
+NODE_ENV=production
+SESSION_SECRET=your-secret-here
+NOOBLY_API_KEYS=key1,key2,key3
+
+# Optional - Service specific
+PORT=3000
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=secret
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+S3_BUCKET=my-bucket
+AWS_REGION=us-east-1
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+OLLAMA_URL=http://localhost:11434
+```
 
 ## Additional Resources
 
-- GitHub: https://github.com/StephenBooysen/nooblyjs-core
-- NPM: https://www.npmjs.com/package/noobly-core
-- Documentation: Generated via JSDoc in `docs/` directory
+- **GitHub**: https://github.com/nooblyjs/nooblyjs-core
+- **NPM**: https://www.npmjs.com/package/noobly-core
+- **Built-in Docs**: Start server and visit `/services/` for interactive documentation
+- **API Tests**: See `tests/api/` directory for HTTP file examples
+- **Example Apps**: See `tests/app-*.js` for complete working examples

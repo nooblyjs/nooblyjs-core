@@ -29,6 +29,10 @@ class AuthGoogle extends AuthBase {
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
 
+    this.settings = {};
+    this.settings.desciption = "This provider exposes the nooblyjs google auth implementation settings"
+    this.settings.list = []
+
     this.passport_ = null;
     this.GoogleStrategy_ = null;
     this.clientID_ = options.clientID;
@@ -42,6 +46,25 @@ class AuthGoogle extends AuthBase {
         provider: 'google',
         message: 'Google OAuth auth provider initialized'
       });
+    }
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
     }
   }
 

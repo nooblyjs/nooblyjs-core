@@ -51,6 +51,18 @@ class S3FilingProvider {
     this.s3 = new S3Client(clientConfig);
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings for filing S3 provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Filing S3 Provider";
+    this.settings.list = [
+      {setting: "bucket", type: "string", values: [this.bucketName]},
+      {setting: "region", type: "string", values: [options.region]},
+      {setting: "maxUploadSize", type: "number", values: [104857600]}
+    ];
+    this.settings.bucket = options.bucket || this.settings.list[0].values[0];
+    this.settings.region = options.region || this.settings.list[1].values[0];
+    this.settings.maxUploadSize = options.maxUploadSize || this.settings.list[2].values[0];
   }
 
   /**
@@ -190,6 +202,25 @@ class S3FilingProvider {
           error: error.message,
         });
       throw error;
+    }
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
     }
   }
 }

@@ -25,9 +25,19 @@ class AuthApi {
    * @param {EventEmitter=} eventEmitter Optional event emitter for auth events.
    */
   constructor(options = {}, eventEmitter) {
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
-    this.timeout = options.timeout || 10000;
+
+    this.settings = {};
+    this.settings.desciption = "This provider exposes the nooblyjs distributed implementation settings"
+    this.settings.list = [
+      {setting: "apiroot", type: "string", values : ['http://localhost:3000']} ,
+      {setting: "apikey", type: "string", values : ['The api key retrieved fron from your adminstrator']} ,
+      {setting: "timeout", type: "int", values : ['1000']} 
+    ]
+
+    this.apiRoot = options.apiRoot || this.settings.apiroot || 'http://localhost:3000';
+    this.apiKey = options.apiKey || this.settings.apikey || null;
+    this.timeout = options.timeout || this.settings.timeout || 10000;
+
     this.eventEmitter_ = eventEmitter;
 
     // Configure axios instance
@@ -36,6 +46,25 @@ class AuthApi {
       timeout: this.timeout,
       headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
     });
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**

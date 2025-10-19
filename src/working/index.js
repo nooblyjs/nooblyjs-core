@@ -84,6 +84,12 @@ function getWorkerInstance(type, options, eventEmitter) {
     // Initialize routes and views for the working service
     Routes(options, eventEmitter, instance, analyticsInstance);
     Views(options, eventEmitter, instance);
+
+    // Expose settings methods (save provider methods before overwriting)
+    const providerGetSettings = instance.getSettings.bind(instance);
+    const providerSaveSettings = instance.saveSettings.bind(instance);
+    instance.getSettings = providerGetSettings;
+    instance.saveSettings = providerSaveSettings;
   }
 
   return instance;

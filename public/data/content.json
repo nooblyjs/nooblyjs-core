@@ -1,151 +1,170 @@
 {
   "index": {
     "meta": {
-      "title": "Noobly JS - Not Just Another Accelerator Framework",
-      "description": "Not Just Another Accelerator Framework"
+      "title": "NooblyJS Core - Modular Node.js Backend Services Framework",
+      "description": "A comprehensive suite of 13+ modular backend services for building scalable Node.js applications with ease"
     },
     "hero": {
-      "title": "Noobly JS",
-      "subtitle": "Not Just Another Accelerator Framework - Your AI-Powered Development Assistant",
+      "title": "NooblyJS Core",
+      "subtitle": "Enterprise-Grade Modular Node.js Backend Services - Build Scalable Applications with 13+ Integrated Services",
       "image": {
         "src": "robot-hero-main.jpg",
-        "alt": "NooblyJS Robot Assistant - Your AI-Powered Development Companion"
+        "alt": "NooblyJS Core - Modular Backend Services Framework"
       },
       "buttons": [
         {
-          "text": "Documentation",
+          "text": "Get Started",
           "href": "documentation.html",
+          "type": "primary"
+        },
+        {
+          "text": "View on GitHub",
+          "href": "https://github.com/nooblyjs/nooblyjs-core",
           "type": "outline"
         }
       ]
     },
     "features": [
       {
-        "icon": "<i class=\"bi bi-robot\"></i>",
-        "title": "AI-Enhanced Development",
-        "description": "Built with intelligent automation and AI-powered assistance. Experience lightning-fast development cycles with your robot companion."
+        "icon": "<i class=\"bi bi-puzzle-fill\"></i>",
+        "title": "13+ Modular Services",
+        "description": "Complete backend toolkit with pluggable services for caching, data storage, file management, authentication, and more. Mix and match exactly what you need."
       },
       {
-        "icon": "<i class=\"bi bi-tools\"></i>",
-        "title": "Modular Robot Architecture",
-        "description": "Use only what you need with our flexible, plugin-based system. Build exactly what your project requires with robotic precision."
+        "icon": "<i class=\"bi bi-diagram-3\"></i>",
+        "title": "Smart Dependency Injection",
+        "description": "Automatic service initialization with intelligent dependency resolution across 4 hierarchy levels. Focus on building, not on orchestration."
       },
       {
-        "icon": "<i class=\"bi bi-lightbulb-fill\"></i>",
-        "title": "Smart Developer Experience",
-        "description": "Intuitive APIs and excellent documentation for a smooth development experience. Built by robots, for humans."
+        "icon": "<i class=\"bi bi-shield-lock\"></i>",
+        "title": "Enterprise Security",
+        "description": "Built-in API key authentication, OAuth 2.0 integration, role-based access control, and bcrypt password security out of the box."
       }
     ],
     "stats": [
       {
-        "number": "50+",
-        "label": "Built-in Modules"
+        "number": "13",
+        "label": "Core Services"
       },
       {
-        "number": "99.9%",
-        "label": "Uptime"
+        "number": "25+",
+        "label": "Provider Options"
       },
       {
-        "number": "10x",
-        "label": "Faster Development"
+        "number": "4",
+        "label": "Dependency Levels"
       },
       {
-        "number": "24/7",
-        "label": "Support"
+        "number": "REST API",
+        "label": "Auto-Generated"
       }
     ],
     "services": {
-      "title": "Core Services",
-      "description": "Explore our comprehensive suite of backend services",
+      "title": "13 Core Services",
+      "description": "Complete backend toolkit with integrated services across all layers of application architecture",
       "items": [
+        {
+          "badge": "📝 Foundation",
+          "badgeType": "default",
+          "title": "Logging Service",
+          "href": "/services/logging",
+          "description": "Multi-level structured logging with console, file, and API providers for comprehensive application monitoring."
+        },
         {
           "badge": "⚡ Performance",
           "badgeType": "default",
           "title": "Caching Service",
-          "href": "/services",
-          "description": "High-performance caching with Redis, Memcached, and in-memory providers for lightning-fast data access."
+          "href": "/services/caching",
+          "description": "High-performance distributed caching with Redis, Memcached, in-memory, and file providers. Built-in analytics and LRU eviction."
         },
         {
-          "badge": "<i class=\"bi bi-server\"></i> Storage"
-        },        {
           "badge": "<i class=\"bi bi-folder-fill\"></i> Files",
           "badgeType": "outline",
           "title": "Filing Service",
-          "href": "filing.html",
-          "description": "Comprehensive file management with local, FTP, and S3 storage options for secure file handling."
-        },
-        {
-          "badge": "📝 Monitoring",
-          "badgeType": "default",
-          "title": "Logging Service",
-          "href": "logging.html",
-          "description": "Advanced logging capabilities with console and file outputs for comprehensive application monitoring."
-        },
-        {
-"badge": "<i class=\"bi bi-graph-up\"></i> Analytics",
-          "title": "Measuring Service",
-          "href": "measuring.html",
-          "description": "Real-time metrics collection and analysis for performance insights and system optimization."
-        },
-        {
-          "badge": "<i class='bi bi-bell-fill'></i> Communication",
-          "title": "Notifying Service",
-          "href": "notifying.html",
-          "description": "Robust notification system with pub/sub messaging for real-time communication across services."
+          "href": "/services/filing",
+          "description": "Flexible file management with local, S3, FTP, GCP, and Git providers. Full-featured file operations and metadata handling."
         },
         {
           "badge": "⏳ Processing",
           "badgeType": "default",
           "title": "Queueing Service",
-          "href": "queueing.html",
-          "description": "Efficient task queueing with in-memory processing for handling background operations."
+          "href": "/services/queueing",
+          "description": "FIFO task queuing for background operations with in-memory and API providers. Monitor queue size and async task handling."
         },
         {
-          "badge": "<i class=\"bi bi-alarm-fill\"></i> Automation",
+          "badge": "<i class=\"bi bi-database\"></i> Storage",
+          "badgeType": "secondary",
+          "title": "Data Service",
+          "href": "/services/dataservice",
+          "description": "Persistent data storage with MongoDB, SimpleDB, file-based, and memory providers. Complete CRUD operations and query support."
+        },
+        {
+          "badge": "🔧 Workers",
+          "badgeType": "default",
+          "title": "Working Service",
+          "href": "/services/working",
+          "description": "Background task execution engine with worker management and lifecycle control for intensive asynchronous operations."
+        },
+        {
+          "badge": "<i class=\"bi bi-graph-up\"></i> Analytics",
+          "badgeType": "secondary",
+          "title": "Measuring Service",
+          "href": "/services/measuring",
+          "description": "Real-time metrics collection with time-series data, aggregation functions, and date range queries for performance analysis."
+        },
+        {
+          "badge": "⏰ Automation",
           "badgeType": "secondary",
           "title": "Scheduling Service",
-          "href": "scheduling.html",
-          "description": "Cron-like task scheduling for automated processes and recurring operations."
+          "href": "/services/scheduling",
+          "description": "Cron-like recurring tasks and delayed execution with callback handling for automated process orchestration."
         },
         {
           "badge": "<i class=\"bi bi-search\"></i> Discovery",
           "badgeType": "outline",
           "title": "Searching Service",
-          "href": "searching.html",
-          "description": "Powerful search functionality with in-memory indexing for fast data retrieval and filtering."
+          "href": "/services/searching",
+          "description": "Full-text search with in-memory indexing and powerful query capabilities. Fast data retrieval and intelligent filtering."
         },
         {
-          "badge": "<i class=\"bi bi-arrow-repeat\"></i> Orchestration",
+          "badge": "<i class=\"bi bi-arrow-repeat\"></i> Workflows",
           "badgeType": "default",
           "title": "Workflow Service",
-          "href": "workflow.html",
-          "description": "Step-based workflow orchestration for complex business processes and automation."
+          "href": "/services/workflow",
+          "description": "Step-based workflow orchestration with worker threads, parallel execution, and comprehensive error handling for complex business logic."
         },
         {
-          "badge": "<i class=\"bi bi-gear-fill\"></i> Execution",
+          "badge": "<i class='bi bi-bell-fill'></i> Messaging",
           "badgeType": "secondary",
-          "title": "Working Service",
-          "href": "working.html",
-          "description": "Background task execution engine for processing intensive operations asynchronously."
+          "title": "Notifying Service",
+          "href": "/services/notifying",
+          "description": "Pub/sub messaging system with topic-based communication and multiple subscribers for real-time event broadcasting."
         },
         {
           "badge": "<i class=\"bi bi-lock-fill\"></i> Security",
-          "badgeType": "yellow",
+          "badgeType": "default",
           "title": "Authentication Service",
           "href": "/services/authservice",
-          "description": "Secure user authentication and authorization with multiple providers including Passport.js and OAuth."
+          "description": "Complete auth system with OAuth 2.0, Passport.js, session management, RBAC, and bcrypt password security."
+        },
+        {
+          "badge": "<i class=\"bi bi-robot\"></i> AI",
+          "badgeType": "outline",
+          "title": "AI Service",
+          "href": "/services/aiservice",
+          "description": "LLM integration with Claude, ChatGPT, and Ollama. Prompt management, streaming responses, and AI-powered analytics."
         }
       ]
     },
     "testimonial": {
-      "text": "Noobly JS and its robot companion have revolutionized our development process. What used to take weeks now takes days. The framework's intelligent automation and powerful features make it an indispensable tool for any serious developer.",
-      "author": "— Sarah Chen, Lead Developer at RoboTech Corp"
+      "text": "NooblyJS Core's modular architecture and dependency injection have completely transformed how we build backend services. What used to require extensive boilerplate now takes minutes. The 13 integrated services with multiple provider options give us the flexibility we need without the complexity.",
+      "author": "— Enterprise Developer"
     },
     "footer": {
       "about": {
-        "title": "About Noobly JS",
-        "description": "Not just another accelerator framework. Noobly JS is designed to empower developers with powerful tools and intuitive APIs for building modern web applications.",
-        "techStack": ["Node.js", "Express", "TypeScript", "Redis", "PostgreSQL"]
+        "title": "About NooblyJS Core",
+        "description": "A comprehensive modular Node.js backend framework providing 13+ integrated services with automatic dependency injection, singleton pattern implementation, and pluggable providers for every layer of application architecture.",
+        "techStack": ["Node.js", "Express", "ServiceRegistry Pattern", "Dependency Injection", "Redis", "MongoDB", "AWS S3"]
       },
       "quickLinks": [
         { "text": "Home", "href": "index.html" },
@@ -200,22 +219,22 @@
     },
     "quickStart": {
       "title": "Quick Start Guide",
-      "description": "Get up and running with Noobly JS in minutes",
+      "description": "Get up and running with NooblyJS Core in minutes",
       "steps": [
         {
           "title": "1. Installation",
-          "description": "Install Noobly JS using npm:",
+          "description": "Install NooblyJS Core using npm:",
           "code": "npm install noobly-core"
         },
         {
-          "title": "2. Basic Setup",
-          "description": "Create your main application file:",
-          "code": "const noobly = require('noobly-core');\nconst app = noobly.create();"
+          "title": "2. Initialize & Get Services",
+          "description": "Create your Express app and initialize the service registry:",
+          "code": "const express = require('express');\nconst serviceRegistry = require('noobly-core');\n\nconst app = express();\napp.use(express.json());\n\n// Initialize registry FIRST\nserviceRegistry.initialize(app);\n\n// Get services\nconst cache = serviceRegistry.cache('memory');\nconst logger = serviceRegistry.logger('file');"
         },
         {
-          "title": "3. Start Building",
-          "description": "Add services and start your server:",
-          "code": "app.addService('cache');\napp.listen(3000);"
+          "title": "3. Use Services in Routes",
+          "description": "Start using services in your application logic:",
+          "code": "app.get('/api/user/:id', async (req, res) => {\n  const cacheKey = `user:${req.params.id}`;\n  let user = await cache.get(cacheKey);\n  \n  if (!user) {\n    user = await db.getUser(req.params.id);\n    await cache.set(cacheKey, user, 3600);\n  }\n  \n  logger.info(`User retrieved: ${req.params.id}`);\n  res.json(user);\n});\n\napp.listen(3000);"
         }
       ]
     },
@@ -228,57 +247,57 @@
           "badgeType": "default",
           "title": "Caching Service",
           "href": "/services",
-          "description": "High-performance caching with Redis, Memcached, and in-memory providers.",
-          "code": "const cache = app.service('cache');\nawait cache.set('key', 'value');"
+          "description": "High-performance distributed caching with Redis, Memcached, and in-memory providers.",
+          "code": "const cache = serviceRegistry.cache('memory');\nawait cache.set('key', 'value');\nconst value = await cache.get('key');"
         },
         {
-          "badge": "🗄️ Storage",
+          "badge": "<i class=\"bi bi-database\"></i> Storage",
           "badgeType": "secondary",
           "title": "Data Service",
           "href": "data.html",
-          "description": "Flexible data storage with SimpleDB and file-based providers.",
-          "code": "const data = app.service('data');\nawait data.store('user:1', userData);"
+          "description": "Persistent data storage with MongoDB, SimpleDB, and file-based providers.",
+          "code": "const dataService = serviceRegistry.dataService('file');\nawait dataService.store('user:1', userData);\nconst user = await dataService.retrieve('user:1');"
         },
         {
           "badge": "📝 Monitoring",
           "badgeType": "outline",
           "title": "Logging Service",
           "href": "logging.html",
-          "description": "Advanced logging with console and file outputs.",
-          "code": "const logger = app.service('logging');\nlogger.info('Application started');"
+          "description": "Multi-level structured logging with console and file outputs.",
+          "code": "const logger = serviceRegistry.logger('file');\nlogger.info('Application started');\nlogger.error('An error occurred', error);"
         },
         {
           "badge": "📊 Analytics",
           "badgeType": "default",
           "title": "Measuring Service",
           "href": "measuring.html",
-          "description": "Real-time metrics collection and analysis.",
-          "code": "const metrics = app.service('measuring');\nmetrics.increment('api_calls');"
+          "description": "Real-time metrics collection and time-series analysis.",
+          "code": "const metrics = serviceRegistry.measuring('memory');\nmetrics.increment('api_calls');\nconst count = await metrics.aggregate('api_calls', 'sum');"
         },
         {
-          "badge": "🔔 Communication",
+          "badge": "<i class='bi bi-bell-fill'></i> Messaging",
           "badgeType": "secondary",
           "title": "Notifying Service",
           "href": "notifying.html",
-          "description": "Pub/sub messaging for real-time communication.",
-          "code": "const notify = app.service('notifying');\nnotify.publish('channel', message);"
+          "description": "Pub/sub messaging system with topic-based communication.",
+          "code": "const notify = serviceRegistry.notifying('memory');\nnotify.subscribe('channel', (message) => console.log(message));\nnotify.publish('channel', { event: 'user_created' });"
         },
         {
           "badge": "⏳ Processing",
           "badgeType": "outline",
           "title": "Queueing Service",
           "href": "queueing.html",
-          "description": "Efficient task queueing for background operations.",
-          "code": "const queue = app.service('queueing');\nqueue.add('task', taskData);"
+          "description": "FIFO task queueing for background job processing.",
+          "code": "const queue = serviceRegistry.queue('memory');\nqueue.add('email_task', { to: 'user@example.com' });\nconst task = await queue.process();"
         }
       ]
     },
     "apiReference": {
       "title": "API Reference",
-      "description": "Complete API documentation for all services",
+      "description": "Complete API documentation for all 13 services and core framework",
       "coreFramework": {
-        "title": "Core Framework Methods",
-        "code": "// Initialize Noobly JS application\nconst app = noobly.create(options);\n\n// Add a service\napp.addService(serviceName, provider, options);\n\n// Get a service instance\nconst service = app.service(serviceName);\n\n// Start the server\napp.listen(port, callback);\n\n// Graceful shutdown\napp.shutdown();"
+        "title": "Service Registry Core Methods",
+        "code": "const serviceRegistry = require('noobly-core');\n\n// Initialize the service registry (REQUIRED - must be first)\nserviceRegistry.initialize(app, eventEmitter, options);\n\n// Get service instances by method name\nconst cache = serviceRegistry.cache(provider, options);\nconst logger = serviceRegistry.logger(provider, options);\nconst dataService = serviceRegistry.dataService(provider, options);\nconst auth = serviceRegistry.authservice(provider, options);\nconst queue = serviceRegistry.queue(provider, options);\nconst notify = serviceRegistry.notifying(provider, options);\n\n// All services auto-register Express routes at /services/{service}/api/*\n// Access service management UI at /services/ (requires authentication)"
       },
       "sections": [
         {
@@ -319,13 +338,13 @@
   },
   "contact": {
     "meta": {
-      "title": "Contact - Noobly JS",
-      "description": "Have questions about Noobly JS? Need support or want to contribute? We'd love to hear from you."
+      "title": "Contact - NooblyJS Core",
+      "description": "Have questions about NooblyJS Core? Need integration help or want to contribute? We'd love to hear from you."
     },
     "hero": {
       "badge": "💬 Contact",
       "title": "Get in Touch",
-      "description": "Have questions about Noobly JS? Need support or want to contribute? We'd love to hear from you."
+      "description": "Have questions about NooblyJS Core? Need integration help or want to contribute? We'd love to hear from you."
     },
     "contactMethods": [
       {
@@ -404,27 +423,31 @@
     },
     "faq": {
       "title": "Frequently Asked Questions",
-      "description": "Common questions about Noobly JS",
+      "description": "Common questions about NooblyJS Core",
       "items": [
         {
-          "question": "What is Noobly JS?",
-          "answer": "Noobly JS is a modular Node.js backend framework that provides pluggable core services for building scalable web applications quickly and efficiently."
+          "question": "What is NooblyJS Core?",
+          "answer": "NooblyJS Core is an enterprise-grade Node.js backend framework providing 13+ integrated modular services with automatic dependency injection, singleton pattern implementation, and pluggable providers for every architectural layer."
         },
         {
-          "question": "Is Noobly JS free to use?",
-          "answer": "Yes, Noobly JS is open-source and free to use for both personal and commercial projects. Check our license for more details."
+          "question": "How many services does NooblyJS Core provide?",
+          "answer": "NooblyJS Core provides 13 core services: Logging, Caching, Filing, Queueing, Data Service, Working, Measuring, Scheduling, Searching, Workflow, Notifying, Authentication, and AI services. Each service supports multiple provider implementations."
+        },
+        {
+          "question": "Is NooblyJS Core free to use?",
+          "answer": "Yes, NooblyJS Core is open-source and free to use for both personal and commercial projects. Check our license for more details."
         },
         {
           "question": "How do I get started?",
-          "answer": "Check out our <a href=\"documentation.html\" style=\"color: hsl(var(--primary)); text-decoration: none;\">documentation</a> for a comprehensive quick start guide and examples."
+          "answer": "Check out our <a href=\"documentation.html\" style=\"color: hsl(var(--primary)); text-decoration: none;\">documentation</a> for installation, quick start guide, service examples, and best practices."
         },
         {
-          "question": "Can I contribute to the project?",
-          "answer": "Absolutely! We welcome contributions. Visit our GitHub repository to see how you can help improve Noobly JS."
+          "question": "Can I use only specific services?",
+          "answer": "Absolutely! NooblyJS Core is fully modular. You can initialize only the services you need. The dependency injection system handles all inter-service dependencies automatically."
         },
         {
-          "question": "Do you offer commercial support?",
-          "answer": "Yes, we offer commercial support and consulting services. Contact us at <a href=\"mailto:business@nooblyjs.com\" style=\"color: hsl(var(--primary)); text-decoration: none;\">business@nooblyjs.com</a> for more information."
+          "question": "What providers are available?",
+          "answer": "Each service supports multiple providers: Caching (Redis, Memcached, in-memory), Data Storage (MongoDB, SimpleDB, file-based), Filing (S3, FTP, GCP), and more. Mix and match based on your infrastructure."
         }
       ]
     },
@@ -456,7 +479,7 @@
     "navigation": {
       "logo": {
         "icon": "NJS",
-        "text": "Noobly JS"
+        "text": "NooblyJS Core"
       },
       "links": [
         { "text": "Home", "href": "index.html" },
@@ -475,9 +498,9 @@
     "footer": {
       "logo": {
         "icon": "NJS",
-        "text": "Noobly JS"
+        "text": "NooblyJS Core"
       },
-      "copyright": "© 2024 Noobly JS. All rights reserved.",
+      "copyright": "© 2024 NooblyJS Core. All rights reserved.",
       "legalLinks": [
         { "text": "Privacy Policy", "href": "#" },
         { "text": "Terms of Service", "href": "#" },

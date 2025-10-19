@@ -25,6 +25,10 @@ class AuthMemory extends AuthBase {
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
 
+    this.settings = {};
+    this.settings.desciption = "There are not setting for the noobly-core in memory auth implementation"
+    this.settings.list = []
+
     // Create default admin user if specified in options
     if (options.createDefaultAdmin !== false) {
       this.initializeDefaultUsers_().catch(error => {
@@ -39,6 +43,26 @@ class AuthMemory extends AuthBase {
       });
     }
   }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
+  }
+
 
   /**
    * Creates default users for development/testing.

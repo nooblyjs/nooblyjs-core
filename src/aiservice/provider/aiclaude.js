@@ -27,14 +27,42 @@ class AIClaude extends AIServiceBase {
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
 
+    this.settings = {};
+    this.settings.desciption = "This provider exposes the Claude apis for use by an underlying provider."
+    this.settings.list = [
+      {setting: "model", type: "string", values : ['claude-sonnet-4-5-20250929']} ,
+      {setting: "apikey", type: "string", values : ['The api key retrieved fron https://claude.ai']} ,
+      {setting: "maxtokens", type: "int", values : ['1000']} ,
+      {setting: "temperature", type: "number", values : ['0.7']} 
+    ]
+
     if (!options.apiKey) {
       throw new Error('Claude API key is required');
     }
 
-    this.model_ = options.model || 'claude-3-5-sonnet-20241022';
+    this.model_ = options.model || this.settings.model || 'claude-sonnet-4-5-20250929';
     this.client_ = new Anthropic({
-      apiKey: options.apiKey
+      apiKey: options.apiKey |  this.settings.apikey
     });
+  }
+
+    /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**
@@ -49,8 +77,8 @@ class AIClaude extends AIServiceBase {
     try {
       const response = await this.client_.messages.create({
         model: this.model_,
-        max_tokens: options.maxTokens || 1000,
-        temperature: options.temperature || 0.7,
+        max_tokens: options.maxTokens || this.settings.maxtokens ||  1000,
+        temperature: options.temperature || this.settings.temperature || 0.7,
         messages: [
           {
             role: 'user',

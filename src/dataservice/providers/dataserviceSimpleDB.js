@@ -48,6 +48,18 @@ class SimpleDbDataRingProvider {
     this.sdb = new AWS.SimpleDB();
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings for dataservice SimpleDB provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the DataService SimpleDB Provider";
+    this.settings.list = [
+      {setting: "connectionTimeout", type: "number", values: [30000]},
+      {setting: "queryTimeout", type: "number", values: [60000]},
+      {setting: "retryLimit", type: "number", values: [3]}
+    ];
+    this.settings.connectionTimeout = options.connectionTimeout || this.settings.list[0].values[0];
+    this.settings.queryTimeout = options.queryTimeout || this.settings.list[1].values[0];
+    this.settings.retryLimit = options.retryLimit || this.settings.list[2].values[0];
   }
 
   /**
@@ -160,6 +172,25 @@ class SimpleDbDataRingProvider {
         results,
       });
     return results;
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

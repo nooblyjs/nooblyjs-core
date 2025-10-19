@@ -61,6 +61,12 @@ function getSchedulerInstance(type, options, eventEmitter) {
     // Initialize routes and views for the scheduling service
     Routes(options, eventEmitter, instance);
     Views(options, eventEmitter, instance);
+
+    // Expose settings methods from provider (save provider methods before overwriting)
+    const providerGetSettings = instance.getSettings.bind(instance);
+    const providerSaveSettings = instance.saveSettings.bind(instance);
+    instance.getSettings = providerGetSettings;
+    instance.saveSettings = providerSaveSettings;
   }
 
   return instance;

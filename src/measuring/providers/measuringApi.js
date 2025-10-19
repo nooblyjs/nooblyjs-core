@@ -36,6 +36,18 @@ class MeasuringApi {
       timeout: this.timeout,
       headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
     });
+
+    // Settings for measuring API provider
+    this.settings = {};
+    this.settings.description = "Configuration settings for the Measuring API Provider";
+    this.settings.list = [
+      {setting: "apiUrl", type: "string", values: ["http://localhost:3000"]},
+      {setting: "timeout", type: "number", values: [5000]},
+      {setting: "retryLimit", type: "number", values: [3]}
+    ];
+    this.settings.apiUrl = options.apiUrl || this.settings.list[0].values[0];
+    this.settings.timeout = options.timeout || this.settings.list[1].values[0];
+    this.settings.retryLimit = options.retryLimit || this.settings.list[2].values[0];
   }
 
   /**
@@ -122,6 +134,25 @@ class MeasuringApi {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('measuring:error', { operation: 'getMetrics', error: error.message });
       throw error;
+    }
+  }
+
+  /**
+   * Get all settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   */
+  async saveSettings(settings){
+    for (let i = 0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
     }
   }
 }

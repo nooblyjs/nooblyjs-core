@@ -38,6 +38,18 @@ class WorkflowService {
 
     /** @private {Object} Working service for task execution */
     this.workingService_ = workingService;
+
+    // Settings configuration
+    this.settings = {};
+    this.settings.description = "Configuration settings for the workflow service";
+    this.settings.list = [
+      { setting: 'maxSteps', type: 'number', values: null },
+      { setting: 'timeoutPerStep', type: 'number', values: null },
+      { setting: 'parallelExecution', type: 'boolean', values: null }
+    ];
+    this.settings.maxSteps = 50;
+    this.settings.timeoutPerStep = 60000;
+    this.settings.parallelExecution = false;
   }
 
   /**
@@ -197,6 +209,28 @@ class WorkflowService {
         finalData: currentData,
       });
   }
+
+  /**
+   * Get all settings for the workflow service.
+   * @return {Promise<Object>} A promise that resolves to the settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save settings for the workflow service.
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>} A promise that resolves when settings are saved.
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
+  }
 }
 
 /**
@@ -284,6 +318,16 @@ function createWorkflowService(type, options, eventEmitter) {
   // Initialize routes and views for the workflow service
   Routes(options, eventEmitter, workflow, analyticsInstance);
   Views(options, eventEmitter, workflow);
+
+  // Expose settings methods (only for memory provider, API provider has its own implementation)
+  if (type !== 'api' && workflow.getSettings && workflow.saveSettings) {
+    // Save provider methods before overwriting
+    const providerGetSettings = workflow.getSettings.bind(workflow);
+    const providerSaveSettings = workflow.saveSettings.bind(workflow);
+    const service = workflow;
+    service.getSettings = providerGetSettings;
+    service.saveSettings = providerSaveSettings;
+  }
 
   return workflow;
 }

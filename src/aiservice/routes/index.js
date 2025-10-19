@@ -196,5 +196,45 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       }
     });
 
+      /**
+     * GET /services/ai/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/ai/api/settings', (req, res) => {
+      try {
+        const settings = aiService.getSettings().then((settings)=> res.status(200).json(settings));
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({
+          error: 'Failed to retrieve settings',
+          message: err.message
+        });
+      }
+    });
+
+     /**
+     * POST /services/ai/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/ai/api/settings', (req, res) => {
+      const message = req.body;
+      if (message) {
+        aiService
+          .saveSettings(message)
+          .then(() => res.status(200).send('OK'))
+          .catch((err) => res.status(500).send(err.message));
+      } else {
+        res.status(400).send('Bad Request: Missing settings');
+      }
+    });
+
   }
 };

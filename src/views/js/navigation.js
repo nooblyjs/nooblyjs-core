@@ -7,17 +7,17 @@ const NooblyNavigation = {
     services: [
         { name: 'ai', icon: 'bi-robot', title: 'AI Service', path: 'ai' },
         { name: 'authservice', icon: 'bi-lock-fill', title: 'Authentication', path: 'authservice' },
-        { name: 'caching', icon: 'bi-server', title: 'Cache Management', path: 'caching' },
-        { name: 'dataservice', icon: 'bi-database', title: 'Data Service', path: 'dataservice' },
-        { name: 'filing', icon: 'bi-folder-fill', title: 'File Management', path: 'filing' },
         { name: 'logging', icon: 'bi-journal-text', title: 'Logging', path: 'logging' },
-        { name: 'measuring', icon: 'bi-graph-up', title: 'Measuring', path: 'measuring' },
-        { name: 'notifying', icon: 'bi-bell-fill', title: 'Notifications', path: 'notifying' },
+        { name: 'caching', icon: 'bi-server', title: 'Caching', path: 'caching' },
         { name: 'queueing', icon: 'bi-list-task', title: 'Queues', path: 'queueing' },
+        { name: 'filing', icon: 'bi-folder-fill', title: 'File Management', path: 'filing' },
+        { name: 'working', icon: 'bi-gear-fill', title: 'Worker Tasks', path: 'working' },
+        { name: 'measuring', icon: 'bi-graph-up', title: 'Measuring', path: 'measuring' },
+        { name: 'dataservice', icon: 'bi-database', title: 'Data Service', path: 'dataservice' },
+        { name: 'notifying', icon: 'bi-bell-fill', title: 'Notifications', path: 'notifying' },
         { name: 'scheduling', icon: 'bi-alarm-fill', title: 'Scheduling', path: 'scheduling' },
-        { name: 'searching', icon: 'bi-search', title: 'Search', path: 'searching' },
-        { name: 'workflow', icon: 'bi-diagram-3-fill', title: 'Workflows', path: 'workflow' },
-        { name: 'working', icon: 'bi-gear-fill', title: 'Worker Tasks', path: 'working' }
+        { name: 'searching', icon: 'bi-search', title: 'Searching', path: 'searching' },
+        { name: 'workflow', icon: 'bi-diagram-3-fill', title: 'Workflows', path: 'workflow' }
     ],
 
     serviceStatus: {},

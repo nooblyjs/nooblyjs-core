@@ -26,6 +26,18 @@ class MeasuringService {
     this.options = options || {};
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    // Settings configuration
+    this.settings = {};
+    this.settings.description = "Configuration settings for the measuring service";
+    this.settings.list = [
+      { setting: 'dataRetention', type: 'number', values: null },
+      { setting: 'aggregationInterval', type: 'number', values: null },
+      { setting: 'metricsLimit', type: 'number', values: null }
+    ];
+    this.settings.dataRetention = options.dataRetention || 30;
+    this.settings.aggregationInterval = options.aggregationInterval || 60;
+    this.settings.metricsLimit = options.metricsLimit || 1000;
   }
 
   /**
@@ -144,6 +156,28 @@ class MeasuringService {
         average,
       });
     return average;
+  }
+
+  /**
+   * Get all settings for the measuring service.
+   * @return {Promise<Object>} A promise that resolves to the settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save settings for the measuring service.
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>} A promise that resolves when settings are saved.
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+      }
+    }
   }
 }
 

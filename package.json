@@ -31,11 +31,13 @@
     "url": "https://github.com/nooblyjs/nooblyjs-core.git"
   },
   "scripts": {
-    "start": "node ./app.js",
-    "dev:web": "nodemon --watch ./src ./app.js",
+    "start": "node ./app-auth.js",
+    "dev:web": "nodemon --watch ./src ./app-auth.js",
+    "dev:web:noauth": "nodemon --watch ./src ./app-noauth.js",
     "test": "jest",
     "test-load": "node ./tests-load/",
-    "kill": "kill -9 $(lsof -t -i:3001)"
+    "kill": "kill -9 $(lsof -t -i:3001)",
+    "analyze-tokens": "node ./scripts/count-tokens.js"
   },
   "jest": {
     "modulePaths": [

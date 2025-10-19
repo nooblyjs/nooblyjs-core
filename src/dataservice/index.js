@@ -186,6 +186,12 @@ function createDataserviceService(type, options, eventEmitter) {
     service.filing = filing;
   }
 
+  // Add settings methods from provider (save before overwriting)
+  const providerGetSettings = provider.getSettings.bind(provider);
+  const providerSaveSettings = provider.saveSettings.bind(provider);
+  service.getSettings = providerGetSettings;
+  service.saveSettings = providerSaveSettings;
+
   // Initialize routes and views for the data service with the complete service object
   Routes(options, eventEmitter, service);
   Views(options, eventEmitter, service);

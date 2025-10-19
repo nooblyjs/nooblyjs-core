@@ -6,6 +6,8 @@
     <title id="page-title">Loading...</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Highlight.js CSS - One Dark Pro theme for beautiful syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/atom-one-dark.min.css">
     <link rel="icon" type="image/jpeg" href="favicon.jpg">
     <link rel="apple-touch-icon" href="favicon.jpg">
     <style>
@@ -25,14 +27,67 @@
             border: 1px solid rgba(0, 102, 204, 0.2);
         }
         .code-block {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background-color: #1e1e1e;
+            border: 1px solid #d4d4d4;
             border-radius: 0.5rem;
             padding: 1rem;
-            font-family: 'Courier New', monospace;
+            font-family: 'Fira Code', 'Courier New', monospace;
             font-size: 0.875rem;
             overflow-x: auto;
             margin: 1rem 0;
+            position: relative;
+        }
+        .code-block code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+            font-family: inherit;
+            color: #d4d4d4 !important;
+        }
+        .code-block pre {
+            margin: 0;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        /* Highlight.js - Bright colors for visibility */
+        .hljs {
+            background: transparent !important;
+            padding: 0 !important;
+            color: #d4d4d4 !important;
+        }
+        .hljs-string { color: #4ec9b0 !important; }
+        .hljs-number { color: #b5cea8 !important; }
+        .hljs-literal { color: #569cd6 !important; }
+        .hljs-attr { color: #9cdcfe !important; }
+        .hljs-built_in { color: #4fc1ff !important; }
+        .hljs-function { color: #dcdcaa !important; }
+        .hljs-title { color: #dcdcaa !important; }
+        .hljs-params { color: #9cdcfe !important; }
+        .hljs-comment { color: #6a9955 !important; }
+        .hljs-keyword { color: #569cd6 !important; }
+        .hljs-variable { color: #9cdcfe !important; }
+        .hljs-name { color: #dcdcaa !important; }
+        .hljs-attr-value { color: #4ec9b0 !important; }
+        .code-copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #abb2bf;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .code-copy-btn {
+            opacity: 1;
+        }
+        .code-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         .footer {
             background-color: #f8f9fa;
@@ -239,7 +294,10 @@
                         <div class="card-body">
                             <h5 class="card-title">${step.title}</h5>
                             <p class="card-text text-muted mb-3">${step.description}</p>
-                            <div class="code-block">${step.code}</div>
+                            <div class="code-block position-relative">
+                                <pre><code class="language-javascript">${escapeHtml(step.code)}</code></pre>
+                                <button class="code-copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -259,7 +317,10 @@
                                 <a href="${service.href}" class="text-decoration-none text-dark">${service.title}</a>
                             </h5>
                             <p class="card-text text-muted">${service.description}</p>
-                            <div class="code-block small">${service.code}</div>
+                            <div class="code-block position-relative small">
+                                <pre><code class="language-javascript">${escapeHtml(service.code)}</code></pre>
+                                <button class="code-copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -269,7 +330,8 @@
             document.getElementById('api-title').textContent = data.apiReference.title;
             document.getElementById('api-description').textContent = data.apiReference.description;
             document.getElementById('core-framework-title').textContent = data.apiReference.coreFramework.title;
-            document.getElementById('core-framework-code').textContent = data.apiReference.coreFramework.code;
+            const coreFrameworkCodeDiv = document.getElementById('core-framework-code');
+            coreFrameworkCodeDiv.innerHTML = `<div class="position-relative"><pre><code class="language-javascript">${escapeHtml(data.apiReference.coreFramework.code)}</code></pre><button class="code-copy-btn" onclick="copyToClipboard(this)">Copy</button></div>`;
 
             const apiSections = document.getElementById('api-sections');
             apiSections.innerHTML = data.apiReference.sections.map(section => `
@@ -341,10 +403,68 @@
         }, true);
 
         document.addEventListener('mouseleave', function(e) {
-            if (e.target.classList.contains('card')) {
+            if (e.target && e.target.classList && e.target.classList.contains('card')) {
                 e.target.style.transform = 'translateY(0)';
             }
         }, true);
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Copy to clipboard functionality
+        function copyToClipboard(button) {
+            const codeBlock = button.closest('.code-block, .position-relative');
+            const code = codeBlock.querySelector('code');
+            const text = code.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.opacity = '1';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }).catch(() => {
+                console.error('Failed to copy');
+            });
+        }
+
+    </script>
+
+    <!-- Highlight.js JavaScript - Load BEFORE custom scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/languages/javascript.min.js"></script>
+
+    <script>
+        // Highlight code blocks after content is loaded
+        function highlightCodeBlocks() {
+            if (typeof hljs === 'undefined') {
+                console.error('Highlight.js not loaded');
+                return;
+            }
+            document.querySelectorAll('pre code').forEach((block) => {
+                // Ensure language is set
+                if (!block.classList.contains('language-javascript')) {
+                    block.classList.add('language-javascript');
+                }
+                hljs.highlightElement(block);
+            });
+        }
+
+        // Hook into loadContent to highlight after population
+        const originalLoadContent = loadContent;
+        loadContent = async function() {
+            await originalLoadContent();
+            // Highlight after content is loaded
+            setTimeout(highlightCodeBlocks, 100);
+        };
     </script>
 
     <!-- Bootstrap 5 JavaScript Bundle with Popper -->

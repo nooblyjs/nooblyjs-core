@@ -42,8 +42,15 @@ function createNotificationService(type, options, eventEmitter) {
   // Initialize routes and views for the notification service
   Routes(options, eventEmitter, notifying, analytics);
   Views(options, eventEmitter, notifying);
-    
-  return notifying;
+
+  // Expose settings methods (save provider methods before overwriting)
+  const providerGetSettings = notifying.getSettings.bind(notifying);
+  const providerSaveSettings = notifying.saveSettings.bind(notifying);
+  const service = notifying;
+  service.getSettings = providerGetSettings;
+  service.saveSettings = providerSaveSettings;
+
+  return service;
 }
 
 module.exports = createNotificationService;

@@ -9,7 +9,6 @@
 'use strict';
 
 const AIServiceBase = require('./aibase');
-// Use built-in fetch (Node.js 18+) or fall back to node-fetch
 const fetch = globalThis.fetch || require('node-fetch');
 
 /**
@@ -27,9 +26,36 @@ class AIOllama extends AIServiceBase {
    */
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
+
+    this.settings = {};
+    this.settings.desciption = "This provider exposes the ollama settings"
+    this.settings.list = [
+      {setting: "model", type: "string", values : ['llama3.2']} ,
+      {setting: "baseurl", type: "string", values : ['http://localhost:11434']} ,
+      {setting: "temperature", type: "number", values : ['0.7']} 
+    ]
     
-    this.baseUrl_ = options.baseUrl || 'http://localhost:11434';
-    this.model_ = options.model || 'llama3.2';
+    this.baseUrl_ = options.baseUrl || this.settings.baseurl || 'http://localhost:11434';
+    this.model_ = options.model || this.settings.model || 'llama3.2';
+  }
+
+    /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (var i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
+        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+      }
+    }
   }
 
   /**
@@ -52,7 +78,7 @@ class AIOllama extends AIServiceBase {
           prompt: prompt,
           stream: options.stream || false,
           options: {
-            temperature: options.temperature || 0.7
+            temperature: options.temperature || this.settings.temperature || 0.7
           }
         })
       });
