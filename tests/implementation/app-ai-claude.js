@@ -34,6 +34,7 @@ dataService.find('ai-config', 'claude').then((result)=>
       'express-app': app
     });
     logger.info('AI service (Claude) initialized successfully');
+    aiservice.prompt("Please give me an inspiring quote").then((response) => console.log(response.content))
   }
 });
 
