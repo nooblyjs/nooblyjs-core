@@ -11,12 +11,21 @@
 const path = require('path');
 const express = require('express');
 const serviceRegistry = require('../../index');
+const { EventEmitter } = require('events');
 
 const app = express();
 app.use(express.json());
 
+var options = { 
+  logDir:  path.join(__dirname, './.noobly-core/', 'logs'),
+  dataDir : path.join(__dirname, './.noobly-core/', 'data')
+};
+
+// Instantiate our event emitter
+const eventEmitter = new EventEmitter();
+
 // Initialize registry (no public folder needed!)
-serviceRegistry.initialize(app,null, {log: { level: 'log' }});
+serviceRegistry.initialize(app,eventEmitter, options);
 
 // Initialize auth service (required for login/register functionality)
 // The authservice automatically serves login.html and register.html from its views folder
@@ -24,8 +33,8 @@ const authservice = serviceRegistry.authservice();
 
 // Get other services
 const cache = serviceRegistry.cache();
-const logger = serviceRegistry.logger();
-const dataService = serviceRegistry.dataService();
+const logger = serviceRegistry.logger('file');
+const dataService = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing();
 const queueing = serviceRegistry.queue();
 const worker = serviceRegistry.working('default', {

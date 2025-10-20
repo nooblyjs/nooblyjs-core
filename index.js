@@ -2,17 +2,20 @@
  * @fileoverview NooblyJS Core - Service Registry
  * This is the container of all the services. It manages the various dependancies of the services
  */
+'use strict';
 
 const EventEmitter = require('events');
 const express = require('express');
 const path = require('path');
 
+// Retrieve the auth middleware
 const {
   createApiKeyAuthMiddleware,
   createServicesAuthMiddleware,
   generateApiKey
 } = require('./src/authservice/middleware');
 
+// Implement monitoring
 const systemMonitoring = require('./src/views/modules/monitoring');
 
 const ensureArray = (value) => {
@@ -57,8 +60,6 @@ class ServiceRegistry {
     if (eventEmitter) {
       this.eventEmitter = eventEmitter;    
     } 
-
-    //this.debug_emitter(this.eventEmitter, "ServiceRegistry");
 
     const {
       security: incomingSecurityConfig = {},
