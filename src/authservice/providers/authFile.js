@@ -32,13 +32,14 @@ class AuthFile extends AuthBase {
     this.settings = {};
     this.settings.desciption = "This provider exposes the nooblyjs file implementation settings"
     this.settings.list = [
-      {setting: "datadir", type: "string", values : ['/data/']}
+      {setting: "datadir", type: "string", values : ['/.data/']}
     ]
 
-    this.dataDir_ = options.dataDir || this.settings.datadir || path.join(process.cwd(), 'data', 'auth');
-    this.usersFile_ = path.join(this.dataDir_, 'users.json');
-    this.rolesFile_ = path.join(this.dataDir_, 'roles.json');
-    this.sessionsFile_ = path.join(this.dataDir_, 'sessions.json');
+    this.settings.datadir = options.dataDir || path.join(process.cwd(), 'data', 'auth');
+
+    this.usersFile_ = path.join(this.settings.datadir, 'users.json');
+    this.rolesFile_ = path.join(this.settings.datadir, 'roles.json');
+    this.sessionsFile_ = path.join(this.settings.datadir, 'sessions.json');
 
     // Initialize file storage
     this.initializeFileStorage_().catch(error => {
@@ -114,7 +115,7 @@ class AuthFile extends AuthBase {
   async initializeFileStorage_() {
     try {
       // Ensure data directory exists
-      await fs.mkdir(this.dataDir_, { recursive: true });
+      await fs.mkdir(this.settings.datadir, { recursive: true });
 
       // Load existing data or create new files
       await this.loadUsersFromFile_();
@@ -130,7 +131,7 @@ class AuthFile extends AuthBase {
         this.eventEmitter_.emit('auth:file-storage-initialized', {
           message: 'File storage initialized successfully',
           usersCount: this.users_.size,
-          dataDir: this.dataDir_
+          dataDir: this.settings.datadir
         });
       }
     } catch (error) {
@@ -377,7 +378,7 @@ class AuthFile extends AuthBase {
     // Check file system status
     let filesStatus = 'unknown';
     try {
-      await fs.access(this.dataDir_);
+      await fs.access(this.settings.datadir);
       filesStatus = 'accessible';
     } catch (error) {
       filesStatus = 'inaccessible';
@@ -388,7 +389,7 @@ class AuthFile extends AuthBase {
       provider: 'file',
       storage: 'file-based',
       persistent: true,
-      dataDirectory: this.dataDir_,
+      dataDirectory: this.settings.datadir,
       filesStatus,
       files: {
         users: this.usersFile_,

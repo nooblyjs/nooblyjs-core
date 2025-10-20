@@ -9,6 +9,7 @@
 'use strict';
 
 const fs = require('fs').promises;
+const fsnm = require('fs');
 const path = require('path');
 
 /**
@@ -30,6 +31,10 @@ class AIServiceBase {
     this.tokensStorePath_ = options.tokensStorePath || './.data/ai-tokens.json';
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 1000;
+
+    if (!fsnm.existsSync(this.tokensStorePath_)) {
+      fsnm.mkdir(path.dirname(this.tokensStorePath_), { recursive: true }, (err) => {});
+    }
 
     // Initialize token data.
     this.tokenData_ = { sessions: [], totalCost: 0, totalTokens: 0 };
