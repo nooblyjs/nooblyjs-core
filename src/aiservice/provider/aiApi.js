@@ -19,29 +19,32 @@ class AIApi {
   /**
    * Initializes the AI API client with configuration.
    * @param {Object} options Configuration options for the API client.
-   * @param {string} options.apiRoot The root URL of the backend API service.
-   * @param {string=} options.apiKey Optional API key for authenticated requests.
+   * @param {string} options.url The root URL of the backend API service.
+   * @param {string=} options.apikey Optional API key for authenticated requests.
    * @param {number=} options.timeout Request timeout in milliseconds (default: 30000).
    * @param {EventEmitter=} eventEmitter Optional event emitter for AI events.
    */
   constructor(options = {}, eventEmitter) {
 
-    this.settings = {};
-    this.settings.desciption = "There are no settings for this provider. The api provider controls the settings."
-    this.settings.list = [];
-  
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
-    this.timeout = options.timeout || 30000;
-    this.eventEmitter_ = eventEmitter;
-    this.enabled = true;
+     this.settings.desciption = "The distributed caching module requires api connections"
+     this.settings.list = [
+       {setting: "url", type: "string", values : ['e.g. http:/logging.nooblyjs.com']},
+       {setting: "apikey", type: "string", values : ['Please speak to you admin for this key']}
+     ];
 
-    // Configure axios instance
-    this.client = axios.create({
-      baseURL: this.apiRoot,
-      timeout: this.timeout,
-      headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
-    });
+     this.settings.url = options.url || 'http://localhost:3000';
+     this.settings.apikey = options.apikey || null;
+     this.timeout = options.timeout || 5000;
+ 
+     this.eventEmitter_ = eventEmitter;
+ 
+     // Configure axios instance
+     this.client = axios.create({
+       baseURL: this.settings.api,
+       timeout: this.timeout,
+       headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
+     })
+
   }
 
   /**
@@ -126,6 +129,7 @@ class AIApi {
       throw error;
     }
   }
+  
 }
 
 module.exports = AIApi;

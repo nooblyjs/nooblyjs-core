@@ -30,7 +30,7 @@ class AIServiceBase {
     this.tokensStorePath_ = options.tokensStorePath || './.data/ai-tokens.json';
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 1000;
-    
+
     // Initialize token data.
     this.tokenData_ = { sessions: [], totalCost: 0, totalTokens: 0 };
     

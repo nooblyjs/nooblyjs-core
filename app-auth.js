@@ -91,73 +91,15 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 
-// Initialize AI service with graceful handling of missing API key
-// Use Ollama as fallback since it doesn't require an API key
-let aiservice;
-if (process.env.aiapikey) {
-  try {
-    aiservice = serviceRegistry.aiservice('claude', {
-      apiKey: process.env.aiapikey,
-      'express-app': app
-    });
-    log.info('AI service (Claude) initialized successfully');
-  } catch (error) {
-    log.error('Failed to initialize Claude AI service:', error.message);
-  }
-}
-
-// If Claude isn't available, try Ollama as fallback
-if (!aiservice) {
-  try {
-    aiservice = serviceRegistry.aiservice('ollama', {
-      baseUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
-      model: 'llama3.2',
-      'express-app': app
-    });
-    log.info('AI service (Ollama) initialized - configure Claude with aiapikey env var for Claude support');
-  } catch (error) {
-    log.info('AI service not available - Ollama not running and no API key configured');
-    log.info('To enable AI features:');
-    log.info('  - For Claude: Set aiapikey environment variable');
-    log.info('  - For Ollama: Start Ollama server at http://localhost:11434');
-  }
-}
-
+// Implement Auth Service
 const authservice = serviceRegistry.authservice('file');
-
-/*
- * Example: Enable Google OAuth by switching providers.
- * Uncomment the block below and supply your credentials when ready.
- */
-// const authservice = serviceRegistry.authservice('google', {
-//   'express-app': app,
-//   clientID: process.env.GOOGLE_CLIENT_ID,
-//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//   callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
-// });
-
 const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
 configurePassport(passport);
 
+//Implement Auth Middleware
 const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
 
-app.get('/api/secure/ping', apiAuthMiddleware, (req, res) => {
-  res.json({
-    ok: true,
-    authorized: Boolean(req.apiKey),
-    keyPrefix: req.apiKey ? `${req.apiKey.slice(0, 6)}...` : null
-  });
-});
-
-if (serviceRegistry.servicesAuthMiddleware) {
-  app.get('/services/protected/ping', serviceRegistry.servicesAuthMiddleware, (req, res) => {
-    res.json({
-      ok: true,
-      user: req.user ? req.user.username : null
-    });
-  });
-}
-
+// Add some things to services
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));
 queue.enqueue(new Date());

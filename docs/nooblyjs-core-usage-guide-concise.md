@@ -167,7 +167,7 @@ serviceRegistry.filing('s3', {
 
 // Local provider
 serviceRegistry.filing('local', {
-  baseDir: './uploads'
+  dataDir: './uploads'
 });
 ```
 
