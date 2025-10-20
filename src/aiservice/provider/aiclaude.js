@@ -137,7 +137,6 @@ class AIClaude extends AIServiceBase {
         throw new Error(`Claude API error: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(data.data);
       return data.data || [];
     } catch (error) {
       console.log(error)
