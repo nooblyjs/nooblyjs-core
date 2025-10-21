@@ -16,6 +16,7 @@
  * @class
  */
 class WorkingAnalytics {
+
   /**
    * Initializes the working analytics module.
    * @param {EventEmitter} eventEmitter - Event emitter to listen for worker events.
@@ -36,40 +37,40 @@ class WorkingAnalytics {
     this.eventEmitter_ = eventEmitter;
 
     // Set up event listeners for worker events
-    this.initializeListeners_();
+    this.initializeListeners();
   }
 
   /**
    * Initializes event listeners for worker events.
    * @private
    */
-  initializeListeners_() {
+  initializeListeners() {
     if (!this.eventEmitter_) {
       return;
     }
 
     // Listen for worker start events
     this.eventEmitter_.on('worker:start', (data) => {
-      this.recordTaskStart_(data.scriptPath, data.taskId);
+      this.recordTaskStart(data.scriptPath, data.taskId);
     });
 
     // Listen for worker status events (completion or error)
     this.eventEmitter_.on('worker:status', (data) => {
       if (data.status === 'completed') {
-        this.recordTaskCompletion_(data.taskId);
+        this.recordTaskCompletion(data.taskId);
       } else if (data.status === 'error') {
-        this.recordTaskError_(data.taskId);
+        this.recordTaskError(data.taskId);
       }
     });
 
     // Listen for worker error events
     this.eventEmitter_.on('worker:error', (data) => {
-      this.recordTaskError_(data.taskId);
+      this.recordTaskError(data.taskId);
     });
 
     // Listen for worker exit errors
     this.eventEmitter_.on('worker:exit:error', (data) => {
-      this.recordTaskError_(data.taskId);
+      this.recordTaskError(data.taskId);
     });
   }
 
@@ -79,7 +80,7 @@ class WorkingAnalytics {
    * @param {string} scriptPath - The script path of the task.
    * @param {string} taskId - The unique task ID.
    */
-  recordTaskStart_(scriptPath, taskId) {
+  recordTaskStart(scriptPath, taskId) {
     // Initialize task analytics if it doesn't exist
     if (!this.taskAnalytics_.has(scriptPath)) {
       this.taskAnalytics_.set(scriptPath, {
@@ -112,7 +113,7 @@ class WorkingAnalytics {
    * @private
    * @param {string} taskId - The unique task ID.
    */
-  recordTaskCompletion_(taskId) {
+  recordTaskCompletion(taskId) {
     // Find the task analytics that contains this taskId
     for (const [scriptPath, analytics] of this.taskAnalytics_.entries()) {
       if (analytics.activeTasks.has(taskId)) {
@@ -140,7 +141,7 @@ class WorkingAnalytics {
    * @private
    * @param {string} taskId - The unique task ID.
    */
-  recordTaskError_(taskId) {
+  recordTaskError(taskId) {
     // Find the task analytics that contains this taskId
     for (const [scriptPath, analytics] of this.taskAnalytics_.entries()) {
       if (analytics.activeTasks.has(taskId)) {

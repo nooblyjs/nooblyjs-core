@@ -19,35 +19,34 @@ class WorkingApi {
   /**
    * Initializes the Working API client with configuration.
    * @param {Object} options Configuration options for the API client.
-   * @param {string} options.apiRoot The root URL of the backend API service.
-   * @param {string=} options.apiKey Optional API key for authenticated requests.
+   * @param {string} options.url The root URL of the backend API service.
+   * @param {string=} options.apikey Optional API key for authenticated requests.
    * @param {number=} options.timeout Request timeout in milliseconds (default: 30000).
+   * @param {number=} options.retryLimit Request retryLimit (default:3)
    * @param {EventEmitter=} eventEmitter Optional event emitter for working events.
    */
   constructor(options = {}, eventEmitter) {
-    this.apiRoot = options.apiRoot || 'http://localhost:3000';
-    this.apiKey = options.apiKey || null;
-    this.timeout = options.timeout || 30000;
-    this.eventEmitter_ = eventEmitter;
 
-    // Configure axios instance
-    this.client = axios.create({
-      baseURL: this.apiRoot,
-      timeout: this.timeout,
-      headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
-    });
-
-    // Settings for working API provider
     this.settings = {};
     this.settings.description = "Configuration settings for the Working API Provider";
     this.settings.list = [
-      {setting: "apiUrl", type: "string", values: ["http://localhost:3000"]},
+      {setting: "url", type: "string", values: ["http://localhost:3000"]},
+      {setting: "apikey", type: "string", values: ["Please request this from your administrator "]},
       {setting: "timeout", type: "number", values: [30000]},
       {setting: "retryLimit", type: "number", values: [3]}
     ];
-    this.settings.apiUrl = options.apiUrl || this.settings.list[0].values[0];
-    this.settings.timeout = options.timeout || this.settings.list[1].values[0];
-    this.settings.retryLimit = options.retryLimit || this.settings.list[2].values[0];
+    this.settings.url = options.url
+    this.settings.apikey = options.apikey
+    this.settings.timeout = options.timeout
+    this.settings.retryLimit = options.retryLimit
+
+    // Configure axios instance
+    this.client = axios.create({
+      baseURL:  this.settings.url,
+      timeout: this.settings.timeout,
+      headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
+    });
+
   }
 
   /**
