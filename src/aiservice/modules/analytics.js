@@ -5,22 +5,11 @@
 
 'use strict';
 
-class AIPromptAnalytics {
+class Analytics {
+
   constructor(eventEmitter) {
-    /** @private @type {Map<string, {
-     *   prompt: string,
-     *   username: string,
-     *   calls: number,
-     *   promptTokens: number,
-     *   completionTokens: number,
-     *   totalTokens: number,
-     *   lastPromptAt: number,
-     *   lastPromptIso: string,
-     *   model: string|null,
-     *   provider: string|null
-     * }>} */
+
     this.promptStats_ = new Map();
-    /** @private @const {number} */
     this.maxEntries_ = 2000;
 
     if (eventEmitter) {
@@ -255,4 +244,4 @@ class AIPromptAnalytics {
   }
 }
 
-module.exports = AIPromptAnalytics;
+module.exports = Analytics;

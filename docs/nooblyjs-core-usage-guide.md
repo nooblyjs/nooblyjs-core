@@ -1296,7 +1296,7 @@ const configUuid = await dataService.add('config', appConfiguration);
 **1. User Management System**
 ```javascript
 const dataService = serviceRegistry.dataService('file', {
-  baseDir: './data/containers'
+  dataDir: './data/containers'
 });
 
 // Create user management functions
@@ -1734,7 +1734,7 @@ const userLimitHistory = await configManager.getConfigHistory('app.maxUsers');
 
 ```javascript
 const filing = serviceRegistry.filing('local', {
-  baseDir: '/app/uploads'
+  dataDir: '/app/uploads'
 });
 
 // Upload file from stream
@@ -1757,7 +1757,7 @@ await filing.delete('documents/report.pdf');
 const fs = require('fs');
 const path = require('path');
 const filing = serviceRegistry.filing('local', {
-  baseDir: path.resolve(__dirname, 'uploads')
+  dataDir: path.resolve(__dirname, 'uploads')
 });
 
 const documentManager = {
@@ -1922,7 +1922,7 @@ app.get('/api/documents/:uuid/download', async (req, res) => {
 ```javascript
 const sharp = require('sharp'); // For image processing
 const filing = serviceRegistry.filing('local', {
-  baseDir: path.resolve(__dirname, 'media')
+  dataDir: path.resolve(__dirname, 'media')
 });
 
 const imageGallery = {
@@ -2856,7 +2856,7 @@ const cache = serviceRegistry.cache(process.env.CACHE_PROVIDER || 'memory', {
 
 const dataService = serviceRegistry.dataService(process.env.DATA_PROVIDER || 'memory');
 const filing = serviceRegistry.filing(process.env.FILE_PROVIDER || 'local', {
-  baseDir: './uploads'
+  dataDir: './uploads'
 });
 
 const logger = serviceRegistry.logger(process.env.LOG_PROVIDER || 'console');
@@ -3618,7 +3618,7 @@ const results = await dataService.jsonFindByCriteria(container, {
 ```javascript
 // File-based provider with custom directory
 const dataService = serviceRegistry.dataService('file', {
-  baseDir: './data/containers'
+  dataDir: './data/containers'
 });
 
 // SimpleDB provider configuration
@@ -3953,7 +3953,7 @@ module.exports = {
   filing: {
     provider: process.env.FILE_PROVIDER || 'local',
     local: {
-      baseDir: process.env.UPLOAD_DIR || './uploads'
+      dataDir: process.env.UPLOAD_DIR || './uploads'
     },
     s3: {
       bucket: process.env.S3_BUCKET,
@@ -4548,7 +4548,7 @@ eventEmitter.on('redis-error', (error) => {
 ```javascript
 // Check file permissions and paths
 const filing = serviceRegistry.filing('local', {
-  baseDir: path.resolve(__dirname, 'uploads') // Use absolute path
+  dataDir: path.resolve(__dirname, 'uploads') // Use absolute path
 });
 
 // Ensure directory exists

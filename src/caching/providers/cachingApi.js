@@ -45,6 +45,7 @@ class CacheApi {
        timeout: this.timeout,
        headers: this.settings.apikey ? { 'X-API-Key': this.settings.apikey } : {}
      });
+     
   }
 
   /**

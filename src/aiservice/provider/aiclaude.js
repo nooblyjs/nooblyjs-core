@@ -36,13 +36,17 @@ class AIClaude extends AIServiceBase {
       {setting: "temperature", type: "number", values : ['0.7']} 
     ]
 
-    if (!options.apiKey) {
+    if (!options.apikey) {
       throw new Error('Claude API key is required');
     }
 
-    this.model_ = options.model || this.settings.model || 'claude-sonnet-4-5-20250929';
+    this.settings.apikey = options.apikey;
+    this.settings.model = options.model || 'claude-sonnet-4-5-20250929';
+    this.settings.maxtokens = options.maxtokens || 4000;
+    this.settings.temperature = options.temperature || 0.7;
+    
     this.client_ = new Anthropic({
-      apiKey: options.apiKey |  this.settings.apikey
+      apiKey: this.settings.apikey
     });
   }
 
@@ -76,9 +80,9 @@ class AIClaude extends AIServiceBase {
   async prompt(prompt, options = {}) {
     try {
       const response = await this.client_.messages.create({
-        model: this.model_,
-        max_tokens: options.maxTokens || this.settings.maxtokens ||  1000,
-        temperature: options.temperature || this.settings.temperature || 0.7,
+        model: this.settings.model,
+        max_tokens: this.settings.maxtokens || 1000,
+        temperature: this.settings.temperature  || 0.7,
         messages: [
           {
             role: 'user',
@@ -99,7 +103,7 @@ class AIClaude extends AIServiceBase {
       const result = {
         content: response.content[0].text,
         usage,
-        model: this.model_,
+        model: this.settings.model,
         provider: 'claude'
       };
 
@@ -115,6 +119,35 @@ class AIClaude extends AIServiceBase {
       throw error;
     }
   }
+
+  /**
+   * Lists available models from Ollama.
+   * @return {Promise<Array>} List of available models.
+   */
+  async listModels() {
+    try {
+      const response = await fetch(`https://api.anthropic.com/v1/models`,{
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.settings.apikey,
+          "anthropic-version": "2023-06-01"
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Claude API error: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.log(error)
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('ai:error', { error: error.message, provider: 'ollama' });
+      }
+      throw error;
+    }
+  }
+
+
 }
 
 module.exports = AIClaude;

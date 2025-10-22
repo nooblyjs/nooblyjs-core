@@ -45,46 +45,9 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 
-// Initialize AI service with graceful handling of missing API key
-// Use Ollama as fallback since it doesn't require an API key
-let aiservice;
-if (process.env.aiapikey) {
-  try {
-    aiservice = serviceRegistry.aiservice('claude', {
-      apiKey: process.env.aiapikey,
-      'express-app': app
-    });
-    log.info('AI service (Claude) initialized successfully');
-  } catch (error) {
-    log.error('Failed to initialize Claude AI service:', error.message);
-  }
-}
-
-// If Claude isn't available, try Ollama as fallback
-if (!aiservice) {
-  try {
-    aiservice = serviceRegistry.aiservice('ollama', {
-      baseUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
-      model: 'llama3.2',
-      'express-app': app
-    });
-    log.info('AI service (Ollama) initialized - configure Claude with aiapikey env var for Claude support');
-  } catch (error) {
-    log.info('AI service not available - Ollama not running and no API key configured');
-    log.info('To enable AI features:');
-    log.info('  - For Claude: Set aiapikey environment variable');
-    log.info('  - For Ollama: Start Ollama server at http://localhost:11434');
-  }
-}
-
 const authservice = serviceRegistry.authservice('file', {
   'express-app': app,
   dataDir: './data/auth'
-});
-// authservice.passportConfigurator(...) is available if passport setup is needed in custom hosts.
-
-app.get('/api/secure/ping', (req, res) => {
-  res.json({ ok: true, authorized: true });
 });
 
 cache.put('currentdate', new Date());

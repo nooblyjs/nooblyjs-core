@@ -21,15 +21,13 @@ class FileDataRingProvider {
   /**
    * Initializes the file-based data storage provider.
    * @param {Object} options Configuration options for the provider.
-   * @param {string=} options.baseDir Base directory for storing data files (defaults to './dataservice_data').
+   * @param {string=} options.dataDir Base directory for storing data files (defaults to './dataservice_data').
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options, eventEmitter) {
-    /** @private @const {string} */
-    this.baseDir = path.resolve(options.baseDir || './.data');
-    /** @private @const {!Map<string, string>} */
-    this.containers = new Map(); // Map<containerName, containerFilePath>
-    /** @private @const {EventEmitter} */
+    this.dataDir = path.resolve(options.dataDir || './.data');
+
+    this.containers = new Map(); 
     this.eventEmitter_ = eventEmitter;
 
     // Settings for dataservice file provider
@@ -52,7 +50,7 @@ class FileDataRingProvider {
    * @private
    */
   async _getContainerFilePath(containerName) {
-    const containerFilePath = path.join(this.baseDir, `${containerName}.json`);
+    const containerFilePath = path.join(this.dataDir, `${containerName}.json`);
     if (!this.containers.has(containerName)) {
       try {
         await fs.access(containerFilePath);
@@ -105,7 +103,7 @@ class FileDataRingProvider {
    * @throws {Error} When a container with the same name already exists.
    */
   async createContainer(containerName) {
-    const containerFilePath = path.join(this.baseDir, `${containerName}.json`);
+    const containerFilePath = path.join(this.dataDir, `${containerName}.json`);
     try {
       await fs.access(containerFilePath);
       throw new Error(`Container '${containerName}' already exists.`);

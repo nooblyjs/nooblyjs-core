@@ -6,6 +6,7 @@ documents-shared/
 watch/
 .data/
 data/
+.noobly-core/
 
 #nodent goes here...
 node_modules/

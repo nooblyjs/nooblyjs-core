@@ -9,14 +9,18 @@
 
 'use strict';
 
+// Providers
 const AIClaude = require('./provider/aiclaude');
 const AIOpenAI = require('./provider/aiopenai');
 const AIOllama = require('./provider/aiollama');
 const AIApi = require('./provider/aiApi');
 
+// Analytics Object
+const Analytics = require('./modules/analytics');
+
+// Routes and views
 const Routes = require('./routes');
 const Views = require('./views');
-const AIPromptAnalytics = require('./modules/analytics');
 
 /**
  * Creates an AI service instance with the specified provider and dependency injection.
@@ -38,7 +42,8 @@ function createAIService(type, options, eventEmitter) {
   const cache = dependencies.caching;
   const workflow = dependencies.workflow;
   const queueing = dependencies.queueing;
-  const analytics = new AIPromptAnalytics(eventEmitter);
+
+  const analytics = new Analytics(eventEmitter);
 
   let aiservice;
 
@@ -80,19 +85,9 @@ function createAIService(type, options, eventEmitter) {
   }
 
   // Inject caching dependency for response caching
-  if (cache) {
-    aiservice.cache = cache;
-  }
-
-  // Inject workflow dependency for complex AI pipelines
-  if (workflow) {
-    aiservice.workflow = workflow;
-  }
-
-  // Inject queueing dependency for async AI processing
-  if (queueing) {
-    aiservice.queueing = queueing;
-  }
+  aiservice.cache = cache;
+  aiservice.workflow = workflow;
+  aiservice.queueing = queueing;
 
   // Store all dependencies for potential use by provider
   aiservice.dependencies = dependencies;

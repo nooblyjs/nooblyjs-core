@@ -10,18 +10,19 @@
 
 'use strict';
 
-// TODO - we need to work on how data is passed to the script
-
+// Providers
 const WorkerProvider = require('./providers/working');
 const WorkingApi = require('./providers/workingApi');
 const WorkingAnalytics = require('./modules/analytics');
+
+// Views
 const Routes = require('./routes');
 const Views = require('./views');
 
-/** @type {WorkerProvider} */
+// The worker provider
 let instance = null;
 
-/** @type {WorkingAnalytics} */
+// The analytics object
 let analyticsInstance = null;
 
 /**
@@ -35,6 +36,7 @@ let analyticsInstance = null;
  * @return {WorkerProvider|WorkingApi} The singleton worker service instance
  */
 function getWorkerInstance(type, options, eventEmitter) {
+
   const { dependencies = {}, ...providerOptions } = options;
   const logger = dependencies.logging;
 
