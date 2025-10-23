@@ -10,7 +10,7 @@
 
 const path = require('path');
 const express = require('express');
-const serviceRegistry = require('../../index');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -27,12 +27,7 @@ const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 const filing = serviceRegistry.filing();
-
-// Initialize queueing service (required by working service)
 const queueing = serviceRegistry.queue();
-
-// Initialize working service with filing dependency for activity resolution
-// Activities folder defaults to './activities' relative to project root
 const worker = serviceRegistry.working('default', {
   maxThreads: 4,
   activitiesFolder: 'activities', // or use absolute path
@@ -42,47 +37,52 @@ const worker = serviceRegistry.working('default', {
   }
 });
 
+// Initialize scheduling service
+const scheduler = serviceRegistry.scheduling();
+
 // Redirect root to services
 app.get('/', (req, res) => {
   res.redirect('/services');
 });
 
-app.listen(3001, () => {
+app.listen(3001, async () => {
   logger.info('Server running on port 3001');
   logger.info('Visit: http://localhost:3001/ (redirects to /services)');
   logger.info('Login page at: http://localhost:3001/services/authservice/views/login.html');
   logger.info('Register page at: http://localhost:3001/services/authservice/views/register.html');
   logger.info('Activities folder: ./activities');
 
-  // Start an example worker task using relative path (resolved from activities folder)
-  // No need for path.resolve() - just use the activity filename!
-  worker.start(
-    'exampleTask.js', // Automatically resolves to ./activities/exampleTask.js
-    { exampleParam: 'Hello from main thread!' },
-    function (status, result) {
-      console.log('Worker completed with status:', status);
-      console.log('Worker result:', result);
-    }
-  ).then((taskId) => {
-    logger.info('Example task queued with ID:', taskId);
-  }).catch((err) => {
-    logger.error('Failed to queue example task:', err);
-  });
-
-  const interval = setInterval(() => {
-    worker.start(
-      'exampleTask.js', // Much simpler! No path.resolve() needed
-      { exampleParam: 'Hello from main thread!' },
-      function (status, result) {
-        console.log('Worker completed with status:', status);
-        console.log('Worker result:', result);
+  // Schedule ExampleTask.js to run every 3 seconds
+  await scheduler.start(
+    'exampleTask1',
+    'exampleTask.js',
+    { taskName: 'ExampleTask 1' },
+    3, // Run every 3 seconds
+    (status, data) => {
+      if (status === 'completed') {
+        logger.info('ExampleTask 1 completed:', data);
+      } else if (status === 'error') {
+        logger.error('ExampleTask 1 failed:', data);
       }
-    ).then((taskId) => {
-      logger.info('Example task queued with ID:', taskId);
-    }).catch((err) => {
-      logger.error('Failed to queue example task:', err);
-    });
-  }, 100);
+    }
+  );
 
+  // Schedule ExampleTask-2.js to run every 5 seconds
+  await scheduler.start(
+    'exampleTask2',
+    'exampleTask-2.js',
+    { taskName: 'ExampleTask 2' },
+    5, // Run every 5 seconds
+    (status, data) => {
+      if (status === 'completed') {
+        logger.info('ExampleTask 2 completed:', data);
+      } else if (status === 'error') {
+        logger.error('ExampleTask 2 failed:', data);
+      }
+    }
+  );
 
+  logger.info('Scheduled tasks:');
+  logger.info('  - ExampleTask 1: runs every 3 seconds');
+  logger.info('  - ExampleTask 2: runs every 5 seconds');
 });

@@ -9,7 +9,7 @@
 'use strict';
 
 const express = require('express');
-const serviceRegistry = require('../../index');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
