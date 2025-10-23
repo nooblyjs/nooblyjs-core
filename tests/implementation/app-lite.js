@@ -9,13 +9,29 @@
 'use strict';
 
 const express = require('express');
-const serviceRegistry = require('nooblyjs-core');
+const EventEmitter = require('events');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 
+// Add options
+var options = { 
+  logDir:  path.join(__dirname, './.app-lite/', 'logs'),
+  dataDir : path.join(__dirname, './.app-lite/', 'data'),
+  'express-app': app,
+    brandingConfig: {
+      appName: 'App Lite',
+      primaryColor: '#FF5733'
+    }
+};
+
+// Declare the Event Emitter
+const eventEmitter = new EventEmitter();
+
 // Initialize registry (no public folder needed!)
-serviceRegistry.initialize(app);
+const serviceRegistry = require('nooblyjs-core');
+serviceRegistry.initialize(app, eventEmitter, options);
 
 // Initialize auth service (required for login/register functionality)
 // The authservice automatically serves login.html and register.html from its views folder

@@ -13,6 +13,17 @@
             --custom-secondary: #6c757d;
             --custom-warning: #ffc107;
         }
+
+        /* Hide content until branding is loaded */
+        body.loading {
+            opacity: 0;
+        }
+
+        body {
+            opacity: 1;
+            transition: opacity 0.3s ease-in;
+        }
+
         .auth-container {
             min-height: 100vh;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -110,6 +121,9 @@
     </div>
 
     <script>
+        // Mark page as loading to hide content until branding is applied
+        document.body.classList.add('loading');
+
         // Load and apply branding configuration
         let brandingConfig = null;
 
@@ -124,6 +138,9 @@
                 }
             } catch (error) {
                 console.error('Failed to load branding configuration:', error);
+            } finally {
+                // Show page (either with branding applied or defaults)
+                showPage();
             }
         }
 
@@ -164,6 +181,11 @@
                 const stylesheetLink = document.getElementById('custom-stylesheet');
                 stylesheetLink.href = brandingConfig.stylesheetUrl;
             }
+        }
+
+        function showPage() {
+            // Remove loading class to show page with branding applied
+            document.body.classList.remove('loading');
         }
 
         // Load branding on page load
