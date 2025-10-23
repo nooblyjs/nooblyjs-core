@@ -9,7 +9,7 @@
 'use strict';
 
 const express = require('express');
-const serviceRegistry = require('../../index');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -31,9 +31,6 @@ app.get('/', (req, res) => {
   res.redirect('/services');
 });
 
-app.listen(3001, async () => {
-  logger.info('Server running on port 3001');
-  logger.info('Visit: http://localhost:3001/ (redirects to /services)');
-  logger.info('Login page at: http://localhost:3001/services/authservice/views/login.html');
-  logger.info('Register page at: http://localhost:3001/services/authservice/views/register.html');
+app.listen(process.env.PORT || 3101, async () => {
+  logger.info('Server running on port ' + (process.env.PORT || 3101));
 });
