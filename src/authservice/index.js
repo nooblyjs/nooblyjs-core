@@ -97,5 +97,7 @@ createAuth.isValidApiKeyFormat = middleware.isValidApiKeyFormat;
 createAuth.createServicesAuthMiddleware = middleware.createServicesAuthMiddleware;
 createAuth.configurePassport = middleware.configurePassport;
 createAuth.passportConfigurator = passportConfigurator;
+createAuth.createAuthMiddleware = middleware.createAuthMiddleware;
+createAuth.createAuthMiddlewareWithHandler = middleware.createAuthMiddlewareWithHandler;
 
 module.exports = createAuth;

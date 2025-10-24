@@ -55,6 +55,7 @@ if (configuredApiKeys.length === 0 && process.env.NODE_ENV !== 'production') {
   console.warn('[NooblyJS] Generated development API key. Set NOOBLY_API_KEYS to override this value.');
 }
 
+// Instantiate the options
 var options = { 
   logDir:  path.join(__dirname, './.noobly-core/', 'logs'),
   dataDir : path.join(__dirname, './.noobly-core/', 'data'),
@@ -66,25 +67,19 @@ var options = {
     '/services/*/views/*',
     '/services/authservice/api/login',
     '/services/authservice/api/register'
-  ],
-  'express-app': app,
-    brandingConfig: {
-      appName: 'My Application',
-      logoUrl: '/images/login.png',
-      primaryColor: '#FF5733'
-    }
+  ]
 };
+
+/* add a claude api key
+if (process.env.ai-provider  == 'claude' && process.env.apikey ){
+  this.settings.apikey = options.process.env.apikey;
+}
+  */
 
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter, options);
 
 const log = serviceRegistry.logger('file');
-if (generatedDevApiKey) {
-  log.warn('Development API key generated automatically for local testing', {
-    keyPrefix: `${generatedDevApiKey.slice(0, 6)}...`
-  });
-}
-
 const cache = serviceRegistry.cache('inmemory');
 const dataservice = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
@@ -96,21 +91,38 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 
+/* configure ai provider
+const aiprovider = '';
+if (process.env.ai-provider  == 'claude' && process.env.apikey ){
+  aiprovider = process.env.ai-provider
+}
+const aiservice = serviceRegistry.aiservice();
+*/
+
 // Implement Auth Service
 const authservice = serviceRegistry.authservice('file');
 const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
 configurePassport(passport);
 
+// Show generated api-key
+if (generatedDevApiKey) {
+  log.warn('Development API key generated automatically for local testing', {
+    keyPrefix: `${generatedDevApiKey.slice(0, 6)}...`
+  });
+}
+
 //Implement Auth Middleware
 const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
 
-// Add some things to services
-cache.put('currentdate', new Date());
-log.info(cache.get('currentdate'));
-queue.enqueue(new Date());
-
-const PORT = process.env.PORT || 3001;
+// Expose the public folder
 app.use('/', express.static(__dirname + '/public'));
-app.listen(PORT, () => {
-  log.info(`Server is running on port ${PORT}`);
+
+app.listen(process.env.PORT || 3001, () => {
+  log.info(`Server is running on port ${process.env.PORT || 3001}`);
+
+  // Add some things to services
+  cache.put('currentdate', new Date());
+  log.info(cache.get('currentdate'));
+  queue.enqueue(new Date());
+
 });

@@ -395,6 +395,39 @@ class AuthBase {
   }
 
   /**
+   * Creates authentication middleware for protecting routes.
+   * Automatically handles login redirects with optional referrer tracking.
+   * @param {Object} [options={}] - Configuration options
+   * @param {string} [options.loginPath='/services/authservice/views/login.html'] - Path to login page
+   * @param {boolean} [options.saveReferer=true] - Whether to save original URL as referrer
+   * @returns {Function} Express middleware function
+   * @example
+   * const requireAuth = authservice.createAuthMiddleware();
+   * app.use('/app', requireAuth, express.static(__dirname + '/public/app'));
+   */
+  createAuthMiddleware(options = {}) {
+    const { createAuthMiddleware } = require('../middleware/authenticate');
+    return createAuthMiddleware(options);
+  }
+
+  /**
+   * Creates authentication middleware with custom response handling.
+   * Allows custom logic for unauthorized requests (e.g., JSON responses for APIs).
+   * @param {Object} [options={}] - Configuration options
+   * @param {Function} [options.onUnauthorized] - Custom handler for unauthenticated requests
+   * @returns {Function} Express middleware function
+   * @example
+   * const requireAuthApi = authservice.createAuthMiddlewareWithHandler({
+   *   onUnauthorized: (req, res) => res.status(401).json({ error: 'Unauthorized' })
+   * });
+   * app.get('/api/protected', requireAuthApi, handler);
+   */
+  createAuthMiddlewareWithHandler(options = {}) {
+    const { createAuthMiddlewareWithHandler } = require('../middleware/authenticate');
+    return createAuthMiddlewareWithHandler(options);
+  }
+
+  /**
    * Returns a passport strategy factory when supported by the provider.
    * Providers that do not integrate with passport should override this method.
    * @return {?Function} Strategy factory or null if unsupported.

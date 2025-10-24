@@ -79,7 +79,32 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         const result = await auth.authenticateUser(username, password);
         eventEmitter.emit('auth:login-api', { username });
 
-        // Determine redirect URL: options override > request returnUrl > default
+        // Establish Passport session so req.isAuthenticated() returns true
+        // This is critical for middleware protection to work
+        // MUST wait for logIn to complete before sending response
+        if (result.user && req.logIn) {
+          return new Promise((resolve, reject) => {
+            req.logIn(result.user, (err) => {
+              if (err) {
+                console.error('Passport session error:', err);
+                return reject(err);
+              }
+
+              // Determine redirect URL: options override > request returnUrl > default
+              let redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+
+              res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                data: result,
+                redirectUrl: redirectUrl
+              });
+              resolve();
+            });
+          });
+        }
+
+        // Fallback if logIn not available
         let redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
 
         res.status(200).json({

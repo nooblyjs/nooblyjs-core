@@ -9,10 +9,13 @@
 'use strict';
 
 const express = require('express');
+const http = require('http');
+
 const EventEmitter = require('events');
 const path = require('path');
 
 const app = express();
+const server = http.createServer(app);
 app.use(express.json());
 
 // Add options
@@ -22,7 +25,7 @@ var options = {
   'express-app': app,
     brandingConfig: {
       appName: 'App Lite',
-      primaryColor: '#FF5733'
+      primaryColor: '#000'
     }
 };
 
@@ -42,11 +45,13 @@ const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
-// Redirect root to services
-app.get('/', (req, res) => {
-  res.redirect('/services');
-});
+// Initiate the content Registry
+const wiki = require('nooblyjs-app-wiki');
+wiki(app, server, eventEmitter, serviceRegistry, options);
 
-app.listen(process.env.PORT || 3101, async () => {
-  logger.info('Server running on port ' + (process.env.PORT || 3101));
+// Expose the public folder
+app.use('/', express.static(__dirname + '/public'));
+
+app.listen(process.env.PORT || 3102, async () => {
+  logger.info('Server running on port ' + (process.env.PORT || 3102));
 });
