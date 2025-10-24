@@ -68,19 +68,25 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      * @param {Object} req.body - Login credentials
      * @param {string} req.body.username - Username
      * @param {string} req.body.password - Password
+     * @param {string} req.body.returnUrl - Optional return URL after successful login
      * @param {express.Response} res - Express response object
      * @return {void}
      */
     app.post(
       '/services/authservice/api/login',
       asyncHandler(async (req, res) => {
-        const { username, password } = req.body;
+        const { username, password, returnUrl } = req.body;
         const result = await auth.authenticateUser(username, password);
         eventEmitter.emit('auth:login-api', { username });
+
+        // Determine redirect URL: options override > request returnUrl > default
+        let redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+
         res.status(200).json({
           success: true,
           message: 'Login successful',
-          data: result
+          data: result,
+          redirectUrl: redirectUrl
         });
       })
     );
@@ -316,6 +322,30 @@ module.exports = (options, eventEmitter, auth, analytics) => {
       });
     }));
 
+    /**
+     * GET /services/authservice/api/branding
+     * Returns branding configuration for the authentication UI.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/authservice/api/branding', asyncHandler(async (req, res) => {
+      const brandingConfig = {
+        appName: options.brandingConfig?.appName || 'Noobly JS',
+        logoUrl: options.brandingConfig?.logoUrl || null,
+        stylesheetUrl: options.brandingConfig?.stylesheetUrl || null,
+        primaryColor: options.brandingConfig?.primaryColor || '#0066cc',
+        secondaryColor: options.brandingConfig?.secondaryColor || '#6c757d',
+        warningColor: options.brandingConfig?.warningColor || '#ffc107'
+      };
+
+      res.status(200).json({
+        success: true,
+        data: brandingConfig
+      });
+    }));
+
     // Passport-specific routes (if available)
     if (auth.authenticateWithPassport) {
       /**
@@ -326,10 +356,16 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         '/services/authservice/api/passport/login',
         asyncHandler(async (req, res, next) => {
           const result = await auth.authenticateWithPassport(req, res, next);
+
+          // Determine redirect URL: options override > request returnUrl > default
+          const { returnUrl } = req.body;
+          const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+
           res.status(200).json({
             success: true,
             message: 'Passport login successful',
-            data: result
+            data: result,
+            redirectUrl: redirectUrl
           });
         })
       );
@@ -353,10 +389,15 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         '/services/authservice/api/google/callback',
         asyncHandler(async (req, res, next) => {
           const result = await auth.handleGoogleCallback(req, res, next);
+
+          // Determine redirect URL: options override > result redirectUrl > default
+          const redirectUrl = options.loginSuccessRedirectUrl || result.redirectUrl || '/services';
+
           res.status(200).json({
             success: true,
             message: 'Google login successful',
-            data: result
+            data: result,
+            redirectUrl: redirectUrl
           });
         })
       );

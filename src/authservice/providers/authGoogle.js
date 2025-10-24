@@ -142,10 +142,11 @@ class AuthGoogle extends AuthBase {
    * @param {Object} profile Google profile object.
    * @param {string} accessToken OAuth access token.
    * @param {string} refreshToken OAuth refresh token.
+   * @param {string} returnUrl Optional return URL for post-login redirect.
    * @return {Promise<Object>} Promise resolving to authentication result.
    * @private
    */
-  async handleGoogleAuth_(profile, accessToken, refreshToken) {
+  async handleGoogleAuth_(profile, accessToken, refreshToken, returnUrl) {
     const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
     const username = profile.id; // Use Google ID as username
     const displayName = profile.displayName || email;
@@ -196,9 +197,13 @@ class AuthGoogle extends AuthBase {
       });
     }
 
+    // Determine redirect URL: options override > returnUrl > default
+    const redirectUrl = this.options_.loginSuccessRedirectUrl || returnUrl || '/services';
+
     return {
       user: this.getSafeUser_(user),
-      session: { token: sessionToken, expiresAt: session.expiresAt }
+      session: { token: sessionToken, expiresAt: session.expiresAt },
+      redirectUrl: redirectUrl
     };
   }
 
@@ -211,6 +216,12 @@ class AuthGoogle extends AuthBase {
   initiateGoogleAuth(req, res, next) {
     if (!this.passport_) {
       throw new Error('Google OAuth not available');
+    }
+
+    // Store returnUrl in session for use in callback
+    if (req.query.returnUrl) {
+      req.session = req.session || {};
+      req.session.oauthReturnUrl = req.query.returnUrl;
     }
 
     this.passport_.authenticate('google', {
@@ -230,6 +241,9 @@ class AuthGoogle extends AuthBase {
       throw new Error('Google OAuth not available');
     }
 
+    // Retrieve returnUrl from session
+    const returnUrl = req.session?.oauthReturnUrl;
+
     return new Promise((resolve, reject) => {
       this.passport_.authenticate('google', (err, user, info) => {
         if (err) {
@@ -243,7 +257,18 @@ class AuthGoogle extends AuthBase {
           if (err) {
             return reject(err);
           }
-          resolve({ user, session: info.session });
+          // Pass returnUrl to the response
+          const result = { user, session: info.session };
+          if (info.redirectUrl) {
+            result.redirectUrl = info.redirectUrl;
+          } else if (returnUrl) {
+            result.redirectUrl = returnUrl;
+          }
+          // Clean up the session
+          if (req.session) {
+            delete req.session.oauthReturnUrl;
+          }
+          resolve(result);
         });
       })(req, res, next);
     });

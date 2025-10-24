@@ -12,9 +12,10 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const serviceRegistry = require('./index');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
+
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(bodyParser.json());

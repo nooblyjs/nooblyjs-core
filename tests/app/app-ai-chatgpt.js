@@ -9,7 +9,7 @@
 'use strict';
 
 const express = require('express');
-const serviceRegistry = require('../../index');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -24,7 +24,18 @@ const authservice = serviceRegistry.authservice();
 // Get other services
 const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
-const dataService = serviceRegistry.dataService();
+const dataService = serviceRegistry.dataService('file', { dataDir: './.noobly-core/data' });
+
+dataService.find('ai-config', 'claude').then((result)=> 
+  {if (result.length > 0){
+    const aiservice = serviceRegistry.aiservice('chatgpt', {
+      apikey: result[0].apikey,
+      model: result[0].model,
+      'express-app': app
+    });
+    logger.info('AI service (Claude) initialized successfully');
+  }
+});
 
 // Redirect root to services
 app.get('/', (req, res) => {

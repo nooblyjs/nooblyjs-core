@@ -67,7 +67,12 @@ var options = {
     '/services/authservice/api/login',
     '/services/authservice/api/register'
   ],
-  'express-app': app
+  'express-app': app,
+    brandingConfig: {
+      appName: 'My Application',
+      logoUrl: '/images/login.png',
+      primaryColor: '#FF5733'
+    }
 };
 
 const eventEmitter = new EventEmitter();
