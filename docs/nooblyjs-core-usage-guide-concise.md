@@ -521,12 +521,101 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 });
 ```
 
-### Pattern 4: Authentication with Passport
+### Pattern 4: Authentication Service - Complete Setup
+
+#### 4a. Basic Setup with Redirect-Based Authentication
+
+The authservice provides built-in login/register pages that handle authentication flow automatically.
+
 ```javascript
 const session = require('express-session');
 const passport = require('passport');
 
-// Setup session
+// 1. Setup session middleware (REQUIRED - MUST come first)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-this-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',  // HTTPS only in production
+    httpOnly: true,                                  // Prevent XSS
+    maxAge: 24 * 60 * 60 * 1000                     // 24 hours
+  }
+}));
+
+// 2. Initialize Passport (MUST come before authservice)
+app.use(passport.initialize());
+app.use(passport.session());
+
+// 3. Initialize service registry
+serviceRegistry.initialize(app, null, {
+  logDir: './logs',
+  dataDir: './data'
+});
+
+// 4. Get auth service
+const authservice = serviceRegistry.authservice('file', {
+  dataDir: './data/auth'
+});
+
+// 5. Configure Passport (CRITICAL - enables session creation)
+const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
+configurePassport(passport);
+
+// 6. Create authentication middleware from authservice
+const requireAuth = authservice.createAuthMiddleware({
+  loginPath: '/services/authservice/views/login.html',
+  saveReferer: true  // Track original URL for post-login redirect
+});
+
+// 7. Protect routes with authentication
+app.use('/app', requireAuth, express.static(__dirname + '/public/app'));
+app.use('/dashboard', requireAuth, (req, res) => {
+  res.json({user: req.user, message: 'Welcome to dashboard'});
+});
+
+// Public routes remain accessible
+app.use('/', express.static(__dirname + '/public'));
+```
+
+#### How the Redirect Flow Works
+
+```
+User Flow:
+1. User visits /app (not logged in)
+   ↓
+2. Middleware checks: req.isAuthenticated() → FALSE
+   ↓
+3. Middleware redirects to: /services/authservice/views/login.html?returnUrl=/app
+   ↓
+4. User sees login page (provided by authservice)
+   ↓
+5. User enters username/password
+   ↓
+6. Login page submits to: /services/authservice/api/login
+   ↓
+7. Backend validates credentials (authservice handles this)
+   ↓
+8. Backend calls: req.logIn(user) ← Creates Passport session
+   ↓
+9. API returns: { success: true, redirectUrl: /app }
+   ↓
+10. Frontend redirects browser to: /app
+    ↓
+11. Middleware checks: req.isAuthenticated() → TRUE ✓
+    ↓
+12. Access granted! ✓
+```
+
+#### 4b. API-Based Authentication (for REST clients)
+
+```javascript
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+
+const app = express();
+app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -537,44 +626,274 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Initialize auth service
-serviceRegistry.initialize(app, null, {
-  dataDir: './data',
-  logDir: './logs'
-});
-
-const auth = serviceRegistry.authservice('file');
-const log = serviceRegistry.logger('file');
-
-// Configure passport
-const {configurePassport} = auth.passportConfigurator(auth.getAuthStrategy);
+// Initialize
+serviceRegistry.initialize(app);
+const authservice = serviceRegistry.authservice('file');
+const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
 configurePassport(passport);
 
-// Auth middleware
-function requireAuth(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({error: 'Unauthorized'});
-}
+// API Login endpoint (for REST clients)
+app.post('/api/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return res.status(500).json({success: false, error: err.message});
+    }
 
-// Login endpoint
-app.post('/api/login', passport.authenticate('local'), (req, res) => {
-  log.info('User logged in', {username: req.user.username});
-  res.json({user: req.user});
+    if (!user) {
+      return res.status(401).json({success: false, error: info?.message || 'Invalid credentials'});
+    }
+
+    // Create Passport session
+    req.logIn(user, (err) => {
+      if (err) {
+        return res.status(500).json({success: false, error: err.message});
+      }
+
+      res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      });
+    });
+  })(req, res, next);
 });
 
-// Protected endpoint
-app.get('/api/profile', requireAuth, (req, res) => {
-  res.json({user: req.user});
+// Register endpoint
+app.post('/api/register', async (req, res) => {
+  try {
+    const {username, email, password} = req.body;
+
+    // Check if user exists
+    const existing = await authservice.getUserByUsername(username);
+    if (existing) {
+      return res.status(400).json({success: false, error: 'User already exists'});
+    }
+
+    // Create user
+    const user = await authservice.createUser({username, email, password, role: 'user'});
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    res.status(500).json({success: false, error: error.message});
+  }
+});
+
+// Protected API endpoint
+app.get('/api/profile', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({error: 'Not authenticated'});
+  }
+
+  res.json({
+    user: req.user,
+    message: 'This is protected data'
+  });
 });
 
 // Logout
 app.post('/api/logout', (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({error: err.message});
-    res.json({message: 'Logged out'});
+    res.json({success: true, message: 'Logged out'});
   });
+});
+```
+
+#### 4c. Protecting Multiple Routes with Different Auth Levels
+
+```javascript
+// Public routes - no authentication required
+app.use('/', express.static('./public'));
+
+// Member routes - basic authentication
+const requireAuth = authservice.createAuthMiddleware();
+app.use('/members', requireAuth, express.static('./public/members'));
+
+// Admin routes - authentication + role check
+const requireAdmin = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(req.originalUrl));
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({error: 'Admin access required'});
+  }
+
+  next();
+};
+
+app.use('/admin', requireAdmin, express.static('./public/admin'));
+
+// API routes with authentication
+app.get('/api/data', requireAuth, (req, res) => {
+  res.json({data: 'user-specific data', user: req.user});
+});
+
+app.post('/api/admin/settings', requireAdmin, (req, res) => {
+  res.json({message: 'Settings updated', admin: req.user});
+});
+```
+
+#### 4d. AuthService API Reference
+
+```javascript
+const authservice = serviceRegistry.authservice('file');
+
+// User Registration
+const newUser = await authservice.createUser({
+  username: 'john_doe',
+  email: 'john@example.com',
+  password: 'secure_password',
+  role: 'user'  // Optional, defaults to 'user'
+});
+
+// User Authentication (internal use)
+const result = await authservice.authenticateUser('john_doe', 'secure_password');
+// Returns: {user: {...}, session: {token: '...', expiresAt: ...}}
+
+// Get User by Username
+const user = await authservice.getUserByUsername('john_doe');
+
+// Get User by Email
+const user = await authservice.getUserByEmail('john@example.com');
+
+// Update User
+const updated = await authservice.updateUser('john_doe', {
+  email: 'newemail@example.com',
+  password: 'new_password'
+});
+
+// Delete User
+await authservice.deleteUser('john_doe');
+
+// List All Users
+const allUsers = await authservice.listUsers();
+
+// Role Management
+await authservice.addUserToRole('john_doe', 'admin');
+const admins = await authservice.getUsersInRole('admin');
+const roles = await authservice.listRoles();
+
+// Service Status
+const status = await authservice.getStatus();
+```
+
+#### 4e. Complete Example: Protected Application
+
+```javascript
+// app.js - Complete example
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+// Session setup
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {secure: false, httpOnly: true, maxAge: 24*60*60*1000}
+}));
+
+// Passport setup
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Initialize services
+serviceRegistry.initialize(app, null, {
+  logDir: './logs',
+  dataDir: './data'
+});
+
+const authservice = serviceRegistry.authservice('file');
+const logger = serviceRegistry.logger('file');
+
+// Configure Passport
+const {configurePassport} = authservice.passportConfigurator(authservice.getAuthStrategy);
+configurePassport(passport);
+
+// Create auth middleware
+const requireAuth = authservice.createAuthMiddleware({
+  saveReferer: true
+});
+
+// Routes
+app.use('/app', requireAuth, express.static('./public/app'));
+app.use('/api/public', require('./routes/public'));
+app.use('/api/protected', requireAuth, require('./routes/protected'));
+app.use('/', express.static('./public'));
+
+app.listen(3000, () => {
+  logger.info('Server started on port 3000');
+  logger.info('Login page: http://localhost:3000/services/authservice/views/login.html');
+  logger.info('Protected app: http://localhost:3000/app');
+});
+```
+
+#### Built-in AuthService Pages
+
+The authservice automatically provides:
+
+- **Login Page**: `/services/authservice/views/login.html`
+  - User can enter username and password
+  - Handles returnUrl query parameter for post-login redirect
+  - Submits to `/services/authservice/api/login`
+
+- **Register Page**: `/services/authservice/views/register.html`
+  - Users can create new accounts
+  - Form fields: username, email, password
+  - Submits to `/services/authservice/api/register`
+
+- **Service UI**: `/services/authservice/`
+  - View all registered users
+  - Manage roles
+  - View authentication logs
+
+#### Key Implementation Points
+
+1. **Session MUST be set up before Passport**: Session middleware must come before `passport.initialize()` and `passport.session()`
+
+2. **Passport MUST be configured before protecting routes**: Call `configurePassport(passport)` before creating the `requireAuth` middleware
+
+3. **req.logIn() MUST complete before responding**: The login API waits for the session to be created before sending the response
+
+4. **returnUrl is automatically tracked**: The middleware captures the original URL and passes it to the login page
+
+5. **Credentials are secure**:
+   - Passwords are hashed before storage
+   - Sessions use HTTP-only cookies
+   - HTTPS recommended for production
+
+#### Configuration Options
+
+```javascript
+// Authservice creation options
+const authservice = serviceRegistry.authservice('file', {
+  dataDir: './data/auth',        // Where to store user data
+  createDefaultAdmin: false      // Create admin:admin123 (memory provider only)
+});
+
+// Middleware creation options
+const requireAuth = authservice.createAuthMiddleware({
+  loginPath: '/services/authservice/views/login.html',  // Custom login page
+  saveReferer: true                                      // Track original URL
 });
 ```
 
