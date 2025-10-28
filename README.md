@@ -1,6 +1,6 @@
 # nooblyjs-core
 
-**Version:** 1.0.14+
+**Version:** 1.0.9
 **License:** ISC
 **Repository:** https://github.com/nooblyjs/nooblyjs-core
 
@@ -490,7 +490,7 @@ console.log('Total tokens:', analytics.totalTokens);
 
 ## Enterprise Architecture with API Providers
 
-**NEW in v1.0.14+:** All 13 services support the `'api'` provider type, enabling enterprise client-server architectures.
+All 13 services support the `'api'` provider type, enabling enterprise client-server architectures.
 
 ### What are API Providers?
 
@@ -631,12 +631,11 @@ npm run dev:web   # Start with nodemon (auto-reload)
 ### Available Web Interfaces
 
 The development server provides web dashboards at:
-- `/` - Glass theme UI (default)
-- `/flat` - Flat design UI
-- `/material` - Material design UI
-- `/minimalist` - Minimalist UI
-- `/shadcn` - Shadcn-inspired UI
-- `/services/` - Service management dashboard
+- `/` - Service management dashboard (default theme)
+- `/services/` - Main service management interface
+- `/services/{service}/` - Individual service dashboards
+
+Multiple UI themes available for customization
 
 ### Development Scripts
 
@@ -680,13 +679,12 @@ All 13 services have comprehensive unit tests covering:
 
 ### Comprehensive Guides
 
-- **[Usage Guide](docs/nooblyjs-core-usage-guide.md)** - Complete usage documentation (4,670 lines)
-- **[Quick Reference](docs/nooblyjs-core-usage-guide-concise.md)** - Concise guide for AI/developers (1,303 lines)
-- **[Requirements](docs/nooblyjs-core-requirements-document.md)** - Product requirements document
-- **[Dependency Architecture](. agent/architecture/nooblyjs-core-dependency-architecture.md)** - Service dependency system
-- **[Enhancement Recommendations](.agent/architecture/nooblyjs-core-enhancement-recommendations.md)** - Roadmap and priorities
-- **[Refactoring Plan](docs/refactoring-plan.md)** - Code organization guidelines
-- **[Token Analysis](docs/TOKEN-ANALYSIS-SUMMARY.md)** - Codebase metrics
+- **[Usage Guide](docs/nooblyjs-core-usage-guide.md)** - Complete usage documentation for all services
+- **[Quick Reference](docs/nooblyjs-core-usage-guide-concise.md)** - Concise guide for developers and AI assistants
+- **[Requirements Document](docs/nooblyjs-core-requirements-document.md)** - Product requirements and feature specifications
+- **[Dependency Architecture](docs/architecture/nooblyjs-core-dependency-architecture.md)** - Service dependency system and 4-level hierarchy
+- **[Enhancement Recommendations](docs/architecture/nooblyjs-core-enhancement-recommendations.md)** - Roadmap and implementation priorities
+- **[Refactoring Analysis](docs/refactoring/token-analysis-report.json)** - Code metrics and analysis reports
 
 ### Project Documentation
 
@@ -700,10 +698,10 @@ All 13 services have comprehensive unit tests covering:
 npm run analyze-tokens
 
 # View analysis report
-cat token-analysis-report.json
+cat docs/refactoring/token-analysis-report.json
 
-# View refactoring recommendations
-cat docs/refactoring-plan.md
+# View token counts by file
+cat token-analysis-report.json
 ```
 
 ---
@@ -828,27 +826,41 @@ DATA_DIR=./data
 ```
 nooblyjs-core/
 ├── index.js                    # ServiceRegistry singleton
-├── app.js                      # Sample application
-├── src/
-│   ├── caching/               # Caching service
-│   ├── filing/                # Filing service
-│   ├── dataservice/           # Data service
-│   ├── logging/               # Logging service
-│   ├── queueing/              # Queueing service
-│   ├── working/               # Working service
-│   ├── measuring/             # Measuring service
-│   ├── scheduling/            # Scheduling service
-│   ├── searching/             # Searching service
-│   ├── workflow/              # Workflow service
-│   ├── notifying/             # Notifying service
-│   ├── authservice/           # Auth service
-│   └── aiservice/             # AI service
-├── tests/                     # Unit tests
-├── tests-load/                # Load tests
-├── tests-api/                 # API tests (.http files)
-├── docs/                      # Documentation
-├── scripts/                   # Utility scripts
-└── ui-design/                 # Web UI themes
+├── app.js                      # Main application with all services
+├── package.json                # Dependencies and scripts
+├── README.md                   # This documentation
+├── CLAUDE.md                   # Claude AI assistant guidance
+├── GEMINI.md                   # Gemini AI assistant guidance
+├── public/                     # Public landing page and assets
+├── src/                        # Source code (13 services)
+│   ├── caching/               # Caching service (memory, redis, memcached, file, api)
+│   ├── filing/                # Filing service (local, ftp, s3, git, gcp, api)
+│   ├── dataservice/           # Data service (memory, file, mongodb, documentdb, api)
+│   ├── logging/               # Logging service (memory, file, api)
+│   ├── queueing/              # Queueing service (memory, api)
+│   ├── working/               # Working service (memory, api)
+│   ├── measuring/             # Measuring service (memory, api)
+│   ├── scheduling/            # Scheduling service (memory, api)
+│   ├── searching/             # Searching service (memory, file, api)
+│   ├── workflow/              # Workflow service (memory, api)
+│   ├── notifying/             # Notifying service (memory, api)
+│   ├── authservice/           # Auth service (memory, file, passport, google, api)
+│   └── aiservice/             # AI service (claude, chatgpt, ollama, api)
+├── tests/
+│   ├── unit/                  # Jest unit tests by service
+│   ├── load/                  # Load testing scripts
+│   ├── api/                   # API test files (.http format)
+│   ├── activities/            # Activity-based integration tests
+│   └── app/
+│       ├── apps/              # Individual service demo applications
+│       └── app-wiki/          # Full-featured wiki application
+├── docs/                      # Comprehensive documentation
+│   ├── refactoring/           # Analysis reports and refactoring plans
+│   └── todo/                  # Feature tracking and bug reports
+├── scripts/                   # Utility scripts (token analysis, etc)
+└── .noobly-core/              # Runtime data directory
+    ├── logs/                  # Application log files
+    └── data/                  # Persistent data storage
 ```
 
 ---
@@ -888,14 +900,19 @@ ISC License - See [LICENSE](LICENSE) file for details
 
 ## Version History
 
-**v1.0.14+** (Current)
+**v1.0.9** (Current)
 - All 13 services with API provider support
-- Enterprise architecture capabilities
-- Comprehensive documentation
-- Token analysis tooling
-- 4-level dependency hierarchy
+- Enterprise architecture with API providers for distributed systems
+- Enhanced service routes and REST API endpoints for all services
+- Improved test applications (wiki app, lite app, auth app)
+- Refactored authentication middleware with role-based access control
+- Enhanced AI service with improved prompt analytics
+- Comprehensive documentation and examples
+- Token analysis tooling with detailed reports
+- 4-level dependency hierarchy with automatic dependency resolution
 - AI service integration (Claude, GPT-4, Ollama)
-- Full test coverage
+- Full unit, load, and API test coverage
+- Multiple UI themes for service management dashboard
 
 ---
 
