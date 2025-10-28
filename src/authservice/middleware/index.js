@@ -8,9 +8,11 @@
 const apiKey = require('./apiKey');
 const services = require('./services');
 const passport = require('./passport');
+const authenticate = require('./authenticate');
 
 module.exports = {
   ...apiKey,
   ...services,
-  ...passport
+  ...passport,
+  ...authenticate
 };

@@ -13,7 +13,7 @@
 const AIClaude = require('./provider/aiclaude');
 const AIOpenAI = require('./provider/aiopenai');
 const AIOllama = require('./provider/aiollama');
-const AIApi = require('./provider/aiApi');
+const AIApi = require('./provider/aiapi');
 
 // Analytics Object
 const Analytics = require('./modules/analytics');
