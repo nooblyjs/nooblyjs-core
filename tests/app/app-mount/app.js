@@ -7,7 +7,6 @@
 
 const express = require('express');
 const http = require('http');
-
 const EventEmitter = require('events');
 const path = require('path');
 

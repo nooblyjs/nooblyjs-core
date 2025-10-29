@@ -83,19 +83,16 @@ function createApplication(type, options, eventEmitter) {
 module.exports = createApplication;
 
 /**
- * Mount the files
- * @param {string} path 
- * @param {*} name 
- * @param {*} app 
- * @param {*} serviceRegistry 
- * @param {*} eventEmitter 
- * @param {*} baseUrl 
+ * Mount the files and pass the requires settings to those applications
+ * @param {*} servicepath 
+ * @param {*} type 
  * @param {*} options 
+ * @param {*} eventEmitter 
+ * @returns 
  */
 function mountFiles(servicepath, type, options, eventEmitter) {
     var filesMounted = false;
-    const files = fs.readdirSync(servicepath);
-    files.forEach(file => {
+    (fs.readdirSync(servicepath)).forEach(file => {
         if (path.extname(file) === '.js') {
             const MountedFile = require(path.join(servicepath ,file));
             MountedFile(type, options, eventEmitter);

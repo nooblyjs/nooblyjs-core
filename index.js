@@ -252,6 +252,7 @@ class ServiceRegistry {
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('queueing', ['logging']);
     this.serviceDependencies.set('appservice', ['logging']);
+    this.serviceDependencies.set('fetching', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
     this.serviceDependencies.set('dataservice', ['logging', 'filing']);
@@ -350,7 +351,8 @@ class ServiceRegistry {
       'workflow': 'memory',
       'notifying': 'memory',
       'authservice': 'file',
-      'aiservice': 'claude'
+      'aiservice': 'claude',
+      'fetching': 'node'
     };
 
     return defaultProviders[serviceName] || 'memory';
@@ -561,6 +563,18 @@ class ServiceRegistry {
   }
 
   /**
+   * Get the fetching service
+   * @param {string} providerType - 'node' or 'axios'
+   * @param {Object} options - Provider-specific options
+   * @param {number} options.cacheTime - Default cache duration in seconds (default: 60)
+   * @param {number} options.timeout - Request timeout in milliseconds (default: 30000)
+   * @returns {Object} Fetching service instance
+   */
+  fetching(providerType = 'node', options = {}) {
+    return this.getService('fetching', providerType, options);
+  }
+
+  /**
    * Get the AI service
    * @param {string} providerType - 'claude', 'chatgpt', or 'ollama'
    * @param {Object} options - Provider-specific options
@@ -650,7 +664,4 @@ class ServiceRegistry {
   }
 }
 
-// Export singleton instance
-const serviceRegistry = new ServiceRegistry();
-
-module.exports = serviceRegistry;
+module.exports = new ServiceRegistry();

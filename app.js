@@ -90,6 +90,7 @@ const measuring = serviceRegistry.measuring('memory');
 const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
+const fetching = serviceRegistry.fetching('node');
 
 /* configure ai provider
 const aiprovider = '';
