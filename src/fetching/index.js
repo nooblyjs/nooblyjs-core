@@ -12,7 +12,9 @@
 const FetchingNode = require('./providers/fetchingnode');
 const FetchingAxios = require('./providers/fetchingaxios');
 const FetchingAnalytics = require('./modules/analytics');
+
 const Routes = require('./routes');
+const Views = require('./views');
 
 /**
  * Creates a fetching service instance with the specified provider and dependency injection.
@@ -75,6 +77,7 @@ function createFetching(type, options, eventEmitter) {
 
   // Initialize routes for the fetching service
   Routes(options, eventEmitter, fetching);
+  Views(options, eventEmitter, fetching);
 
   return fetching;
 }
