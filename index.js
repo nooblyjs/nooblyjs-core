@@ -313,7 +313,6 @@ class ServiceRegistry {
       const serviceFactory = require(`${__dirname}/src/${serviceName}`);
       service = serviceFactory(providerType, mergedOptions, this.eventEmitter);
     } catch (error) {
-      console.error(error);
       throw new Error(
         `Failed to create service '${serviceName}' with provider '${providerType}': ${error.message}`,
       );
@@ -654,13 +653,17 @@ class ServiceRegistry {
     this.initialized = false;
   }
 
- debug_emitter(emitter, name) {
-    var orig_emit = emitter.emit;
-    emitter.emit = function() {
-        var emitArgs = arguments;
-        console.log(emitArgs);
-        orig_emit.apply(emitter, arguments);
-    }
+  /**
+   * Debug helper to log all emitter events (for development purposes)
+   * @param {EventEmitter} emitter - The event emitter to debug
+   * @param {string} name - Name identifier for the emitter
+   * @private
+   */
+  _debugEmitter(emitter, name) {
+    const originalEmit = emitter.emit;
+    emitter.emit = function(...args) {
+      originalEmit.apply(emitter, args);
+    };
   }
 }
 

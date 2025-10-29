@@ -89,10 +89,9 @@ class WorkerManager {
    * @return {Promise<void>} A promise that resolves when settings are saved.
    */
   async saveSettings(settings) {
-    for (let i = 0; i < this.settings.list.length; i++) {
-      if (settings[this.settings.list[i].setting] != null) {
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+    for (const { setting } of this.settings.list) {
+      if (settings[setting] != null) {
+        this.settings[setting] = settings[setting];
       }
     }
   }
@@ -297,7 +296,6 @@ class WorkerManager {
                 await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
               }
             } catch (err) {
-              console.error('Error adding task to result queue:', err);
               if (this.eventEmitter_)
                 this.eventEmitter_.emit('worker:queue:error', {
                   taskId: task.id,
@@ -311,7 +309,6 @@ class WorkerManager {
             try {
               task.completionCallback(message.status, message.data);
             } catch (err) {
-              console.error('Error in completion callback:', err);
               if (this.eventEmitter_)
                 this.eventEmitter_.emit('worker:callback:error', {
                   taskId: task.id,
@@ -327,8 +324,6 @@ class WorkerManager {
     });
 
     worker.on('error', async (err) => {
-      console.error('Worker error:', err);
-
       const taskResult = {
         taskId: task.id,
         scriptPath: task.scriptPath,
@@ -347,7 +342,6 @@ class WorkerManager {
         try {
           await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
         } catch (queueErr) {
-          console.error('Error adding task to error queue:', queueErr);
           if (this.eventEmitter_)
             this.eventEmitter_.emit('worker:queue:error', {
               taskId: task.id,
@@ -367,7 +361,11 @@ class WorkerManager {
         try {
           task.completionCallback('error', err.message);
         } catch (callbackErr) {
-          console.error('Error in completion callback:', callbackErr);
+          if (this.eventEmitter_)
+            this.eventEmitter_.emit('worker:callback:error', {
+              taskId: task.id,
+              error: callbackErr.message
+            });
         }
       }
 
@@ -379,7 +377,6 @@ class WorkerManager {
       const taskInHistory = this.taskHistory_.get(task.id);
       if (code !== 0 && (!taskInHistory || taskInHistory.status !== 'completed')) {
         const errorMsg = `Worker exited with code ${code}`;
-        console.error(errorMsg);
 
         // Only store if not already in history (error handler may have already stored it)
         if (!taskInHistory) {
@@ -400,7 +397,6 @@ class WorkerManager {
             try {
               await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
             } catch (queueErr) {
-              console.error('Error adding task to error queue:', queueErr);
               if (this.eventEmitter_)
                 this.eventEmitter_.emit('worker:queue:error', {
                   taskId: task.id,
@@ -413,7 +409,11 @@ class WorkerManager {
             try {
               task.completionCallback('error', errorMsg);
             } catch (err) {
-              console.error('Error in completion callback:', err);
+              if (this.eventEmitter_)
+                this.eventEmitter_.emit('worker:callback:error', {
+                  taskId: task.id,
+                  error: err.message
+                });
             }
           }
         }

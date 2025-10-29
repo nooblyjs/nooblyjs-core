@@ -52,13 +52,12 @@ let generatedDevApiKey = null;
 if (configuredApiKeys.length === 0 && process.env.NODE_ENV !== 'production') {
   generatedDevApiKey = serviceRegistry.generateApiKey();
   configuredApiKeys.push(generatedDevApiKey);
-  console.warn('[NooblyJS] Generated development API key. Set NOOBLY_API_KEYS to override this value.');
 }
 
 // Instantiate the options
-var options = { 
-  logDir:  path.join(__dirname, './.noobly-core/', 'logs'),
-  dataDir : path.join(__dirname, './.noobly-core/', 'data'),
+const options = {
+  logDir: path.join(__dirname, './.noobly-core/', 'logs'),
+  dataDir: path.join(__dirname, './.noobly-core/', 'data'),
   apiKeys: configuredApiKeys,
   requireApiKey: configuredApiKeys.length > 0,
   excludePaths: [
@@ -70,18 +69,13 @@ var options = {
   ]
 };
 
-/* add a claude api key
-if (process.env.ai-provider  == 'claude' && process.env.apikey ){
-  this.settings.apikey = options.process.env.apikey;
-}
-  */
-
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter, options);
 
+// Initialize all services
 const log = serviceRegistry.logger('file');
 const cache = serviceRegistry.cache('inmemory');
-const dataservice = serviceRegistry.dataService('file');
+const dataService = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
 const queue = serviceRegistry.queue('memory');
 const scheduling = serviceRegistry.scheduling('memory');
@@ -91,14 +85,6 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 const fetching = serviceRegistry.fetching('node');
-
-/* configure ai provider
-const aiprovider = '';
-if (process.env.ai-provider  == 'claude' && process.env.apikey ){
-  aiprovider = process.env.ai-provider
-}
-const aiservice = serviceRegistry.aiservice();
-*/
 
 // Implement Auth Service
 const authservice = serviceRegistry.authservice('file');

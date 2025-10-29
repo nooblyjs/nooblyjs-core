@@ -21,28 +21,32 @@ class Queueing {
    * @param {EventEmitter=} eventEmitter Optional event emitter for queue events.
    */
   constructor(options, eventEmitter) {
-    this.settings = {};
-    this.settings.desciption = "There are no settings defined for the in memory queue"
+    this.settings = {
+      description: 'There are no settings defined for the in memory queue',
+      list: []
+    };
 
     this.queues_ = new Map();
     this.eventEmitter_ = eventEmitter;
   }
 
-    /**
+  /**
    * Get all our settings
+   * @returns {Promise<Object>} The current settings object.
    */
-  async getSettings(){
+  async getSettings() {
     return this.settings;
   }
 
   /**
    * Set all our settings
+   * @param {Object} settings The new settings to save.
+   * @returns {Promise<void>}
    */
-  async saveSettings(settings){
-    for (var i=0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
-        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+  async saveSettings(settings) {
+    for (const { setting } of this.settings.list) {
+      if (settings[setting] != null) {
+        this.settings[setting] = settings[setting];
       }
     }
   }

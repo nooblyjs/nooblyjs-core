@@ -15,7 +15,7 @@ const os = require('os');
  * Provides methods for logging info, warning, and error messages to the console.
  * @class
  */
-class logging {
+class Logging {
 
   /**
    * Initializes the console logger.
@@ -23,33 +23,35 @@ class logging {
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options, eventEmitter) {
-    this.settings = {};
-    this.settings.desciption = "The only setting that is needed is the minloglevel"
-     this.settings.list = [
-      {setting: "minLogLevel", type: "list", values : ['error', 'warn', 'info', 'log']}
-    ];
+    this.settings = {
+      description: 'The only setting that is needed is the minloglevel',
+      list: [
+        { setting: 'minLogLevel', type: 'list', values: ['error', 'warn', 'info', 'log'] }
+      ]
+    };
     this.eventEmitter_ = eventEmitter;
-    if (options && options.log){
-      this.settings.minLogLevel = options.log.level || 'info';
-      console.log(this.settings.minLogLevel);
+    if (options?.log?.level) {
+      this.settings.minLogLevel = options.log.level;
     }
   }
 
-    /**
+  /**
    * Get all our settings
+   * @returns {Promise<Object>} The current settings object.
    */
-  async getSettings(){
+  async getSettings() {
     return this.settings;
   }
 
   /**
    * Set all our settings
+   * @param {Object} settings The new settings to save.
+   * @returns {Promise<void>}
    */
-  async saveSettings(settings){
-    for (var i=0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
-        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+  async saveSettings(settings) {
+    for (const { setting } of this.settings.list) {
+      if (settings[setting] != null) {
+        this.settings[setting] = settings[setting];
       }
     }
   }
@@ -183,4 +185,4 @@ class logging {
 
 }
 
-module.exports = logging;
+module.exports = Logging;
