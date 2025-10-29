@@ -36,7 +36,7 @@ function createApplication(type, options, eventEmitter) {
 
     // Determine if the services folder and index file exists and load it
     if (fs.existsSync('./src/services/')) {
-        if (mountFiles('./src/services/',  type, options, eventEmitter)){
+        if (mountFiles(path.resolve('./src/services/'),  type, options, eventEmitter)){
             logger.info('[APPSERVICE:DEFAULT] - services structure loaded')
         }
     }
@@ -57,7 +57,7 @@ function createApplication(type, options, eventEmitter) {
 
     // Determine if views folder and index file exists and load it else if there us a index.html then server the folder statically
     if (fs.existsSync('./src/views/')) {
-        if (mountFiles('./src/views/', type, options, eventEmitter)){
+        if (mountFiles(path.resolve('./src/views/'), type, options, eventEmitter)){
             logger.info('[APPSERVICE:DEFAULT] - Views structures loaded')
         } else if (fs.existsSync('./src/views/index.html')) {
             app.use(options.baseUrl, express.static('./src/views/'));
@@ -67,7 +67,7 @@ function createApplication(type, options, eventEmitter) {
 
     // Determine if activites folder and index file exists and load it
     if (fs.existsSync('./src/activities/index.js')) {
-        if (mountFiles('./src/activities/', type, options, eventEmitter)){
+        if (mountFiles(path.resolve('./src/activities/'), type, options, eventEmitter)){
             logger.info('[APPSERVICE:DEFAULT] - activities structures loaded')
         }
     }
@@ -95,7 +95,6 @@ function mountFiles(servicepath, type, options, eventEmitter) {
     const files = fs.readdirSync(servicepath);
     files.forEach(file => {
         if (path.extname(file) === '.js') {
-            console.log(path.join(servicepath ,file));
             const MountedFile = require(path.join(servicepath ,file));
             MountedFile(type, options, eventEmitter);
             filesMounted = true;
