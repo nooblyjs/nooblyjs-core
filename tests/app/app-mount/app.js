@@ -17,13 +17,9 @@ app.use(express.json());
 
 // Add options
 var options = { 
+  baseUrl: "/testapp",
   logDir:  path.join(__dirname, './.app-lite/', 'logs'),
-  dataDir : path.join(__dirname, './.app-lite/', 'data'),
-  'express-app': app,
-    brandingConfig: {
-      appName: 'App Lite',
-      primaryColor: '#000'
-    }
+  dataDir : path.join(__dirname, './.app-lite/', 'data')
 };
 
 // Declare the Event Emitter
@@ -42,11 +38,8 @@ const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
-const structure = require('../../../src/structuring')
-structure.mount(app, serviceRegistry, eventEmitter, '/testapp/', options)
-
-// Expose the public folder
-app.use('/', express.static(__dirname + '/public'));
+// Launch the application service
+const appService = serviceRegistry.appservice();
 
 app.listen(process.env.PORT || 3102, async () => {
   logger.info('Server running on port ' + (process.env.PORT || 3102));

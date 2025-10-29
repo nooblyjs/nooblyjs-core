@@ -251,6 +251,7 @@ class ServiceRegistry {
     this.serviceDependencies.set('filing', ['logging']);
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('queueing', ['logging']);
+    this.serviceDependencies.set('appservice', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
     this.serviceDependencies.set('dataservice', ['logging', 'filing']);
@@ -311,6 +312,7 @@ class ServiceRegistry {
       const serviceFactory = require(`${__dirname}/src/${serviceName}`);
       service = serviceFactory(providerType, mergedOptions, this.eventEmitter);
     } catch (error) {
+      console.error(error);
       throw new Error(
         `Failed to create service '${serviceName}' with provider '${providerType}': ${error.message}`,
       );
@@ -593,6 +595,16 @@ class ServiceRegistry {
       providerType = this.getDefaultProviderType('authservice');
     }
     return this.getService('authservice', providerType, options);
+  }
+  
+  /**
+   * Get the app service
+   * @param {string} providerType - 'file', 'memory', 'passport', or 'google'
+   * @param {Object} options - Provider-specific options
+   * @returns {Object} Auth service instance
+   */
+  appservice(providerType, options = {}) {
+    return this.getService('appservice', providerType, options);
   }
 
   /**
