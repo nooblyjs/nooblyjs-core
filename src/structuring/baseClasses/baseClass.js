@@ -20,8 +20,6 @@ class BaseClass {
    * @param {object} app // The express app to use   
    */
   constructor(app, serviceRegistry, eventEmitter,baseUrl ,options) {
-    
-    // store the passed varibles
     this.app = app;
     this.serviceRegistry = serviceRegistry;
     this.eventEmitter = eventEmitter;
@@ -30,4 +28,4 @@ class BaseClass {
   }
 }
 
-module.exports = ViewClass;
+module.exports = BaseClass;

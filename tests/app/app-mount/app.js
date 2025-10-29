@@ -42,9 +42,8 @@ const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
-// Initiate the content Registry
-const wiki = require('nooblyjs-app-wiki');
-wiki(app, server, eventEmitter, serviceRegistry, options);
+const structure = require('../../../src/structuring')
+structure.mount(app, serviceRegistry, eventEmitter, '/testapp/', options)
 
 // Expose the public folder
 app.use('/', express.static(__dirname + '/public'));
