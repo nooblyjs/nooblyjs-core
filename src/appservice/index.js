@@ -23,6 +23,8 @@ const express = require('express');
  */
 function createApplication(type, options, eventEmitter) {
 
+    const logprefx = `[APPSERVICE:${type}]`
+
     // set some defaults for options
     options.name = options.name || 'Application';
     options.baseUrl = options.baseUrl || '/';
@@ -32,50 +34,50 @@ function createApplication(type, options, eventEmitter) {
     const logger = dependencies.logging;
 
     // Determine where we are working
-    logger.info(`[APPSERVICE:DEFAULT] - ${options.name} current working: ${process.cwd()}`);
+    logger.info(`${logprefx} Application service ${options.name} current working directory is ${process.cwd()}`);
 
     // Determine if the services folder and index file exists and load it
     if (fs.existsSync('./src/services/')) {
         if (mountFiles(path.resolve('./src/services/'),  type, options, eventEmitter)){
-            logger.info('[APPSERVICE:DEFAULT] - services structure loaded')
+            logger.info(`${logprefx} Application service structure loaded`)
         }
     }
 
     // Determine if the data folder and index file exists and load it
     if (fs.existsSync('./src/data/')) {
         if (mountFiles(path.resolve('./src/data/'), type, options, eventEmitter)){
-            logger.info('[APPSERVICE:DEFAULT] - data structures loaded')
+            logger.info(`${logprefx} Application service data structures loaded`)
         }
     }
 
     // Determine if routes folder and index file exists and load it
     if (fs.existsSync('./src/routes/')) {
         if (mountFiles(path.resolve('./src/routes/'), type, options, eventEmitter)){
-            logger.info('[APPSERVICE:DEFAULT] - routes structures loaded')
+            logger.info(`${logprefx} Application service routes structures loaded`)
         }
     }
 
     // Determine if views folder and index file exists and load it else if there us a index.html then server the folder statically
     if (fs.existsSync('./src/views/')) {
         if (mountFiles(path.resolve('./src/views/'), type, options, eventEmitter)){
-            logger.info('[APPSERVICE:DEFAULT] - Views structures loaded')
+            logger.info(`${logprefx} Application service views structures loaded`)
         } else if (fs.existsSync('./src/views/index.html')) {
             app.use(options.baseUrl, express.static('./src/views/'));
-            logger.info('[APPSERVICE:DEFAULT] - Views static data loaded on ' + options.baseUrl)
+            logger.info(`${logprefx} Application service static views data loaded on ${options.baseUrl}`)
         }
     } 
 
     // Determine if activites folder and index file exists and load it
     if (fs.existsSync('./src/activities/index.js')) {
         if (mountFiles(path.resolve('./src/activities/'), type, options, eventEmitter)){
-            logger.info('[APPSERVICE:DEFAULT] - activities structures loaded')
+            logger.info(`${logprefx} Application service structures loaded`)
         }
     }
 
     // Determine if we have a public folder in the route and load the base styles
     if (fs.existsSync('./public/styles.css')) {
         app.use('/base.css', express.static('./public/styles.css'));
-        logger.info('[APPSERVICE:DEFAULT] - base styles loaded')
+        logger.info(`${logprefx} Application service base styles loaded`)
     }
 };
 module.exports = createApplication;

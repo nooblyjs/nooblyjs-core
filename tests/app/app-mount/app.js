@@ -18,6 +18,7 @@ app.use(express.json());
 // Add options
 var options = { 
   baseUrl: "/",
+  name: "Mounted Application",
   logDir:  path.join(__dirname, './.app-lite/', 'logs'),
   dataDir : path.join(__dirname, './.app-lite/', 'data')
 };
