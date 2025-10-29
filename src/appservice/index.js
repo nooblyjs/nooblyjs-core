@@ -23,9 +23,11 @@ const express = require('express');
  */
 function createApplication(type, options, eventEmitter) {
 
+    // set some defaults for options
     options.name = options.name || 'Application';
     options.baseUrl = options.baseUrl || '/';
 
+    const app = options['express-app'];
     const { dependencies = {}, ...providerOptions } = options;
     const logger = dependencies.logging;
 
@@ -58,8 +60,8 @@ function createApplication(type, options, eventEmitter) {
         if (mountFiles('./src/views/', type, options, eventEmitter)){
             logger.info('[APPSERVICE:DEFAULT] - Views structures loaded')
         } else if (fs.existsSync('./src/views/index.html')) {
-            options.use(options.baseUrl, express.static('./src/views/'));
-            logger.info('[APPSERVICE:DEFAULT] - Views static data loaded on ' + baseUrl)
+            app.use(options.baseUrl, express.static('./src/views/'));
+            logger.info('[APPSERVICE:DEFAULT] - Views static data loaded on ' + options.baseUrl)
         }
     } 
 
@@ -72,7 +74,7 @@ function createApplication(type, options, eventEmitter) {
 
     // Determine if we have a public folder in the route and load the base styles
     if (fs.existsSync('./public/styles.css')) {
-        options.use('/base.css', express.static('./public/styles.css'));
+        app.use('/base.css', express.static('./public/styles.css'));
         logger.info('[APPSERVICE:DEFAULT] - base styles loaded')
     }
 };

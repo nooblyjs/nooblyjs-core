@@ -17,7 +17,7 @@ app.use(express.json());
 
 // Add options
 var options = { 
-  baseUrl: "/testapp",
+  baseUrl: "/",
   logDir:  path.join(__dirname, './.app-lite/', 'logs'),
   dataDir : path.join(__dirname, './.app-lite/', 'data')
 };

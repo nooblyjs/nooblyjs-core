@@ -18,9 +18,10 @@
  */
 function createRoutes(type, options, eventEmitter)   {
  
-    console.log(options);
-    return;
-
+    const app = options['express-app'];
+    if (!options.baseUrl.endsWith('/')){
+      options.baseUrl = options.baseUrl + '/';
+    }    
     /**
      * GET /services/caching/api/status
      * Returns the operational status of the caching service.
@@ -29,9 +30,9 @@ function createRoutes(type, options, eventEmitter)   {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get(`${baseUrl}/api/status`, (req, res) => {
-      eventEmitter.emit(`${name}-application-status`, `${name} api running`);
-      res.status(200).json(`${name} api running`);
+    app.get(`${options.baseUrl}api/status`, (req, res) => {
+      eventEmitter.emit(`${options.name}-application-status`, `${options.name} api running`);
+      res.status(200).json(`${options.name} api running`);
     });
 
 };
