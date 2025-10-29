@@ -170,7 +170,7 @@ app.listen(process.env.PORT || 3101, async () => {
   };
 
   // Schedule the fetch test to run every 60 seconds (1 minute)
-  setInterval(runFetchTest, 60000);
+  setInterval(runFetchTest, 10000);
 
   // Run immediately on startup for testing
   await runFetchTest();

@@ -9,6 +9,7 @@ const NooblyNavigation = {
         { name: 'authservice', icon: 'bi-lock-fill', title: 'Authentication', path: 'authservice' },
         { name: 'logging', icon: 'bi-journal-text', title: 'Logging', path: 'logging' },
         { name: 'caching', icon: 'bi-server', title: 'Caching', path: 'caching' },
+        { name: 'fetching', icon: 'bi-globe', title: 'Fetching', path: 'fetching' },
         { name: 'queueing', icon: 'bi-list-task', title: 'Queues', path: 'queueing' },
         { name: 'filing', icon: 'bi-folder-fill', title: 'File Management', path: 'filing' },
         { name: 'working', icon: 'bi-gear-fill', title: 'Worker Tasks', path: 'working' },
