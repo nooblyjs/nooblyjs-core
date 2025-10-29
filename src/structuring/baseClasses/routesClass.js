@@ -21,12 +21,12 @@ class ViewClass extends BaseClass {
    * @param {object} app // The express app to use   
    */
   constructor() {
-    super(name, app, serviceRegistry, eventEmitter,baseUrl ,options)
+    super(app, serviceRegistry, eventEmitter,baseUrl ,options)
 
-    // Should the index.html file exist then mount the folder
-    if (fs.existsSync('./src/views/index.html')) {
-      app.use(`${baseUrl}`, express.static('./src/views'));
-    }
+    app.get(`${baseUrl}/api/status`, (req, res) => {
+      eventEmitter.emit('application-status', 'caching api running');
+      res.status(200).json('caching api running');
+    });
 
   }
 }
