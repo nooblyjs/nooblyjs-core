@@ -4,9 +4,17 @@
  */
 'use strict';
 
+// Imports
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+
+// Base classes 
+const appViewBase = require('./baseClasses/appViewBase.js');
+const appRouteBase = require('./baseClasses/appRouteBase.js');
+const appWorkerBase = require('./baseClasses/appWorkerBase.js');
+const appServiceBase = require('./baseClasses/appServiceBase.js');
+const appDataBase = require('./baseClasses/appDataBase.js');
 
 /**
  * Creates a cache service instance with the specified provider and dependency injection.
@@ -21,7 +29,7 @@ const express = require('express');
  * @return {Application} Cache service instance with specified provider
  * @throws {Error} When unsupported cache type is provided
  */
-function createApplication(type, options, eventEmitter) {
+module. exports = function(type, options, eventEmitter) {
 
     const logprefx = `[APPSERVICE:${type}]`
 
@@ -79,8 +87,18 @@ function createApplication(type, options, eventEmitter) {
         app.use('/base.css', express.static('./public/styles.css'));
         logger.info(`${logprefx} Application service base styles loaded`)
     }
+
+
+    var baseClasses = {    
+        appViewBase,
+        appRouteBase,
+        appWorkerBase,
+        appServiceBase,
+        appDataBase
+    };
+
+    return baseClasses;
 };
-module.exports = createApplication;
 
 /**
  * Mount the files and pass the requires settings to those applications
@@ -101,5 +119,3 @@ function mountFiles(servicepath, type, options, eventEmitter) {
     });
     return filesMounted;
 }
-
-

@@ -88,28 +88,20 @@ const fetching = serviceRegistry.fetching('node');
 
 // Implement Auth Service
 const authservice = serviceRegistry.authservice('file');
-const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
-configurePassport(passport);
+//const { configurePassport } = authservice.passportConfigurator(authservice.getAuthStrategy);
+//configurePassport(passport);
 
-// Show generated api-key
+/* Show generated api-key
 if (generatedDevApiKey) {
   log.warn('Development API key generated automatically for local testing', {
     keyPrefix: `${generatedDevApiKey.slice(0, 6)}...`
   });
 }
-
-//Implement Auth Middleware
-const apiAuthMiddleware = serviceRegistry.authMiddleware || ((req, res, next) => next());
+*/
 
 // Expose the public folder
 app.use('/', express.static(__dirname + '/public'));
 
 app.listen(process.env.PORT || 3001, () => {
-  log.info(`Server is running on port ${process.env.PORT || 3001}`);
-
-  // Add some things to services
-  cache.put('currentdate', new Date());
-  log.info(cache.get('currentdate'));
-  queue.enqueue(new Date());
-
+  log.warn(`Server is running on port ${process.env.PORT || 3001}`);
 });

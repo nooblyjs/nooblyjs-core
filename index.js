@@ -313,6 +313,7 @@ class ServiceRegistry {
       const serviceFactory = require(`${__dirname}/src/${serviceName}`);
       service = serviceFactory(providerType, mergedOptions, this.eventEmitter);
     } catch (error) {
+      console.error(error)
       throw new Error(
         `Failed to create service '${serviceName}' with provider '${providerType}': ${error.message}`,
       );
