@@ -84,14 +84,16 @@ app.listen(3000);
 
 ## Service Registry Quick Reference
 
-### All 13 Services with Method Signatures
+### All 15 Services with Method Signatures
 
 | Service | Method | Providers | Key Dependencies |
 |---------|--------|-----------|------------------|
 | **aiservice** | `serviceRegistry.aiservice(provider, options)` | `claude`, `chatgpt`, `ollama`, `api` | logging, caching, workflow, queueing |
+| **appservice** | `serviceRegistry.appservice(type, options)` | `type-based` | logging |
 | **authservice** | `serviceRegistry.authservice(provider, options)` | `file`, `memory`, `passport`, `google`, `api` | logging, caching, dataservice |
 | **caching** | `serviceRegistry.cache(provider, options)` | `memory`, `inmemory`, `redis`, `memcached`, `file`, `api` | logging |
 | **dataservice** | `serviceRegistry.dataService(provider, options)` | `memory`, `file`, `simpledb`, `mongodb`, `documentdb`, `api` | logging, filing |
+| **fetching** | `serviceRegistry.fetching(provider, options)` | `node`, `axios`, `api` | logging |
 | **filing** | `serviceRegistry.filing(provider, options)` or `.filer()` | `local`, `ftp`, `s3`, `git`, `gcp`, `sync`, `api` | logging |
 | **logging** | `serviceRegistry.logger(provider, options)` | `memory`, `file`, `api` | none (foundation) |
 | **measuring** | `serviceRegistry.measuring(provider, options)` | `memory`, `api` | logging, queueing, caching |
@@ -105,10 +107,10 @@ app.listen(3000);
 ### Service Dependency Hierarchy (Initialization Order)
 
 **Level 0 - Foundation**: logging
-**Level 1 - Infrastructure**: caching, filing, queueing
+**Level 1 - Infrastructure**: caching, filing, queueing, fetching
 **Level 2 - Business Logic**: dataservice, working, measuring
 **Level 3 - Application**: scheduling, searching, workflow
-**Level 4 - Integration**: notifying, authservice, aiservice
+**Level 4 - Integration**: notifying, authservice, aiservice, appservice
 
 ## Common Provider Options
 
@@ -187,6 +189,28 @@ serviceRegistry.aiservice('ollama', {
 });
 ```
 
+### Fetching Service
+```javascript
+// Node.js native fetch provider
+serviceRegistry.fetching('node', {
+  cacheTime: 60,       // Default cache duration
+  timeout: 30000       // Request timeout
+});
+
+// Axios provider
+serviceRegistry.fetching('axios', {
+  timeout: 10000
+});
+
+// Usage examples
+const fetching = serviceRegistry.fetching('node');
+await fetching.fetch('https://api.example.com/data');
+await fetching.fetch('https://api.example.com/data', {
+  cache: 'force-cache'
+});
+const analytics = fetching.getAnalytics();
+```
+
 ### Authentication Service
 ```javascript
 // File provider (recommended for production)
@@ -205,6 +229,27 @@ serviceRegistry.authservice('google', {
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: '/auth/google/callback'
 });
+```
+
+### App Service
+```javascript
+// Basic setup
+const appService = serviceRegistry.appservice('basic', {
+  name: 'MyApp',
+  baseUrl: '/app',
+  'express-app': app,
+  dependencies: { logging: logger }
+});
+
+// Returns base classes
+const { appViewBase, appRouteBase, appServiceBase, appDataBase, appWorkerBase } = appService;
+
+// Auto-loads from src/ directory structure:
+// src/services/  → Custom services
+// src/routes/    → Custom routes
+// src/data/      → Data models
+// src/views/     → HTML views or view modules
+// src/activities/ → Background workers
 ```
 
 ## REST API Reference
@@ -395,6 +440,45 @@ GET /services/ai/api/analytics
 # Status
 GET /services/ai/api/status
 ```
+
+### Fetching API
+
+```bash
+# Fetch URL with options
+POST /services/fetching/api/fetch
+{"url": "https://api.example.com/data", "options": {...}}
+
+# Simple GET fetch (URL as base64)
+GET /services/fetching/api/fetch/:base64_url
+
+# Get fetch analytics
+GET /services/fetching/api/analytics
+
+# Get fetch history/list
+GET /services/fetching/api/list
+
+# Get service settings
+GET /services/fetching/api/settings
+
+# Update settings
+POST /services/fetching/api/settings
+{"cacheTime": 300, "timeout": 60000}
+
+# Clear fetch cache
+DELETE /services/fetching/api/cache
+
+# Status check (no auth required)
+GET /services/fetching/api/status
+```
+
+### App Service
+
+The App Service doesn't expose REST endpoints directly. Instead, it:
+- Auto-loads and mounts all files from `src/` directories
+- Registers custom routes from `src/routes/`
+- Serves static views from `src/views/`
+- Initializes services and data models automatically
+- Returns base classes for extending functionality
 
 ## Implementation Patterns for Common Use Cases
 
@@ -1588,6 +1672,17 @@ const response = await aiservice.prompt(prompt, {maxTokens, temperature});
 await auth.registerUser(username, password, email, roles);
 const result = await auth.authenticateUser(username, password);
 const user = await auth.getUserByUsername(username);
+
+// Fetching Service
+const fetching = serviceRegistry.fetching('node');
+const response = await fetching.fetch('https://api.example.com/data');
+const response2 = await fetching.fetch('https://api.example.com/data', {cache: 'force-cache'});
+const analytics = fetching.getAnalytics();
+
+// App Service
+const appService = serviceRegistry.appservice('basic', options);
+const { appViewBase, appRouteBase, appServiceBase, appDataBase, appWorkerBase } = appService;
+// Auto-loads: src/services/, src/routes/, src/data/, src/views/, src/activities/
 ```
 
 ### Environment Variables Template

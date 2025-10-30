@@ -8,7 +8,7 @@
 
 ## Overview
 
-**nooblyjs-core** is a comprehensive, modular Node.js backend framework that provides **13 enterprise-grade services** through a unified Service Registry architecture. Built for scalability and flexibility, it supports multiple provider backends (memory, Redis, MongoDB, S3, Claude AI, etc.) and enables both monolithic and distributed microservices architectures.
+**nooblyjs-core** is a comprehensive, modular Node.js backend framework that provides **15 enterprise-grade services** through a unified Service Registry architecture. Built for scalability and flexibility, it supports multiple provider backends (memory, Redis, MongoDB, S3, Claude AI, etc.) and enables both monolithic and distributed microservices architectures.
 
 **Key Features:**
 - 🏗️ **Service Registry Pattern** - Singleton services with automatic dependency injection
@@ -18,7 +18,7 @@
 - 📊 **Real-time Analytics** - Built-in monitoring and metrics for caching and queueing
 - 🎨 **Web Dashboards** - Service management UIs with 5 themes
 - 🤖 **AI Integration** - Claude 3.5, GPT-4, and Ollama support with token tracking
-- 📝 **Auto-generated APIs** - RESTful endpoints for all 13 services
+- 📝 **Auto-generated APIs** - RESTful endpoints for all 15 services
 - 🔄 **4-Level Dependency Hierarchy** - Automatic service dependency resolution
 - 🧪 **Comprehensive Testing** - Unit, load, and API tests included
 
@@ -158,7 +158,7 @@ app.listen(3001);
 
 ---
 
-## All 13 Services
+## All 15 Services
 
 NooblyJS Core provides a complete suite of backend services organized in a 4-level dependency hierarchy:
 
@@ -168,6 +168,7 @@ NooblyJS Core provides a complete suite of backend services organized in a 4-lev
 | **1** | 🗃️ Caching | High-performance caching | memory, redis, memcached, file, api |
 | **1** | 📁 Filing | File management | local, ftp, s3, git, gcp, api |
 | **1** | 🚀 Queueing | Task queuing | memory, api |
+| **1** | 🌐 Fetching | HTTP fetching & caching | node, axios, api |
 | **2** | 📊 DataService | Key-value storage | memory, mongodb, documentdb, simpledb, file, api |
 | **2** | ⚙️ Working | Background tasks | memory, api |
 | **2** | 📈 Measuring | Metrics collection | memory, api |
@@ -177,6 +178,7 @@ NooblyJS Core provides a complete suite of backend services organized in a 4-lev
 | **4** | 🔔 Notifying | Pub/sub messaging | memory, api |
 | **4** | 🔐 AuthService | Authentication | memory, passport, google, file, api |
 | **4** | 🤖 AIService | LLM integration | claude, chatgpt, ollama, api |
+| **4** | 🏗️ AppService | Application structure & scaffolding | type-based, api |
 
 **Dependency Hierarchy:** Level 0 has no dependencies. Each higher level can depend on services from lower levels. The Service Registry automatically resolves all dependencies.
 
@@ -560,6 +562,8 @@ app.listen(3000);  // Frontend on port 3000
 - ✅ Notifying
 - ✅ AuthService
 - ✅ AIService
+- ✅ Fetching
+- ✅ AppService
 
 ---
 
@@ -614,6 +618,22 @@ All services expose RESTful APIs at `/services/{service}/api/*`:
 - `POST   /services/aiservice/api/chat` - Send chat message to LLM
 - `GET    /services/aiservice/api/analytics` - Get usage analytics
 - `GET    /services/aiservice/api/status` - Get service status
+
+### Fetching API
+- `POST   /services/fetching/api/fetch` - Fetch URL with options (method, headers, cache control)
+- `GET    /services/fetching/api/fetch/:url` - Simple GET fetch (URL as base64)
+- `GET    /services/fetching/api/status` - Get service status
+- `GET    /services/fetching/api/analytics` - Get fetch analytics
+- `GET    /services/fetching/api/list` - Get fetch history
+- `GET    /services/fetching/api/settings` - Get fetching settings
+- `POST   /services/fetching/api/settings` - Update fetching settings
+- `DELETE /services/fetching/api/cache` - Clear fetch cache
+
+### AppService
+- Dynamic routing based on application structure
+- Automatically loads views, routes, services, and data structures from filesystem
+- Auto-generated REST APIs for custom application endpoints
+- Provides base classes for rapid application development
 
 *See full API documentation in [`docs/nooblyjs-core-usage-guide.md`](docs/nooblyjs-core-usage-guide.md)*
 

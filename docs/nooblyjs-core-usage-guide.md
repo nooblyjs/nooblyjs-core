@@ -342,7 +342,7 @@ eventEmitter.on('ai:usage', (data) => {
 });
 ```
 
-### All 13 Services Overview
+### All 15 Services Overview
 
 | # | Service | Method | Purpose | Best Providers |
 |---|---------|--------|---------|----------------|
@@ -350,15 +350,17 @@ eventEmitter.on('ai:usage', (data) => {
 | 2 | **Caching** | `.cache(provider, options)` | High-performance key-value caching with TTL | `redis`, `memcached`, `memory`, `api` |
 | 3 | **Filing** | `.filing(provider, options)` | File upload/download/management | `s3`, `local`, `gcp`, `git`, `api` |
 | 4 | **Queueing** | `.queue(provider, options)` | FIFO task queue management | `memory`, `api` |
-| 5 | **DataService** | `.dataService(provider, options)` | UUID-based JSON document storage | `mongodb`, `file`, `memory`, `api` |
-| 6 | **Working** | `.working(provider, options)` | Background task execution with worker threads | `memory`, `api` |
-| 7 | **Measuring** | `.measuring(provider, options)` | Metrics collection and aggregation | `memory`, `api` |
-| 8 | **Scheduling** | `.scheduling(provider, options)` | Cron-like task scheduling | `memory` |
-| 9 | **Searching** | `.searching(provider, options)` | Full-text search and indexing | `memory`, `file`, `api` |
-| 10 | **Workflow** | `.workflow(provider, options)` | Multi-step workflow orchestration | `memory`, `api` |
-| 11 | **Notifying** | `.notifying(provider, options)` | Pub/sub messaging system | `memory`, `api` |
-| 12 | **Auth Service** | `.authservice(provider, options)` | User authentication, RBAC, OAuth | `file`, `passport`, `google`, `api` |
-| 13 | **AI Service** | `.aiservice(provider, options)` | LLM integration with analytics | `claude`, `chatgpt`, `ollama`, `api` |
+| 5 | **Fetching** | `.fetching(provider, options)` | HTTP fetching with caching and deduplication | `node`, `axios`, `api` |
+| 6 | **DataService** | `.dataService(provider, options)` | UUID-based JSON document storage | `mongodb`, `file`, `memory`, `api` |
+| 7 | **Working** | `.working(provider, options)` | Background task execution with worker threads | `memory`, `api` |
+| 8 | **Measuring** | `.measuring(provider, options)` | Metrics collection and aggregation | `memory`, `api` |
+| 9 | **Scheduling** | `.scheduling(provider, options)` | Cron-like task scheduling | `memory` |
+| 10 | **Searching** | `.searching(provider, options)` | Full-text search and indexing | `memory`, `file`, `api` |
+| 11 | **Workflow** | `.workflow(provider, options)` | Multi-step workflow orchestration | `memory`, `api` |
+| 12 | **Notifying** | `.notifying(provider, options)` | Pub/sub messaging system | `memory`, `api` |
+| 13 | **Auth Service** | `.authservice(provider, options)` | User authentication, RBAC, OAuth | `file`, `passport`, `google`, `api` |
+| 14 | **AI Service** | `.aiservice(provider, options)` | LLM integration with analytics | `claude`, `chatgpt`, `ollama`, `api` |
+| 15 | **App Service** | `.appservice(type, options)` | Application structure and scaffolding | `type-based` |
 
 ### Dependency Hierarchy
 
@@ -371,6 +373,7 @@ Services are organized in a 4-level hierarchy. Lower-level services have no depe
 - **Caching** - Depends on: `logging`
 - **Filing** - Depends on: `logging`
 - **Queueing** - Depends on: `logging`
+- **Fetching** - Depends on: `logging`
 
 #### **Level 2: Business Logic** (Depend on Infrastructure)
 - **DataService** - Depends on: `logging`, `filing`
@@ -386,6 +389,7 @@ Services are organized in a 4-level hierarchy. Lower-level services have no depe
 - **Notifying** - Depends on: `logging`, `queueing`, `scheduling`
 - **Auth Service** - Depends on: `logging`, `caching`, `dataservice`
 - **AI Service** - Depends on: `logging`, `caching`, `workflow`, `queueing`
+- **App Service** - Depends on: `logging` (loads application structure and scaffolding)
 
 **Why This Matters:**
 - Dependencies are injected automatically in the correct order
@@ -4654,6 +4658,263 @@ const cache = serviceRegistry.cache('redis', {
   commandTimeout: 5000
 });
 ```
+
+---
+
+## Fetching Service
+
+### Overview
+
+The Fetching Service provides HTTP fetching capabilities with built-in caching, request deduplication, and comprehensive analytics. It supports both Node.js native fetch API and Axios providers, following the NextJS fetch specification for advanced cache control.
+
+### Basic Usage
+
+```javascript
+const fetching = serviceRegistry.fetching('node'); // or 'axios'
+
+// Simple fetch
+const response = await fetching.fetch('https://api.example.com/data');
+console.log(response.status, response.data);
+
+// Fetch with options
+const response = await fetching.fetch('https://api.example.com/users', {
+  method: 'GET',
+  headers: { 'Authorization': 'Bearer token' },
+  cache: 'force-cache'
+});
+```
+
+### Cache Control Options
+
+```javascript
+// Default caching (follows cache headers)
+await fetching.fetch('https://api.example.com/data');
+
+// Force cache - use cached response if available
+await fetching.fetch('https://api.example.com/data', {
+  cache: 'force-cache'
+});
+
+// No cache - always fetch fresh
+await fetching.fetch('https://api.example.com/data', {
+  cache: 'no-cache'
+});
+
+// No store - don't cache the response
+await fetching.fetch('https://api.example.com/data', {
+  cache: 'no-store'
+});
+
+// Revalidate after time period (NextJS style)
+await fetching.fetch('https://api.example.com/data', {
+  next: { revalidate: 60 }
+});
+
+// Cache with tags for grouped invalidation
+await fetching.fetch('https://api.example.com/data', {
+  next: { tags: ['api-data', 'products'] }
+});
+```
+
+### Request Deduplication
+
+The Fetching Service automatically deduplicates concurrent requests to the same URL:
+
+```javascript
+// Both will use the same request
+const promise1 = fetching.fetch('https://api.example.com/data');
+const promise2 = fetching.fetch('https://api.example.com/data');
+const [result1, result2] = await Promise.all([promise1, promise2]);
+// Only one actual HTTP request made!
+```
+
+### Analytics & Monitoring
+
+```javascript
+// Get fetch statistics
+const analytics = fetching.getAnalytics();
+
+// Get URL distribution (top URLs fetched)
+const topUrls = fetching.analytics.getUrlDistribution(10);
+
+// Get fetch timeline
+const timeline = fetching.analytics.getTimeline(20);
+
+// Get error statistics
+const topErrors = fetching.analytics.getTopErrors(10);
+
+// Clear cache
+await fetching.clear();
+```
+
+### REST API
+
+```bash
+# Fetch with options
+POST /services/fetching/api/fetch
+{
+  "url": "https://api.example.com/data",
+  "options": {"method": "GET", "cache": "force-cache"}
+}
+
+# Simple GET fetch
+GET /services/fetching/api/fetch/:base64_url
+
+# Get analytics
+GET /services/fetching/api/analytics
+
+# Clear cache
+DELETE /services/fetching/api/cache
+```
+
+---
+
+## App Service
+
+### Overview
+
+The App Service provides application scaffolding and automatic structure loading. It enables rapid development by automatically discovering and initializing application components from a conventional directory structure.
+
+### Basic Setup
+
+```javascript
+const appService = serviceRegistry.appservice('basic', {
+  name: 'MyApp',
+  baseUrl: '/app',
+  'express-app': app,
+  dependencies: { logging: logger }
+});
+
+// Returns base classes for extending
+const {
+  appViewBase,
+  appRouteBase,
+  appServiceBase,
+  appDataBase,
+  appWorkerBase
+} = appService;
+```
+
+### Auto-Loading Structure
+
+Create your application in this structure and App Service will auto-load everything:
+
+```
+src/
+├── services/          # Custom service modules
+├── routes/            # Custom route handlers
+├── data/              # Data models
+├── views/             # Static HTML or view modules
+└── activities/        # Background workers
+```
+
+### Creating Services
+
+Create `src/services/example-service.js`:
+
+```javascript
+module.exports = (type, options, eventEmitter) => {
+  const { appServiceBase } = require('./base-classes');
+
+  class ExampleService extends appServiceBase {
+    async process(data) {
+      this.app.logger.info('Processing:', data);
+      return { processed: true };
+    }
+  }
+
+  return new ExampleService();
+};
+```
+
+### Creating Routes
+
+Create `src/routes/api-routes.js`:
+
+```javascript
+module.exports = (type, options, eventEmitter) => {
+  const app = options['express-app'];
+
+  app.get('/api/example', (req, res) => {
+    res.json({ message: 'Hello from example route' });
+  });
+};
+```
+
+### Creating Data Models
+
+Create `src/data/user-data.js`:
+
+```javascript
+module.exports = (type, options, eventEmitter) => {
+  const { appDataBase } = require('./base-classes');
+  const dataService = options.dependencies.dataservice;
+
+  class UserData extends appDataBase {
+    async createUser(userData) {
+      const uuid = await dataService.add('users', userData);
+      return uuid;
+    }
+
+    async getUser(uuid) {
+      return await dataService.getByUuid('users', uuid);
+    }
+  }
+
+  return new UserData();
+};
+```
+
+### Complete Example
+
+```javascript
+// app.js
+const express = require('express');
+const serviceRegistry = require('noobly-core');
+
+const app = express();
+app.use(express.json());
+
+serviceRegistry.initialize(app);
+
+// App Service loads everything from src/
+const appService = serviceRegistry.appservice('basic', {
+  name: 'MyApplication',
+  baseUrl: '/app',
+  'express-app': app,
+  dependencies: {
+    logging: serviceRegistry.logger('file'),
+    dataservice: serviceRegistry.dataService('file')
+  }
+});
+
+app.listen(3000);
+```
+
+### Directory Structure
+
+```
+project/
+├── app.js
+├── src/
+│   ├── services/
+│   │   └── user-service.js
+│   ├── data/
+│   │   └── user-model.js
+│   ├── routes/
+│   │   └── api.js
+│   └── views/
+│       └── index.html
+└── package.json
+```
+
+### Benefits
+
+- Convention over configuration
+- Automatic discovery and initialization
+- Clear separation of concerns
+- Scalable application structure
+- Easy to test and maintain
 
 ---
 

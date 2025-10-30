@@ -60,7 +60,7 @@
       }
     ],
     "services": {
-      "title": "13 Core Services",
+      "title": "15 Core Services",
       "description": "Complete backend toolkit with integrated services across all layers of application architecture",
       "items": [
         {
@@ -90,6 +90,13 @@
           "title": "Queueing Service",
           "href": "/services/queueing",
           "description": "FIFO task queuing for background operations with in-memory and API providers. Monitor queue size and async task handling."
+        },
+        {
+          "badge": "<i class=\"bi bi-globe\"></i> Network",
+          "badgeType": "default",
+          "title": "Fetching Service",
+          "href": "/services/fetching",
+          "description": "HTTP fetching with advanced caching, deduplication, and analytics. Supports Node.js native fetch and Axios providers with NextJS fetch specification compliance."
         },
         {
           "badge": "<i class=\"bi bi-database\"></i> Storage",
@@ -153,18 +160,25 @@
           "title": "AI Service",
           "href": "/services/aiservice",
           "description": "LLM integration with Claude, ChatGPT, and Ollama. Prompt management, streaming responses, and AI-powered analytics."
+        },
+        {
+          "badge": "<i class=\"bi bi-diagram-3\"></i> Structure",
+          "badgeType": "secondary",
+          "title": "App Service",
+          "href": "/services/appservice",
+          "description": "Application scaffolding and structure management. Auto-loads views, routes, services, and data structures. Provides base classes for rapid development."
         }
       ]
     },
     "testimonial": {
-      "text": "NooblyJS Core's modular architecture and dependency injection have completely transformed how we build backend services. What used to require extensive boilerplate now takes minutes. The 13 integrated services with multiple provider options give us the flexibility we need without the complexity.",
+      "text": "NooblyJS Core's modular architecture and dependency injection have completely transformed how we build backend services. What used to require extensive boilerplate now takes minutes. The 15 integrated services with multiple provider options give us the flexibility we need without the complexity.",
       "author": "— Enterprise Developer"
     },
     "footer": {
       "about": {
         "title": "About NooblyJS Core",
-        "description": "A comprehensive modular Node.js backend framework providing 13+ integrated services with automatic dependency injection, singleton pattern implementation, and pluggable providers for every layer of application architecture.",
-        "techStack": ["Node.js", "Express", "ServiceRegistry Pattern", "Dependency Injection", "Redis", "MongoDB", "AWS S3"]
+        "description": "A comprehensive modular Node.js backend framework providing 15 integrated services with automatic dependency injection, singleton pattern implementation, and pluggable providers for every layer of application architecture.",
+        "techStack": ["Node.js", "Express", "ServiceRegistry Pattern", "Dependency Injection", "Redis", "MongoDB", "AWS S3", "HTTP Fetching", "App Scaffolding"]
       },
       "quickLinks": [
         { "text": "Home", "href": "index.html" },
@@ -289,12 +303,28 @@
           "href": "queueing.html",
           "description": "FIFO task queueing for background job processing.",
           "code": "const queue = serviceRegistry.queue('memory');\nqueue.add('email_task', { to: 'user@example.com' });\nconst task = await queue.process();"
+        },
+        {
+          "badge": "<i class=\"bi bi-globe\"></i> Network",
+          "badgeType": "default",
+          "title": "Fetching Service",
+          "href": "fetching.html",
+          "description": "HTTP fetching with caching, deduplication, and analytics. Supports Node.js native fetch and Axios providers.",
+          "code": "const fetching = serviceRegistry.fetching('node');\nconst response = await fetching.fetch('https://api.example.com/data');\nconst analytics = fetching.getAnalytics();"
+        },
+        {
+          "badge": "<i class=\"bi bi-diagram-3\"></i> Structure",
+          "badgeType": "secondary",
+          "title": "App Service",
+          "href": "appservice.html",
+          "description": "Application scaffolding with auto-loading of views, routes, services, and data structures.",
+          "code": "const appService = serviceRegistry.appservice('basic', options);\n// Auto-loads from src/views/, src/routes/, src/services/, src/data/"
         }
       ]
     },
     "apiReference": {
       "title": "API Reference",
-      "description": "Complete API documentation for all 13 services and core framework",
+      "description": "Complete API documentation for all 15 services and core framework",
       "coreFramework": {
         "title": "Service Registry Core Methods",
         "code": "const serviceRegistry = require('noobly-core');\n\n// Initialize the service registry (REQUIRED - must be first)\nserviceRegistry.initialize(app, eventEmitter, options);\n\n// Get service instances by method name\nconst cache = serviceRegistry.cache(provider, options);\nconst logger = serviceRegistry.logger(provider, options);\nconst dataService = serviceRegistry.dataService(provider, options);\nconst auth = serviceRegistry.authservice(provider, options);\nconst queue = serviceRegistry.queue(provider, options);\nconst notify = serviceRegistry.notifying(provider, options);\n\n// All services auto-register Express routes at /services/{service}/api/*\n// Access service management UI at /services/ (requires authentication)"
