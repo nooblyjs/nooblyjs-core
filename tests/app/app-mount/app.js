@@ -19,7 +19,16 @@ var options = {
   baseUrl: "/",
   name: "Mounted Application",
   logDir:  path.join(__dirname, './.app-lite/', 'logs'),
-  dataDir : path.join(__dirname, './.app-lite/', 'data')
+  dataDir : path.join(__dirname, './.app-lite/', 'data'),
+   security: {
+    apiKeyAuth: {
+      requireApiKey: false,
+      apiKeys: []
+    },
+    servicesAuth: {
+      requireLogin: false
+    }
+  }
 };
 
 // Declare the Event Emitter
