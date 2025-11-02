@@ -13,24 +13,27 @@
 /**
  * A class that captures and stores log entries for analytics.
  * Maintains a rolling buffer of the last 1000 log entries.
+ * Supports instance-aware event tracking for multi-instance logging.
  * @class
  */
 class LogAnalytics {
   /**
    * Initializes the log analytics module.
    * @param {EventEmitter} eventEmitter - Event emitter to listen for log events.
+   * @param {string} instanceName - The instance name this analytics module tracks (default: 'default').
    */
-  constructor(eventEmitter) {
+  constructor(eventEmitter, instanceName = 'default') {
     this.MAX_LOGS_ = 1000;
     this.logs_ = [];
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = instanceName;
 
     // Set up event listeners for different log levels
     this.initializeListeners_();
   }
 
   /**
-   * Initializes event listeners for all log levels.
+   * Initializes event listeners for all log levels with instance awareness.
    * @private
    */
   initializeListeners_() {
@@ -38,23 +41,28 @@ class LogAnalytics {
       return;
     }
 
+    const infoEventName = `log:info:${this.instanceName_}`;
+    const warnEventName = `log:warn:${this.instanceName_}`;
+    const errorEventName = `log:error:${this.instanceName_}`;
+    const logEventName = `log:log:${this.instanceName_}`;
+
     // Listen for info logs
-    this.eventEmitter_.on('log:info', (data) => {
+    this.eventEmitter_.on(infoEventName, (data) => {
       this.captureLog_('INFO', data.message);
     });
 
     // Listen for warning logs
-    this.eventEmitter_.on('log:warn', (data) => {
+    this.eventEmitter_.on(warnEventName, (data) => {
       this.captureLog_('WARN', data.message);
     });
 
     // Listen for error logs
-    this.eventEmitter_.on('log:error', (data) => {
+    this.eventEmitter_.on(errorEventName, (data) => {
       this.captureLog_('ERROR', data.message);
     });
 
     // Listen for generic logs
-    this.eventEmitter_.on('log:log', (data) => {
+    this.eventEmitter_.on(logEventName, (data) => {
       this.captureLog_('LOG', data.message);
     });
   }

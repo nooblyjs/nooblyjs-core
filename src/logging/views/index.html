@@ -683,8 +683,23 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Logging Management</h1>
-                <p class="page-subtitle">Submit and manage log entries</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+                    <div>
+                        <h1 class="page-title">Logging Management</h1>
+                        <p class="page-subtitle">Submit and manage log entries</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div>
+                            <label for="instanceSelector" style="margin-right: 8px; font-weight: 500;">Instance:</label>
+                            <select id="instanceSelector" class="form-select" style="width: 200px; display: inline-block;">
+                                <option value="default">default</option>
+                            </select>
+                        </div>
+                        <button id="refreshInstanceBtn" class="btn btn-sm btn-outline-primary" title="Refresh instances list">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="alert alert-success" id="successAlert">

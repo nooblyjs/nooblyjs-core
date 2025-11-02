@@ -31,7 +31,8 @@ function createLogger(type, options, eventEmitter) {
   // Initialize analytics module to capture logs
   let analytics = null;
   if (eventEmitter) {
-    analytics = new LogAnalytics(eventEmitter);
+    const instanceName = (options && options.instanceName) || 'default';
+    analytics = new LogAnalytics(eventEmitter, instanceName);
   }
 
   // Create logger instance based on provider type

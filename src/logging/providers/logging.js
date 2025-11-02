@@ -19,7 +19,7 @@ class Logging {
 
   /**
    * Initializes the console logger.
-   * @param {Object=} options Configuration options (unused in this implementation).
+   * @param {Object=} options Configuration options (includes instanceName for multi-instance support).
    * @param {EventEmitter=} eventEmitter Optional event emitter for log events.
    */
   constructor(options, eventEmitter) {
@@ -30,6 +30,7 @@ class Logging {
       ]
     };
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
     if (options?.log?.level) {
       this.settings.minLogLevel = options.log.level;
     }
@@ -122,8 +123,10 @@ class Logging {
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - INFO - ${device} - ${formattedMessage}`;
     console.log(logMessage);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('log:info', { message: logMessage });
+    if (this.eventEmitter_) {
+      const eventName = `log:info:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { message: logMessage });
+    }
   }
 
   /**
@@ -141,8 +144,10 @@ class Logging {
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - WARN - ${device} - ${formattedMessage}`;
     console.warn(logMessage);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('log:warn', { message: logMessage });
+    if (this.eventEmitter_) {
+      const eventName = `log:warn:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { message: logMessage });
+    }
   }
 
   /**
@@ -160,8 +165,10 @@ class Logging {
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - ERROR - ${device} - ${formattedMessage}`;
     console.error(logMessage);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('log:error', { message: logMessage });
+    if (this.eventEmitter_) {
+      const eventName = `log:error:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { message: logMessage });
+    }
   }
 
   /**
@@ -179,8 +186,10 @@ class Logging {
     const formattedMessage = this.formatMessage_(message, meta);
     const logMessage = `${timestamp} - ${device} - ${formattedMessage}`;
     console.log(logMessage);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('log:log', { message: logMessage });
+    if (this.eventEmitter_) {
+      const eventName = `log:log:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { message: logMessage });
+    }
   }
 
 }

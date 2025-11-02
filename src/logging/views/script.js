@@ -61,6 +61,58 @@
             }
         }
 
+        // Instance selection state
+        let selectedInstance = 'default';
+
+        // Instance management functions
+        async function loadAvailableInstances() {
+            try {
+                const response = await fetch('/services/logging/api/instances');
+                if (!response.ok) {
+                    console.error('Failed to fetch instances');
+                    return;
+                }
+                const data = await response.json();
+                if (data.instances && Array.isArray(data.instances)) {
+                    updateInstanceSelector(data.instances);
+                }
+            } catch (error) {
+                console.error('Error loading instances:', error);
+            }
+        }
+
+        function updateInstanceSelector(instances) {
+            const selector = document.getElementById('instanceSelector');
+            const currentValue = selector.value;
+
+            // Clear existing options
+            selector.innerHTML = '';
+
+            // Add instances as options
+            instances.forEach(instance => {
+                const option = document.createElement('option');
+                option.value = instance.name;
+                option.textContent = `${instance.name}${instance.name === 'default' ? ' (default)' : ''}`;
+                selector.appendChild(option);
+            });
+
+            // Restore previously selected instance if it still exists
+            if (instances.some(i => i.name === currentValue)) {
+                selector.value = currentValue;
+            } else {
+                selector.value = 'default';
+                selectedInstance = 'default';
+            }
+        }
+
+        function buildInstanceUrl(basePath) {
+            if (selectedInstance === 'default') {
+                return basePath;
+            }
+            // Insert instance name after /api/ in the path
+            return basePath.replace('/services/logging/api/', `/services/logging/api/${selectedInstance}/`);
+        }
+
         // Utility functions
         function showAlert(message, type = 'success') {
             const alertElement = document.getElementById(type + 'Alert');
@@ -88,18 +140,21 @@
 
         // API functions
         async function makeRequest(url, method = 'GET', body = null) {
+            // Make URL instance-aware
+            const instanceAwareUrl = buildInstanceUrl(url);
+
             const options = {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
                 }
             };
-            
+
             if (body) {
                 options.body = JSON.stringify(body);
             }
-            
-            const response = await fetch(url, options);
+
+            const response = await fetch(instanceAwareUrl, options);
             const contentType = response.headers.get('content-type');
             
             if (contentType && contentType.includes('application/json')) {
@@ -156,7 +211,8 @@
         // Fetch statistics from analytics API
         async function fetchStats() {
             try {
-                const response = await fetch('/services/logging/api/stats');
+                const statsUrl = buildInstanceUrl('/services/logging/api/stats');
+                const response = await fetch(statsUrl);
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -196,7 +252,8 @@
         // Fetch timeline from analytics API
         async function fetchTimeline() {
             try {
-                const response = await fetch('/services/logging/api/timeline');
+                const timelineUrl = buildInstanceUrl('/services/logging/api/timeline');
+                const response = await fetch(timelineUrl);
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -931,9 +988,23 @@
             loadSettings();
         });
 
+        // Instance selector handlers
+        document.getElementById('instanceSelector')?.addEventListener('change', function (e) {
+            selectedInstance = this.value;
+            // Reload stats and timeline when instance changes
+            loadStats();
+            loadTimeline();
+        });
+
+        document.getElementById('refreshInstanceBtn')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            loadAvailableInstances();
+        });
+
         // Initialize Swagger UI
         window.onload = function() {
             checkStatus();
+            loadAvailableInstances();
             try {
             checkStatus();
                 const ui = SwaggerUIBundle({

@@ -21,13 +21,13 @@ This document outlines the complete service dependency architecture for **noobly
 ### Architecture Summary
 
 ```
-Level 4: Integration Services    (aiservice, authservice, notifying)
+Level 4: Integration Services    (aiservice, authservice)
             ↓
 Level 3: Application Services    (workflow, searching, scheduling, filing)
             ↓
 Level 2: Business Logic Services (working, measuring, dataservice)
             ↓
-Level 1: Infrastructure Services (caching queueing)
+Level 1: Infrastructure Services (caching, queueing, notifying)
             ↓
 Level 0: Foundation Services     (logging)
 ```
@@ -52,13 +52,13 @@ This architecture transforms nooblyjs-core from a collection of isolated service
 - **Logging** - Fundamental logging capabilities
 
 ### **Level 1: Infrastructure Services** (Depend on Logging)
-*Core infrastructure that uses logging for operations tracking*
+*Core infrastructure that uses logging for operations tracking and provides event-driven capabilities*
 
 ```
- ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
- │   Filing    │  │   Caching   │  │  Queueing   │
- │  (Storage)  │  │   (Cache)   │  │  (Queues)   │
- └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+ ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
+ │   Caching    │  │  Queueing   │  │  Notifying   │
+ │  (Cache)     │  │  (Queues)   │  │  (EventBus)  │
+ └──────┬───────┘  └──────┬──────┘  └──────┬───────┘
         │                │                │
         └────────────────┼────────────────┘
                          │
@@ -69,14 +69,15 @@ This architecture transforms nooblyjs-core from a collection of isolated service
 ```
 
 **Services:**
-- **Filing** - File system operations (depends on: logging)
 - **Caching** - Caching system operations (depends on: logging)
 - **Queueing** - Queueing operations (depends on: logging)
+- **Notifying** - Pub/sub event bus for inter-service communication (depends on: logging)
 
 **Characteristics:**
 - Use logging for operation tracking and debugging
 - Provide essential infrastructure capabilities
 - Can use external libraries and logging service
+- Notifying service enables event-driven patterns throughout higher-level services
 
 ---
 
@@ -92,7 +93,7 @@ This architecture transforms nooblyjs-core from a collection of isolated service
         ┌────────┴──────┐    ┌────┴────┬──────────┴──────┐
         │               │    │         │                 │
 ┌───────▼───────┐ ┌─────▼─────┐ ┌─────▼─────┐  ┌────────▼────────┐
-│    Logging    │ │   Filing  │ │  Logging  │  │  Logging        │
+│    Logging    │ │  Queueing │ │  Logging  │  │  Logging        │
 │   (Level 0)   │ │ (Level 1) │ │ (Level 0) │  │  (Level 0)      │
 └───────────────┘ └───────────┘ └───────────┘  └─────────────────┘
                                 ┌─────▼─────┐  ┌────────▼────────┐
@@ -106,7 +107,7 @@ This architecture transforms nooblyjs-core from a collection of isolated service
 ```
 
 **Services:**
-- **Dataservice** - Uses logging and filing for data persistence (depends on: logging, filing)
+- **Dataservice** - Uses logging and queueing for data persistence (depends on: logging, queueing)
 - **Working** - Uses logging, queueing, caching for job execution (depends on: logging, queueing, caching)
 - **Measuring** - Metrics collection with logging, queueing, caching (depends on: logging, queueing, caching)
 
@@ -130,17 +131,17 @@ await working.execute(scriptPath, args);
 *Services that orchestrate complex operations using business logic*
 
 ```
-        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-        │ Scheduling  │  │  Searching  │  │  Workflow   │
-        │             │  │             │  │             │
-        └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-               │                │                │
-     ┌─────────┴──┐    ┌────────┴────────┬───────┴────────┬─────────┐
-     │            │    │                 │                │         │
-┌────▼────┐ ┌────▼────┐ ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐ ┌──▼──────┐
-│ Logging │ │ Working │ │ Logging     │ │ Caching │ │Datasrvc │ │ Logging │
-│(Level 0)│ │(Level 2)│ │ (Level 0)   │ │(Level 1)│ │(Level 2)│ │(Level 0)│
-└─────────┘ └─────────┘ └─────────────┘ └─────────┘ └─────────┘ └─────────┘
+        ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+        │ Scheduling  │  │  Searching  │  │  Workflow   │  │   Filing    │
+        │             │  │             │  │             │  │  (Storage)  │
+        └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+               │                │                │                │
+     ┌─────────┴──┐    ┌────────┴────────┬───────┴────────┬─────────┬───────────┐
+     │            │    │                 │                │         │           │
+┌────▼────┐ ┌────▼────┐ ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐ ┌──▼──────┐ ┌──▼──────┐
+│ Logging │ │ Working │ │ Logging     │ │ Caching │ │Datasrvc │ │ Logging │ │ Logging │
+│(Level 0)│ │(Level 2)│ │ (Level 0)   │ │(Level 1)│ │(Level 2)│ │(Level 0)│ │(Level 0)│
+└─────────┘ └─────────┘ └─────────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘
                          ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐
                          │  Queueing   │ │ Working │ │Queueing │
                          │  (Level 1)  │ │(Level 2)│ │(Level 1)│
@@ -156,6 +157,7 @@ await working.execute(scriptPath, args);
 - **Scheduling** - Task scheduling with logging and working (depends on: logging, working)
 - **Searching** - Full-text search with logging, caching, dataservice, queueing, working, scheduling (depends on: logging, caching, dataservice, queueing, working, scheduling)
 - **Workflow** - Multi-step workflows with logging, queueing, scheduling, measuring, working (depends on: logging, queueing, scheduling, measuring, working)
+- **Filing** - File system operations with logging, queueing, and dataservice for metadata (depends on: logging, queueing, dataservice)
 
 **Example Usage:**
 ```javascript
@@ -195,22 +197,21 @@ class EnhancedQueue {
 *High-level services that provide user-facing functionality*
 
 ```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Notifying  │  │ Authservice │  │  AIService  │
-│             │  │             │  │             │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-       │                │                │
-  ┌────┴───┬─────┐  ┌───┴────┬────┐  ┌──┴────┬──────┬─────────┐
-  │        │     │  │        │    │  │       │      │         │
-┌─▼──┐ ┌──▼──┐ ┌▼──┐ ┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌───▼────┐ ┌──▼──┐
-│Log │ │Queue│ │Sch │ │ Log │ │Cache│ │Data │ │ Log │ │ Cache  │ │Wflow│ │Queue│
-│(L0)│ │(L1) │ │(L3)│ │(L0) │ │(L1) │ │(L2) │ │(L0) │ │  (L1)  │ │(L3) │ │(L1) │
-└────┘ └─────┘ └────┘ └─────┘ └─────┘ └─────┘ └─────┘ └────────┘ └─────┘ └─────┘
+┌──────────────┐  ┌─────────────┐
+│ Authservice  │  │  AIService  │
+│              │  │             │
+└──────┬───────┘  └──────┬──────┘
+       │                 │
+   ┌───┴────┬────┐   ┌───┴────┬──────┬───────────┬─────────┐
+   │        │    │   │        │      │           │         │
+┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌──▼──┐ ┌───▼────┐ ┌───▼────┐ ┌──▼──┐
+│ Log │ │Cache│ │Data │ │ Log │ │ Cache  │ │Workflow│ │Queue│
+│(L0) │ │(L1) │ │(L2) │ │(L0) │ │  (L1)  │ │  (L3)  │ │(L1) │
+└─────┘ └─────┘ └─────┘ └─────┘ └────────┘ └────────┘ └─────┘
 ```
 
 **Services:**
 
-- **Notifying** - Pub/sub notifications with logging, queueing, scheduling (depends on: logging, queueing, scheduling)
 - **Authservice** - Authentication/authorization with logging, caching, dataservice (depends on: logging, caching, dataservice)
 - **AIService** - LLM integration with logging, caching, workflow, queueing (depends on: logging, caching, workflow, queueing)
 
@@ -240,12 +241,12 @@ class ServiceRegistry {
     this.serviceDependencies.set('logging', []);
 
     // Level 1 services (Infrastructure - Use foundation services)
-    this.serviceDependencies.set('filing', ['logging']);
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('queueing', ['logging']);
+    this.serviceDependencies.set('notifying', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
-    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
+    this.serviceDependencies.set('dataservice', ['logging', 'queueing']);
     this.serviceDependencies.set('working', ['logging', 'queueing', 'caching']);
     this.serviceDependencies.set('measuring', ['logging', 'queueing', 'caching']);
 
@@ -253,9 +254,9 @@ class ServiceRegistry {
     this.serviceDependencies.set('scheduling', ['logging', 'working']);
     this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice', 'queueing', 'working', 'scheduling']);
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring', 'working']);
+    this.serviceDependencies.set('filing', ['logging', 'queueing', 'dataservice']);
 
     // Level 4 services (Integration - Use application services)
-    this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
     this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
 
@@ -827,16 +828,16 @@ class EnhancedWorkflowService {
 | Level | Service      | Dependencies                                                      | Provider Support            |
 |-------|--------------|-------------------------------------------------------------------|-----------------------------|
 | 0     | logging      | none                                                              | memory, file, api           |
-| 1     | filing       | logging                                                           | local, ftp, s3, api         |
 | 1     | caching      | logging                                                           | memory, redis, memcached, file, api |
 | 1     | queueing     | logging                                                           | memory, api                 |
-| 2     | dataservice  | logging, filing                                                   | memory, simpledb, file, api |
+| 1     | notifying    | logging                                                           | memory, api                 |
+| 2     | dataservice  | logging, queueing                                                 | memory, simpledb, file, api |
 | 2     | working      | logging, queueing, caching                                        | memory, api                 |
 | 2     | measuring    | logging, queueing, caching                                        | memory, api                 |
 | 3     | scheduling   | logging, working                                                  | memory, api                 |
 | 3     | searching    | logging, caching, dataservice, queueing, working, scheduling      | memory, api                 |
 | 3     | workflow     | logging, queueing, scheduling, measuring, working                 | memory, api                 |
-| 4     | notifying    | logging, queueing, scheduling                                     | memory, api                 |
+| 3     | filing       | logging, queueing, dataservice                                    | local, ftp, s3, api         |
 | 4     | authservice  | logging, caching, dataservice                                     | memory, api                 |
 | 4     | aiservice    | logging, caching, workflow, queueing                              | claude, chatgpt, ollama, api|
 

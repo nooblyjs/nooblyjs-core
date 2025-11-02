@@ -248,14 +248,14 @@ class ServiceRegistry {
     this.serviceDependencies.set('logging', []);
 
     // Level 1 services (Infrastructure - Use foundation services)
-    this.serviceDependencies.set('filing', ['logging']);
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('queueing', ['logging']);
+    this.serviceDependencies.set('notifying', ['logging']);
     this.serviceDependencies.set('appservice', ['logging']);
     this.serviceDependencies.set('fetching', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
-    this.serviceDependencies.set('dataservice', ['logging', 'filing']);
+    this.serviceDependencies.set('dataservice', ['logging', 'queueing']);
     this.serviceDependencies.set('working', ['logging','queueing','caching']);
     this.serviceDependencies.set('measuring', ['logging','queueing','caching']);
 
@@ -263,9 +263,9 @@ class ServiceRegistry {
     this.serviceDependencies.set('scheduling', ['logging', 'working']);
     this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice', 'queueing', 'working', 'scheduling']);
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring', 'working']);
+    this.serviceDependencies.set('filing', ['logging', 'queueing', 'dataservice']);
 
     // Level 4 services (Integration - Use application services)
-    this.serviceDependencies.set('notifying', ['logging', 'queueing', 'scheduling']);
     this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
 
