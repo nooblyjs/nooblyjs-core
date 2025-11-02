@@ -412,5 +412,82 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(400).send('Bad Request: Missing settings');
       }
     });
+
+    /**
+     * GET /services/caching/scriptlibrary
+     * Serves the client-side caching library as JavaScript
+     * This endpoint returns the nooblyjsCaching library for use in web applications.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     * @example
+     * // Include in HTML:
+     * <script src="/services/caching/scriptlibrary"></script>
+     *
+     * // Use in JavaScript:
+     * const cache = new nooblyjsCaching({ instanceName: 'default' });
+     * cache.put('key', { data: 'value' });
+     * cache.get('key').then(data => console.log(data));
+     */
+    app.get('/services/caching/scriptlibrary', (req, res) => {
+      const fs = require('fs');
+      const path = require('path');
+
+      try {
+        // Read the client library file
+        const libraryPath = path.join(__dirname, '../scriptlibrary/index.js');
+        const libraryCode = fs.readFileSync(libraryPath, 'utf8');
+
+        // Set appropriate headers for JavaScript
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+
+        res.status(200).send(libraryCode);
+      } catch (error) {
+        eventEmitter.emit('api-caching-scriptlibrary-error', error.message);
+        res.status(500).json({
+          error: 'Failed to load caching library',
+          message: error.message
+        });
+      }
+    });
+
+    /**
+     * GET /services/caching/scriptlibrary/test
+     * Serves the interactive test page for the caching library
+     * Provides a user-friendly interface for testing all caching operations.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     * @example
+     * // Visit in browser:
+     * // http://localhost:3001/services/caching/scriptlibrary/test
+     */
+    app.get('/services/caching/scriptlibrary/test', (req, res) => {
+      const fs = require('fs');
+      const path = require('path');
+
+      try {
+        // Read the test HTML file
+        const testPath = path.join(__dirname, '../scriptlibrary/test.html');
+        const testHTML = fs.readFileSync(testPath, 'utf8');
+
+        // Set appropriate headers for HTML
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+
+        res.status(200).send(testHTML);
+      } catch (error) {
+        eventEmitter.emit('api-caching-scriptlibrary-test-error', error.message);
+        res.status(500).json({
+          error: 'Failed to load caching library test page',
+          message: error.message
+        });
+      }
+    });
   }
 };
