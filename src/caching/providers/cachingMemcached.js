@@ -57,6 +57,7 @@ class CacheMemcached {
     });
 
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
     this.options_ = defaultOptions;
     this.isConnected_ = false;
     this.connectionAttempts_ = 0;
@@ -103,7 +104,7 @@ class CacheMemcached {
       await this.client_.set(key, stringValue, { expires: ttl || 0 });
       this.trackOperation_(key);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:put', { key, value, ttl });
+        this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, ttl, instance: this.instanceName_ });
     } catch (error) {
       this.handleConnectionError_(error);
       throw error;
@@ -122,19 +123,19 @@ class CacheMemcached {
       this.trackOperation_(key);
       if (value === null) {
         if (this.eventEmitter_)
-          this.eventEmitter_.emit('cache:get', { key, value: null });
+          this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value: null, instance: this.instanceName_ });
         return null;
       }
       // Attempt to parse as JSON, otherwise return as string.
       try {
         const parsedValue = JSON.parse(value.toString());
         if (this.eventEmitter_)
-          this.eventEmitter_.emit('cache:get', { key, value: parsedValue });
+          this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value: parsedValue, instance: this.instanceName_ });
         return parsedValue;
       } catch (e) {
         const stringValue = value.toString();
         if (this.eventEmitter_)
-          this.eventEmitter_.emit('cache:get', { key, value: stringValue });
+          this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value: stringValue, instance: this.instanceName_ });
         return stringValue;
       }
     } catch (error) {
@@ -152,7 +153,7 @@ class CacheMemcached {
     await this.ensureConnection_();
     try {
       await this.client_.delete(key);
-      if (this.eventEmitter_) this.eventEmitter_.emit('cache:delete', { key });
+      if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
     } catch (error) {
       this.handleConnectionError_(error);
       throw error;

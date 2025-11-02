@@ -46,6 +46,10 @@ class AuthFile extends AuthBase {
       console.error('Error initializing file storage:', error);
     });
 
+    // Initialize passport for session management even though file provider doesn't use passport strategies
+    // This is needed for req.logIn() to work in routes
+    this.initializePassport_();
+
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:provider-initialized', {
         provider: 'file',
@@ -397,6 +401,35 @@ class AuthFile extends AuthBase {
         sessions: this.sessionsFile_
       }
     };
+  }
+
+  /**
+   * Initializes passport for session management.
+   * File provider doesn't use passport strategies, but needs passport for req.logIn() to work.
+   * @private
+   */
+  initializePassport_() {
+    try {
+      this.passport_ = require('passport');
+      const strategyConfig = super.getAuthStrategy();
+
+      if (strategyConfig && typeof strategyConfig === 'object') {
+        const { serializeUser, deserializeUser } = strategyConfig;
+
+        // Only register serialization once to avoid conflicts with multiple instances
+        const hasSerializers = this.passport_._serializers && this.passport_._serializers.length > 0;
+
+        if (typeof serializeUser === 'function' && !hasSerializers) {
+          this.passport_.serializeUser(serializeUser);
+        }
+
+        if (typeof deserializeUser === 'function' && !hasSerializers) {
+          this.passport_.deserializeUser(deserializeUser);
+        }
+      }
+    } catch (error) {
+      console.warn('Passport not available for session management:', error.message);
+    }
   }
 }
 

@@ -77,11 +77,13 @@ function createCache(type, options, eventEmitter) {
 
   // Initialize analytics module
   if (eventEmitter) {
-    cache.analytics = new CacheAnalytics(eventEmitter);
+    const instanceName = (providerOptions && providerOptions.instanceName) || 'default';
+    cache.analytics = new CacheAnalytics(eventEmitter, instanceName);
 
     if (logger) {
       cache.log('info', 'Cache analytics initialized', {
-        provider: type
+        provider: type,
+        instance: instanceName
       });
     }
   }

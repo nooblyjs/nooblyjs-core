@@ -81,11 +81,15 @@ class AuthPassport extends AuthBase {
           this.passport_.use(strategy);
         }
 
-        if (typeof serializeUser === 'function') {
+        // Only register serialization once to avoid conflicts with multiple instances
+        // Check if already registered by looking at internal state
+        const hasSerializers = this.passport_._serializers && this.passport_._serializers.length > 0;
+
+        if (typeof serializeUser === 'function' && !hasSerializers) {
           this.passport_.serializeUser(serializeUser);
         }
 
-        if (typeof deserializeUser === 'function') {
+        if (typeof deserializeUser === 'function' && !hasSerializers) {
           this.passport_.deserializeUser(deserializeUser);
         }
       }

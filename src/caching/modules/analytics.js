@@ -19,13 +19,15 @@ class CacheAnalytics {
   /**
    * Initializes the cache analytics module.
    * @param {EventEmitter} eventEmitter - Event emitter to listen for cache events.
+   * @param {string} instanceName - The instance name this analytics module tracks (default: 'default').
    */
-  constructor(eventEmitter) {
+  constructor(eventEmitter, instanceName = 'default') {
     this.MAX_ACTIVITY_ENTRIES_ = 1000;
     this.keyStats_ = new Map();
     this.keyActivity_ = new Map();
     this.keyMisses_ = new Map();
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = instanceName;
 
     // Set up event listeners for cache operations
     this.initializeListeners_();
@@ -40,8 +42,12 @@ class CacheAnalytics {
       return;
     }
 
+    const getEventName = `cache:get:${this.instanceName_}`;
+    const putEventName = `cache:put:${this.instanceName_}`;
+    const deleteEventName = `cache:delete:${this.instanceName_}`;
+
     // Listen for get events (can be hit or miss)
-    this.eventEmitter_.on('cache:get', (data) => {
+    this.eventEmitter_.on(getEventName, (data) => {
       const isHit = data.value !== undefined;
       if (isHit) {
         this.recordActivity_(data.key, 'hit', data.value);
@@ -54,12 +60,12 @@ class CacheAnalytics {
     });
 
     // Listen for put events (writes)
-    this.eventEmitter_.on('cache:put', (data) => {
+    this.eventEmitter_.on(putEventName, (data) => {
       this.recordActivity_(data.key, 'put', data.value);
     });
 
     // Listen for delete events
-    this.eventEmitter_.on('cache:delete', (data) => {
+    this.eventEmitter_.on(deleteEventName, (data) => {
       this.recordActivity_(data.key, 'delete', null);
     });
   }

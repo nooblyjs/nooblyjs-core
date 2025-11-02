@@ -102,8 +102,8 @@ describe('ServiceRegistry', () => {
       const logger = serviceRegistry.logger('console');
 
       const services = serviceRegistry.listServices();
-      expect(services).toContain('caching:memory');
-      expect(services).toContain('logging:console');
+      expect(services).toContain('caching:memory:default');
+      expect(services).toContain('logging:console:default');
     });
 
     it('should return singleton instances', () => {
@@ -129,6 +129,11 @@ describe('ServiceRegistry', () => {
     let validApiKey;
 
     beforeEach(() => {
+      // Reset registry and app before each test in this suite
+      app = express();
+      app.use(express.json());
+      ServiceRegistry.reset();
+      serviceRegistry = ServiceRegistry;
       validApiKey = serviceRegistry.generateApiKey();
     });
     
@@ -138,7 +143,7 @@ describe('ServiceRegistry', () => {
 
       eventEmitter.on('api-auth-setup', (data) => {
         expect(data).toMatchObject({
-          message: 'API key authentication enabled',
+          message: 'API key authentication configured',
           keyCount: 1,
           requireApiKey: true
         });
@@ -250,6 +255,11 @@ describe('ServiceRegistry', () => {
   describe('Service Creation', () => {
 
     beforeEach(() => {
+      // Reset registry and app before each test in this suite
+      app = express();
+      app.use(express.json());
+      ServiceRegistry.reset();
+      serviceRegistry = ServiceRegistry;
       serviceRegistry.initialize(app, null, {});
     });
     
@@ -306,16 +316,21 @@ describe('ServiceRegistry', () => {
   describe('Event Handling', () => {
 
     beforeEach(() => {
+      // Reset registry and app before each test in this suite
+      app = express();
+      app.use(express.json());
+      ServiceRegistry.reset();
+      serviceRegistry = ServiceRegistry;
       serviceRegistry.initialize(app, null, {});
     });
-    
+
     it('should provide event emitter', () => {
       const eventEmitter = serviceRegistry.getEventEmitter();
       expect(eventEmitter).toBeDefined();
       expect(typeof eventEmitter.on).toBe('function');
       expect(typeof eventEmitter.emit).toBe('function');
     });
-    
+
     it('should emit events correctly', () => {
       const eventEmitter = serviceRegistry.getEventEmitter();
       const mockHandler = jest.fn();
@@ -324,6 +339,141 @@ describe('ServiceRegistry', () => {
       eventEmitter.emit('test-event', 'test-data');
 
       expect(mockHandler).toHaveBeenCalledWith('test-data');
+    });
+  });
+
+  describe('Multiple Service Instances', () => {
+
+    beforeEach(() => {
+      // Create a fresh app and ensure registry is clean
+      app = express();
+      app.use(express.json());
+      ServiceRegistry.reset();
+      serviceRegistry = ServiceRegistry;
+      serviceRegistry.initialize(app, null, {});
+    });
+
+    it('should create default instance when no instanceName is provided', () => {
+      const cache = serviceRegistry.cache('memory');
+      expect(cache).toBeDefined();
+
+      const services = serviceRegistry.listServices();
+      expect(services).toContain('caching:memory:default');
+    });
+
+    it('should create named instances with explicit instanceName', () => {
+      const cache1 = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      const cache2 = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache2' });
+
+      expect(cache1).toBeDefined();
+      expect(cache2).toBeDefined();
+      expect(cache1).not.toBe(cache2);
+
+      const services = serviceRegistry.listServices();
+      expect(services).toContain('caching:memory:cache1');
+      expect(services).toContain('caching:memory:cache2');
+    });
+
+    it('should maintain singleton behavior for same instance', () => {
+      const cache1a = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      const cache1b = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+
+      expect(cache1a).toBe(cache1b);
+    });
+
+    it('should return null for non-existent instance using getServiceInstance', () => {
+      const instance = serviceRegistry.getServiceInstance('caching', 'memory', 'nonexistent');
+      expect(instance).toBeNull();
+    });
+
+    it('should retrieve existing instance using getServiceInstance', () => {
+      const original = serviceRegistry.getService('caching', 'memory', { instanceName: 'test' });
+      const retrieved = serviceRegistry.getServiceInstance('caching', 'memory', 'test');
+
+      expect(retrieved).toBe(original);
+    });
+
+    it('should list all instances of a service', () => {
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'cache2' });
+      serviceRegistry.getService('caching', 'redis', { instanceName: 'cache3' });
+
+      const instances = serviceRegistry.listInstances('caching');
+      expect(instances).toHaveLength(3);
+      expect(instances.map(i => i.instanceName)).toEqual(expect.arrayContaining(['cache1', 'cache2', 'cache3']));
+      expect(instances.map(i => i.providerType)).toEqual(expect.arrayContaining(['memory', 'memory', 'redis']));
+    });
+
+    it('should list empty array when no instances exist for a service', () => {
+      const instances = serviceRegistry.listInstances('nonexistent');
+      expect(instances).toEqual([]);
+    });
+
+    it('should reset specific instance', () => {
+      const cache1 = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'cache2' });
+
+      expect(serviceRegistry.listServices()).toContain('caching:memory:cache1');
+      expect(serviceRegistry.listServices()).toContain('caching:memory:cache2');
+
+      const result = serviceRegistry.resetServiceInstance('caching', 'memory', 'cache1');
+      expect(result).toBe(true);
+
+      expect(serviceRegistry.listServices()).not.toContain('caching:memory:cache1');
+      expect(serviceRegistry.listServices()).toContain('caching:memory:cache2');
+    });
+
+    it('should return false when resetting non-existent instance', () => {
+      const result = serviceRegistry.resetServiceInstance('caching', 'memory', 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('should reset all instances of a service', () => {
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'cache2' });
+      serviceRegistry.getService('caching', 'redis', { instanceName: 'cache3' });
+
+      const count = serviceRegistry.resetService('caching');
+      expect(count).toBe(3);
+
+      const instances = serviceRegistry.listInstances('caching');
+      expect(instances).toEqual([]);
+    });
+
+    it('should return 0 when resetting non-existent service', () => {
+      const count = serviceRegistry.resetService('nonexistent');
+      expect(count).toBe(0);
+    });
+
+    it('should isolate data between instances', async () => {
+      const cache1 = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache1' });
+      const cache2 = serviceRegistry.getService('caching', 'memory', { instanceName: 'cache2' });
+
+      await cache1.put('testkey', 'value1');
+      await cache2.put('testkey', 'value2');
+
+      const val1 = await cache1.get('testkey');
+      const val2 = await cache2.get('testkey');
+
+      expect(val1).toBe('value1');
+      expect(val2).toBe('value2');
+    });
+
+    it('should emit service:created event with instance information', (done) => {
+      const eventEmitter = serviceRegistry.getEventEmitter();
+
+      eventEmitter.on('service:created', (data) => {
+        if (data.serviceName === 'caching' && data.instanceName === 'test') {
+          expect(data).toMatchObject({
+            serviceName: 'caching',
+            providerType: 'memory',
+            instanceName: 'test'
+          });
+          done();
+        }
+      });
+
+      serviceRegistry.getService('caching', 'memory', { instanceName: 'test' });
     });
   });
 });

@@ -458,10 +458,20 @@ class AuthBase {
     return {
       strategy,
       serializeUser: (user, done) => {
-        done(null, user.username);
+        try {
+          if (!user || !user.username) {
+            return done(new Error('User object must have a username property'));
+          }
+          done(null, user.username);
+        } catch (error) {
+          done(error);
+        }
       },
       deserializeUser: async (username, done) => {
         try {
+          if (!username) {
+            return done(new Error('Username is required for deserialization'));
+          }
           const user = await this.getUser(username);
           done(null, user);
         } catch (error) {

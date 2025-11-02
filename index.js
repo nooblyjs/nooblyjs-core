@@ -281,9 +281,11 @@ class ServiceRegistry {
 
   /**
    * Gets or creates a service instance (singleton pattern with dependency injection)
+   * Supports multiple named instances of the same service:provider combination
    * @param {string} serviceName - Name of the service
    * @param {string} providerType - Type of provider to use
    * @param {Object} options - Service-specific options
+   * @param {string} options.instanceName - Optional instance name (defaults to 'default')
    * @returns {Object} Service instance
    */
   getService(serviceName, providerType = 'memory', options = {}) {
@@ -293,7 +295,8 @@ class ServiceRegistry {
       );
     }
 
-    const serviceKey = `${serviceName}:${providerType}`;
+    const { instanceName = 'default', ...serviceOptions } = options;
+    const serviceKey = `${serviceName}:${providerType}:${instanceName}`;
 
     if (this.services.has(serviceKey)) {
       return this.services.get(serviceKey);
@@ -304,8 +307,11 @@ class ServiceRegistry {
 
     const mergedOptions = {
       ...this.globalOptions,
-      ...options,
-      dependencies
+      ...serviceOptions,
+      dependencies,
+      instanceName, // Include instance name in options for service use
+      ServiceRegistry: this, // Include ServiceRegistry reference for multi-instance support
+      providerType // Include provider type for routes to use
     };
 
     let service;
@@ -315,7 +321,7 @@ class ServiceRegistry {
     } catch (error) {
       console.error(error)
       throw new Error(
-        `Failed to create service '${serviceName}' with provider '${providerType}': ${error.message}`,
+        `Failed to create service '${serviceName}' with provider '${providerType}' instance '${instanceName}': ${error.message}`,
       );
     }
 
@@ -325,11 +331,25 @@ class ServiceRegistry {
     this.eventEmitter.emit('service:created', {
       serviceName,
       providerType,
+      instanceName,
       dependenciesCount: Object.keys(dependencies).length,
       dependencyNames: Object.keys(dependencies)
     });
 
     return service;
+  }
+
+  /**
+   * Gets a service instance by service name, provider type, and optional instance name
+   * This is a convenience method for retrieving already-initialized instances
+   * @param {string} serviceName - Name of the service
+   * @param {string} providerType - Type of provider (defaults to 'memory')
+   * @param {string} instanceName - Optional instance name (defaults to 'default')
+   * @returns {Object|null} Service instance or null if not found
+   */
+  getServiceInstance(serviceName, providerType = 'memory', instanceName = 'default') {
+    const serviceKey = `${serviceName}:${providerType}:${instanceName}`;
+    return this.services.get(serviceKey) || null;
   }
 
   /**
@@ -439,6 +459,7 @@ class ServiceRegistry {
    * Get the caching service
    * @param {string} providerType - 'memory', 'redis', or 'memcached'
    * @param {Object} options - Provider-specific options
+   * @param {string} options.instanceName - Optional instance name (defaults to 'default')
    * @returns {Object} Cache service instance
    */
   cache(providerType = 'memory', options = {}) {
@@ -631,10 +652,33 @@ class ServiceRegistry {
 
   /**
    * Lists all initialized services
-   * @returns {Array} Array of service keys
+   * @returns {Array} Array of service keys in format "serviceName:providerType:instanceName"
    */
   listServices() {
     return Array.from(this.services.keys());
+  }
+
+  /**
+   * Lists all instances of a specific service
+   * @param {string} serviceName - Name of the service
+   * @returns {Array} Array of instance objects with serviceName, providerType, and instanceName
+   */
+  listInstances(serviceName) {
+    const instances = [];
+
+    for (const key of this.services.keys()) {
+      const [srvName, provider, instance] = key.split(':');
+      if (srvName === serviceName) {
+        instances.push({
+          serviceName: srvName,
+          providerType: provider,
+          instanceName: instance,
+          key: key
+        });
+      }
+    }
+
+    return instances;
   }
 
   /**
@@ -648,10 +692,44 @@ class ServiceRegistry {
 
   /**
    * Clears all service instances (useful for testing)
+   * This clears all named and default instances of all services
    */
   reset() {
     this.services.clear();
     this.initialized = false;
+  }
+
+  /**
+   * Resets a specific service (all instances of that service)
+   * @param {string} serviceName - Name of the service to reset
+   * @returns {number} Number of instances cleared
+   */
+  resetService(serviceName) {
+    let count = 0;
+    const keysToDelete = [];
+
+    for (const key of this.services.keys()) {
+      const [srvName] = key.split(':');
+      if (srvName === serviceName) {
+        keysToDelete.push(key);
+        count++;
+      }
+    }
+
+    keysToDelete.forEach(key => this.services.delete(key));
+    return count;
+  }
+
+  /**
+   * Resets a specific service instance
+   * @param {string} serviceName - Name of the service
+   * @param {string} providerType - Type of provider (defaults to 'memory')
+   * @param {string} instanceName - Instance name (defaults to 'default')
+   * @returns {boolean} True if instance was found and deleted
+   */
+  resetServiceInstance(serviceName, providerType = 'memory', instanceName = 'default') {
+    const serviceKey = `${serviceName}:${providerType}:${instanceName}`;
+    return this.services.delete(serviceKey);
   }
 
   /**

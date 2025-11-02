@@ -36,9 +36,10 @@ class CacheApi {
      this.settings.api = options.api || 'http://localhost:3000';
      this.settings.apikey = options.apiKey || null;
      this.timeout = options.timeout || 5000;
- 
+
      this.eventEmitter_ = eventEmitter;
- 
+     this.instanceName_ = (options && options.instanceName) || 'default';
+
      // Configure axios instance
      this.client = axios.create({
        baseURL: this.settings.api,
@@ -77,7 +78,7 @@ class CacheApi {
     try {
       await this.client.post(`/services/caching/api/put/${encodeURIComponent(key)}`, value);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:put', { key, value });
+        this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
     } catch (error) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('cache:error', { operation: 'put', key, error: error.message });
@@ -95,7 +96,7 @@ class CacheApi {
       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
       const value = response.data;
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:get', { key, value });
+        this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
       return value;
     } catch (error) {
       if (this.eventEmitter_)
@@ -113,7 +114,7 @@ class CacheApi {
     try {
       await this.client.delete(`/services/caching/api/delete/${encodeURIComponent(key)}`);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:delete', { key });
+        this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
     } catch (error) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('cache:error', { operation: 'delete', key, error: error.message });

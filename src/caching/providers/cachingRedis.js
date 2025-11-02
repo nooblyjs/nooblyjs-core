@@ -65,11 +65,12 @@ class CacheRedis {
     });
 
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
     /** @private @const {!Map<string, {key: string, hits: number, lastHit: Date}>} */
     this.analytics_ = new Map();
     /** @private @const {number} */
     this.maxAnalyticsEntries_ = 100;
-    
+
     this.setupConnectionHandlers_();
   }
 
@@ -108,7 +109,7 @@ class CacheRedis {
     }
     this.trackOperation_(key);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('cache:put', { key, value, ttl });
+      this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, ttl, instance: this.instanceName_ });
   }
 
   /**
@@ -121,7 +122,7 @@ class CacheRedis {
     const value = await this.client_.get(key);
     this.trackOperation_(key);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('cache:get', { key, value });
+      this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
     return value;
   }
 
@@ -133,7 +134,7 @@ class CacheRedis {
   async delete(key) {
     await this.ensureConnection_();
     await this.client_.del(key);
-    if (this.eventEmitter_) this.eventEmitter_.emit('cache:delete', { key });
+    if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
   }
 
   /**

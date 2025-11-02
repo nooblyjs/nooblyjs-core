@@ -190,3 +190,146 @@ GET {{baseUrl}}/services/caching/api/get/sequence-test
 x-api-key: {{apiKey}}
 
 ###
+### =====================================
+### Multiple Instance Cache Tests
+### =====================================
+### These tests demonstrate the multiple instances feature for the Caching service.
+### Instance-specific endpoints allow using named cache instances to isolate data.
+###
+
+###
+### Named Instance: cache1
+### PUT - Store data in named cache instance 'cache1'
+POST {{baseUrl}}/services/caching/api/cache1/put/user-profile-1
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "userId": "1",
+    "name": "Alice",
+    "role": "admin",
+    "createdAt": "{{$datetime iso8601}}"
+}
+
+###
+
+### Named Instance: cache1
+### GET - Retrieve data from cache instance 'cache1'
+GET {{baseUrl}}/services/caching/api/cache1/get/user-profile-1
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache2
+### PUT - Store data in named cache instance 'cache2'
+POST {{baseUrl}}/services/caching/api/cache2/put/user-profile-1
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "userId": "1",
+    "name": "Bob",
+    "role": "user",
+    "createdAt": "{{$datetime iso8601}}"
+}
+
+###
+
+### Named Instance: cache2
+### GET - Retrieve data from cache instance 'cache2'
+GET {{baseUrl}}/services/caching/api/cache2/get/user-profile-1
+x-api-key: {{apiKey}}
+
+###
+
+### Cross-Instance Test
+### This verifies data isolation: cache1 has Alice, cache2 has Bob
+### GET - Verify cache1 still has Alice
+GET {{baseUrl}}/services/caching/api/cache1/get/user-profile-1
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache1
+### PUT - Store session in cache1
+POST {{baseUrl}}/services/caching/api/cache1/put/session-token
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "token": "token_cache1_xyz123",
+    "userId": "1",
+    "expiresAt": "2025-12-31T23:59:59Z"
+}
+
+###
+
+### Named Instance: cache2
+### PUT - Store different session in cache2
+POST {{baseUrl}}/services/caching/api/cache2/put/session-token
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+    "token": "token_cache2_abc789",
+    "userId": "2",
+    "expiresAt": "2025-12-31T23:59:59Z"
+}
+
+###
+
+### Named Instance: cache1
+### GET - Verify cache1 has correct session token
+GET {{baseUrl}}/services/caching/api/cache1/get/session-token
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache2
+### GET - Verify cache2 has different session token
+GET {{baseUrl}}/services/caching/api/cache2/get/session-token
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache1
+### DELETE - Remove session from cache1
+DELETE {{baseUrl}}/services/caching/api/cache1/delete/session-token
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache2
+### GET - Verify session still exists in cache2
+GET {{baseUrl}}/services/caching/api/cache2/get/session-token
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache1
+### GET - Analytics for cache instance 'cache1'
+GET {{baseUrl}}/services/caching/api/cache1/list
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache2
+### GET - Analytics for cache instance 'cache2'
+GET {{baseUrl}}/services/caching/api/cache2/list
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache1
+### GET - Comprehensive analytics for cache instance 'cache1'
+GET {{baseUrl}}/services/caching/api/cache1/analytics
+x-api-key: {{apiKey}}
+
+###
+
+### Named Instance: cache2
+### GET - Comprehensive analytics for cache instance 'cache2'
+GET {{baseUrl}}/services/caching/api/cache2/analytics
+x-api-key: {{apiKey}}
+
+###

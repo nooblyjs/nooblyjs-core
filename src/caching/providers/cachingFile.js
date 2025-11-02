@@ -35,9 +35,10 @@ class CacheFile {
     this.settings.cachedir = options.cacheDir || this.settings.cachedir || './.cache';
 
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = options.maxAnalyticsEntries || 100;
-    
+
     this.initializeCacheDir();
   }
 
@@ -104,7 +105,7 @@ class CacheFile {
       await fs.writeFile(filePath, JSON.stringify(cacheEntry, null, 2), 'utf8');
       this.trackOperation_(key);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:put', { key, value });
+        this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
     } catch (error) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('cache:error', { operation: 'put', key, error });
@@ -125,13 +126,13 @@ class CacheFile {
       const cacheEntry = JSON.parse(data);
       this.trackOperation_(key);
       if (this.eventEmitter_)
-        this.eventEmitter_.emit('cache:get', { key, value: cacheEntry.value });
+        this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value: cacheEntry.value, instance: this.instanceName_ });
       return cacheEntry.value;
     } catch (error) {
       if (error.code === 'ENOENT') {
         this.trackOperation_(key);
         if (this.eventEmitter_)
-          this.eventEmitter_.emit('cache:get', { key, value: undefined });
+          this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value: undefined, instance: this.instanceName_ });
         return undefined;
       }
       if (this.eventEmitter_)
@@ -150,7 +151,7 @@ class CacheFile {
 
     try {
       await fs.unlink(filePath);
-      if (this.eventEmitter_) this.eventEmitter_.emit('cache:delete', { key });
+      if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
     } catch (error) {
       if (error.code !== 'ENOENT') {
         if (this.eventEmitter_)

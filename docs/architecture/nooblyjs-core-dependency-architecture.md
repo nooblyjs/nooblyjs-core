@@ -23,11 +23,11 @@ This document outlines the complete service dependency architecture for **noobly
 ```
 Level 4: Integration Services    (aiservice, authservice, notifying)
             ↓
-Level 3: Application Services    (workflow, searching, scheduling)
+Level 3: Application Services    (workflow, searching, scheduling, filing)
             ↓
 Level 2: Business Logic Services (working, measuring, dataservice)
             ↓
-Level 1: Infrastructure Services (caching, filing, queueing)
+Level 1: Infrastructure Services (caching queueing)
             ↓
 Level 0: Foundation Services     (logging)
 ```

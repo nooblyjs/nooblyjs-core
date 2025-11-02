@@ -27,6 +27,7 @@ class Cache {
 
     this.cache_ = {};
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 100;
   }
@@ -62,7 +63,7 @@ class Cache {
     this.cache_[key] = value;
     this.trackOperation_(key);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('cache:put', { key, value });
+      this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
   }
 
   /**
@@ -74,7 +75,7 @@ class Cache {
     const value = this.cache_[key];
     this.trackOperation_(key);
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('cache:get', { key, value });
+      this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
     return value;
   }
 
@@ -85,7 +86,7 @@ class Cache {
    */
   async delete(key) {
     delete this.cache_[key];
-    if (this.eventEmitter_) this.eventEmitter_.emit('cache:delete', { key });
+    if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
   }
 
   /**

@@ -104,20 +104,34 @@ class AuthGoogle extends AuthBase {
         }
       ));
 
-      // Serialize user for session
-      this.passport_.serializeUser((user, done) => {
-        done(null, user.username);
-      });
+      // Serialize user for session - only register once
+      const hasSerializers = this.passport_._serializers && this.passport_._serializers.length > 0;
 
-      // Deserialize user from session
-      this.passport_.deserializeUser(async (username, done) => {
-        try {
-          const user = await this.getUser(username);
-          done(null, user);
-        } catch (error) {
-          done(error, null);
-        }
-      });
+      if (!hasSerializers) {
+        this.passport_.serializeUser((user, done) => {
+          try {
+            if (!user || !user.username) {
+              return done(new Error('User object must have a username property'));
+            }
+            done(null, user.username);
+          } catch (error) {
+            done(error);
+          }
+        });
+
+        // Deserialize user from session
+        this.passport_.deserializeUser(async (username, done) => {
+          try {
+            if (!username) {
+              return done(new Error('Username is required for deserialization'));
+            }
+            const user = await this.getUser(username);
+            done(null, user);
+          } catch (error) {
+            done(error, null);
+          }
+        });
+      }
 
       // Initialize passport with express app if provided
       if (this.options_['express-app']) {

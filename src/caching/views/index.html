@@ -776,8 +776,23 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Cache Management</h1>
-                <p class="page-subtitle">Monitor performance and manage cache entries</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+                    <div>
+                        <h1 class="page-title">Cache Management</h1>
+                        <p class="page-subtitle">Monitor performance and manage cache entries</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div>
+                            <label for="instanceSelector" style="margin-right: 8px; font-weight: 500;">Instance:</label>
+                            <select id="instanceSelector" class="form-select" style="width: 200px; display: inline-block;">
+                                <option value="default">default</option>
+                            </select>
+                        </div>
+                        <button id="refreshInstanceBtn" class="btn btn-sm btn-outline-primary" title="Refresh instances list">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
              <!-- Bootstrap 5 Alerts -->
@@ -1131,6 +1146,9 @@
         let analyticsData = [];
         let currentSort = { column: 'hits', direction: 'desc' };
 
+        // Instance selection state
+        let selectedInstance = 'default';
+
         // Color palette for charts
         const chartColors = [
             '#0066cc', '#198754', '#dc3545', '#ffc107', '#6610f2',
@@ -1139,6 +1157,55 @@
             '#6f42c1', '#e83e8c', '#17a2b8', '#28a745', '#ffc107'
         ];
 
+        // Instance management functions
+        async function loadAvailableInstances() {
+            try {
+                const response = await fetch('/services/caching/api/instances');
+                if (!response.ok) {
+                    console.error('Failed to fetch instances');
+                    return;
+                }
+                const data = await response.json();
+                if (data.instances && Array.isArray(data.instances)) {
+                    updateInstanceSelector(data.instances);
+                }
+            } catch (error) {
+                console.error('Error loading instances:', error);
+            }
+        }
+
+        function updateInstanceSelector(instances) {
+            const selector = document.getElementById('instanceSelector');
+            const currentValue = selector.value;
+
+            // Clear existing options
+            selector.innerHTML = '';
+
+            // Add instances as options
+            instances.forEach(instance => {
+                const option = document.createElement('option');
+                option.value = instance.name;
+                option.textContent = `${instance.name}${instance.name === 'default' ? ' (default)' : ''}`;
+                selector.appendChild(option);
+            });
+
+            // Restore previously selected instance if it still exists
+            if (instances.some(i => i.name === currentValue)) {
+                selector.value = currentValue;
+            } else {
+                selector.value = 'default';
+                selectedInstance = 'default';
+            }
+        }
+
+        function buildInstanceUrl(basePath) {
+            if (selectedInstance === 'default') {
+                return basePath;
+            }
+            // Insert instance name after /api/ in the path
+            return basePath.replace('/services/caching/api/', `/services/caching/api/${selectedInstance}/`);
+        }
+
         // Load dashboard analytics data
         async function loadDashboardAnalytics() {
             const refreshBtn = document.getElementById('refreshBtn');
@@ -1146,7 +1213,8 @@
             refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Loading<span class="loading-spinner"></span>';
 
             try {
-                const response = await fetch('/services/caching/api/analytics');
+                const analyticsUrl = buildInstanceUrl('/services/caching/api/analytics');
+                const response = await fetch(analyticsUrl);
                 const data = await response.json();
 
                 updateStats(data.stats);
@@ -1421,7 +1489,8 @@
         // Data  Tab - Load analytics
         async function loadDataAnalytics() {
             try {
-                const response = await fetch('/services/caching/api/list');
+                const listUrl = buildInstanceUrl('/services/caching/api/list');
+                const response = await fetch(listUrl);
                 const result = await response.json();
 
                 if (result.success) {
@@ -1624,6 +1693,9 @@
 
         // API functions
         async function makeRequest(url, method = 'GET', body = null) {
+            // Make URL instance-aware
+            const instanceAwareUrl = buildInstanceUrl(url);
+
             const options = {
                 method,
                 headers: {
@@ -1635,7 +1707,7 @@
                 options.body = JSON.stringify(body);
             }
 
-            const response = await fetch(url, options);
+            const response = await fetch(instanceAwareUrl, options);
             const contentType = response.headers.get('content-type');
 
             if (contentType && contentType.includes('application/json')) {
@@ -1738,7 +1810,8 @@
         // Fetch settings from API
         async function loadSettings() {
             try {
-                const response = await fetch('/services/caching/api/settings');
+                const settingsUrl = buildInstanceUrl('/services/caching/api/settings');
+                const response = await fetch(settingsUrl);
                 const data = await response.json();
                 currentSettings = data;
                 renderSettingsForm(data);
@@ -1888,7 +1961,8 @@
                 }
 
                 // Send to API
-                const response = await fetch('/services/caching/api/settings', {
+                const settingsUrl = buildInstanceUrl('/services/caching/api/settings');
+                const response = await fetch(settingsUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1917,6 +1991,24 @@
         // Load settings when settings tab is shown
         document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', function (e) {
             loadSettings();
+        });
+
+        // Instance selector handlers
+        document.getElementById('instanceSelector')?.addEventListener('change', function (e) {
+            selectedInstance = this.value;
+            loadDashboardAnalytics();
+            loadDataAnalytics();
+        });
+
+        document.getElementById('refreshInstanceBtn')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            loadAvailableInstances();
+        });
+
+        // Initialize: Load instances and analytics on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadAvailableInstances();
+            loadDashboardAnalytics();
         });
 
         // Swagger UI setup
