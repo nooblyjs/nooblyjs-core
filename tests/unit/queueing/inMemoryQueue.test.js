@@ -46,23 +46,23 @@ describe('InMemoryQueue', () => {
    */
   it('should enqueue and dequeue items from a named queue', async () => {
     await queue.enqueue('emailQueue', 'item1');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue:default', {
       queueName: 'emailQueue',
       item: 'item1',
     });
     await queue.enqueue('emailQueue', 'item2');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:enqueue:default', {
       queueName: 'emailQueue',
       item: 'item2',
     });
     mockEventEmitter.emit.mockClear(); // Clear previous emits
     expect(await queue.dequeue('emailQueue')).toBe('item1');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue:default', {
       queueName: 'emailQueue',
       item: 'item1',
     });
     expect(await queue.dequeue('emailQueue')).toBe('item2');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:dequeue:default', {
       queueName: 'emailQueue',
       item: 'item2',
     });
@@ -156,7 +156,7 @@ describe('InMemoryQueue', () => {
 
     mockEventEmitter.emit.mockClear();
     await queue.purge('testQueue');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:purge', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('queue:purge:default', {
       queueName: 'testQueue',
     });
     expect(await queue.size('testQueue')).toBe(0);

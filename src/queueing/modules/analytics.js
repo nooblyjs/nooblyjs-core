@@ -19,8 +19,9 @@ class QueueAnalytics {
   /**
    * Initializes the queue analytics module.
    * @param {EventEmitter} eventEmitter - Event emitter to listen for queue events.
+   * @param {string} instanceName - The instance name this analytics module tracks (default: 'default').
    */
-  constructor(eventEmitter) {
+  constructor(eventEmitter, instanceName = 'default') {
     /** @private @const {number} Maximum number of activity entries to store per queue */
     this.MAX_ACTIVITY_ENTRIES_ = 1000;
 
@@ -32,6 +33,9 @@ class QueueAnalytics {
 
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
+
+    /** @private @const {string} Instance name for this analytics module */
+    this.instanceName_ = instanceName;
 
     // Set up event listeners for queue operations
     this.initializeListeners_();
@@ -46,18 +50,22 @@ class QueueAnalytics {
       return;
     }
 
+    const enqueueEventName = `queue:enqueue:${this.instanceName_}`;
+    const dequeueEventName = `queue:dequeue:${this.instanceName_}`;
+    const purgeEventName = `queue:purge:${this.instanceName_}`;
+
     // Listen for enqueue events
-    this.eventEmitter_.on('queue:enqueue', (data) => {
+    this.eventEmitter_.on(enqueueEventName, (data) => {
       this.recordActivity_(data.queueName, 'enqueue', data.item);
     });
 
     // Listen for dequeue events
-    this.eventEmitter_.on('queue:dequeue', (data) => {
+    this.eventEmitter_.on(dequeueEventName, (data) => {
       this.recordActivity_(data.queueName, 'dequeue', data.item);
     });
 
     // Listen for purge events
-    this.eventEmitter_.on('queue:purge', (data) => {
+    this.eventEmitter_.on(purgeEventName, (data) => {
       this.recordActivity_(data.queueName, 'purge', null);
     });
   }

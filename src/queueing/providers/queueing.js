@@ -28,6 +28,7 @@ class Queueing {
 
     this.queues_ = new Map();
     this.eventEmitter_ = eventEmitter;
+    this.instanceName_ = (options && options.instanceName) || 'default';
   }
 
   /**
@@ -73,8 +74,10 @@ class Queueing {
   async enqueue(queueName, item) {
     const queue = this.getQueue_(queueName);
     queue.push(item);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('queue:enqueue', { queueName, item });
+    if (this.eventEmitter_) {
+      const eventName = `queue:enqueue:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { queueName, item });
+    }
   }
 
   /**
@@ -85,8 +88,10 @@ class Queueing {
   async dequeue(queueName) {
     const queue = this.getQueue_(queueName);
     const item = queue.shift();
-    if (item && this.eventEmitter_)
-      this.eventEmitter_.emit('queue:dequeue', { queueName, item });
+    if (item && this.eventEmitter_) {
+      const eventName = `queue:dequeue:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { queueName, item });
+    }
     return item;
   }
 
@@ -115,8 +120,10 @@ class Queueing {
    */
   async purge(queueName) {
     this.queues_.set(queueName, []);
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('queue:purge', { queueName });
+    if (this.eventEmitter_) {
+      const eventName = `queue:purge:${this.instanceName_}`;
+      this.eventEmitter_.emit(eventName, { queueName });
+    }
   }
 }
 

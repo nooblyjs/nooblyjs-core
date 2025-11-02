@@ -81,11 +81,13 @@ function createQueue(type, options, eventEmitter) {
 
   // Initialize analytics module
   if (eventEmitter) {
-    queue.analytics = new QueueAnalytics(eventEmitter);
+    const instanceName = (providerOptions && providerOptions.instanceName) || 'default';
+    queue.analytics = new QueueAnalytics(eventEmitter, instanceName);
 
     if (logger) {
       queue.log('info', 'Queue analytics initialized', {
-        provider: type
+        provider: type,
+        instance: instanceName
       });
     }
   }
