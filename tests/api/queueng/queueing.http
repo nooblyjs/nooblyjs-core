@@ -227,3 +227,14 @@ GET {{baseUrl}}/services/queueing/api/size/emailQueue
 x-api-key: {{apiKey}}
 
 ###
+
+### SCRIPT LIBRARY - Get the client-side JavaScript library (No API key required)
+GET {{baseUrl}}/services/queueing/scriptlibrary
+
+###
+
+### SCRIPT LIBRARY - Verify content type is JavaScript
+### Should return application/javascript content type
+GET {{baseUrl}}/services/queueing/scriptlibrary
+
+###

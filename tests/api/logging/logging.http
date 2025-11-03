@@ -221,3 +221,14 @@ Authorization: ApiKey {{apiKey}}
 }
 
 ###
+
+### SCRIPT LIBRARY - Get the client-side JavaScript library (No API key required)
+GET {{baseUrl}}/services/logging/scriptlibrary
+
+###
+
+### SCRIPT LIBRARY - Verify content type is JavaScript
+### Should return application/javascript content type
+GET {{baseUrl}}/services/logging/scriptlibrary
+
+###

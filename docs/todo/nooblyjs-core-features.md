@@ -13,6 +13,7 @@
 
 # Logging Features
 
+- [ ] Distributed caching testing
 - [ ] Ensure all Unit testing is in place
 - [ ] Enusre all Load testing is in place
 - [ ] Enusre all API testing is in place

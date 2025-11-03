@@ -55,10 +55,10 @@ This architecture transforms nooblyjs-core from a collection of isolated service
 *Core infrastructure that uses logging for operations tracking and provides event-driven capabilities*
 
 ```
- ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
- │   Caching    │  │  Queueing   │  │  Notifying   │
- │  (Cache)     │  │  (Queues)   │  │  (EventBus)  │
- └──────┬───────┘  └──────┬──────┘  └──────┬───────┘
+ ┌──────────────┐  ┌────────────┐  ┌──────────────┐
+ │   Caching    │  │  Queueing  │  │  Notifying   │
+ │   (Cache)    │  │  (Queues)  │  │  (EventBus)  │
+ └──────┬───────┘  └─────┬──────┘  └──────┬───────┘
         │                │                │
         └────────────────┼────────────────┘
                          │
@@ -90,8 +90,8 @@ This architecture transforms nooblyjs-core from a collection of isolated service
           │             │  │             │  │             │
           └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
                  │                │                │
-        ┌────────┴──────┐    ┌────┴────┬──────────┴──────┐
-        │               │    │         │                 │
+        ┌────────┴──────┐    ┌────┴────┬───────────┴────┐
+        │               │    │         │                │
 ┌───────▼───────┐ ┌─────▼─────┐ ┌─────▼─────┐  ┌────────▼────────┐
 │    Logging    │ │  Queueing │ │  Logging  │  │  Logging        │
 │   (Level 0)   │ │ (Level 1) │ │ (Level 0) │  │  (Level 0)      │
@@ -136,8 +136,8 @@ await working.execute(scriptPath, args);
         │             │  │             │  │             │  │  (Storage)  │
         └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
                │                │                │                │
-     ┌─────────┴──┐    ┌────────┴────────┬───────┴────────┬─────────┬───────────┐
-     │            │    │                 │                │         │           │
+     ┌─────────┴──┐    ┌────────┴────────────┬───┴───────┬────────┴┬───────────┐
+     │            │    │                     │           │         │           │
 ┌────▼────┐ ┌────▼────┐ ┌──────▼──────┐ ┌────▼────┐ ┌────▼────┐ ┌──▼──────┐ ┌──▼──────┐
 │ Logging │ │ Working │ │ Logging     │ │ Caching │ │Datasrvc │ │ Logging │ │ Logging │
 │(Level 0)│ │(Level 2)│ │ (Level 0)   │ │(Level 1)│ │(Level 2)│ │(Level 0)│ │(Level 0)│

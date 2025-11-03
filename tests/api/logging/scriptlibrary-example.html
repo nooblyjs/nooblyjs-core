@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noobly-core Logging Script Library Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .code-block {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .example-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f0f7ff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button.info {
+            background-color: #17a2b8;
+        }
+        button.info:hover {
+            background-color: #138496;
+        }
+        button.warn {
+            background-color: #ffc107;
+            color: #000;
+        }
+        button.warn:hover {
+            background-color: #e0a800;
+        }
+        button.error {
+            background-color: #dc3545;
+        }
+        button.error:hover {
+            background-color: #c82333;
+        }
+        button.debug {
+            background-color: #6c757d;
+        }
+        button.debug:hover {
+            background-color: #5a6268;
+        }
+        .output {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 12px;
+        }
+        .output.success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .output.error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .output.info {
+            background-color: #cfe2ff;
+            border-color: #b6d4fe;
+            color: #084298;
+        }
+        .output.warn {
+            background-color: #fff3cd;
+            border-color: #ffecb5;
+            color: #664d03;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        input[type="text"], input[type="number"], select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 300px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .log-entries {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .log-entry {
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #999;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry.info {
+            background-color: #cfe2ff;
+            border-left-color: #0d6efd;
+        }
+        .log-entry.warn {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .log-entry.error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .log-entry.debug {
+            background-color: #e2e3e5;
+            border-left-color: #6c757d;
+        }
+        .level-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        .level-indicator.info {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .level-indicator.warn {
+            background-color: #ffc107;
+            color: black;
+        }
+        .level-indicator.error {
+            background-color: #dc3545;
+            color: white;
+        }
+        .level-indicator.debug {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Noobly-core Logging Script Library Example</h1>
+
+    <div class="container">
+        <h2>Overview</h2>
+        <p>This example demonstrates how to use the Noobly-core Logging service JavaScript library in a browser environment.</p>
+        <p>The library is served from <code>/services/logging/scriptlibrary</code> and provides logging at different levels: info, warn, error, and debug.</p>
+    </div>
+
+    <div class="container">
+        <h2>Configuration</h2>
+        <div class="form-group">
+            <label for="instanceName">Instance Name:</label>
+            <input type="text" id="instanceName" value="default" placeholder="e.g., default, custom-logger">
+        </div>
+        <div class="form-group">
+            <label for="apiKey">API Key (optional):</label>
+            <input type="text" id="apiKey" placeholder="Leave empty if not required">
+        </div>
+        <div class="form-group">
+            <label for="minLogLevel">Minimum Log Level:</label>
+            <select id="minLogLevel">
+                <option value="debug">Debug</option>
+                <option value="info" selected>Info</option>
+                <option value="warn">Warn</option>
+                <option value="error">Error</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="initializeClient()">Initialize Client</button>
+            <button onclick="toggleDebug()">Toggle Debug Mode</button>
+        </div>
+        <div id="clientStatus" class="status disconnected">Client Status: Not Initialized</div>
+    </div>
+
+    <div class="container">
+        <h2>Logging Operations</h2>
+
+        <div class="example-section">
+            <h3>Log Messages</h3>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <input type="text" id="message" value="Test message" placeholder="Enter log message">
+            </div>
+            <div class="form-group">
+                <label for="metadata">Metadata (JSON, optional):</label>
+                <input type="text" id="metadata" value='{"userId": 123}' placeholder='{"key": "value"}' style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <button class="info" onclick="logInfo()">Log Info</button>
+                <button class="warn" onclick="logWarn()">Log Warn</button>
+                <button class="error" onclick="logError()">Log Error</button>
+                <button class="debug" onclick="logDebug()">Log Debug</button>
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h3>Analytics & Settings</h3>
+            <button onclick="getAnalytics()">Get Analytics</button>
+            <button onclick="getSettings()">Get Settings</button>
+        </div>
+
+        <div class="example-section">
+            <h3>Local Logs</h3>
+            <button onclick="showLocalLogs()">Show Local Logs</button>
+            <button onclick="clearLocalLogs()">Clear Local Logs</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Output</h2>
+        <div id="output" class="output">Ready for operations...</div>
+    </div>
+
+    <div class="container">
+        <h2>Local Log History</h2>
+        <div id="logHistory" class="log-entries">
+            <p style="color: #999;">No logs yet. Start logging to see entries here.</p>
+        </div>
+    </div>
+
+    <!-- Load the script library -->
+    <script src="/services/logging/scriptlibrary"></script>
+
+    <script>
+        let logger = null;
+        let debugMode = false;
+
+        function log(message, type = 'info') {
+            const outputDiv = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+
+            if (outputDiv.textContent.includes('Ready for operations')) {
+                outputDiv.textContent = '';
+            }
+
+            outputDiv.textContent += logMessage + '\n';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+
+            // Update output styling
+            outputDiv.classList.remove('success', 'error', 'info', 'warn');
+            outputDiv.classList.add(type);
+        }
+
+        function initializeClient() {
+            try {
+                const instanceName = document.getElementById('instanceName').value || 'default';
+                const apiKey = document.getElementById('apiKey').value || null;
+                const minLogLevel = document.getElementById('minLogLevel').value;
+
+                const options = {
+                    apiKey: apiKey,
+                    debug: debugMode,
+                    minLogLevel: minLogLevel
+                };
+
+                logger = new nooblyjscorelogging(instanceName, options);
+
+                const statusDiv = document.getElementById('clientStatus');
+                statusDiv.classList.remove('disconnected');
+                statusDiv.classList.add('connected');
+                statusDiv.textContent = `Client Status: Connected to "${instanceName}" instance`;
+
+                log(`✓ Client initialized for instance: ${instanceName}`, 'info');
+            } catch (error) {
+                log(`✗ Error initializing client: ${error.message}`, 'error');
+                document.getElementById('clientStatus').textContent = 'Client Status: Error';
+            }
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            log(`Debug mode: ${debugMode ? 'ON' : 'OFF'}`, 'info');
+        }
+
+        async function logInfo() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const message = document.getElementById('message').value;
+                const metadataStr = document.getElementById('metadata').value;
+                const meta = metadataStr ? JSON.parse(metadataStr) : undefined;
+
+                await logger.info(message, meta);
+                log(`✓ Info logged: ${message}`, 'info');
+                updateLocalLogs();
+            } catch (error) {
+                log(`✗ Error logging info: ${error.message}`, 'error');
+            }
+        }
+
+        async function logWarn() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const message = document.getElementById('message').value;
+                const metadataStr = document.getElementById('metadata').value;
+                const meta = metadataStr ? JSON.parse(metadataStr) : undefined;
+
+                await logger.warn(message, meta);
+                log(`✓ Warn logged: ${message}`, 'warn');
+                updateLocalLogs();
+            } catch (error) {
+                log(`✗ Error logging warn: ${error.message}`, 'error');
+            }
+        }
+
+        async function logError() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const message = document.getElementById('message').value;
+                const metadataStr = document.getElementById('metadata').value;
+                const meta = metadataStr ? JSON.parse(metadataStr) : undefined;
+
+                await logger.error(message, meta);
+                log(`✓ Error logged: ${message}`, 'error');
+                updateLocalLogs();
+            } catch (error) {
+                log(`✗ Error logging error: ${error.message}`, 'error');
+            }
+        }
+
+        async function logDebug() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const message = document.getElementById('message').value;
+                const metadataStr = document.getElementById('metadata').value;
+                const meta = metadataStr ? JSON.parse(metadataStr) : undefined;
+
+                await logger.debug(message, meta);
+                log(`✓ Debug logged: ${message}`, 'info');
+                updateLocalLogs();
+            } catch (error) {
+                log(`✗ Error logging debug: ${error.message}`, 'error');
+            }
+        }
+
+        async function getAnalytics() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const analytics = await logger.getAnalytics();
+                log(`✓ Analytics: ${JSON.stringify(analytics, null, 2)}`, 'info');
+            } catch (error) {
+                log(`✗ Error getting analytics: ${error.message}`, 'error');
+            }
+        }
+
+        async function getSettings() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            try {
+                const settings = await logger.getSettings();
+                log(`✓ Settings: ${JSON.stringify(settings, null, 2)}`, 'info');
+            } catch (error) {
+                log(`✗ Error getting settings: ${error.message}`, 'error');
+            }
+        }
+
+        function updateLocalLogs() {
+            if (!logger) return;
+
+            const localLogs = logger.getLocalLogs(50);
+            const logHistoryDiv = document.getElementById('logHistory');
+
+            if (localLogs.length === 0) {
+                logHistoryDiv.innerHTML = '<p style="color: #999;">No logs yet.</p>';
+                return;
+            }
+
+            logHistoryDiv.innerHTML = localLogs.map(log => {
+                const time = new Date(log.timestamp).toLocaleTimeString();
+                const meta = log.meta ? ` | ${JSON.stringify(log.meta)}` : '';
+                return `
+                    <div class="log-entry ${log.level}">
+                        <span class="level-indicator ${log.level}">${log.level.toUpperCase()}</span>
+                        <span>${time}</span> ${log.message}${meta}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showLocalLogs() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            const localLogs = logger.getLocalLogs(100);
+            log(`✓ Local logs (${localLogs.length} entries):\n${JSON.stringify(localLogs, null, 2)}`, 'info');
+            updateLocalLogs();
+        }
+
+        function clearLocalLogs() {
+            if (!logger) {
+                log('Please initialize the client first', 'error');
+                return;
+            }
+
+            logger.clearLocalLogs();
+            log('✓ Local logs cleared', 'info');
+            document.getElementById('logHistory').innerHTML = '<p style="color: #999;">No logs yet.</p>';
+        }
+
+        // Auto-initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded. Script library ready. Configure and click "Initialize Client" to begin.', 'info');
+
+            // Check if the library is available
+            if (typeof nooblyjscorelogging === 'undefined') {
+                log('✗ ERROR: nooblyjscorelogging library is not available!', 'error');
+                log('Make sure the script library endpoint is accessible at /services/logging/scriptlibrary', 'error');
+            } else {
+                log('✓ nooblyjscorelogging library is available', 'info');
+            }
+        });
+
+        // Update local logs display when changes occur
+        setInterval(() => {
+            if (logger) {
+                updateLocalLogs();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

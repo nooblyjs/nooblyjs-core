@@ -13,6 +13,9 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 /**
  * Gets the appropriate queue instance based on instance name
  * Falls back to the provided default queue if no instance name is specified
@@ -61,6 +64,32 @@ module.exports = (options, eventEmitter, queue) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
+
+    /**
+     * GET /services/queueing/scriptlibrary
+     * Serves the client-side JavaScript library for consuming the queueing service API
+     * Allows front-end applications to interact with the queueing service.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/queueing/scriptlibrary', (req, res) => {
+      try {
+        const scriptPath = path.join(__dirname, '..', 'scriptlibrary', 'client.js');
+        const scriptContent = fs.readFileSync(scriptPath, 'utf8');
+        res.setHeader('Content-Type', 'application/javascript');
+        res.status(200).send(scriptContent);
+        eventEmitter.emit('api-queueing-scriptlibrary-served', 'Queueing script library served');
+      } catch (error) {
+        eventEmitter.emit('api-queueing-scriptlibrary-error', error.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to load script library',
+          message: error.message
+        });
+      }
+    });
 
     // Helper function to create enqueue handler
     const createEnqueueHandler = (queue) => {

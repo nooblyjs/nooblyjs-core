@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noobly-core Queueing Script Library Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .code-block {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .example-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f0f7ff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .output.success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .output.error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Noobly-core Queueing Script Library Example</h1>
+
+    <div class="container">
+        <h2>Overview</h2>
+        <p>This example demonstrates how to use the Noobly-core Queueing service JavaScript library in a browser environment.</p>
+        <p>The library is served from <code>/services/queueing/scriptlibrary</code> and provides a simple API for enqueueing and dequeueing items.</p>
+    </div>
+
+    <div class="container">
+        <h2>Configuration</h2>
+        <div class="form-group">
+            <label for="instanceName">Instance Name:</label>
+            <input type="text" id="instanceName" value="default" placeholder="e.g., default, custom-instance">
+        </div>
+        <div class="form-group">
+            <label for="apiKey">API Key (optional):</label>
+            <input type="text" id="apiKey" placeholder="Leave empty if not required">
+        </div>
+        <div class="form-group">
+            <button onclick="initializeClient()">Initialize Client</button>
+            <button onclick="toggleDebug()">Toggle Debug Mode</button>
+        </div>
+        <div id="clientStatus" class="status disconnected">Client Status: Not Initialized</div>
+    </div>
+
+    <div class="container">
+        <h2>Queue Operations</h2>
+
+        <div class="example-section">
+            <h3>Enqueue Item</h3>
+            <div class="form-group">
+                <label for="queueName">Queue Name:</label>
+                <input type="text" id="queueName" value="tasks" placeholder="e.g., tasks, emails">
+            </div>
+            <div class="form-group">
+                <label for="taskData">Task Data (JSON):</label>
+                <input type="text" id="taskData" value='{"userId": 123, "action": "process"}' style="width: 100%; padding: 8px;">
+            </div>
+            <button onclick="enqueueItem()">Enqueue Item</button>
+        </div>
+
+        <div class="example-section">
+            <h3>Dequeue Item</h3>
+            <div class="form-group">
+                <label for="dequeueQueueName">Queue Name:</label>
+                <input type="text" id="dequeueQueueName" value="tasks" placeholder="e.g., tasks, emails">
+            </div>
+            <button onclick="dequeueItem()">Dequeue Item</button>
+        </div>
+
+        <div class="example-section">
+            <h3>Queue Management</h3>
+            <div class="form-group">
+                <label for="sizeQueueName">Queue Name:</label>
+                <input type="text" id="sizeQueueName" value="tasks" placeholder="e.g., tasks, emails">
+            </div>
+            <button onclick="getQueueSize()">Get Queue Size</button>
+            <button onclick="listAllQueues()">List All Queues</button>
+            <button onclick="purgeQueue()">Purge Queue</button>
+        </div>
+
+        <div class="example-section">
+            <h3>Analytics & Settings</h3>
+            <button onclick="getAnalytics()">Get Analytics</button>
+            <button onclick="getSettings()">Get Settings</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Output</h2>
+        <div id="output" class="output">Ready for operations...</div>
+    </div>
+
+    <!-- Load the script library -->
+    <script src="/services/queueing/scriptlibrary"></script>
+
+    <script>
+        let queueClient = null;
+        let debugMode = false;
+
+        function log(message, isError = false) {
+            const outputDiv = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+
+            if (outputDiv.textContent.includes('Ready for operations')) {
+                outputDiv.textContent = '';
+            }
+
+            outputDiv.textContent += logMessage + '\n';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+
+            // Update output styling
+            if (isError) {
+                outputDiv.classList.add('error');
+                outputDiv.classList.remove('success');
+            } else {
+                outputDiv.classList.add('success');
+                outputDiv.classList.remove('error');
+            }
+        }
+
+        function initializeClient() {
+            try {
+                const instanceName = document.getElementById('instanceName').value || 'default';
+                const apiKey = document.getElementById('apiKey').value || null;
+
+                const options = {
+                    apiKey: apiKey,
+                    debug: debugMode
+                };
+
+                queueClient = new nooblyjscorequeueing(instanceName, options);
+
+                const statusDiv = document.getElementById('clientStatus');
+                statusDiv.classList.remove('disconnected');
+                statusDiv.classList.add('connected');
+                statusDiv.textContent = `Client Status: Connected to "${instanceName}" instance`;
+
+                log(`✓ Client initialized for instance: ${instanceName}`);
+            } catch (error) {
+                log(`✗ Error initializing client: ${error.message}`, true);
+                document.getElementById('clientStatus').textContent = 'Client Status: Error';
+            }
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            log(`Debug mode: ${debugMode ? 'ON' : 'OFF'}`);
+        }
+
+        async function enqueueItem() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const queueName = document.getElementById('queueName').value;
+                const taskDataStr = document.getElementById('taskData').value;
+                const taskData = JSON.parse(taskDataStr);
+
+                await queueClient.enqueue(queueName, taskData);
+                log(`✓ Item enqueued to "${queueName}": ${JSON.stringify(taskData)}`);
+            } catch (error) {
+                log(`✗ Error enqueueing item: ${error.message}`, true);
+            }
+        }
+
+        async function dequeueItem() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const queueName = document.getElementById('dequeueQueueName').value;
+                const item = await queueClient.dequeue(queueName);
+
+                if (item) {
+                    log(`✓ Item dequeued from "${queueName}": ${JSON.stringify(item)}`);
+                } else {
+                    log(`✓ Queue "${queueName}" is empty`);
+                }
+            } catch (error) {
+                log(`✗ Error dequeueing item: ${error.message}`, true);
+            }
+        }
+
+        async function getQueueSize() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const queueName = document.getElementById('sizeQueueName').value;
+                const size = await queueClient.size(queueName);
+                log(`✓ Queue "${queueName}" size: ${size}`);
+            } catch (error) {
+                log(`✗ Error getting queue size: ${error.message}`, true);
+            }
+        }
+
+        async function listAllQueues() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const queues = await queueClient.listQueues();
+                if (queues && queues.length > 0) {
+                    log(`✓ Available queues: ${JSON.stringify(queues)}`);
+                } else {
+                    log(`✓ No queues available`);
+                }
+            } catch (error) {
+                log(`✗ Error listing queues: ${error.message}`, true);
+            }
+        }
+
+        async function purgeQueue() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const queueName = document.getElementById('sizeQueueName').value;
+                const confirmed = confirm(`Are you sure you want to purge the "${queueName}" queue?`);
+
+                if (confirmed) {
+                    await queueClient.purge(queueName);
+                    log(`✓ Queue "${queueName}" has been purged`);
+                }
+            } catch (error) {
+                log(`✗ Error purging queue: ${error.message}`, true);
+            }
+        }
+
+        async function getAnalytics() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const analytics = await queueClient.getAnalytics();
+                log(`✓ Analytics: ${JSON.stringify(analytics, null, 2)}`);
+            } catch (error) {
+                log(`✗ Error getting analytics: ${error.message}`, true);
+            }
+        }
+
+        async function getSettings() {
+            if (!queueClient) {
+                log('Please initialize the client first', true);
+                return;
+            }
+
+            try {
+                const settings = await queueClient.getSettings();
+                log(`✓ Settings: ${JSON.stringify(settings, null, 2)}`);
+            } catch (error) {
+                log(`✗ Error getting settings: ${error.message}`, true);
+            }
+        }
+
+        // Auto-initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded. Script library ready. Configure and click "Initialize Client" to begin.');
+
+            // Check if the library is available
+            if (typeof nooblyjscorequeueing === 'undefined') {
+                log('✗ ERROR: nooblyjscorequeueing library is not available!', true);
+                log('Make sure the script library endpoint is accessible at /services/queueing/scriptlibrary', true);
+            } else {
+                log('✓ nooblyjscorequeueing library is available');
+            }
+        });
+    </script>
+</body>
+</html>
