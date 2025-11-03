@@ -52,10 +52,15 @@ class AuthPassport extends AuthBase {
    * Set all our settings
    */
   async saveSettings(settings){
-    for (var i=0; i < this.settings.list.length; i++){
+    for (let i=0; i < this.settings.list.length; i++){
       if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
-        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting]
+        if (this.eventEmitter_) {
+          this.eventEmitter_.emit('auth:setting-changed', {
+            setting: this.settings.list[i].setting,
+            value: settings[this.settings.list[i].setting]
+          });
+        }
       }
     }
   }
@@ -95,7 +100,6 @@ class AuthPassport extends AuthBase {
       }
 
     } catch (error) {
-      console.warn('Passport not available. Install passport and passport-local packages.');
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:passport-unavailable', {
           message: 'Passport packages not installed',

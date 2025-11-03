@@ -43,7 +43,11 @@ class AuthFile extends AuthBase {
 
     // Initialize file storage
     this.initializeFileStorage_().catch(error => {
-      console.error('Error initializing file storage:', error);
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:file-storage-error', {
+          error: error.message
+        });
+      }
     });
 
     // Initialize passport for session management even though file provider doesn't use passport strategies
@@ -69,10 +73,15 @@ class AuthFile extends AuthBase {
    * Set all our settings
    */
   async saveSettings(settings){
-    for (var i=0; i < this.settings.list.length; i++){
+    for (let i=0; i < this.settings.list.length; i++){
       if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
-        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting]
+        if (this.eventEmitter_) {
+          this.eventEmitter_.emit('auth:setting-changed', {
+            setting: this.settings.list[i].setting,
+            value: settings[this.settings.list[i].setting]
+          });
+        }
       }
     }
   }
@@ -139,7 +148,11 @@ class AuthFile extends AuthBase {
         });
       }
     } catch (error) {
-      console.error('Failed to initialize file storage:', error);
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:file-storage-initialization-error', {
+          error: error.message
+        });
+      }
       throw error;
     }
   }
@@ -151,17 +164,14 @@ class AuthFile extends AuthBase {
   async createDefaultAdmin_() {
     const adminPassword = this.generateSecurePassword_(20);
 
-    console.log('\n' + '='.repeat(80));
-    console.log('🔐 DEFAULT ADMIN USER CREATED');
-    console.log('='.repeat(80));
-    console.log('Username: administrator');
-    console.log('Email: admin@localhost');
-    console.log(`Password: ${adminPassword}`);
-    console.log('='.repeat(80));
-    console.log('⚠️  IMPORTANT: Save this password immediately!');
-    console.log('   This password will be hashed and cannot be recovered.');
-    console.log('   Change it after first login for security.');
-    console.log('='.repeat(80) + '\n');
+    if (this.eventEmitter_) {
+      this.eventEmitter_.emit('auth:default-admin-password', {
+        username: 'administrator',
+        email: 'admin@localhost',
+        password: adminPassword,
+        message: 'Default admin user created. Save this password immediately!'
+      });
+    }
 
     try {
       await this.createUser({
@@ -178,7 +188,11 @@ class AuthFile extends AuthBase {
         });
       }
     } catch (error) {
-      console.error('Failed to create default admin user:', error);
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:default-admin-creation-error', {
+          error: error.message
+        });
+      }
       throw error;
     }
   }
@@ -428,7 +442,12 @@ class AuthFile extends AuthBase {
         }
       }
     } catch (error) {
-      console.warn('Passport not available for session management:', error.message);
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:passport-unavailable', {
+          message: 'Passport not available for session management',
+          error: error.message
+        });
+      }
     }
   }
 }

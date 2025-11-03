@@ -401,7 +401,12 @@ class SearchService {
             }
           } catch (error) {
             errorCount++;
-            console.error(`Error indexing item ${item.key}:`, error.message);
+            if (this.eventEmitter_) {
+              this.eventEmitter_.emit('search:indexing:error', {
+                key: item.key,
+                error: error.message
+              });
+            }
           }
         }
 
@@ -413,7 +418,11 @@ class SearchService {
           });
         }
       } catch (error) {
-        console.error('Error in indexing processor:', error);
+        if (this.eventEmitter_) {
+          this.eventEmitter_.emit('search:indexing:processor-error', {
+            error: error.message
+          });
+        }
       }
     };
 

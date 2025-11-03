@@ -312,7 +312,9 @@ class QueueAnalytics {
 
       return queueList;
     } catch (error) {
-      console.error('Error getting queue list:', error);
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('queue:analytics:error', { operation: 'getQueueList', error: error.message });
+      }
       return [];
     }
   }
