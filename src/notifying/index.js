@@ -20,8 +20,29 @@ const NotifyingAnalytics = require('./modules/analytics');
  * Automatically configures routes and views for the notification service.
  * @param {string} type - The notification service type ('default', 'api')
  * @param {Object} options - Configuration options for the notification service
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
+ * @param {Object} options.dependencies.queueing - Queueing service instance
+ * @param {Object} options.dependencies.scheduling - Scheduling service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {NotificationService|NotifyingApi} Notification service instance for messaging
+ * @throws {Error} When unsupported notification type is provided
+ * @example
+ * const notifyingService = createNotificationService('default', {
+ *   dependencies: { logging, queueing, scheduling }
+ * }, eventEmitter);
+ *
+ * // Subscribe to a topic
+ * notifyingService.subscribe('user_events', (message) => {
+ *   console.log('Received notification:', message);
+ * });
+ *
+ * // Publish a message to a topic
+ * await notifyingService.publish('user_events', {
+ *   type: 'user_created',
+ *   userId: 123,
+ *   timestamp: new Date()
+ * });
  */
 function createNotificationService(type, options, eventEmitter) {
   // Create notification service instance

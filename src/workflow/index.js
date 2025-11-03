@@ -246,6 +246,23 @@ class WorkflowService {
  * @param {Object} options.dependencies.working - Working service instance for task execution
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {WorkflowService|WorkflowApi} Workflow service instance
+ * @throws {Error} When required dependencies (especially working service) are missing
+ * @example
+ * const workflowService = createWorkflowService('memory', {
+ *   dependencies: { logging, queueing, scheduling, measuring, working }
+ * }, eventEmitter);
+ *
+ * // Define a workflow with multiple steps
+ * await workflowService.defineWorkflow('order_processing', [
+ *   '/path/to/steps/validate_order.js',
+ *   '/path/to/steps/charge_payment.js',
+ *   '/path/to/steps/send_confirmation.js'
+ * ]);
+ *
+ * // Execute the workflow
+ * await workflowService.runWorkflow('order_processing', { orderId: 123 }, (status) => {
+ *   console.log('Workflow status:', status);
+ * });
  */
 function createWorkflowService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

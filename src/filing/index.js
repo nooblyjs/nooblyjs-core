@@ -354,11 +354,42 @@ class FilingService {
 /**
  * Creates a filing service instance with the specified provider.
  * Automatically configures routes and views for the filing service.
- * @param {string} type - The filing provider type ('local', 'ftp', 's3', 'git', 'gcp', 'sync')
+ * @param {string} type - The filing provider type ('local', 'ftp', 's3', 'git', 'gcp', 'sync', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {string} [options.baseDir] - Base directory for file operations (local provider)
+ * @param {string} [options.bucket] - S3 bucket name (s3 provider)
+ * @param {string} [options.remoteType] - Remote provider type for sync provider
+ * @param {Object} [options.remoteOptions] - Configuration for remote provider (sync provider)
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {FilingService} Filing service instance with specified provider
  * @throws {Error} When unsupported filing provider type is provided
+ * @example
+ * const filingService = createFilingService('local', {
+ *   baseDir: '/data/files',
+ *   dependencies: { logging }
+ * }, eventEmitter);
+ *
+ * // Create/upload a file
+ * await filingService.create('documents/report.pdf', fileBuffer);
+ *
+ * // Read/download a file
+ * const content = await filingService.read('documents/report.pdf');
+ *
+ * // List directory contents
+ * const files = await filingService.list('documents/');
+ *
+ * // Delete a file
+ * await filingService.delete('documents/report.pdf');
+ *
+ * @example
+ * // S3 provider example
+ * const s3Filing = createFilingService('s3', {
+ *   bucket: 'my-app-files',
+ *   region: 'us-east-1',
+ *   dependencies: { logging }
+ * }, eventEmitter);
  */
 function createFilingService(type = 'local', options, eventEmitter) {
   let provider;

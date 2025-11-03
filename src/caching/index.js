@@ -24,11 +24,34 @@ const Views = require('./views');
  * Automatically configures routes and views for the cache service.
  * @param {string} type - The cache provider type ('memory', 'redis', 'memcached', 'file', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {string} [options.instanceName='default'] - Unique identifier for this cache instance
+ * @param {number} [options.maxSize] - Maximum cache size (for memory provider)
+ * @param {number} [options.ttl] - Default time-to-live in milliseconds
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {Cache|CacheRedis|CacheMemcached|CacheFile|CacheApi} Cache service instance with specified provider
  * @throws {Error} When unsupported cache type is provided
+ * @example
+ * const cacheService = createCache('memory', {
+ *   instanceName: 'api-cache',
+ *   maxSize: 1000,
+ *   ttl: 3600000, // 1 hour
+ *   dependencies: { logging }
+ * }, eventEmitter);
+ *
+ * // Set a cache entry
+ * await cacheService.set('user:123', { name: 'John Doe', email: 'john@example.com' });
+ *
+ * // Get a cache entry
+ * const user = await cacheService.get('user:123');
+ *
+ * // Delete a cache entry
+ * await cacheService.delete('user:123');
+ *
+ * // Get cache statistics
+ * const stats = cacheService.analytics.getAnalytics();
+ * console.log(`Hit rate: ${stats.hitRate}%`);
  */
 function createCache(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

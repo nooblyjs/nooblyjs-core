@@ -32,8 +32,23 @@ let analyticsInstance = null;
  * @param {Object} options - Configuration options for the worker service
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
+ * @param {Object} options.dependencies.queueing - Queueing service instance
+ * @param {Object} options.dependencies.caching - Caching service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {WorkerProvider|WorkingApi} The singleton worker service instance
+ * @example
+ * const workingService = getWorkerInstance('default', {
+ *   dependencies: { logging, queueing, caching }
+ * }, eventEmitter);
+ *
+ * // Execute a task in a worker thread
+ * await workingService.start('/path/to/task.js', { input: 'data' }, (status, result) => {
+ *   if (status === 'completed') {
+ *     console.log('Task completed:', result);
+ *   } else if (status === 'error') {
+ *     console.error('Task failed:', result);
+ *   }
+ * });
  */
 function getWorkerInstance(type, options, eventEmitter) {
 

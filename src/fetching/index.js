@@ -26,6 +26,25 @@ const Views = require('./views');
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {FetchingNode|FetchingAxios} Fetching service instance with specified provider
  * @throws {Error} When unsupported fetching type is provided
+ * @example
+ * const fetchingService = createFetching('node', {
+ *   dependencies: { logging }
+ * }, eventEmitter);
+ *
+ * // Fetch data from a URL
+ * const response = await fetchingService.fetch('https://api.example.com/data', {
+ *   method: 'GET',
+ *   headers: { 'Authorization': 'Bearer token' }
+ * });
+ * const data = await response.json();
+ *
+ * @example
+ * // Using axios provider
+ * const axiosFetching = createFetching('axios', {
+ *   dependencies: { logging }
+ * }, eventEmitter);
+ *
+ * const result = await axiosFetching.fetch('https://api.example.com/users');
  */
 function createFetching(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

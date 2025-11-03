@@ -22,8 +22,28 @@ const LogAnalytics = require('./modules/analytics');
  * Automatically configures routes and views for the logging service.
  * @param {string} type - The logging provider type ('memory', 'file', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {string} [options.instanceName='default'] - Unique identifier for this logger instance
+ * @param {string} [options.logDir] - Directory for log files (file provider)
+ * @param {string} [options.level='info'] - Minimum log level to capture (debug, info, warn, error)
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {logging|loggingFile|loggingApi} Logging service instance with specified provider
+ * @throws {Error} When unsupported logging type is provided
+ * @example
+ * const loggingService = createLogger('file', {
+ *   instanceName: 'app-logger',
+ *   logDir: './logs',
+ *   level: 'info'
+ * }, eventEmitter);
+ *
+ * // Log messages at different levels
+ * loggingService.info('Application started', { version: '1.0.0' });
+ * loggingService.warn('Deprecated API used', { endpoint: '/old-api' });
+ * loggingService.error('Database connection failed', { error: err.message });
+ * loggingService.debug('Processing request', { requestId: '123' });
+ *
+ * // Get log analytics
+ * const stats = loggingService.analytics.getAnalytics();
+ * console.log(`Total logs: ${stats.totalLogs}, Errors: ${stats.errorCount}`);
  */
 function createLogger(type, options, eventEmitter) {
   let logger;

@@ -27,6 +27,8 @@ const Views = require('./views');
  * Automatically configures routes and views for the AI service.
  * @param {string} type - The AI provider type ('claude', 'chatgpt', 'ollama', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {string} [options.apiKey] - API key for the AI provider (required for claude/chatgpt)
+ * @param {string} [options.model] - Model identifier (e.g., 'claude-3-sonnet', 'gpt-4', 'llama2')
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.caching - Caching service instance
@@ -35,6 +37,25 @@ const Views = require('./views');
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {AIClaude|AIOpenAI|AIOllama|AIApi} AI service instance with specified provider
  * @throws {Error} When unsupported AI provider type is provided
+ * @example
+ * const aiService = createAIService('claude', {
+ *   apiKey: process.env.ANTHROPIC_API_KEY,
+ *   model: 'claude-3-sonnet-20240229',
+ *   dependencies: { logging, caching, workflow, queueing }
+ * }, eventEmitter);
+ *
+ * // Generate a response
+ * const response = await aiService.generate({
+ *   prompt: 'Explain quantum computing in simple terms',
+ *   maxTokens: 500
+ * });
+ * console.log(response.text);
+ *
+ * // Stream a response
+ * await aiService.stream({
+ *   prompt: 'Write a story about a robot',
+ *   onChunk: (chunk) => console.log(chunk)
+ * });
  */
 function createAIService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

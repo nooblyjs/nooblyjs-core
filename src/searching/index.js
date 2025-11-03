@@ -20,7 +20,7 @@ const Views = require('./views');
 /**
  * Creates a search service instance with indexing and query capabilities.
  * Automatically configures routes and views for the search service.
- * @param {string} type - The search service type ('default', 'api')
+ * @param {string} type - The search service type ('default', 'files', 'api')
  * @param {Object} options - Configuration options for the search service
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -30,7 +30,18 @@ const Views = require('./views');
  * @param {Object} options.dependencies.working - Working service instance
  * @param {Object} options.dependencies.scheduling - Scheduling service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {SearchService|SearchingApi} Search service instance for indexing and querying
+ * @return {SearchService|SearchFileService|SearchingApi} Search service instance for indexing and querying
+ * @throws {Error} When required dependencies are missing
+ * @example
+ * const searchService = createSearchService('default', {
+ *   dependencies: { logging, caching, dataservice, queueing, working, scheduling }
+ * }, eventEmitter);
+ *
+ * // Index an object for searching
+ * await searchService.index('users', { id: 1, name: 'John Doe', email: 'john@example.com' });
+ *
+ * // Search for indexed objects
+ * const results = await searchService.search('users', 'John');
  */
 function createSearchService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

@@ -23,6 +23,9 @@ const Views = require('./views');
  * Automatically configures routes and views for the queue service.
  * @param {string} type - The queue provider type ('memory', 'redis', 'rabbitmq', 'api')
  * @param {Object} options - Configuration options for the queue service
+ * @param {string} [options.instanceName='default'] - Unique identifier for this queue instance
+ * @param {string} [options.host] - Redis/RabbitMQ host (for redis/rabbitmq providers)
+ * @param {number} [options.port] - Redis/RabbitMQ port (for redis/rabbitmq providers)
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.caching - Caching service instance
@@ -30,6 +33,25 @@ const Views = require('./views');
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {Queueing|QueueingRedis|QueueingRabbitMQ|QueueingApi} Queue service instance with specified provider
  * @throws {Error} When unsupported queue type is provided
+ * @example
+ * const queueService = createQueue('memory', {
+ *   instanceName: 'task-queue',
+ *   dependencies: { logging, caching, dataservice }
+ * }, eventEmitter);
+ *
+ * // Enqueue a task
+ * await queueService.enqueue('process-order', { orderId: 123, userId: 456 });
+ *
+ * // Dequeue and process tasks
+ * const task = await queueService.dequeue('process-order');
+ * if (task) {
+ *   console.log('Processing task:', task);
+ *   // Process the task...
+ * }
+ *
+ * // Get queue size
+ * const size = await queueService.size('process-order');
+ * console.log(`Queue size: ${size}`);
  */
 function createQueue(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

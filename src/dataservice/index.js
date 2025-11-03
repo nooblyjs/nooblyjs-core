@@ -15,10 +15,15 @@ const Views = require('./views');
 const analytics = require('./modules/analytics');
 
 /**
- * Helper function to get nested values from objects using dot notation
+ * Helper function to get nested values from objects using dot notation.
+ * Safely traverses object properties using a path string.
  * @param {Object} obj - The object to search in
  * @param {string} path - The path to the value (e.g., 'user.profile.name')
- * @return {*} The value at the specified path
+ * @return {*} The value at the specified path, or undefined if not found
+ * @example
+ * const user = { profile: { name: 'John', age: 30 } };
+ * const name = getNestedValue(user, 'profile.name'); // 'John'
+ * const missing = getNestedValue(user, 'profile.email'); // undefined
  */
 function getNestedValue(obj, path) {
   return path.split('.').reduce((current, key) => {
@@ -31,11 +36,39 @@ function getNestedValue(obj, path) {
  * Automatically configures routes and views for the data service.
  * @param {string} type - The data provider type ('memory', 'file', 'simpledb', 'mongodb', 'documentdb', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {string} [options.dataDir] - Directory for file-based storage (file provider)
+ * @param {string} [options.connectionString] - Database connection string (mongodb/documentdb providers)
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.filing - Filing service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {Object} Data service wrapper with provider and methods
+ * @return {Object} Data service wrapper with provider and methods (add, remove, find, jsonFind, etc.)
+ * @throws {Error} When unsupported data provider type is provided
+ * @example
+ * const dataService = createDataserviceService('memory', {
+ *   dependencies: { logging, filing }
+ * }, eventEmitter);
+ *
+ * // Add an object to a container
+ * await dataService.add('users', { name: 'John Doe', email: 'john@example.com' });
+ *
+ * // Find objects in a container
+ * const users = await dataService.find('users', 'John');
+ *
+ * // JSON search with predicate function
+ * const activeUsers = await dataService.jsonFind('users', (user) => user.active === true);
+ *
+ * // JSON search by path
+ * const johnUsers = await dataService.jsonFindByPath('users', 'name', 'John Doe');
+ *
+ * // JSON search with multiple criteria
+ * const results = await dataService.jsonFindByCriteria('users', {
+ *   'profile.age': 30,
+ *   'profile.country': 'USA'
+ * });
+ *
+ * // Remove an object
+ * await dataService.remove('users', 'user-uuid-123');
  */
 function createDataserviceService(type, options, eventEmitter) {
   const { dependencies = {}, ...providerOptions } = options;

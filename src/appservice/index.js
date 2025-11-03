@@ -1,6 +1,12 @@
 /**
- * @fileoverview NooblyJS Core - Structuring
- * This enabler looks for a expected structure that will accelerate some development
+ * @fileoverview Application Service Factory
+ * Factory module for creating application structure services.
+ * Automatically discovers and mounts routes, views, services, data, and activities
+ * from standard directory structure (src/routes, src/views, src/services, src/data, src/activities).
+ *
+ * @author NooblyJS Team
+ * @version 1.0.14
+ * @since 1.0.0
  */
 'use strict';
 
@@ -17,19 +23,35 @@ const appServiceBase = require('./baseClasses/appServiceBase.js');
 const appDataBase = require('./baseClasses/appDataBase.js');
 
 /**
- * Creates a cache service instance with the specified provider and dependency injection.
- * Automatically configures routes and views for the cache service.
- * @param {string} type - The type of application
- * @param {Object} options - Provider-specific configuration options
- * @param {Object} options.name - The name of the application
- * @param {Object} options.baseURL - The URL that the application will listen under e.g./applications/wiki
+ * Creates an application service instance that automatically discovers and mounts
+ * application structure from standard directories.
+ *
+ * @param {string} type - The type of application structure to create
+ * @param {Object} options - Configuration options for the application service
+ * @param {string} [options.name='Application'] - The name of the application
+ * @param {string} [options.baseUrl='/'] - The base URL path for the application (e.g., '/applications/wiki')
+ * @param {Express} options['express-app'] - Express application instance for mounting routes
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {Application} Cache service instance with specified provider
- * @throws {Error} When unsupported cache type is provided
+ * @return {Object} Object containing base classes (appViewBase, appRouteBase, appWorkerBase, appServiceBase, appDataBase)
+ * @throws {Error} When required dependencies are missing
+ * @example
+ * const appService = createAppService('default', {
+ *   name: 'MyApp',
+ *   baseUrl: '/myapp',
+ *   'express-app': app,
+ *   dependencies: { logging }
+ * }, eventEmitter);
+ *
+ * // Application structure is automatically discovered and mounted:
+ * // - src/services/ → Service modules
+ * // - src/data/ → Data models
+ * // - src/routes/ → Express routes
+ * // - src/views/ → View templates or static files
+ * // - src/activities/ → Activity handlers
  */
-module. exports = function(type, options, eventEmitter) {
+module.exports = function(type, options, eventEmitter) {
 
     const logprefx = `[APPSERVICE:${type}]`
 
@@ -101,12 +123,15 @@ module. exports = function(type, options, eventEmitter) {
 };
 
 /**
- * Mount the files and pass the requires settings to those applications
- * @param {*} servicepath 
- * @param {*} type 
- * @param {*} options 
- * @param {*} eventEmitter 
- * @returns 
+ * Mount JavaScript files from a directory and pass configuration to them.
+ * Scans the specified directory for .js files and requires/executes each one
+ * with the provided options and event emitter.
+ *
+ * @param {string} servicepath - Absolute path to the directory containing files to mount
+ * @param {string} type - The type of application being created
+ * @param {Object} options - Configuration options to pass to each mounted file
+ * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
+ * @return {boolean} True if any files were mounted, false otherwise
  */
 function mountFiles(servicepath, type, options, eventEmitter) {
     var filesMounted = false;

@@ -41,9 +41,38 @@ function passportConfigurator(strategyFactoryOrConfig) {
  * Automatically configures routes and views for the auth service.
  * @param {string} type - The auth provider type ('passport', 'google', 'memory', 'file', 'api')
  * @param {Object} options - Provider-specific configuration options
+ * @param {Object} options.dependencies - Injected service dependencies
+ * @param {Object} options.dependencies.logging - Logging service instance
+ * @param {Object} options.dependencies.caching - Caching service instance
+ * @param {Object} options.dependencies.dataservice - DataService instance for user storage
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {AuthPassport|AuthGoogle|AuthMemory|AuthFile|AuthApi} Auth service instance with specified provider
  * @throws {Error} When unsupported auth type is provided
+ * @example
+ * const authService = createAuth('passport', {
+ *   dependencies: { logging, caching, dataservice }
+ * }, eventEmitter);
+ *
+ * // Register a new user
+ * await authService.register('user@example.com', 'securepassword', {
+ *   name: 'John Doe',
+ *   role: 'user'
+ * });
+ *
+ * // Authenticate a user
+ * const user = await authService.authenticate('user@example.com', 'securepassword');
+ *
+ * // Check permissions
+ * const hasAccess = authService.hasPermission(user, 'admin');
+ *
+ * @example
+ * // Google OAuth provider
+ * const googleAuth = createAuth('google', {
+ *   clientID: process.env.GOOGLE_CLIENT_ID,
+ *   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+ *   callbackURL: '/auth/google/callback',
+ *   dependencies: { logging, caching, dataservice }
+ * }, eventEmitter);
  */
 function createAuth(type, options, eventEmitter) {
   let auth;

@@ -29,6 +29,20 @@ let instance = null;
  * @param {Object} options.dependencies.working - Working service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
  * @return {SchedulerProvider} The singleton scheduler service instance
+ * @example
+ * const schedulingService = getSchedulerInstance('memory', {
+ *   dependencies: { logging, measuring, queueing, working }
+ * }, eventEmitter);
+ *
+ * // Schedule a one-time task
+ * schedulingService.schedule('send_reminder', new Date(Date.now() + 3600000), () => {
+ *   console.log('Reminder triggered!');
+ * });
+ *
+ * // Schedule a recurring task (runs every hour)
+ * schedulingService.scheduleRecurring('hourly_cleanup', 3600000, () => {
+ *   console.log('Cleanup task running...');
+ * });
  */
 function getSchedulerInstance(type, options, eventEmitter) {
   // Create singleton instance if it doesn't exist
