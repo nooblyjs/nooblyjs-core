@@ -43,7 +43,7 @@ const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
 // Initialize cache with memcached provider
-const cache = serviceRegistry.cache('memcached');
+const cache = serviceRegistry.cache('redis');
 
 // Global stats for continuous caching operations
 let cacheStats = {
@@ -168,14 +168,12 @@ async function continuousCacheOperations() {
   isCachingRunning = false;
 
   // Schedule next cycle in 10 seconds
-  setTimeout(continuousCacheOperations, 10000);
+  setTimeout(continuousCacheOperations, 1000);
 }
 
-/* Redirect root to services
 app.get('/', (req, res) => {
   res.redirect('/services');
 });
-*/
 
 // Expose the public folder
 app.use('/README', express.static('README.md'));
@@ -184,66 +182,9 @@ app.use('/README', express.static('README.md'));
 app.use('/', express.static(__dirname + '/public'));
 
 // Start continuous caching operations
-app.get('/start-cache-test', (_req, res) => {
-  if (cacheStats.cycleCount === 0) {
-    continuousCacheOperations();
-    res.json({
-      success: true,
-      message: 'Continuous cache test started. Operations run every 10 seconds.',
-      info: 'Check /cache-stats for real-time statistics'
-    });
-  } else {
-    res.json({
-      success: false,
-      message: 'Cache test is already running'
-    });
-  }
-});
-
-// Stop continuous caching operations
-app.get('/stop-cache-test', (_req, res) => {
-  res.json({
-    success: true,
-    message: 'Continuous cache test stopped',
-    stats: cacheStats
-  });
-});
+continuousCacheOperations();
 
 // Real-time cache statistics
-app.get('/cache-stats', async (_req, res) => {
-  try {
-    const isHealthy = await cache.ping();
-    const analytics = cache.getAnalytics();
-    const uptime = Date.now() - cacheStats.startTime;
-
-    res.json({
-      healthy: isHealthy,
-      uptime: uptime,
-      uptimeSeconds: (uptime / 1000).toFixed(2),
-      currentCycle: cacheStats.cycleCount,
-      totalStats: {
-        puts: cacheStats.totalPutOperations,
-        gets: cacheStats.totalGetOperations,
-        deletes: cacheStats.totalDeleteOperations,
-        totalOperations: cacheStats.totalPutOperations + cacheStats.totalGetOperations + cacheStats.totalDeleteOperations
-      },
-      throughput: {
-        putsPerSecond: (cacheStats.totalPutOperations / (uptime / 1000)).toFixed(2),
-        getsPerSecond: (cacheStats.totalGetOperations / (uptime / 1000)).toFixed(2),
-        deletesPerSecond: (cacheStats.totalDeleteOperations / (uptime / 1000)).toFixed(2)
-      },
-      recentCycles: cacheStats.cycles.slice(-5),
-      cacheAnalytics: {
-        count: analytics.length,
-        topEntries: analytics.slice(0, 10)
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
-  }
-});
 
 app.listen(process.env.PORT || 3101, async () => {
   logger.info('Server running on port ' + (process.env.PORT || 3101));
