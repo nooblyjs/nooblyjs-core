@@ -11,6 +11,8 @@
 'use strict';
 
 const Queueing = require('./providers/queueing');
+const QueueingRedis = require('./providers/queueingRedis');
+const QueueingRabbitMQ = require('./providers/queueingRabbitMQ');
 const QueueingApi = require('./providers/queueingApi');
 const QueueAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
@@ -19,14 +21,14 @@ const Views = require('./views');
 /**
  * Creates a queue service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the queue service.
- * @param {string} type - The queue provider type ('memory', 'api')
+ * @param {string} type - The queue provider type ('memory', 'redis', 'rabbitmq', 'api')
  * @param {Object} options - Configuration options for the queue service
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.caching - Caching service instance
  * @param {Object} options.dependencies.dataservice - DataService service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {InMemoryQueue|QueueingApi} Queue service instance with specified provider
+ * @return {Queueing|QueueingRedis|QueueingRabbitMQ|QueueingApi} Queue service instance with specified provider
  * @throws {Error} When unsupported queue type is provided
  */
 function createQueue(type, options, eventEmitter) {
@@ -39,6 +41,12 @@ function createQueue(type, options, eventEmitter) {
 
   // Create queue instance based on provider type
   switch (type) {
+    case 'rabbitmq':
+      queue = new QueueingRabbitMQ(providerOptions, eventEmitter);
+      break;
+    case 'redis':
+      queue = new QueueingRedis(providerOptions, eventEmitter);
+      break;
     case 'api':
       queue = new QueueingApi(providerOptions, eventEmitter);
       break;

@@ -1,5 +1,8 @@
 /**
- * @fileoverview Queueing app
+ * @fileoverview RabbitMQ Queueing app
+ *
+ * Demonstrates the queueing service with RabbitMQ as the backend provider.
+ * RabbitMQ provides distributed, durable, and persistent queue operations.
  *
  * @author NooblyJS Team
  * @version 1.0.14
@@ -16,7 +19,7 @@ const app = express();
 app.use(express.json());
 
 // Add options
-var options = { 
+var options = {
   logDir:  path.join(__dirname, './.application/', 'logs'),
   dataDir : path.join(__dirname, './.application/', 'data'),
   'express-app': app,
@@ -42,21 +45,15 @@ const authservice = serviceRegistry.authservice();
 const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
-// Initialize queue service
-// By default uses 'memory' provider. To use other providers:
-//
-// Redis Provider:
-// 1. Ensure Redis is running on localhost:6379 (or configure REDIS_URL)
-// 2. Update serviceRegistry.queue() call to: serviceRegistry.queue('redis', { redisdurl: 'localhost' })
-//
-// RabbitMQ Provider:
-// 1. Ensure RabbitMQ is running on localhost:5672 (or configure RABBITMQ_URL)
-// 2. Update serviceRegistry.queue() call to: serviceRegistry.queue('rabbitmq', { rabbitmqUrl: 'amqp://localhost' })
-// 3. See: tests/app/queueing/app-queueing-rabbitmq.js for example
-const queue = serviceRegistry.queue();
+// Initialize queue service with RabbitMQ provider
+// Make sure RabbitMQ is running on localhost:5672 (default port)
+// RabbitMQ provides distributed, persistent queue operations
+const queue = serviceRegistry.queue('rabbitmq', {
+  rabbitmqUrl: process.env.RABBITMQ_URL || 'amqp://localhost'
+});
 
-// Get the actual queue provider type from environment or detect from instance
-const queueProviderType = process.env.QUEUE_PROVIDER || 'memory';
+// Queue provider type
+const queueProviderType = 'rabbitmq';
 
 // Is the queue running
 let isQueueRunning = false;
@@ -72,11 +69,11 @@ const queueStats = {
 
 /**
  * Continuous queue operations function
- * Performs enqueue dequeue operations on 1000 items every 10 seconds
+ * Performs enqueue dequeue operations on 1000 items with configurable intervals
  */
 async function continuousQueueOperations() {
   if (isQueueRunning) {
-    // Schedule next operation in 10 seconds
+    // Schedule next operation in 500ms
     setTimeout(continuousQueueOperations, 500);
     return;
   }
@@ -171,7 +168,7 @@ async function continuousQueueOperations() {
 
   isQueueRunning = false;
 
-  // Schedule next cycle in 10 seconds
+  // Schedule next cycle in 500ms
   setTimeout(continuousQueueOperations, 500);
 }
 
@@ -198,25 +195,20 @@ app.get('/queue-stats', (_req, res) => {
 continuousQueueOperations();
 
 // Start server
-const PORT = process.env.PORT || 3101;
+const PORT = process.env.PORT || 3101; // Use different port than default app
 app.listen(PORT, async () => {
   logger.info(`Queue test server running on port ${PORT}`);
   logger.info(`Using queue provider: ${queueProviderType}`);
   logger.info('Available endpoints:');
-  logger.info(`  - Queue stats: http://localhost:${PORT}/queue-stats`);
-  logger.info(`  - Start test: http://localhost:${PORT}/start-queue-test (POST)`);
-  logger.info(`  - Stop test: http://localhost:${PORT}/stop-queue-test (POST)`);
-  logger.info(`  - Reset stats: http://localhost:${PORT}/queue-reset`);
 
-  if (queueProviderType === 'memory') {
-    logger.info('\nNote: Using IN-MEMORY queue provider. Data will be lost on server restart.');
-    logger.info('To use Redis provider: Set QUEUE_PROVIDER=redis environment variable');
-    logger.info('Ensure Redis is running on localhost:6379');
-  } else if (queueProviderType === 'redis') {
-    logger.info('\nNote: Using REDIS queue provider for distributed/persistent queue operations.');
-    const connInfo = queue.getConnectionInfo?.();
-    if (connInfo) {
-      logger.info(`Redis Connection: ${connInfo.host}:${connInfo.port} (Status: ${connInfo.status})`);
-    }
+  logger.info('\nNote: Using RABBITMQ queue provider for distributed/persistent queue operations.');
+  const connInfo = queue.getConnectionInfo?.();
+  if (connInfo) {
+    logger.info(`RabbitMQ Connection: ${connInfo.url} (Status: ${connInfo.status})`);
   }
+
+  logger.info('\nRabbitMQ Configuration:');
+  logger.info('  - Default URL: amqp://localhost');
+  logger.info('  - Set RABBITMQ_URL environment variable to use custom URL');
+  logger.info('  - Example: RABBITMQ_URL=amqp://user:pass@rabbitmq.example.com npm start');
 });

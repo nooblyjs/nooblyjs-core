@@ -43,20 +43,13 @@ const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
 // Initialize queue service
-// By default uses 'memory' provider. To use other providers:
-//
-// Redis Provider:
+// By default uses 'memory' provider. To use Redis provider instead:
 // 1. Ensure Redis is running on localhost:6379 (or configure REDIS_URL)
 // 2. Update serviceRegistry.queue() call to: serviceRegistry.queue('redis', { redisdurl: 'localhost' })
-//
-// RabbitMQ Provider:
-// 1. Ensure RabbitMQ is running on localhost:5672 (or configure RABBITMQ_URL)
-// 2. Update serviceRegistry.queue() call to: serviceRegistry.queue('rabbitmq', { rabbitmqUrl: 'amqp://localhost' })
-// 3. See: tests/app/queueing/app-queueing-rabbitmq.js for example
-const queue = serviceRegistry.queue();
+const queue = serviceRegistry.queue('redis');
 
 // Get the actual queue provider type from environment or detect from instance
-const queueProviderType = process.env.QUEUE_PROVIDER || 'memory';
+const queueProviderType = process.env.QUEUE_PROVIDER || 'redis';
 
 // Is the queue running
 let isQueueRunning = false;
@@ -175,7 +168,7 @@ async function continuousQueueOperations() {
   setTimeout(continuousQueueOperations, 500);
 }
 
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
   res.redirect('/services');
 });
 
