@@ -18,8 +18,8 @@ app.use(express.json());
 var options = { 
   baseUrl: "/",
   name: "Mounted Application",
-  logDir:  path.join(__dirname, './.app-lite/', 'logs'),
-  dataDir : path.join(__dirname, './.app-lite/', 'data'),
+  logDir:  path.join(__dirname, './.application/', 'logs'),
+  dataDir : path.join(__dirname, './.application/', 'data'),
    security: {
     apiKeyAuth: {
       requireApiKey: false,

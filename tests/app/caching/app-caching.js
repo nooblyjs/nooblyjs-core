@@ -17,8 +17,8 @@ app.use(express.json());
 
 // Add options
 var options = { 
-  logDir:  path.join(__dirname, './.app-lite/', 'logs'),
-  dataDir : path.join(__dirname, './.app-lite/', 'data'),
+  logDir:  path.join(__dirname, './.application/', 'logs'),
+  dataDir : path.join(__dirname, './.application/', 'data'),
   'express-app': app,
     brandingConfig: {
       appName: 'App Lite',

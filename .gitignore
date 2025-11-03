@@ -8,7 +8,7 @@ watch/
 data/
 .noobly-core/
 .cache/
-.app-lite/
+.application/
 
 #nodent goes here...
 node_modules/
