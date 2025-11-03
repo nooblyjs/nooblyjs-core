@@ -28,9 +28,9 @@ class CacheMemcached {
     this.settings = {};
     this.settings.desciption = "The following settings are needed for this provider"
     this.settings.list = [
-      {setting: "memcachedurl", type: "string", values : ['http://localhost:11211']}
+      {setting: "memcachedurl", type: "string", values : ['localhost:11211']}
     ];
-    this.settings.memcachedurl = options.memcachedurl || this.settings.memcachedurl || 'http://localhost:11211';
+    this.settings.memcachedurl = options.memcachedurl || this.settings.memcachedurl || 'localhost:11211';
 
     const defaultOptions = {
       poolSize: 10,
@@ -153,6 +153,7 @@ class CacheMemcached {
     await this.ensureConnection_();
     try {
       await this.client_.delete(key);
+      this.trackOperation_(key);
       if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
     } catch (error) {
       this.handleConnectionError_(error);
