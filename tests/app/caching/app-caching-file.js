@@ -17,8 +17,9 @@ app.use(express.json());
 
 // Add options
 var options = { 
-  logDir:  path.join(__dirname, './.app-lite/', 'logs'),
-  dataDir : path.join(__dirname, './.app-lite/', 'data'),
+  logDir:  path.join(__dirname, './.application/', 'logs'),
+  dataDir : path.join(__dirname, './.application/', 'data'),
+  cacheDir : path.join(__dirname, './.application/', 'caching'),
   'express-app': app,
     brandingConfig: {
       appName: 'App Lite',
@@ -43,7 +44,7 @@ const logger = serviceRegistry.logger();
 const dataService = serviceRegistry.dataService();
 
 // Initialize cache with memcached provider
-const cache = serviceRegistry.cache('memcached');
+const cache = serviceRegistry.cache('file');
 
 // Global stats for continuous caching operations
 let cacheStats = {
