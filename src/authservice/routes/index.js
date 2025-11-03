@@ -83,29 +83,24 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         // This is critical for middleware protection to work
         // MUST wait for logIn to complete before sending response
         if (result.user && req.logIn) {
-          return new Promise((resolve, reject) => {
-            req.logIn(result.user, (err) => {
-              if (err) {
-                console.error('Passport session error:', err);
-                return reject(err);
-              }
-
-              // Determine redirect URL: options override > request returnUrl > default
-              let redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
-
-              res.status(200).json({
-                success: true,
-                message: 'Login successful',
-                data: result,
-                redirectUrl: redirectUrl
+          try {
+            await new Promise((resolve, reject) => {
+              req.logIn(result.user, (err) => {
+                if (err) {
+                  eventEmitter.emit('auth:passport-error', { error: err.message });
+                  return reject(err);
+                }
+                resolve();
               });
-              resolve();
             });
-          });
+          } catch (err) {
+            eventEmitter.emit('auth:passport-error', { error: err.message });
+            throw err;
+          }
         }
 
-        // Fallback if logIn not available
-        let redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+        // Determine redirect URL: options override > request returnUrl > default
+        const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
 
         res.status(200).json({
           success: true,
@@ -457,7 +452,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
       });
     });
 
-        /**
+    /**
      * GET /services/authservice/api/settings
      * Retrieves the settings
      *
@@ -465,37 +460,42 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/authservice/api/settings', (req, res) => {
+    app.get('/services/authservice/api/settings', asyncHandler(async (req, res) => {
       try {
-        const settings = auth.getSettings().then((settings)=> res.status(200).json(settings));
+        const settings = await auth.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('auth:settings-error', { error: err.message });
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
         });
       }
-    });
+    }));
 
-     /**
+    /**
      * POST /services/authservice/api/settings
-     * Retrieves the settings
+     * Saves the settings
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/authservice/api/settings', (req, res) => {
+    app.post('/services/authservice/api/settings', asyncHandler(async (req, res) => {
       const message = req.body;
       if (message) {
-        auth
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await auth.saveSettings(message);
+          eventEmitter.emit('auth:settings-updated', { timestamp: Date.now() });
+          res.status(200).send('OK');
+        } catch (err) {
+          eventEmitter.emit('auth:settings-save-error', { error: err.message });
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }
-    });
+    }));
   }
 };
 

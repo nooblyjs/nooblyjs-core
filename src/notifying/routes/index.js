@@ -34,13 +34,15 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/notifying/api/topic', (req, res) => {
+    app.post('/services/notifying/api/topic', async (req, res) => {
       const {topic} = req.body;
       if (topic) {
-        notifier
-          .createTopic(topic)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await notifier.createTopic(topic);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing topic');
       }
@@ -56,14 +58,16 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/notifying/api/subscribe/topic/:topic', (req, res) => {
+    app.post('/services/notifying/api/subscribe/topic/:topic', async (req, res) => {
       const topic = req.params.topic;
       const {callbackUrl} = req.body;
       if (topic && callbackUrl) {
-        notifier
-          .subscribe(topic, callbackUrl)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await notifier.subscribe(topic, callbackUrl);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing topic or callback URL');
       }
@@ -79,14 +83,16 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/notifying/api/unsubscribe/topic/:topic', (req, res) => {
+    app.post('/services/notifying/api/unsubscribe/topic/:topic', async (req, res) => {
       const topic = req.params.topic;
       const {callbackUrl} = req.body;
       if (topic && callbackUrl) {
-        notifier
-          .unsubscribe(topic, callbackUrl)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await notifier.unsubscribe(topic, callbackUrl);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing topic or callback URL');
       }
@@ -102,14 +108,16 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/notifying/api/notify/topic/:topic', (req, res) => {
+    app.post('/services/notifying/api/notify/topic/:topic', async (req, res) => {
       const topic = req.params.topic;
       const {message} = req.body;
       if (topic && message) {
-        notifier
-          .notify(topic, message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await notifier.notify(topic, message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing topic or message');
       }
@@ -180,19 +188,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/notifying/api/settings', (req, res) => {
+    app.get('/services/notifying/api/settings', async (req, res) => {
       try {
-        notifier.getSettings()
-          .then((settings) => res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await notifier.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-notifying-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -208,13 +209,15 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/notifying/api/settings', (req, res) => {
+    app.post('/services/notifying/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        notifier
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await notifier.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

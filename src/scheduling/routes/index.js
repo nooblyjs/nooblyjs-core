@@ -36,13 +36,15 @@ module.exports = (options, eventEmitter, scheduler) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/scheduling/api/schedule', (req, res) => {
+    app.post('/services/scheduling/api/schedule', async (req, res) => {
       const {task, cron} = req.body;
       if (task && cron) {
-        scheduler
-          .start(task, cron)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await scheduler.start(task, cron);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing task or cron expression');
       }
@@ -57,12 +59,14 @@ module.exports = (options, eventEmitter, scheduler) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/scheduling/api/cancel/:taskId', (req, res) => {
+    app.delete('/services/scheduling/api/cancel/:taskId', async (req, res) => {
       const taskId = req.params.taskId;
-      scheduler
-        .cancel(taskId)
-        .then(() => res.status(200).send('OK'))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        await scheduler.cancel(taskId);
+        res.status(200).send('OK');
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -155,19 +159,12 @@ module.exports = (options, eventEmitter, scheduler) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/scheduling/api/settings', (req, res) => {
+    app.get('/services/scheduling/api/settings', async (req, res) => {
       try {
-        scheduler.getSettings()
-          .then((settings) => res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await scheduler.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-scheduling-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -183,13 +180,15 @@ module.exports = (options, eventEmitter, scheduler) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/scheduling/api/settings', (req, res) => {
+    app.post('/services/scheduling/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        scheduler
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await scheduler.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

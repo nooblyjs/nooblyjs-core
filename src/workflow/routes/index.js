@@ -35,13 +35,15 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/defineworkflow', (req, res) => {
+    app.post('/services/workflow/api/defineworkflow', async (req, res) => {
       const {name, steps} = req.body;
       if (name) {
-        workflow
-          .defineWorkflow(name, steps)
-          .then((workflowId) => res.status(200).json({workflowId}))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          const workflowId = await workflow.defineWorkflow(name, steps);
+          res.status(200).json({workflowId});
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing workflow name');
       }
@@ -57,15 +59,17 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/start', (req, res) => {
+    app.post('/services/workflow/api/start', async (req, res) => {
       const {name, data} = req.body;
       if (name) {
-        workflow
-          .runWorkflow(name, data, (data) => {
+        try {
+          const workflowId = await workflow.runWorkflow(name, data, (data) => {
             eventEmitter.emit('workflow-complete', data);
-          })
-          .then((workflowId) => res.status(200).json({workflowId}))
-          .catch((err) => res.status(500).send(err.message));
+          });
+          res.status(200).json({workflowId});
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing workflow name');
       }
@@ -182,19 +186,12 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/settings', (req, res) => {
+    app.get('/services/workflow/api/settings', async (req, res) => {
       try {
-        workflow.getSettings()
-          .then((settings) => res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await workflow.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-workflow-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -210,13 +207,15 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/settings', (req, res) => {
+    app.post('/services/workflow/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        workflow
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await workflow.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

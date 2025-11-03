@@ -58,10 +58,14 @@ class LoggingApi {
    * Set all our settings
    */
   async saveSettings(settings){
-    for (var i=0; i < this.settings.list.length; i++){
+    for (let i = 0; i < this.settings.list.length; i++){
       if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting] 
-        console.log(this.settings.list[i].setting + ' changed to :' + settings[this.settings.list[i].setting]  )
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        const settingName = this.settings.list[i].setting;
+        const newValue = settings[this.settings.list[i].setting];
+        if (this.eventEmitter_) {
+          this.eventEmitter_.emit('logging:setting-changed', { setting: settingName, value: newValue });
+        }
       }
     }
   }
@@ -149,12 +153,12 @@ class LoggingApi {
   }
 
   /**
-   * Logs a log message via the remote logging API.
+   * Logs a debug/log level message via the remote logging API.
    * @param {string} message The log message.
    * @param {Object=} meta Additional metadata.
    * @return {Promise<void>} A promise that resolves when the log is sent.
    */
-  async log(message, meta = {}) {
+  async debug(message, meta = {}) {
     if (!this.shouldLog('log')) {
       return;
     }

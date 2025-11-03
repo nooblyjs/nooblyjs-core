@@ -91,15 +91,22 @@ module.exports = (options, eventEmitter, logger, analytics) => {
       }
     });
 
-    // Helper function to create info handler
+    /**
+     * Creates an async handler for info level logging
+     * @param {Object} logger - Logger instance
+     * @returns {Function} Express middleware function
+     */
     const createInfoHandler = (logger) => {
-      return (req, res) => {
+      return async (req, res) => {
         const message = req.body;
         if (message) {
-          logger
-            .info(message)
-            .then(() => res.status(200).send('OK'))
-            .catch((err) => res.status(500).send(err.message));
+          try {
+            await logger.info(message);
+            res.status(200).send('OK');
+          } catch (err) {
+            eventEmitter.emit('api-logging-info-error', err.message);
+            res.status(500).send(err.message);
+          }
         } else {
           res.status(400).send('Bad Request: Missing message');
         }
@@ -133,15 +140,22 @@ module.exports = (options, eventEmitter, logger, analytics) => {
       createInfoHandler(loggerInstance)(req, res);
     });
 
-    // Helper function to create warn handler
+    /**
+     * Creates an async handler for warning level logging
+     * @param {Object} logger - Logger instance
+     * @returns {Function} Express middleware function
+     */
     const createWarnHandler = (logger) => {
-      return (req, res) => {
+      return async (req, res) => {
         const message = req.body;
         if (message) {
-          logger
-            .warn(message)
-            .then(() => res.status(200).send('OK'))
-            .catch((err) => res.status(500).send(err.message));
+          try {
+            await logger.warn(message);
+            res.status(200).send('OK');
+          } catch (err) {
+            eventEmitter.emit('api-logging-warn-error', err.message);
+            res.status(500).send(err.message);
+          }
         } else {
           res.status(400).send('Bad Request: Missing message');
         }
@@ -175,15 +189,22 @@ module.exports = (options, eventEmitter, logger, analytics) => {
       createWarnHandler(loggerInstance)(req, res);
     });
 
-    // Helper function to create error handler
+    /**
+     * Creates an async handler for error level logging
+     * @param {Object} logger - Logger instance
+     * @returns {Function} Express middleware function
+     */
     const createErrorHandler = (logger) => {
-      return (req, res) => {
+      return async (req, res) => {
         const message = req.body;
         if (message) {
-          logger
-            .error(message)
-            .then(() => res.status(200).send('OK'))
-            .catch((err) => res.status(500).send(err.message));
+          try {
+            await logger.error(message);
+            res.status(200).send('OK');
+          } catch (err) {
+            eventEmitter.emit('api-logging-error-error', err.message);
+            res.status(500).send(err.message);
+          }
         } else {
           res.status(400).send('Bad Request: Missing message');
         }
@@ -442,11 +463,12 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/logging/api/settings', (req, res) => {
+    app.get('/services/logging/api/settings', async (req, res) => {
       try {
-        logger.getSettings().then((settings) => res.status(200).json(settings));
+        const settings = await logger.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-logging-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -462,13 +484,17 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/logging/api/settings', (req, res) => {
+    app.post('/services/logging/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        logger
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await logger.saveSettings(message);
+          eventEmitter.emit('api-logging-settings-saved', { timestamp: Date.now() });
+          res.status(200).send('OK');
+        } catch (err) {
+          eventEmitter.emit('api-logging-settings-save-error', err.message);
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

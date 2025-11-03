@@ -204,13 +204,12 @@ module.exports = (options, eventEmitter, fetching) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/fetching/api/settings', (req, res) => {
+    app.get('/services/fetching/api/settings', async (req, res) => {
       try {
-        fetching.getSettings().then((settings) => {
-          res.status(200).json({
-            success: true,
-            data: settings
-          });
+        const settings = await fetching.getSettings();
+        res.status(200).json({
+          success: true,
+          data: settings
         });
       } catch (err) {
         res.status(500).json({
@@ -230,19 +229,21 @@ module.exports = (options, eventEmitter, fetching) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/fetching/api/settings', (req, res) => {
+    app.post('/services/fetching/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        fetching
-          .saveSettings(message)
-          .then(() => res.status(200).json({
+        try {
+          await fetching.saveSettings(message);
+          res.status(200).json({
             success: true,
             message: 'Settings saved successfully'
-          }))
-          .catch((err) => res.status(500).json({
+          });
+        } catch (err) {
+          res.status(500).json({
             success: false,
             error: err.message
-          }));
+          });
+        }
       } else {
         res.status(400).json({
           success: false,

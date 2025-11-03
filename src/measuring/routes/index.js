@@ -205,19 +205,12 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/measuring/api/settings', (req, res) => {
+    app.get('/services/measuring/api/settings', async (req, res) => {
       try {
-        measuring.getSettings()
-          .then((settings) => res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await measuring.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-measuring-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -233,13 +226,15 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/measuring/api/settings', (req, res) => {
+    app.post('/services/measuring/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        measuring
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await measuring.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

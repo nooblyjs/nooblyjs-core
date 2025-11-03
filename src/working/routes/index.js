@@ -35,15 +35,17 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/working/api/run', (req, res) => {
+    app.post('/services/working/api/run', async (req, res) => {
       const { scriptPath, data } = req.body;
       if (scriptPath) {
-        worker
-          .start(scriptPath, data, (status, result) => {
+        try {
+          const taskId = await worker.start(scriptPath, data, (status, result) => {
             eventEmitter.emit('worker-complete', { status, result });
-          })
-          .then((taskId) => res.status(200).json({ taskId, message: 'Task queued successfully' }))
-          .catch((err) => res.status(500).send(err.message));
+          });
+          res.status(200).json({ taskId, message: 'Task queued successfully' });
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing scriptPath');
       }
@@ -57,11 +59,13 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/working/api/stop', (req, res) => {
-      worker
-        .stop()
-        .then((result) => res.status(200).json(result))
-        .catch((err) => res.status(500).send(err.message));
+    app.get('/services/working/api/stop', async (req, res) => {
+      try {
+        const result = await worker.stop();
+        res.status(200).json(result);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -72,14 +76,14 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/working/api/status', (req, res) => {
-      worker
-        .getStatus()
-        .then((status) => {
-          eventEmitter.emit('api-working-status', status);
-          res.status(200).json(status);
-        })
-        .catch((err) => res.status(500).send(err.message));
+    app.get('/services/working/api/status', async (req, res) => {
+      try {
+        const status = await worker.getStatus();
+        eventEmitter.emit('api-working-status', status);
+        res.status(200).json(status);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -90,12 +94,14 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/working/api/history', (req, res) => {
+    app.get('/services/working/api/history', async (req, res) => {
       const limit = parseInt(req.query.limit) || 100;
-      worker
-        .getTaskHistory(limit)
-        .then((history) => res.status(200).json(history))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const history = await worker.getTaskHistory(limit);
+        res.status(200).json(history);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -106,18 +112,18 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/working/api/task/:taskId', (req, res) => {
+    app.get('/services/working/api/task/:taskId', async (req, res) => {
       const { taskId } = req.params;
-      worker
-        .getTask(taskId)
-        .then((task) => {
-          if (task) {
-            res.status(200).json(task);
-          } else {
-            res.status(404).send('Task not found');
-          }
-        })
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const task = await worker.getTask(taskId);
+        if (task) {
+          res.status(200).json(task);
+        } else {
+          res.status(404).send('Task not found');
+        }
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -218,19 +224,12 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/working/api/settings', (req, res) => {
+    app.get('/services/working/api/settings', async (req, res) => {
       try {
-        worker.getSettings()
-          .then((settings) => res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await worker.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-working-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -246,13 +245,15 @@ module.exports = (options, eventEmitter, worker, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/working/api/settings', (req, res) => {
+    app.post('/services/working/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        worker
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await worker.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

@@ -204,11 +204,12 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/ai/api/settings', (req, res) => {
+    app.get('/services/ai/api/settings', async (req, res) => {
       try {
-        const settings = aiService.getSettings().then((settings)=> res.status(200).json(settings));
+        const settings = await aiService.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-ai-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -224,13 +225,15 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/ai/api/settings', (req, res) => {
+    app.post('/services/ai/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        aiService
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await aiService.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

@@ -43,7 +43,7 @@ module.exports = (options, eventEmitter, filing) => {
     app.post(
       '/services/filing/api/upload/:key',
       upload.single('file'),
-      (req, res) => {
+      async (req, res) => {
         const key = req.params.key;
         let fileData;
         if (req.file) {
@@ -57,15 +57,15 @@ module.exports = (options, eventEmitter, filing) => {
           return res.status(400).send('No file data provided');
         }
 
-        filing
-          .upload(key, fileData)
-          .then(() => {
-            analytics.trackWrite(key);
-            res
-              .status(200)
-              .json({ message: 'File uploaded successfully', key });
-          })
-          .catch((err) => res.status(500).json({ error: err.message }));
+        try {
+          await filing.upload(key, fileData);
+          analytics.trackWrite(key);
+          res
+            .status(200)
+            .json({ message: 'File uploaded successfully', key });
+        } catch (err) {
+          res.status(500).json({ error: err.message });
+        }
       },
     );
 
@@ -81,41 +81,41 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/download/:key', (req, res) => {
+    app.get('/services/filing/api/download/:key', async (req, res) => {
       const key = req.params.key;
       const encoding = req.query.encoding;
       const isAttachment = req.query.attachment === 'true';
 
-      filing
-        .download(key, encoding)
-        .then((data) => {
-          analytics.trackRead(key);
-          if (isAttachment) {
-            // Set headers for file download
-            const filename = key.split('/').pop() || 'download';
-            res.setHeader(
-              'Content-Disposition',
-              `attachment; filename="${filename}"`,
-            );
+      try {
+        const data = await filing.download(key, encoding);
+        analytics.trackRead(key);
+        if (isAttachment) {
+          // Set headers for file download
+          const filename = key.split('/').pop() || 'download';
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${filename}"`,
+          );
 
-            if (Buffer.isBuffer(data)) {
-              res.setHeader('Content-Type', 'application/octet-stream');
-              res.send(data);
-            } else {
-              res.setHeader('Content-Type', 'text/plain');
-              res.send(data);
-            }
+          if (Buffer.isBuffer(data)) {
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.send(data);
           } else {
-            // Return as JSON or raw data
-            if (Buffer.isBuffer(data)) {
-              res.setHeader('Content-Type', 'application/octet-stream');
-              res.send(data);
-            } else {
-              res.status(200).json({ data, encoding: encoding || 'buffer' });
-            }
+            res.setHeader('Content-Type', 'text/plain');
+            res.send(data);
           }
-        })
-        .catch((err) => res.status(500).json({ error: err.message }));
+        } else {
+          // Return as JSON or raw data
+          if (Buffer.isBuffer(data)) {
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.send(data);
+          } else {
+            res.status(200).json({ data, encoding: encoding || 'buffer' });
+          }
+        }
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
     });
 
     /**
@@ -127,15 +127,15 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/filing/api/remove/:key', (req, res) => {
+    app.delete('/services/filing/api/remove/:key', async (req, res) => {
       const key = req.params.key;
-      filing
-        .remove(key)
-        .then(() => {
-          analytics.trackDelete(key);
-          res.status(200).json({ message: 'File removed successfully', key });
-        })
-        .catch((err) => res.status(500).json({ error: err.message }));
+      try {
+        await filing.remove(key);
+        analytics.trackDelete(key);
+        res.status(200).json({ message: 'File removed successfully', key });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
     });
 
     /**
@@ -163,18 +163,18 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/filing/api/upload-stream/:key', (req, res) => {
+    app.post('/services/filing/api/upload-stream/:key', async (req, res) => {
       const key = req.params.key;
 
-      filing
-        .upload(key, req)
-        .then(() => {
-          analytics.trackWrite(key);
-          res
-            .status(200)
-            .json({ message: 'File uploaded successfully via stream', key });
-        })
-        .catch((err) => res.status(500).json({ error: err.message }));
+      try {
+        await filing.upload(key, req);
+        analytics.trackWrite(key);
+        res
+          .status(200)
+          .json({ message: 'File uploaded successfully via stream', key });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
     });
 
     // Sync-specific routes (available when using sync filing provider)
@@ -767,19 +767,12 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/settings', (req, res) => {
+    app.get('/services/filing/api/settings', async (req, res) => {
       try {
-        filing.getSettings()
-          .then((settings)=> res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await filing.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-filing-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -795,13 +788,15 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/filing/api/settings', (req, res) => {
+    app.post('/services/filing/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        filing
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await filing.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

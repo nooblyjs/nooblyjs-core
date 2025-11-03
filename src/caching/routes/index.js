@@ -62,15 +62,21 @@ module.exports = (options, eventEmitter, cache) => {
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
 
-    // Helper function to create put handler
+    /**
+     * Helper function to create put handler
+     * @param {Object} cache - Cache instance
+     * @returns {Function} Express route handler
+     */
     const createPutHandler = (cache) => {
-      return (req, res) => {
+      return async (req, res) => {
         const key = req.params.key;
         const value = req.body;
-        cache
-          .put(key, value)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await cache.put(key, value);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -111,14 +117,20 @@ module.exports = (options, eventEmitter, cache) => {
       }
     );
 
-    // Helper function to create get handler
+    /**
+     * Helper function to create get handler
+     * @param {Object} cache - Cache instance
+     * @returns {Function} Express route handler
+     */
     const createGetHandler = (cache) => {
-      return (req, res) => {
+      return async (req, res) => {
         const key = req.params.key;
-        cache
-          .get(key)
-          .then((value) => res.status(200).json(value))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          const value = await cache.get(key);
+          res.status(200).json(value);
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -157,14 +169,20 @@ module.exports = (options, eventEmitter, cache) => {
       }
     );
 
-    // Helper function to create delete handler
+    /**
+     * Helper function to create delete handler
+     * @param {Object} cache - Cache instance
+     * @returns {Function} Express route handler
+     */
     const createDeleteHandler = (cache) => {
-      return (req, res) => {
+      return async (req, res) => {
         const key = req.params.key;
-        cache
-          .delete(key)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await cache.delete(key);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -381,11 +399,12 @@ module.exports = (options, eventEmitter, cache) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/caching/api/settings', (req, res) => {
+    app.get('/services/caching/api/settings', async (req, res) => {
       try {
-        const settings = cache.getSettings().then((settings)=> res.status(200).json(settings));
+        const settings = await cache.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-cache-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -401,13 +420,15 @@ module.exports = (options, eventEmitter, cache) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/caching/api/settings', (req, res) => {
+    app.post('/services/caching/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        cache
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await cache.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

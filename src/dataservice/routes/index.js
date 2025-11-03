@@ -48,10 +48,12 @@ module.exports = (options, eventEmitter, dataservice) => {
         // Container may already exist, ignore error
       }
 
-      dataservice
-        .add(container, jsonObject)
-        .then((uuid) => res.status(200).json({ id: uuid }))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const uuid = await dataservice.add(container, jsonObject);
+        res.status(200).json({ id: uuid });
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -64,13 +66,15 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.get('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const container = req.params.container;
       const uuid = req.params.uuid;
-      dataservice
-        .getByUuid(container, uuid)
-        .then((value) => res.status(200).json(value))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const value = await dataservice.getByUuid(container, uuid);
+        res.status(200).json(value);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -83,19 +87,19 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.delete('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const container = req.params.container;
       const uuid = req.params.uuid;
-      dataservice
-        .remove(container, uuid)
-        .then((success) => {
-          if (success) {
-            res.status(200).send('OK');
-          } else {
-            res.status(404).send('Not found');
-          }
-        })
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const success = await dataservice.remove(container, uuid);
+        if (success) {
+          res.status(200).send('OK');
+        } else {
+          res.status(404).send('Not found');
+        }
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
 
@@ -111,7 +115,7 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataservice/api/jsonFind/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.post('/services/dataservice/api/jsonFind/:containerName', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const containerName = req.params.containerName;
       const { predicate } = req.body;
 
@@ -119,10 +123,8 @@ module.exports = (options, eventEmitter, dataservice) => {
         // Create predicate function from string (be careful with eval in production)
         const predicateFunc = new Function('obj', `return ${predicate}`);
 
-        dataservice
-          .jsonFind(containerName, predicateFunc)
-          .then((results) => res.status(200).json(results))
-          .catch((err) => res.status(500).send(err.message));
+        const results = await dataservice.jsonFind(containerName, predicateFunc);
+        res.status(200).json(results);
       } catch (err) {
         res.status(400).send(`Invalid predicate: ${err.message}`);
       }
@@ -139,15 +141,17 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataservice/api/jsonFindByPath/:containerName/:path/:value', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.get('/services/dataservice/api/jsonFindByPath/:containerName/:path/:value', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const containerName = req.params.containerName;
       const path = req.params.path;
       const value = req.params.value;
 
-      dataservice
-        .jsonFindByPath(containerName, path, value)
-        .then((results) => res.status(200).json(results))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const results = await dataservice.jsonFindByPath(containerName, path, value);
+        res.status(200).json(results);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -161,14 +165,16 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataservice/api/jsonFindByCriteria/:containerName', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    app.post('/services/dataservice/api/jsonFindByCriteria/:containerName', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const containerName = req.params.containerName;
       const criteria = req.body;
 
-      dataservice
-        .jsonFindByCriteria(containerName, criteria)
-        .then((results) => res.status(200).json(results))
-        .catch((err) => res.status(500).send(err.message));
+      try {
+        const results = await dataservice.jsonFindByCriteria(containerName, criteria);
+        res.status(200).json(results);
+      } catch (err) {
+        res.status(500).send(err.message);
+      }
     });
 
     /**
@@ -261,19 +267,12 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/dataservice/api/settings', (req, res) => {
+    app.get('/services/dataservice/api/settings', async (req, res) => {
       try {
-        dataservice.getSettings()
-          .then((settings)=> res.status(200).json(settings))
-          .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-              error: 'Failed to retrieve settings',
-              message: err.message
-            });
-          });
+        const settings = await dataservice.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-dataservice-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -289,13 +288,15 @@ module.exports = (options, eventEmitter, dataservice) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/dataservice/api/settings', (req, res) => {
+    app.post('/services/dataservice/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        dataservice
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await dataservice.saveSettings(message);
+          res.status(200).send('OK');
+        } catch (err) {
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }

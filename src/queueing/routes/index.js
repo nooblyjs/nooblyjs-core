@@ -91,19 +91,27 @@ module.exports = (options, eventEmitter, queue) => {
       }
     });
 
-    // Helper function to create enqueue handler
+    /**
+     * Creates an async handler for enqueue operations
+     * @param {Object} queue - Queue instance
+     * @returns {Function} Express middleware function
+     */
     const createEnqueueHandler = (queue) => {
-      return (req, res) => {
+      return async (req, res) => {
         const { queueName } = req.params;
         const { task } = req.body;
         if (!queueName) {
           return res.status(400).send('Bad Request: Missing queue name');
         }
         if (task) {
-          queue
-            .enqueue(queueName, task)
-            .then(() => res.status(200).send('OK'))
-            .catch((err) => res.status(500).send(err.message));
+          try {
+            await queue.enqueue(queueName, task);
+            eventEmitter.emit('api-queueing-enqueue', { queueName });
+            res.status(200).send('OK');
+          } catch (err) {
+            eventEmitter.emit('api-queueing-enqueue-error', { error: err.message });
+            res.status(500).send(err.message);
+          }
         } else {
           res.status(400).send('Bad Request: Missing task');
         }
@@ -147,17 +155,25 @@ module.exports = (options, eventEmitter, queue) => {
       }
     );
 
-    // Helper function to create dequeue handler
+    /**
+     * Creates an async handler for dequeue operations
+     * @param {Object} queue - Queue instance
+     * @returns {Function} Express middleware function
+     */
     const createDequeueHandler = (queue) => {
-      return (req, res) => {
+      return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
           return res.status(400).send('Bad Request: Missing queue name');
         }
-        queue
-          .dequeue(queueName)
-          .then((task) => res.status(200).json(task))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          const task = await queue.dequeue(queueName);
+          eventEmitter.emit('api-queueing-dequeue', { queueName });
+          res.status(200).json(task);
+        } catch (err) {
+          eventEmitter.emit('api-queueing-dequeue-error', { error: err.message });
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -196,17 +212,25 @@ module.exports = (options, eventEmitter, queue) => {
       }
     );
 
-    // Helper function to create size handler
+    /**
+     * Creates an async handler for size operations
+     * @param {Object} queue - Queue instance
+     * @returns {Function} Express middleware function
+     */
     const createSizeHandler = (queue) => {
-      return (req, res) => {
+      return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
           return res.status(400).send('Bad Request: Missing queue name');
         }
-        queue
-          .size(queueName)
-          .then((size) => res.status(200).json(size))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          const size = await queue.size(queueName);
+          eventEmitter.emit('api-queueing-size', { queueName });
+          res.status(200).json(size);
+        } catch (err) {
+          eventEmitter.emit('api-queueing-size-error', { error: err.message });
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -245,13 +269,21 @@ module.exports = (options, eventEmitter, queue) => {
       }
     );
 
-    // Helper function to create list handler
+    /**
+     * Creates an async handler for list operations
+     * @param {Object} queue - Queue instance
+     * @returns {Function} Express middleware function
+     */
     const createListHandler = (queue) => {
-      return (req, res) => {
-        queue
-          .listQueues()
-          .then((queues) => res.status(200).json(queues))
-          .catch((err) => res.status(500).send(err.message));
+      return async (req, res) => {
+        try {
+          const queues = await queue.listQueues();
+          eventEmitter.emit('api-queueing-list', { count: queues.length });
+          res.status(200).json(queues);
+        } catch (err) {
+          eventEmitter.emit('api-queueing-list-error', { error: err.message });
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -288,17 +320,25 @@ module.exports = (options, eventEmitter, queue) => {
       }
     );
 
-    // Helper function to create purge handler
+    /**
+     * Creates an async handler for purge operations
+     * @param {Object} queue - Queue instance
+     * @returns {Function} Express middleware function
+     */
     const createPurgeHandler = (queue) => {
-      return (req, res) => {
+      return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
           return res.status(400).send('Bad Request: Missing queue name');
         }
-        queue
-          .purge(queueName)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await queue.purge(queueName);
+          eventEmitter.emit('api-queueing-purge', { queueName });
+          res.status(200).send('OK');
+        } catch (err) {
+          eventEmitter.emit('api-queueing-purge-error', { error: err.message });
+          res.status(500).send(err.message);
+        }
       };
     };
 
@@ -462,11 +502,12 @@ module.exports = (options, eventEmitter, queue) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/queueing/api/settings', (req, res) => {
+    app.get('/services/queueing/api/settings', async (req, res) => {
       try {
-        queue.getSettings().then((settings) => res.status(200).json(settings));
+        const settings = await queue.getSettings();
+        res.status(200).json(settings);
       } catch (err) {
-        console.log(err);
+        eventEmitter.emit('api-queueing-settings-error', err.message);
         res.status(500).json({
           error: 'Failed to retrieve settings',
           message: err.message
@@ -482,13 +523,17 @@ module.exports = (options, eventEmitter, queue) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/queueing/api/settings', (req, res) => {
+    app.post('/services/queueing/api/settings', async (req, res) => {
       const message = req.body;
       if (message) {
-        queue
-          .saveSettings(message)
-          .then(() => res.status(200).send('OK'))
-          .catch((err) => res.status(500).send(err.message));
+        try {
+          await queue.saveSettings(message);
+          eventEmitter.emit('api-queueing-settings-saved', { timestamp: Date.now() });
+          res.status(200).send('OK');
+        } catch (err) {
+          eventEmitter.emit('api-queueing-settings-save-error', err.message);
+          res.status(500).send(err.message);
+        }
       } else {
         res.status(400).send('Bad Request: Missing settings');
       }
