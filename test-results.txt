@@ -1,0 +1,4175 @@
+
+> nooblyjs-core@1.0.10 test
+> jest
+
+FAIL tests/unit/dataservice/dataserviceDocumentDB.test.js (5.524 s)
+  ● Console
+
+    console.warn
+      ⚠️  DocumentDB not available for testing: DocumentDB connection failed: Topology is closed
+
+      58 |       console.log('[x] DocumentDB is available for testing');
+      59 |     } catch (error) {
+    > 60 |       console.warn('⚠️  DocumentDB not available for testing:', error.message);
+         |               ^
+      61 |       console.warn('   Make sure DocumentDB is running on port 10260 for full test coverage');
+      62 |       documentDBAvailable = false;
+      63 |     }
+
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:60:15)
+
+    console.warn
+         Make sure DocumentDB is running on port 10260 for full test coverage
+
+      59 |     } catch (error) {
+      60 |       console.warn('⚠️  DocumentDB not available for testing:', error.message);
+    > 61 |       console.warn('   Make sure DocumentDB is running on port 10260 for full test coverage');
+         |               ^
+      62 |       documentDBAvailable = false;
+      63 |     }
+      64 |   });
+
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:61:15)
+
+  ● DocumentDB DataService › should report DocumentDB availability
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should create a container successfully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should add and retrieve objects
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should find objects by search term
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should remove objects successfully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should handle complex nested objects
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should handle non-existent objects gracefully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should support advanced JSON search methods
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should report connection information
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should build connection strings correctly
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+FAIL tests/unit/dataservice/dataserviceMongoDB.test.js
+  ● MongoDB DataService › should create a container successfully
+
+
+
+
+  ● MongoDB DataService › should add and retrieve objects
+
+
+
+
+  ● MongoDB DataService › should find objects by search term
+
+
+
+
+  ● MongoDB DataService › should remove objects successfully
+
+
+
+
+  ● MongoDB DataService › should handle complex nested objects
+
+
+
+
+  ● MongoDB DataService › should handle non-existent objects gracefully
+
+
+
+
+  ● MongoDB DataService › should support advanced JSON search methods
+
+
+
+
+  ● MongoDB DataService › should report connection status
+
+
+
+
+
+  ● Test suite failed to run
+
+    DocumentDB connection failed: connect ECONNREFUSED 127.0.0.1:10260
+
+FAIL tests/unit/logging/loggingApi.test.js
+  ● Logging API Provider › should log info messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "info",
+    -   "message": "Test info message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      47 |     await logger.info(message, meta);
+      48 |
+    > 49 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      50 |       level: 'info',
+      51 |       message
+      52 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:49:35)
+
+  ● Logging API Provider › should log error messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "error",
+    -   "message": "Test error message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      68 |     await logger.error(message, meta);
+      69 |
+    > 70 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      71 |       level: 'error',
+      72 |       message
+      73 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:70:35)
+
+  ● Logging API Provider › should log warn messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "warn",
+    -   "message": "Test warning message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      88 |     await logger.warn(message);
+      89 |
+    > 90 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      91 |       level: 'warn',
+      92 |       message
+      93 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:90:35)
+
+  ● Logging API Provider › should query logs via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      173 |   async query(query = {}) {
+      174 |     try {
+    > 175 |       const response = await this.client.get('/services/logging/api/logs', { params: query });
+          |                        ^
+      176 |       return response.data;
+      177 |     } catch (error) {
+      178 |       if (this.eventEmitter_)
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at LoggingApi.query (src/logging/providers/loggingApi.js:175:24)
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:124:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/serviceRegistry.test.js
+  ● ServiceRegistry › API Key Authentication Integration › should work with multiple API keys
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 2,
+        "message": "API key authentication configured",
+        "requireApiKey": true,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:216:23)
+
+  ● ServiceRegistry › API Key Authentication Integration › should allow disabling API key requirement
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "keyCount": 1,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:239:23)
+
+  ● ServiceRegistry › Service Creation › should create cache services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create logging services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create dataservice services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create filing services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create other services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should throw error for invalid service type
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Event Handling › should provide event emitter
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:324:23)
+
+  ● ServiceRegistry › Event Handling › should emit events correctly
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:324:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should create default instance when no instanceName is provided
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should create named instances with explicit instanceName
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should maintain singleton behavior for same instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return null for non-existent instance using getServiceInstance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should retrieve existing instance using getServiceInstance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should list all instances of a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should list empty array when no instances exist for a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should reset specific instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return false when resetting non-existent instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should reset all instances of a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return 0 when resetting non-existent service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should isolate data between instances
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should emit service:created event with instance information
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+FAIL tests/unit/caching/cacheFile.test.js
+  ● CacheFile › should put and get a value with file persistence
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:put", {"key": "key1", "value": "value1"}
+    Received
+           1
+              "cache:put:default",
+              Object {
+            +   "instance": "default",
+                "key": "key1",
+                "value": "value1",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key1",
+                "value": "value1",
+              },
+
+    Number of calls: 2
+
+      72 |     await expect(cache.get('key1')).resolves.toBe('value1');
+      73 |     
+    > 74 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+         |                                   ^
+      75 |       key: 'key1',
+      76 |       value: 'value1',
+      77 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:74:35)
+
+  ● CacheFile › should delete a value and remove file
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:delete", {"key": "deleteKey"}
+    Received
+           1
+              "cache:delete:default",
+              Object {
+            +   "instance": "default",
+                "key": "deleteKey",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "deleteKey",
+            +   "value": undefined,
+              },
+
+    Number of calls: 2
+
+      125 |     await expect(cache.get('deleteKey')).resolves.toBeUndefined();
+      126 |     
+    > 127 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+          |                                   ^
+      128 |       key: 'deleteKey',
+      129 |     });
+      130 |
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:127:35)
+
+  ● CacheFile › should return undefined for a non-existent key
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "cache:get",
+    + "cache:get:default",
+      Object {
+    +   "instance": "default",
+        "key": "non-existent-key",
+        "value": undefined,
+      },
+
+    Number of calls: 1
+
+      142 |   it('should return undefined for a non-existent key', async () => {
+      143 |     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
+    > 144 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+          |                                   ^
+      145 |       key: 'non-existent-key',
+      146 |       value: undefined,
+      147 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:144:35)
+
+FAIL tests/unit/caching/cacheApi.test.js
+  ● Cache API Provider › should put a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      82 |   async put(key, value) {
+      83 |     try {
+    > 84 |       await this.client.post(`/services/caching/api/put/${encodeURIComponent(key)}`, value);
+         |       ^
+      85 |       if (this.eventEmitter_)
+      86 |         this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+      87 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.put (src/caching/providers/cachingApi.js:84:7)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:63:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should get a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:82:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should delete a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      118 |   async delete(key) {
+      119 |     try {
+    > 120 |       await this.client.delete(`/services/caching/api/delete/${encodeURIComponent(key)}`);
+          |       ^
+      121 |       if (this.eventEmitter_)
+      122 |         this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
+      123 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.delete (src/caching/providers/cachingApi.js:120:7)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:100:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should get analytics via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      134 |   async getAnalytics() {
+      135 |     try {
+    > 136 |       const response = await this.client.get('/services/caching/api/list');
+          |                        ^
+      137 |       return response.data.data || [];
+      138 |     } catch (error) {
+      139 |       if (this.eventEmitter_)
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.getAnalytics (src/caching/providers/cachingApi.js:136:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:121:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should include API key in request headers
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:154:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should properly encode keys with special characters
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:170:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/aiservice/aiservice.test.js
+  ● AI Service Factory › should create Claude AI service with dependencies
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:82:23)
+
+  ● AI Service Factory › should create AI service without optional dependencies
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:171:23)
+
+  ● AI Service Factory › should handle partial dependencies correctly
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:202:23)
+
+  ● AI Service Factory › should provide logging functionality when logger is injected
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:227:23)
+
+FAIL tests/unit/dataservice/dataserviceApi.test.js
+  ● DataService API Provider › should create a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      56 |   async create(collection, data) {
+      57 |     try {
+    > 58 |       const response = await this.client.post(`/services/dataservice/api/${collection}`, data);
+         |                        ^
+      59 |       if (this.eventEmitter_)
+      60 |         this.eventEmitter_.emit('data:create', { collection, data: response.data });
+      61 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.create (src/dataservice/providers/dataserviceApi.js:58:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:46:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should read records via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      75 |   async read(collection, query = {}) {
+      76 |     try {
+    > 77 |       const response = await this.client.get(`/services/dataservice/api/${collection}`, { params: query });
+         |                        ^
+      78 |       if (this.eventEmitter_)
+      79 |         this.eventEmitter_.emit('data:read', { collection, count: response.data.length });
+      80 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.read (src/dataservice/providers/dataserviceApi.js:77:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:67:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should read a single record by ID via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      94 |   async readById(collection, id) {
+      95 |     try {
+    > 96 |       const response = await this.client.get(`/services/dataservice/api/${collection}/${id}`);
+         |                        ^
+      97 |       if (this.eventEmitter_)
+      98 |         this.eventEmitter_.emit('data:readById', { collection, id });
+      99 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.readById (src/dataservice/providers/dataserviceApi.js:96:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:81:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should update a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      114 |   async update(collection, id, updates) {
+      115 |     try {
+    > 116 |       const response = await this.client.put(`/services/dataservice/api/${collection}/${id}`, updates);
+          |                        ^
+      117 |       if (this.eventEmitter_)
+      118 |         this.eventEmitter_.emit('data:update', { collection, id, updates });
+      119 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.update (src/dataservice/providers/dataserviceApi.js:116:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:96:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should delete a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      133 |   async delete(collection, id) {
+      134 |     try {
+    > 135 |       await this.client.delete(`/services/dataservice/api/${collection}/${id}`);
+          |       ^
+      136 |       if (this.eventEmitter_)
+      137 |         this.eventEmitter_.emit('data:delete', { collection, id });
+      138 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.delete (src/dataservice/providers/dataserviceApi.js:135:7)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:109:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should execute queries via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      151 |   async query(collection, query) {
+      152 |     try {
+    > 153 |       const response = await this.client.post(`/services/dataservice/api/${collection}/query`, { query });
+          |                        ^
+      154 |       if (this.eventEmitter_)
+      155 |         this.eventEmitter_.emit('data:query', { collection, count: response.data.length });
+      156 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.query (src/dataservice/providers/dataserviceApi.js:153:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:126:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/dataservice/dataservice.test.js
+  ● Console
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      Error deleting item some-item-key from domain test-domain: Deletion failed
+
+      125 |       // If the item doesn't exist, deleteAttributes might still succeed or throw a specific error.
+      126 |       // For simplicity, we'll assume success if no specific error indicating non-existence is thrown.
+    > 127 |       console.warn(
+          |               ^
+      128 |         `Error deleting item ${objectKey} from domain ${domainName}: ${error.message}`,
+      129 |       );
+      130 |       return false;
+
+      at SimpleDbDataRingProvider.remove (src/dataservice/providers/dataserviceSimpleDB.js:127:15)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+    console.warn
+      ⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. Consider migrating to DynamoDB which supports AWS SDK v3.
+
+      36 |     }
+      37 |
+    > 38 |     console.warn(
+         |             ^
+      39 |       '⚠️  WARNING: SimpleDB provider uses AWS SDK v2 which is in maintenance mode. ' +
+      40 |       'Consider migrating to DynamoDB which supports AWS SDK v3.'
+      41 |     );
+
+      at new SimpleDbDataRingProvider (src/dataservice/providers/dataserviceSimpleDB.js:38:13)
+      at createDataserviceService (src/dataservice/index.js:88:18)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:317:29)
+
+  ● DataService › FileDataRingProvider › should create a container file
+
+    Container 'orders' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:174:7)
+
+  ● DataService › FileDataRingProvider › should throw error if container file already exists
+
+    Container 'orders' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:186:7)
+
+  ● DataService › FileDataRingProvider › should add an object to a container file and return a key
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:193:7)
+
+  ● DataService › FileDataRingProvider › should remove an object from a container file by key
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:212:7)
+
+  ● DataService › FileDataRingProvider › should return false if removing non-existent object from file
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:231:7)
+
+  ● DataService › FileDataRingProvider › should find objects in a container file by search term
+
+    Container 'items' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:240:7)
+
+  ● DataService › FileDataRingProvider › should return empty array if no matching objects found in file
+
+    Container 'items' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:264:7)
+
+  ● DataService › FileDataRingProvider › should handle adding to a container that was not explicitly created but exists as a file
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: {"id": 1, "value": "test"}
+    Received: undefined
+
+      287 |       const content = await fs.readFile(containerFilePath, 'utf8');
+      288 |       const data = JSON.parse(content);
+    > 289 |       expect(data[key]).toEqual(item);
+          |                         ^
+      290 |     });
+      291 |   });
+      292 |
+
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:289:25)
+
+FAIL tests/unit/working/worker.test.js
+  ● WorkerProvider › should start a worker and execute a script
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      68 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      69 |
+    > 70 |     expect(MockWorker).toHaveBeenCalledTimes(1);
+         |                        ^
+      71 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+      72 |     expect(workerInstanceMock.on).toHaveBeenCalledWith(
+      73 |       'message',
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:70:24)
+
+  ● WorkerProvider › should report status updates from the worker
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      102 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      103 |
+    > 104 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      105 |     const messageHandler = workerInstanceMock.on.mock.calls[0][1];
+      106 |
+      107 |     // Simulate worker sending a running status
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:104:59)
+
+  ● WorkerProvider › should handle worker errors
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      133 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      134 |
+    > 135 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      136 |     const errorHandler = workerInstanceMock.on.mock.calls[1][1];
+      137 |
+      138 |     const error = new Error('Worker failed');
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:135:59)
+
+  ● WorkerProvider › should handle worker exit with non-zero code
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      155 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      156 |
+    > 157 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      158 |     const exitHandler = workerInstanceMock.on.mock.calls[2][1];
+      159 |
+      160 |     exitHandler(1); // Simulate non-zero exit code
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:157:59)
+
+  ● WorkerProvider › should not start if worker is already running
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      180 |     workerInstance.start(mockScriptPath, {}); // Try to start again
+      181 |
+    > 182 |     expect(MockWorker).toHaveBeenCalledTimes(1); // Should only be called once
+          |                        ^
+      183 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('worker:start:error', {
+      184 |       scriptPath: mockScriptPath,
+      185 |       error: 'Worker already running.',
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:182:24)
+
+  ● WorkerProvider › should stop the worker
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      191 |     workerInstance.start(mockScriptPath, {});
+      192 |
+    > 193 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      194 |     mockEventEmitter.emit.mockClear();
+      195 |     workerInstance.stop();
+      196 |
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:193:59)
+
+FAIL tests/unit/caching/cache.test.js
+  ● Cache › should put and get a value
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:put", {"key": "key", "value": "value"}
+    Received
+           1
+              "cache:put:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+                "value": "value",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+                "value": "value",
+              },
+
+    Number of calls: 2
+
+      47 |     await cache.put('key', 'value');
+      48 |     await expect(cache.get('key')).resolves.toBe('value');
+    > 49 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+         |                                   ^
+      50 |       key: 'key',
+      51 |       value: 'value',
+      52 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:49:35)
+
+  ● Cache › should delete a value
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:delete", {"key": "key"}
+    Received
+           1
+              "cache:delete:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+            +   "value": undefined,
+              },
+
+    Number of calls: 2
+
+      68 |     await cache.delete('key');
+      69 |     await expect(cache.get('key')).resolves.toBeUndefined();
+    > 70 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+         |                                   ^
+      71 |       key: 'key',
+      72 |     });
+      73 |   });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:70:35)
+
+  ● Cache › should return undefined for a non-existent key
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "cache:get",
+    + "cache:get:default",
+      Object {
+    +   "instance": "default",
+        "key": "non-existent-key",
+        "value": undefined,
+      },
+
+    Number of calls: 1
+
+      81 |   it('should return undefined for a non-existent key', async () => {
+      82 |     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
+    > 83 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+         |                                   ^
+      84 |       key: 'non-existent-key',
+      85 |       value: undefined,
+      86 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:83:35)
+
+FAIL tests/unit/scheduling/scheduler.test.js
+  ● SchedulerProvider › should be a singleton
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should be a singleton
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should start a scheduled task
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should start a scheduled task
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should start multiple scheduled tasks
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should start multiple scheduled tasks
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should stop a specific scheduled task
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should stop a specific scheduled task
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should stop all scheduled tasks
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should stop all scheduled tasks
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should not start a task if another with the same name is already running
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should not start a task if another with the same name is already running
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should handle task execution and emit event
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should handle task execution and emit event
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+FAIL tests/unit/workflow/workflow.test.js
+  ● WorkflowService › should run a defined workflow and pass data between steps
+
+    Working service not available
+
+       98 |
+       99 |     if (!this.workingService_) {
+    > 100 |       const error = new Error('Working service not available');
+          |                     ^
+      101 |       if (this.eventEmitter_) {
+      102 |         this.eventEmitter_.emit('workflow:error', {
+      103 |           workflowName,
+
+      at WorkflowService.runWorkflow (src/workflow/index.js:100:21)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:121:27)
+
+  ● WorkflowService › should handle errors within a workflow step
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Simulated step error"
+    Received message:   "Working service not available"
+
+           98 |
+           99 |     if (!this.workingService_) {
+        > 100 |       const error = new Error('Working service not available');
+              |                     ^
+          101 |       if (this.eventEmitter_) {
+          102 |         this.eventEmitter_.emit('workflow:error', {
+          103 |           workflowName,
+
+      at WorkflowService.runWorkflow (src/workflow/index.js:100:21)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:251:23)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:256:15)
+
+PASS tests/unit/authservice/authserviceApi.test.js
+PASS tests/unit/logging/scriptlibrary.test.js
+  ● Console
+
+    console.log
+      [nooblyjscorelogging] Initialized with instance: default
+
+      at new nooblyjscorelogging (src/logging/scriptlibrary/client.js:96:15)
+
+    console.log
+      [nooblyjscorelogging] Base URL: /services/logging/api
+
+      at new nooblyjscorelogging (src/logging/scriptlibrary/client.js:97:15)
+
+    console.log
+      [nooblyjscorelogging] Min log level: debug
+
+      at new nooblyjscorelogging (src/logging/scriptlibrary/client.js:98:15)
+
+PASS tests/unit/filing/filing.test.js
+PASS tests/unit/queueing/redisQueue.test.js
+  ● Console
+
+    console.log
+      redisdurl changed to :redis.example.com
+
+      at QueueingRedis.saveSettings (src/queueing/providers/queueingRedis.js:95:17)
+
+    console.log
+      redisport changed to :6380
+
+      at QueueingRedis.saveSettings (src/queueing/providers/queueingRedis.js:95:17)
+
+PASS tests/unit/queueing/rabbitMQQueue.test.js
+  ● Console
+
+    console.log
+      rabbitmqUrl changed to :amqp://example.com
+
+      at QueueingRabbitMQ.saveSettings (src/queueing/providers/queueingRabbitMQ.js:70:17)
+
+PASS tests/unit/working/working-activities.test.js
+FAIL tests/unit/searching/search.test.js
+  ● SearchService › should handle empty search term
+
+    Invalid searchTerm: must be a non-empty string
+
+      216 |     // Validate searchTerm parameter
+      217 |     if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+    > 218 |       const error = new Error('Invalid searchTerm: must be a non-empty string');
+          |                     ^
+      219 |       if (this.eventEmitter_) {
+      220 |         this.eventEmitter_.emit('search:validation-error', {
+      221 |           method: 'search',
+
+      at SearchService.search (src/searching/providers/searching.js:218:21)
+      at Object.<anonymous> (tests/unit/searching/search.test.js:233:41)
+
+PASS tests/unit/authservice/authservice.test.js
+PASS tests/unit/queueing/scriptlibrary.test.js
+  ● Console
+
+    console.log
+      [nooblyjscorequeueing] Initialized with instance: default
+
+      at new nooblyjscorequeueing (src/queueing/scriptlibrary/client.js:99:15)
+
+    console.log
+      [nooblyjscorequeueing] Base URL: /services/queueing/api
+
+      at new nooblyjscorequeueing (src/queueing/scriptlibrary/client.js:100:15)
+
+PASS tests/unit/queueing/inMemoryQueue.test.js
+PASS tests/unit/working/working-queues.test.js
+PASS tests/unit/notifying/notification.test.js
+PASS tests/unit/logging/loggingFile.test.js
+PASS tests/unit/measuring/measuring.test.js
+PASS tests/unit/middleware/apiKeyAuth.test.js
+FAIL tests/unit/logging/logging.test.js
+  ● logging › should log a message to the console
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringMatching /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - [\w.-]+ - Test message$/
+
+    Number of calls: 0
+
+      56 |       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - [\w.-]+ - Test message$/;
+      57 |     await logger.log(message);
+    > 58 |     expect(consoleSpy).toHaveBeenCalledWith(
+         |                        ^
+      59 |       expect.stringMatching(expectedLogPattern),
+      60 |     );
+      61 |   });
+
+      at Object.<anonymous> (tests/unit/logging/logging.test.js:58:24)
+
+Summary of all failing tests
+FAIL tests/unit/dataservice/dataserviceDocumentDB.test.js (5.524 s)
+  ● DocumentDB DataService › should report DocumentDB availability
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should create a container successfully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should add and retrieve objects
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should find objects by search term
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should remove objects successfully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should handle complex nested objects
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should handle non-existent objects gracefully
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should support advanced JSON search methods
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should report connection information
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+  ● DocumentDB DataService › should build connection strings correctly
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      39 |    * Creates a DocumentDB dataservice instance with test configuration.
+      40 |    */
+    > 41 |   beforeAll(async () => {
+         |   ^
+      42 |     mockEventEmitter = new EventEmitter();
+      43 |     jest.spyOn(mockEventEmitter, 'emit');
+      44 |     
+
+      at tests/unit/dataservice/dataserviceDocumentDB.test.js:41:3
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceDocumentDB.test.js:27:1)
+
+FAIL tests/unit/dataservice/dataserviceMongoDB.test.js
+  ● MongoDB DataService › should create a container successfully
+
+
+
+
+  ● MongoDB DataService › should add and retrieve objects
+
+
+
+
+  ● MongoDB DataService › should find objects by search term
+
+
+
+
+  ● MongoDB DataService › should remove objects successfully
+
+
+
+
+  ● MongoDB DataService › should handle complex nested objects
+
+
+
+
+  ● MongoDB DataService › should handle non-existent objects gracefully
+
+
+
+
+  ● MongoDB DataService › should support advanced JSON search methods
+
+
+
+
+  ● MongoDB DataService › should report connection status
+
+
+
+
+
+  ● Test suite failed to run
+
+    DocumentDB connection failed: connect ECONNREFUSED 127.0.0.1:10260
+
+FAIL tests/unit/logging/loggingApi.test.js
+  ● Logging API Provider › should log info messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "info",
+    -   "message": "Test info message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      47 |     await logger.info(message, meta);
+      48 |
+    > 49 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      50 |       level: 'info',
+      51 |       message
+      52 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:49:35)
+
+  ● Logging API Provider › should log error messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "error",
+    -   "message": "Test error message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      68 |     await logger.error(message, meta);
+      69 |
+    > 70 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      71 |       level: 'error',
+      72 |       message
+      73 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:70:35)
+
+  ● Logging API Provider › should log warn messages via API
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "logging:log",
+    + "logging:error",
+      Object {
+    -   "level": "warn",
+    -   "message": "Test warning message",
+    +   "error": "connect ECONNREFUSED 127.0.0.1:3000",
+    +   "operation": "log",
+      },
+
+    Number of calls: 1
+
+      88 |     await logger.warn(message);
+      89 |
+    > 90 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('logging:log', {
+         |                                   ^
+      91 |       level: 'warn',
+      92 |       message
+      93 |     });
+
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:90:35)
+
+  ● Logging API Provider › should query logs via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      173 |   async query(query = {}) {
+      174 |     try {
+    > 175 |       const response = await this.client.get('/services/logging/api/logs', { params: query });
+          |                        ^
+      176 |       return response.data;
+      177 |     } catch (error) {
+      178 |       if (this.eventEmitter_)
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at LoggingApi.query (src/logging/providers/loggingApi.js:175:24)
+      at Object.<anonymous> (tests/unit/logging/loggingApi.test.js:124:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/serviceRegistry.test.js
+  ● ServiceRegistry › API Key Authentication Integration › should work with multiple API keys
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 2,
+        "message": "API key authentication configured",
+        "requireApiKey": true,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:216:23)
+
+  ● ServiceRegistry › API Key Authentication Integration › should allow disabling API key requirement
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "keyCount": 1,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:239:23)
+
+  ● ServiceRegistry › Service Creation › should create cache services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create logging services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create dataservice services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create filing services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should create other services
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Service Creation › should throw error for invalid service type
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:263:23)
+
+  ● ServiceRegistry › Event Handling › should provide event emitter
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:324:23)
+
+  ● ServiceRegistry › Event Handling › should emit events correctly
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:324:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should create default instance when no instanceName is provided
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should create named instances with explicit instanceName
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should maintain singleton behavior for same instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return null for non-existent instance using getServiceInstance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should retrieve existing instance using getServiceInstance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should list all instances of a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should list empty array when no instances exist for a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should reset specific instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return false when resetting non-existent instance
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should reset all instances of a service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should return 0 when resetting non-existent service
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should isolate data between instances
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+  ● ServiceRegistry › Multiple Service Instances › should emit service:created event with instance information
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "keyCount": 1,
+    +   "keyCount": 0,
+        "message": "API key authentication configured",
+    -   "requireApiKey": true,
+    +   "requireApiKey": false,
+      }
+
+      143 |
+      144 |       eventEmitter.on('api-auth-setup', (data) => {
+    > 145 |         expect(data).toMatchObject({
+          |                      ^
+      146 |           message: 'API key authentication configured',
+      147 |           keyCount: 1,
+      148 |           requireApiKey: true
+
+      at EventEmitter.<anonymous> (tests/unit/serviceRegistry.test.js:145:22)
+      at ServiceRegistry.initialize (index.js:162:25)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:353:23)
+
+FAIL tests/unit/caching/cacheFile.test.js
+  ● CacheFile › should put and get a value with file persistence
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:put", {"key": "key1", "value": "value1"}
+    Received
+           1
+              "cache:put:default",
+              Object {
+            +   "instance": "default",
+                "key": "key1",
+                "value": "value1",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key1",
+                "value": "value1",
+              },
+
+    Number of calls: 2
+
+      72 |     await expect(cache.get('key1')).resolves.toBe('value1');
+      73 |     
+    > 74 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+         |                                   ^
+      75 |       key: 'key1',
+      76 |       value: 'value1',
+      77 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:74:35)
+
+  ● CacheFile › should delete a value and remove file
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:delete", {"key": "deleteKey"}
+    Received
+           1
+              "cache:delete:default",
+              Object {
+            +   "instance": "default",
+                "key": "deleteKey",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "deleteKey",
+            +   "value": undefined,
+              },
+
+    Number of calls: 2
+
+      125 |     await expect(cache.get('deleteKey')).resolves.toBeUndefined();
+      126 |     
+    > 127 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+          |                                   ^
+      128 |       key: 'deleteKey',
+      129 |     });
+      130 |
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:127:35)
+
+  ● CacheFile › should return undefined for a non-existent key
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "cache:get",
+    + "cache:get:default",
+      Object {
+    +   "instance": "default",
+        "key": "non-existent-key",
+        "value": undefined,
+      },
+
+    Number of calls: 1
+
+      142 |   it('should return undefined for a non-existent key', async () => {
+      143 |     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
+    > 144 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+          |                                   ^
+      145 |       key: 'non-existent-key',
+      146 |       value: undefined,
+      147 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cacheFile.test.js:144:35)
+
+FAIL tests/unit/caching/cacheApi.test.js
+  ● Cache API Provider › should put a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      82 |   async put(key, value) {
+      83 |     try {
+    > 84 |       await this.client.post(`/services/caching/api/put/${encodeURIComponent(key)}`, value);
+         |       ^
+      85 |       if (this.eventEmitter_)
+      86 |         this.eventEmitter_.emit(`cache:put:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+      87 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.put (src/caching/providers/cachingApi.js:84:7)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:63:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should get a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:82:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should delete a value via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      118 |   async delete(key) {
+      119 |     try {
+    > 120 |       await this.client.delete(`/services/caching/api/delete/${encodeURIComponent(key)}`);
+          |       ^
+      121 |       if (this.eventEmitter_)
+      122 |         this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
+      123 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.delete (src/caching/providers/cachingApi.js:120:7)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:100:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should get analytics via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      134 |   async getAnalytics() {
+      135 |     try {
+    > 136 |       const response = await this.client.get('/services/caching/api/list');
+          |                        ^
+      137 |       return response.data.data || [];
+      138 |     } catch (error) {
+      139 |       if (this.eventEmitter_)
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.getAnalytics (src/caching/providers/cachingApi.js:136:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:121:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should include API key in request headers
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:154:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● Cache API Provider › should properly encode keys with special characters
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+       99 |   async get(key) {
+      100 |     try {
+    > 101 |       const response = await this.client.get(`/services/caching/api/get/${encodeURIComponent(key)}`);
+          |                        ^
+      102 |       const value = response.data;
+      103 |       if (this.eventEmitter_)
+      104 |         this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at CacheApi.get (src/caching/providers/cachingApi.js:101:24)
+      at Object.<anonymous> (tests/unit/caching/cacheApi.test.js:170:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/aiservice/aiservice.test.js
+  ● AI Service Factory › should create Claude AI service with dependencies
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:82:23)
+
+  ● AI Service Factory › should create AI service without optional dependencies
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:171:23)
+
+  ● AI Service Factory › should handle partial dependencies correctly
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:202:23)
+
+  ● AI Service Factory › should provide logging functionality when logger is injected
+
+    Claude API key is required
+
+      38 |
+      39 |     if (!options.apikey) {
+    > 40 |       throw new Error('Claude API key is required');
+         |             ^
+      41 |     }
+      42 |
+      43 |     this.settings.apikey = options.apikey;
+
+      at new AIClaude (src/aiservice/provider/aiclaude.js:40:13)
+      at createAIService (src/aiservice/index.js:74:19)
+      at Object.<anonymous> (tests/unit/aiservice/aiservice.test.js:227:23)
+
+FAIL tests/unit/dataservice/dataserviceApi.test.js
+  ● DataService API Provider › should create a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      56 |   async create(collection, data) {
+      57 |     try {
+    > 58 |       const response = await this.client.post(`/services/dataservice/api/${collection}`, data);
+         |                        ^
+      59 |       if (this.eventEmitter_)
+      60 |         this.eventEmitter_.emit('data:create', { collection, data: response.data });
+      61 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.create (src/dataservice/providers/dataserviceApi.js:58:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:46:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should read records via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      75 |   async read(collection, query = {}) {
+      76 |     try {
+    > 77 |       const response = await this.client.get(`/services/dataservice/api/${collection}`, { params: query });
+         |                        ^
+      78 |       if (this.eventEmitter_)
+      79 |         this.eventEmitter_.emit('data:read', { collection, count: response.data.length });
+      80 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.read (src/dataservice/providers/dataserviceApi.js:77:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:67:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should read a single record by ID via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      94 |   async readById(collection, id) {
+      95 |     try {
+    > 96 |       const response = await this.client.get(`/services/dataservice/api/${collection}/${id}`);
+         |                        ^
+      97 |       if (this.eventEmitter_)
+      98 |         this.eventEmitter_.emit('data:readById', { collection, id });
+      99 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.readById (src/dataservice/providers/dataserviceApi.js:96:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:81:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should update a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      114 |   async update(collection, id, updates) {
+      115 |     try {
+    > 116 |       const response = await this.client.put(`/services/dataservice/api/${collection}/${id}`, updates);
+          |                        ^
+      117 |       if (this.eventEmitter_)
+      118 |         this.eventEmitter_.emit('data:update', { collection, id, updates });
+      119 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.update (src/dataservice/providers/dataserviceApi.js:116:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:96:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should delete a record via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      133 |   async delete(collection, id) {
+      134 |     try {
+    > 135 |       await this.client.delete(`/services/dataservice/api/${collection}/${id}`);
+          |       ^
+      136 |       if (this.eventEmitter_)
+      137 |         this.eventEmitter_.emit('data:delete', { collection, id });
+      138 |     } catch (error) {
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.delete (src/dataservice/providers/dataserviceApi.js:135:7)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:109:5)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+  ● DataService API Provider › should execute queries via API
+
+    connect ECONNREFUSED 127.0.0.1:3000
+
+      151 |   async query(collection, query) {
+      152 |     try {
+    > 153 |       const response = await this.client.post(`/services/dataservice/api/${collection}/query`, { query });
+          |                        ^
+      154 |       if (this.eventEmitter_)
+      155 |         this.eventEmitter_.emit('data:query', { collection, count: response.data.length });
+      156 |       return response.data;
+
+      at AxiosError.from (node_modules/axios/lib/core/AxiosError.js:96:14)
+      at RedirectableRequest.handleRequestError (node_modules/axios/lib/adapters/http.js:638:25)
+      at ClientRequest.eventHandlers.<computed> (node_modules/follow-redirects/index.js:49:24)
+      at Axios.request (node_modules/axios/lib/core/Axios.js:45:41)
+      at DataServiceApi.query (src/dataservice/providers/dataserviceApi.js:153:24)
+      at Object.<anonymous> (tests/unit/dataservice/dataserviceApi.test.js:126:20)
+
+    Cause:
+    connect ECONNREFUSED 127.0.0.1:3000
+
+
+FAIL tests/unit/dataservice/dataservice.test.js
+  ● DataService › FileDataRingProvider › should create a container file
+
+    Container 'orders' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:174:7)
+
+  ● DataService › FileDataRingProvider › should throw error if container file already exists
+
+    Container 'orders' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:186:7)
+
+  ● DataService › FileDataRingProvider › should add an object to a container file and return a key
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:193:7)
+
+  ● DataService › FileDataRingProvider › should remove an object from a container file by key
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:212:7)
+
+  ● DataService › FileDataRingProvider › should return false if removing non-existent object from file
+
+    Container 'products' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:231:7)
+
+  ● DataService › FileDataRingProvider › should find objects in a container file by search term
+
+    Container 'items' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:240:7)
+
+  ● DataService › FileDataRingProvider › should return empty array if no matching objects found in file
+
+    Container 'items' already exists.
+
+      107 |     try {
+      108 |       await fs.access(containerFilePath);
+    > 109 |       throw new Error(`Container '${containerName}' already exists.`);
+          |             ^
+      110 |     } catch (error) {
+      111 |       if (error.code === 'ENOENT') {
+      112 |         // Container does not exist, create an empty file for it
+
+      at FileDataRingProvider.createContainer (src/dataservice/providers/dataservicefiles.js:109:13)
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:264:7)
+
+  ● DataService › FileDataRingProvider › should handle adding to a container that was not explicitly created but exists as a file
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: {"id": 1, "value": "test"}
+    Received: undefined
+
+      287 |       const content = await fs.readFile(containerFilePath, 'utf8');
+      288 |       const data = JSON.parse(content);
+    > 289 |       expect(data[key]).toEqual(item);
+          |                         ^
+      290 |     });
+      291 |   });
+      292 |
+
+      at Object.<anonymous> (tests/unit/dataservice/dataservice.test.js:289:25)
+
+FAIL tests/unit/working/worker.test.js
+  ● WorkerProvider › should start a worker and execute a script
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      68 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      69 |
+    > 70 |     expect(MockWorker).toHaveBeenCalledTimes(1);
+         |                        ^
+      71 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+      72 |     expect(workerInstanceMock.on).toHaveBeenCalledWith(
+      73 |       'message',
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:70:24)
+
+  ● WorkerProvider › should report status updates from the worker
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      102 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      103 |
+    > 104 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      105 |     const messageHandler = workerInstanceMock.on.mock.calls[0][1];
+      106 |
+      107 |     // Simulate worker sending a running status
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:104:59)
+
+  ● WorkerProvider › should handle worker errors
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      133 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      134 |
+    > 135 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      136 |     const errorHandler = workerInstanceMock.on.mock.calls[1][1];
+      137 |
+      138 |     const error = new Error('Worker failed');
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:135:59)
+
+  ● WorkerProvider › should handle worker exit with non-zero code
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      155 |     workerInstance.start(mockScriptPath, {}, mockCallback);
+      156 |
+    > 157 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      158 |     const exitHandler = workerInstanceMock.on.mock.calls[2][1];
+      159 |
+      160 |     exitHandler(1); // Simulate non-zero exit code
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:157:59)
+
+  ● WorkerProvider › should not start if worker is already running
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 0
+
+      180 |     workerInstance.start(mockScriptPath, {}); // Try to start again
+      181 |
+    > 182 |     expect(MockWorker).toHaveBeenCalledTimes(1); // Should only be called once
+          |                        ^
+      183 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('worker:start:error', {
+      184 |       scriptPath: mockScriptPath,
+      185 |       error: 'Worker already running.',
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:182:24)
+
+  ● WorkerProvider › should stop the worker
+
+    TypeError: Cannot read properties of undefined (reading 'value')
+
+      191 |     workerInstance.start(mockScriptPath, {});
+      192 |
+    > 193 |     const workerInstanceMock = MockWorker.mock.results[0].value;
+          |                                                           ^
+      194 |     mockEventEmitter.emit.mockClear();
+      195 |     workerInstance.stop();
+      196 |
+
+      at Object.<anonymous> (tests/unit/working/worker.test.js:193:59)
+
+FAIL tests/unit/caching/cache.test.js
+  ● Cache › should put and get a value
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:put", {"key": "key", "value": "value"}
+    Received
+           1
+              "cache:put:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+                "value": "value",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+                "value": "value",
+              },
+
+    Number of calls: 2
+
+      47 |     await cache.put('key', 'value');
+      48 |     await expect(cache.get('key')).resolves.toBe('value');
+    > 49 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+         |                                   ^
+      50 |       key: 'key',
+      51 |       value: 'value',
+      52 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:49:35)
+
+  ● Cache › should delete a value
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "cache:delete", {"key": "key"}
+    Received
+           1
+              "cache:delete:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+              },
+           2
+              "cache:get:default",
+              Object {
+            +   "instance": "default",
+                "key": "key",
+            +   "value": undefined,
+              },
+
+    Number of calls: 2
+
+      68 |     await cache.delete('key');
+      69 |     await expect(cache.get('key')).resolves.toBeUndefined();
+    > 70 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+         |                                   ^
+      71 |       key: 'key',
+      72 |     });
+      73 |   });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:70:35)
+
+  ● Cache › should return undefined for a non-existent key
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+    - "cache:get",
+    + "cache:get:default",
+      Object {
+    +   "instance": "default",
+        "key": "non-existent-key",
+        "value": undefined,
+      },
+
+    Number of calls: 1
+
+      81 |   it('should return undefined for a non-existent key', async () => {
+      82 |     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
+    > 83 |     expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+         |                                   ^
+      84 |       key: 'non-existent-key',
+      85 |       value: undefined,
+      86 |     });
+
+      at Object.<anonymous> (tests/unit/caching/cache.test.js:83:35)
+
+FAIL tests/unit/scheduling/scheduler.test.js
+  ● SchedulerProvider › should be a singleton
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should be a singleton
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should start a scheduled task
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should start a scheduled task
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should start multiple scheduled tasks
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should start multiple scheduled tasks
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should stop a specific scheduled task
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should stop a specific scheduled task
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should stop all scheduled tasks
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should stop all scheduled tasks
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should not start a task if another with the same name is already running
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should not start a task if another with the same name is already running
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+  ● SchedulerProvider › should handle task execution and emit event
+
+    Working service is required for SchedulerProvider
+
+      33 |
+      34 |     if (!this.worker_) {
+    > 35 |       throw new Error('Working service is required for SchedulerProvider');
+         |             ^
+      36 |     }
+      37 |
+      38 |     // Settings configuration
+
+      at new SchedulerProvider (src/scheduling/providers/scheduling.js:35:13)
+      at getSchedulerInstance (src/scheduling/index.js:51:16)
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:57:25)
+
+  ● SchedulerProvider › should handle task execution and emit event
+
+    TypeError: Cannot read properties of undefined (reading 'stop')
+
+      63 |    */
+      64 |   afterEach(async () => {
+    > 65 |     await schedulerInstance.stop();
+         |                             ^
+      66 |     getSchedulerInstance._reset();
+      67 |   });
+      68 |
+
+      at Object.<anonymous> (tests/unit/scheduling/scheduler.test.js:65:29)
+
+FAIL tests/unit/workflow/workflow.test.js
+  ● WorkflowService › should run a defined workflow and pass data between steps
+
+    Working service not available
+
+       98 |
+       99 |     if (!this.workingService_) {
+    > 100 |       const error = new Error('Working service not available');
+          |                     ^
+      101 |       if (this.eventEmitter_) {
+      102 |         this.eventEmitter_.emit('workflow:error', {
+      103 |           workflowName,
+
+      at WorkflowService.runWorkflow (src/workflow/index.js:100:21)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:121:27)
+
+  ● WorkflowService › should handle errors within a workflow step
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Simulated step error"
+    Received message:   "Working service not available"
+
+           98 |
+           99 |     if (!this.workingService_) {
+        > 100 |       const error = new Error('Working service not available');
+              |                     ^
+          101 |       if (this.eventEmitter_) {
+          102 |         this.eventEmitter_.emit('workflow:error', {
+          103 |           workflowName,
+
+      at WorkflowService.runWorkflow (src/workflow/index.js:100:21)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:251:23)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/workflow/workflow.test.js:256:15)
+
+FAIL tests/unit/searching/search.test.js
+  ● SearchService › should handle empty search term
+
+    Invalid searchTerm: must be a non-empty string
+
+      216 |     // Validate searchTerm parameter
+      217 |     if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+    > 218 |       const error = new Error('Invalid searchTerm: must be a non-empty string');
+          |                     ^
+      219 |       if (this.eventEmitter_) {
+      220 |         this.eventEmitter_.emit('search:validation-error', {
+      221 |           method: 'search',
+
+      at SearchService.search (src/searching/providers/searching.js:218:21)
+      at Object.<anonymous> (tests/unit/searching/search.test.js:233:41)
+
+FAIL tests/unit/logging/logging.test.js
+  ● logging › should log a message to the console
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringMatching /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - [\w.-]+ - Test message$/
+
+    Number of calls: 0
+
+      56 |       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - [\w.-]+ - Test message$/;
+      57 |     await logger.log(message);
+    > 58 |     expect(consoleSpy).toHaveBeenCalledWith(
+         |                        ^
+      59 |       expect.stringMatching(expectedLogPattern),
+      60 |     );
+      61 |   });
+
+      at Object.<anonymous> (tests/unit/logging/logging.test.js:58:24)
+
+
+Test Suites: 15 failed, 1 skipped, 14 passed, 29 of 30 total
+Tests:       92 failed, 11 skipped, 249 passed, 352 total
+Snapshots:   0 total
+Time:        15.442 s
+Ran all test suites.
+
+Jest has detected the following 1 open handle potentially keeping Jest from exiting:
+
+  ●  Timeout
+
+      147 |
+      148 |     // Then collect every second
+    > 149 |     this.collectionInterval = setInterval(() => {
+          |                               ^
+      150 |       this._collectMetrics();
+      151 |     }, 1000);
+      152 |   }
+
+      at SystemMonitoring.startCollecting (src/views/modules/monitoring.js:149:31)
+      at new SystemMonitoring (src/views/modules/monitoring.js:30:10)
+      at Object.<anonymous> (src/views/modules/monitoring.js:211:26)
+      at Object.<anonymous> (index.js:19:26)
+      at Object.<anonymous> (tests/unit/serviceRegistry.test.js:16:25)
+

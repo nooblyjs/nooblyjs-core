@@ -69,9 +69,61 @@ class AuthBase {
    * @param {string} userData.password User password (will be hashed).
    * @param {string=} userData.role User role (default: 'user').
    * @return {Promise<Object>} Promise resolving to user object.
+   * @throws {Error} When userData is invalid or username already exists.
    */
   async createUser(userData) {
+    // Validate userData parameter
+    if (!userData || typeof userData !== 'object' || Array.isArray(userData)) {
+      const error = new Error('Invalid userData: must be a non-null object');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'createUser',
+          error: error.message
+        });
+      }
+      throw error;
+    }
+
     const { username, email, password, role = 'user' } = userData;
+
+    // Validate username
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      const error = new Error('Invalid username: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'createUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
+    // Validate email
+    if (!email || typeof email !== 'string' || email.trim() === '') {
+      const error = new Error('Invalid email: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'createUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
+    // Validate password
+    if (!password || typeof password !== 'string' || password.trim() === '') {
+      const error = new Error('Invalid password: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'createUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
 
     if (this.users_.has(username)) {
       throw new Error('Username already exists');
@@ -105,8 +157,35 @@ class AuthBase {
    * @param {string} username Username.
    * @param {string} password Password.
    * @return {Promise<Object>} Promise resolving to user object if authenticated.
+   * @throws {Error} When username or password is invalid, or credentials are incorrect.
    */
   async authenticateUser(username, password) {
+    // Validate username parameter
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      const error = new Error('Invalid username: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'authenticateUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
+    // Validate password parameter
+    if (!password || typeof password !== 'string') {
+      const error = new Error('Invalid password: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'authenticateUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
     const user = this.users_.get(username);
 
     if (!user || !user.isActive) {
@@ -154,8 +233,21 @@ class AuthBase {
    * Validates a session token.
    * @param {string} token Session token.
    * @return {Promise<Object>} Promise resolving to session object if valid.
+   * @throws {Error} When token is invalid or session is expired.
    */
   async validateSession(token) {
+    // Validate token parameter
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      const error = new Error('Invalid token: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'validateSession',
+          error: error.message
+        });
+      }
+      throw error;
+    }
+
     const session = this.sessions_.get(token);
 
     if (!session) {
@@ -203,8 +295,35 @@ class AuthBase {
    * @param {string} username Username.
    * @param {Object} updates Object containing fields to update.
    * @return {Promise<Object>} Promise resolving to updated user object.
+   * @throws {Error} When username or updates is invalid, or user not found.
    */
   async updateUser(username, updates) {
+    // Validate username parameter
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      const error = new Error('Invalid username: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'updateUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
+    // Validate updates parameter
+    if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+      const error = new Error('Invalid updates: must be a non-null object');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('auth:validation-error', {
+          method: 'updateUser',
+          error: error.message,
+          username
+        });
+      }
+      throw error;
+    }
+
     const user = this.users_.get(username);
     if (!user) {
       throw new Error('User not found');

@@ -70,8 +70,35 @@ class Queueing {
    * @param {string} queueName The name of the queue.
    * @param {*} item The item to add to the queue.
    * @return {Promise<void>} A promise that resolves when the item is enqueued.
+   * @throws {Error} When queueName is invalid or item is undefined.
    */
   async enqueue(queueName, item) {
+    // Validate queueName parameter
+    if (!queueName || typeof queueName !== 'string' || queueName.trim() === '') {
+      const error = new Error('Invalid queueName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`queue:validation-error:${this.instanceName_}`, {
+          method: 'enqueue',
+          error: error.message,
+          queueName
+        });
+      }
+      throw error;
+    }
+
+    // Validate item parameter
+    if (item === undefined) {
+      const error = new Error('Invalid item: cannot be undefined');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`queue:validation-error:${this.instanceName_}`, {
+          method: 'enqueue',
+          error: error.message,
+          queueName
+        });
+      }
+      throw error;
+    }
+
     const queue = this.getQueue_(queueName);
     queue.push(item);
     if (this.eventEmitter_) {
@@ -84,8 +111,22 @@ class Queueing {
    * Removes and returns the item at the front of the specified queue (dequeue operation).
    * @param {string} queueName The name of the queue.
    * @return {Promise<*>} A promise that resolves to the item at the front of the queue, or undefined if empty.
+   * @throws {Error} When queueName is invalid.
    */
   async dequeue(queueName) {
+    // Validate queueName parameter
+    if (!queueName || typeof queueName !== 'string' || queueName.trim() === '') {
+      const error = new Error('Invalid queueName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`queue:validation-error:${this.instanceName_}`, {
+          method: 'dequeue',
+          error: error.message,
+          queueName
+        });
+      }
+      throw error;
+    }
+
     const queue = this.getQueue_(queueName);
     const item = queue.shift();
     if (item && this.eventEmitter_) {
@@ -99,8 +140,22 @@ class Queueing {
    * Returns the number of items in the specified queue.
    * @param {string} queueName The name of the queue.
    * @return {Promise<number>} A promise that resolves to the number of items in the queue.
+   * @throws {Error} When queueName is invalid.
    */
   async size(queueName) {
+    // Validate queueName parameter
+    if (!queueName || typeof queueName !== 'string' || queueName.trim() === '') {
+      const error = new Error('Invalid queueName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`queue:validation-error:${this.instanceName_}`, {
+          method: 'size',
+          error: error.message,
+          queueName
+        });
+      }
+      throw error;
+    }
+
     const queue = this.getQueue_(queueName);
     return queue.length;
   }
@@ -117,8 +172,22 @@ class Queueing {
    * Purges all items from the specified queue.
    * @param {string} queueName The name of the queue to purge.
    * @return {Promise<void>} A promise that resolves when the queue is purged.
+   * @throws {Error} When queueName is invalid.
    */
   async purge(queueName) {
+    // Validate queueName parameter
+    if (!queueName || typeof queueName !== 'string' || queueName.trim() === '') {
+      const error = new Error('Invalid queueName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`queue:validation-error:${this.instanceName_}`, {
+          method: 'purge',
+          error: error.message,
+          queueName
+        });
+      }
+      throw error;
+    }
+
     this.queues_.set(queueName, []);
     if (this.eventEmitter_) {
       const eventName = `queue:purge:${this.instanceName_}`;

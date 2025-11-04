@@ -45,9 +45,35 @@ class LocalFilingProvider {
    * @param {string} filePath The path where the file should be created.
    * @param {Buffer|ReadableStream|string} content The content to write to the file.
    * @return {Promise<void>} A promise that resolves when the file is created.
-   * @throws {Error} When file creation fails.
+   * @throws {Error} When filePath or content is invalid, or file creation fails.
    */
   async create(filePath, content) {
+    // Validate filePath parameter
+    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+      const error = new Error('Invalid filePath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'create',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
+    // Validate content parameter
+    if (content === undefined || content === null) {
+      const error = new Error('Invalid content: cannot be null or undefined');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'create',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
     await this._ensureDirectoryExists(filePath);
 
     if (content && typeof content.pipe === 'function') {
@@ -70,9 +96,36 @@ class LocalFilingProvider {
    * @param {string} filePath The path of the file to read.
    * @param {string} [encoding] Optional encoding (e.g., 'utf8', 'base64'), defaults to Buffer.
    * @return {Promise<Buffer|string>} A promise that resolves to the file content.
-   * @throws {Error} When file reading fails.
+   * @throws {Error} When filePath is invalid or file reading fails.
    */
   async read(filePath, encoding) {
+    // Validate filePath parameter
+    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+      const error = new Error('Invalid filePath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'read',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
+    // Validate encoding parameter if provided
+    if (encoding !== undefined && typeof encoding !== 'string') {
+      const error = new Error('Invalid encoding: must be a string if provided');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'read',
+          error: error.message,
+          filePath,
+          encoding
+        });
+      }
+      throw error;
+    }
+
     const content = encoding
       ? await fs.readFile(filePath, encoding)
       : await fs.readFile(filePath);
@@ -89,9 +142,22 @@ class LocalFilingProvider {
    * Deletes a file from the local file system.
    * @param {string} filePath The path of the file to delete.
    * @return {Promise<void>} A promise that resolves when the file is deleted.
-   * @throws {Error} When file deletion fails.
+   * @throws {Error} When filePath is invalid or file deletion fails.
    */
   async delete(filePath) {
+    // Validate filePath parameter
+    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+      const error = new Error('Invalid filePath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'delete',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
     await fs.unlink(filePath);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('filing:delete', { filePath });
@@ -101,9 +167,22 @@ class LocalFilingProvider {
    * Lists files in a local directory.
    * @param {string} dirPath The path of the directory to list.
    * @return {Promise<Array<string>>} A promise that resolves to an array of file names.
-   * @throws {Error} When directory listing fails.
+   * @throws {Error} When dirPath is invalid or directory listing fails.
    */
   async list(dirPath) {
+    // Validate dirPath parameter
+    if (!dirPath || typeof dirPath !== 'string' || dirPath.trim() === '') {
+      const error = new Error('Invalid dirPath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'list',
+          error: error.message,
+          dirPath
+        });
+      }
+      throw error;
+    }
+
     const files = await fs.readdir(dirPath);
     if (this.eventEmitter_)
       this.eventEmitter_.emit('filing:list', { dirPath, files });
@@ -115,9 +194,35 @@ class LocalFilingProvider {
    * @param {string} filePath The path of the file to update.
    * @param {Buffer|ReadableStream|string} content The new content for the file.
    * @return {Promise<void>} A promise that resolves when the file is updated.
-   * @throws {Error} When file update fails.
+   * @throws {Error} When filePath or content is invalid, or file update fails.
    */
   async update(filePath, content) {
+    // Validate filePath parameter
+    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+      const error = new Error('Invalid filePath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'update',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
+    // Validate content parameter
+    if (content === undefined || content === null) {
+      const error = new Error('Invalid content: cannot be null or undefined');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:validation-error', {
+          method: 'update',
+          error: error.message,
+          filePath
+        });
+      }
+      throw error;
+    }
+
     await this._ensureDirectoryExists(filePath);
 
     if (content && typeof content.pipe === 'function') {

@@ -84,8 +84,35 @@ class SearchService {
    * @param {!Object} jsonObject The JSON object to add.
    * @param {string=} searchContainer The name of the index (defaults to default index).
    * @return {Promise<boolean>} A promise that resolves to true if the object was queued/added, false if the key already exists.
+   * @throws {Error} When key or jsonObject is invalid.
    */
   async add(key, jsonObject, searchContainer = this.defaultIndex_) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'add',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
+    // Validate jsonObject parameter
+    if (!jsonObject || typeof jsonObject !== 'object' || Array.isArray(jsonObject)) {
+      const error = new Error('Invalid jsonObject: must be a non-null object');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'add',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     // Track add operation
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     analytics.trackAdd(resolvedContainer);
@@ -147,8 +174,22 @@ class SearchService {
    * @param {string} key The key of the JSON object to remove.
    * @param {string=} searchContainer The name of the index (defaults to default index).
    * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false if the key was not found.
+   * @throws {Error} When key is invalid.
    */
   async remove(key, searchContainer = this.defaultIndex_) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'remove',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     if (!this.indexes.has(resolvedContainer)) {
       return false;
@@ -169,14 +210,23 @@ class SearchService {
    * @param {string} searchTerm The term to search for.
    * @param {string=} searchContainer The name of the index to search (defaults to default index).
    * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects with their keys.
+   * @throws {Error} When searchTerm is invalid.
    */
   async search(searchTerm, searchContainer = this.defaultIndex_) {
-    const results = [];
-    if (!searchTerm) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer: this.normalizeIndexName_(searchContainer), results });
-      return results;
+    // Validate searchTerm parameter
+    if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+      const error = new Error('Invalid searchTerm: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'search',
+          error: error.message,
+          searchTerm
+        });
+      }
+      throw error;
     }
+
+    const results = [];
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     const index = this.indexes.get(resolvedContainer);

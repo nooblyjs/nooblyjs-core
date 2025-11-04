@@ -64,9 +64,22 @@ class InMemoryDataServiceProvider {
    * Creates a new container for storing JSON objects.
    * @param {string} containerName The name of the container to create.
    * @return {Promise<void>} A promise that resolves when the container is created.
-   * @throws {Error} When a container with the same name already exists.
+   * @throws {Error} When containerName is invalid or a container with the same name already exists.
    */
   async createContainer(containerName) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      const error = new Error('Invalid containerName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'createContainer',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
     if (this.containers.has(containerName)) {
       throw new Error(`Container '${containerName}' already exists.`);
     }
@@ -80,9 +93,35 @@ class InMemoryDataServiceProvider {
    * @param {string} containerName The name of the container to add the object to.
    * @param {!Object} jsonObject The JSON object to store.
    * @return {Promise<string>} A promise that resolves to the unique key for the stored object.
-   * @throws {Error} When the specified container does not exist.
+   * @throws {Error} When containerName or jsonObject is invalid, or container does not exist.
    */
   async add(containerName, jsonObject) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      const error = new Error('Invalid containerName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'add',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
+    // Validate jsonObject parameter
+    if (!jsonObject || typeof jsonObject !== 'object' || Array.isArray(jsonObject)) {
+      const error = new Error('Invalid jsonObject: must be a non-null object');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'add',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
     if (!this.containers.has(containerName)) {
       throw new Error(`Container '${containerName}' does not exist.`);
     }
@@ -102,8 +141,36 @@ class InMemoryDataServiceProvider {
    * @param {string} containerName The name of the container to retrieve the object from.
    * @param {string} objectKey The unique UUID of the object to retrieve.
    * @return {Promise<Object|null>} A promise that resolves to the object or null if not found.
+   * @throws {Error} When containerName or objectKey is invalid.
    */
   async getByUuid(containerName, objectKey) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      const error = new Error('Invalid containerName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'getByUuid',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
+    // Validate objectKey parameter
+    if (!objectKey || typeof objectKey !== 'string' || objectKey.trim() === '') {
+      const error = new Error('Invalid objectKey: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'getByUuid',
+          error: error.message,
+          containerName,
+          objectKey
+        });
+      }
+      throw error;
+    }
+
     if (!this.containers.has(containerName)) {
       return null;
     }
@@ -118,8 +185,36 @@ class InMemoryDataServiceProvider {
    * @param {string} containerName The name of the container to remove the object from.
    * @param {string} objectKey The unique key of the object to remove.
    * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false otherwise.
+   * @throws {Error} When containerName or objectKey is invalid.
    */
   async remove(containerName, objectKey) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      const error = new Error('Invalid containerName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'remove',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
+    // Validate objectKey parameter
+    if (!objectKey || typeof objectKey !== 'string' || objectKey.trim() === '') {
+      const error = new Error('Invalid objectKey: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'remove',
+          error: error.message,
+          containerName,
+          objectKey
+        });
+      }
+      throw error;
+    }
+
     if (!this.containers.has(containerName)) {
       return false;
     }
@@ -135,8 +230,36 @@ class InMemoryDataServiceProvider {
    * @param {string} containerName The name of the container to search in.
    * @param {string} searchTerm The term to search for (case-insensitive).
    * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects.
+   * @throws {Error} When containerName or searchTerm is invalid.
    */
   async find(containerName, searchTerm) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      const error = new Error('Invalid containerName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'find',
+          error: error.message,
+          containerName
+        });
+      }
+      throw error;
+    }
+
+    // Validate searchTerm parameter
+    if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+      const error = new Error('Invalid searchTerm: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', {
+          method: 'find',
+          error: error.message,
+          containerName,
+          searchTerm
+        });
+      }
+      throw error;
+    }
+
     if (!this.containers.has(containerName)) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('api-dataservice-find', {

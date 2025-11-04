@@ -56,12 +56,39 @@ class SchedulerProvider {
    * @param {number=} intervalSeconds The interval in seconds at which to execute the script.
    * @param {Function=} executionCallback Optional callback function to be called on each execution.
    * @return {Promise<void>} A promise that resolves when the task is started.
-   * @throws {Error} When a task with the same name is already scheduled.
+   * @throws {Error} When parameters are invalid or a task with the same name is already scheduled.
    */
   async start(taskName, scriptPath, dataOrInterval, intervalSeconds, executionCallback) {
+    // Validate taskName parameter
+    if (!taskName || typeof taskName !== 'string' || taskName.trim() === '') {
+      const error = new Error('Invalid taskName: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('scheduler:validation-error', {
+          method: 'start',
+          error: error.message,
+          taskName
+        });
+      }
+      throw error;
+    }
+
+    // Validate scriptPath parameter
+    if (!scriptPath || typeof scriptPath !== 'string' || scriptPath.trim() === '') {
+      const error = new Error('Invalid scriptPath: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('scheduler:validation-error', {
+          method: 'start',
+          error: error.message,
+          taskName,
+          scriptPath
+        });
+      }
+      throw error;
+    }
+
     // Handle different calling patterns for backward compatibility
     let data, interval, callback;
-    
+
     if (arguments.length === 3) {
       // start(taskName, scriptPath, intervalSeconds)
       data = null;
@@ -78,6 +105,34 @@ class SchedulerProvider {
       interval = intervalSeconds;
       callback = executionCallback;
     }
+
+    // Validate interval
+    if (typeof interval !== 'number' || interval <= 0) {
+      const error = new Error('Invalid interval: must be a positive number');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('scheduler:validation-error', {
+          method: 'start',
+          error: error.message,
+          taskName,
+          interval
+        });
+      }
+      throw error;
+    }
+
+    // Validate callback if provided
+    if (callback !== undefined && typeof callback !== 'function') {
+      const error = new Error('Invalid callback: must be a function if provided');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('scheduler:validation-error', {
+          method: 'start',
+          error: error.message,
+          taskName
+        });
+      }
+      throw error;
+    }
+
     if (this.tasks_.has(taskName)) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('scheduler:start:error', {
@@ -139,8 +194,22 @@ class SchedulerProvider {
    * Stops a specific task or all tasks if no task name is provided.
    * @param {string=} taskName The name of the task to stop (optional).
    * @return {Promise<void>} A promise that resolves when the task(s) are stopped.
+   * @throws {Error} When taskName is invalid.
    */
   async stop(taskName) {
+    // Validate taskName if provided
+    if (taskName !== undefined && (!taskName || typeof taskName !== 'string' || taskName.trim() === '')) {
+      const error = new Error('Invalid taskName: must be a non-empty string if provided');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('scheduler:validation-error', {
+          method: 'stop',
+          error: error.message,
+          taskName
+        });
+      }
+      throw error;
+    }
+
     if (taskName) {
       if (this.tasks_.has(taskName)) {
         const task = this.tasks_.get(taskName);

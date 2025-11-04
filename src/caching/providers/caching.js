@@ -58,8 +58,35 @@ class Cache {
    * @param {string} key The key to store the value under.
    * @param {*} value The value to store.
    * @return {Promise<void>} A promise that resolves when the value is stored.
+   * @throws {Error} When key is invalid or value is undefined.
    */
   async put(key, value) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`cache:validation-error:${this.instanceName_}`, {
+          method: 'put',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
+    // Validate value parameter
+    if (value === undefined) {
+      const error = new Error('Invalid value: cannot be undefined');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`cache:validation-error:${this.instanceName_}`, {
+          method: 'put',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     this.cache_[key] = value;
     this.trackOperation_(key);
     if (this.eventEmitter_)
@@ -70,8 +97,22 @@ class Cache {
    * Retrieves a value from the cache.
    * @param {string} key The key to retrieve the value for.
    * @return {Promise<*>} A promise that resolves to the cached value, or undefined if not found.
+   * @throws {Error} When key is invalid.
    */
   async get(key) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`cache:validation-error:${this.instanceName_}`, {
+          method: 'get',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     const value = this.cache_[key];
     this.trackOperation_(key);
     if (this.eventEmitter_)
@@ -83,8 +124,22 @@ class Cache {
    * Deletes a value from the cache.
    * @param {string} key The key to delete.
    * @return {Promise<void>} A promise that resolves when the key is deleted.
+   * @throws {Error} When key is invalid.
    */
   async delete(key) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit(`cache:validation-error:${this.instanceName_}`, {
+          method: 'delete',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     delete this.cache_[key];
     if (this.eventEmitter_) this.eventEmitter_.emit(`cache:delete:${this.instanceName_}`, { key, instance: this.instanceName_ });
   }
