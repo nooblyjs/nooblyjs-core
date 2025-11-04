@@ -122,6 +122,7 @@ class Logging {
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - INFO - ${device} - ${formattedMessage}`;
+    console.log(logMessage);
     if (this.eventEmitter_) {
       const eventName = `log:info:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });
@@ -142,6 +143,7 @@ class Logging {
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - WARN - ${device} - ${formattedMessage}`;
+    console.warn(logMessage);
     if (this.eventEmitter_) {
       const eventName = `log:warn:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });
@@ -162,6 +164,7 @@ class Logging {
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message);
     const logMessage = `${timestamp} - ERROR - ${device} - ${formattedMessage}`;
+    console.error(logMessage);
     if (this.eventEmitter_) {
       const eventName = `log:error:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });
@@ -174,7 +177,7 @@ class Logging {
    * @param {*=} meta Optional metadata to include in the log (object, string, etc.).
    * @return {Promise<void>} A promise that resolves when the message is logged.
    */
-  async log(message, meta) {
+  async debug(message, meta) {
     if (!this.shouldLog('log')) {
       return;
     }
@@ -182,6 +185,7 @@ class Logging {
     const device = os.hostname();
     const formattedMessage = this.formatMessage_(message, meta);
     const logMessage = `${timestamp} - ${device} - ${formattedMessage}`;
+    console.warn(logMessage);
     if (this.eventEmitter_) {
       const eventName = `log:log:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });

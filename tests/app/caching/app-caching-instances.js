@@ -19,6 +19,7 @@ app.use(express.json());
 var options = { 
   logDir:  path.join(__dirname, './.application/', 'logs'),
   dataDir : path.join(__dirname, './.application/', 'data'),
+  log : {level: 'debug'},
   'express-app': app,
     brandingConfig: {
       appName: 'App Lite',
@@ -31,6 +32,7 @@ const eventEmitter = new EventEmitter();
 
 // Initialize registry (no public folder needed!)
 const serviceRegistry = require('nooblyjs-core');
+const Logging = require('../../../src/logging/providers/logging');
 serviceRegistry.initialize(app, eventEmitter, options);
 
 // Initialize auth service (required for login/register functionality)

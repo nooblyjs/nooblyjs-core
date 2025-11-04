@@ -53,7 +53,7 @@ const authservice = serviceRegistry.authservice('file', {
 
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));
-queue.enqueue(new Date());
+queue.enqueue('my-new-queue',new Date());
 
 const PORT = process.env.PORT || 3001;
 app.use('/', express.static(__dirname + '/public'));
