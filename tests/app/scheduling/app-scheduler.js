@@ -82,7 +82,24 @@ app.listen(3001, async () => {
     }
   );
 
+  // Schedule ExampleTask-3.js to run every 10 seconds
+  await scheduler.start(
+    'exampleTask3',
+    'exampleTask-3.js',
+    { taskName: 'ExampleTask 3' },
+    10, // Run every 5 seconds
+    (status, data) => {
+      if (status === 'completed') {
+        logger.info('ExampleTask 3 completed:', data);
+      } else if (status === 'error') {
+        logger.error('ExampleTask 3 failed:', data);
+      }
+    }
+  );
+
   logger.info('Scheduled tasks:');
   logger.info('  - ExampleTask 1: runs every 3 seconds');
   logger.info('  - ExampleTask 2: runs every 5 seconds');
+  logger.info('  - ExampleTask 3: runs every 10 seconds');
+
 });
