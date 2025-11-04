@@ -48,7 +48,7 @@ filing.status;
  */
 cache.put('currentdate', new Date());
 log.info(cache.get('currentdate'));
-queue.enqueue(new Date());
+queue.enqueue('test queue',new Date());
 
 /**
  * Demonstrate scheduling service.

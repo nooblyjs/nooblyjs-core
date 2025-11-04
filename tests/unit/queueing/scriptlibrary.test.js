@@ -12,7 +12,7 @@
 
 'use strict';
 
-const nooblyjscorequeueing = require('../../../src/queueing/scriptlibrary/client.js');
+const nooblyjscorequeueing = require('../../../src/queueing/scripts/client.js');
 
 /**
  * Test suite for the queueing script library client.
@@ -26,7 +26,7 @@ describe('Queueing Script Library Client', () => {
 
   /**
    * Set up test environment before each test case.
-   * Creates a fresh client instance with default settings.
+   * Creates a fresh client instance with default settings.s
    */
   beforeEach(() => {
     client = new nooblyjscorequeueing('default');

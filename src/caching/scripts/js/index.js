@@ -9,7 +9,7 @@
  *
  * @example
  * // Include the library in your HTML
- * <script src="/services/caching/scriptlibrary"></script>
+ * <script src="/services/caching/scripts"></script>
  *
  * // Create a cache instance
  * const cache = new nooblyjsCaching({ instanceName: 'default' });

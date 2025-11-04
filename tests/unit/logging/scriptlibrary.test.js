@@ -12,7 +12,7 @@
 
 'use strict';
 
-const nooblyjscorelogging = require('../../../src/logging/scriptlibrary/client.js');
+const nooblyjscorelogging = require('../../../src/logging/scripts/client.js');
 
 /**
  * Test suite for the logging script library client.

@@ -66,7 +66,7 @@ module.exports = (options, eventEmitter, queue) => {
     const providerType = options.providerType || 'memory';
 
     /**
-     * GET /services/queueing/scriptlibrary
+     * GET /services/queueing/scripts
      * Serves the client-side JavaScript library for consuming the queueing service API
      * Allows front-end applications to interact with the queueing service.
      *
@@ -74,22 +74,22 @@ module.exports = (options, eventEmitter, queue) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/queueing/scriptlibrary', (req, res) => {
+    app.get('/services/queueing/scripts', (req, res) => {
       try {
-        const scriptPath = path.join(__dirname, '..', 'scriptlibrary', 'client.js');
+        const scriptPath = path.join(__dirname, '..', 'scripts', 'client.js');
         const scriptContent = fs.readFileSync(scriptPath, 'utf8');
         res.setHeader('Content-Type', 'application/javascript');
         res.status(200).send(scriptContent);
-        eventEmitter.emit('api-queueing-scriptlibrary-served', 'Queueing script library served');
+        eventEmitter.emit('api-queueing-scripts-served', 'Queueing script library served');
       } catch (error) {
-        eventEmitter.emit('api-queueing-scriptlibrary-error', error.message);
+        eventEmitter.emit('api-queueing-scripts-error', error.message);
         res.status(500).json({
           success: false,
           error: 'Failed to load script library',
           message: error.message
         });
       }
-    });
+    });s
 
     /**
      * Creates an async handler for enqueue operations

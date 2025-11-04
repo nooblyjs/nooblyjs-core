@@ -42,7 +42,7 @@ module.exports = (options, eventEmitter, cache) => {
     const app = options['express-app'];
 
     // Serve static files from the views directory for caching service
-    app.use('/services/caching/scriptlibrary/', express.static(path.join(__dirname)));
+    app.use('/services/caching/scripts/', express.static(path.join(__dirname)));
 
     eventEmitter.emit('cache:loading scripts', {
       folder: path.join(__dirname),

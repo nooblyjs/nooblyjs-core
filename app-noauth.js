@@ -58,7 +58,7 @@ defaultCache.put('running status','running');
 
 cacheSessions.put('currentdate', new Date());
 log.info(cacheSessions.get('currentdate'));
-queue.enqueue(new Date());
+queue.enqueue('test queue',new Date());
 
 cacheMetrics.put('Startup Time', new Date());
 

@@ -18,6 +18,7 @@ const CacheAnalytics = require('./modules/analytics');
 
 const Routes = require('./routes');
 const Views = require('./views');
+const Scripts = require('./scripts');
 
 /**
  * Creates a cache service instance with the specified provider and dependency injection.
@@ -114,6 +115,7 @@ function createCache(type, options, eventEmitter) {
   // Initialize routes and views for the cache service
   Routes(options, eventEmitter, cache);
   Views(options, eventEmitter, cache);
+  Scripts(options, eventEmitter, cache);
 
   return cache;
 }

@@ -66,7 +66,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
     const providerType = options.providerType || 'memory';
 
     /**
-     * GET /services/logging/scriptlibrary
+     * GET /services/logging/scripts
      * Serves the client-side JavaScript library for consuming the logging service API
      * Allows front-end applications to log messages to the logging service.
      *
@@ -74,15 +74,15 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/logging/scriptlibrary', (req, res) => {
+    app.get('/services/logging/scripts', (req, res) => {
       try {
-        const scriptPath = path.join(__dirname, '..', 'scriptlibrary', 'client.js');
+        const scriptPath = path.join(__dirname, '..', 'scripts', 'client.js');
         const scriptContent = fs.readFileSync(scriptPath, 'utf8');
         res.setHeader('Content-Type', 'application/javascript');
         res.status(200).send(scriptContent);
-        eventEmitter.emit('api-logging-scriptlibrary-served', 'Logging script library served');
+        eventEmitter.emit('api-logging-scripts-served', 'Logging script library served');
       } catch (error) {
-        eventEmitter.emit('api-logging-scriptlibrary-error', error.message);
+        eventEmitter.emit('api-logging-scripts-error', error.message);
         res.status(500).json({
           success: false,
           error: 'Failed to load script library',
