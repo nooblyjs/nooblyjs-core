@@ -123,7 +123,7 @@ class InMemoryDataServiceProvider {
     }
 
     if (!this.containers.has(containerName)) {
-      throw new Error(`Container '${containerName}' does not exist.`);
+      this.createContainer(containerName);
     }
     const objectKey = uuidv4();
     this.containers.get(containerName).set(objectKey, jsonObject);

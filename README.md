@@ -3,7 +3,7 @@
 **Version:** 1.0.14+
 **License:** ISC
 **Repository:** https://github.com/nooblyjs/nooblyjs-core
-**Package:** `noobly-core` on npm
+**Package:** `nooblyjs-core` on npm
 
 ---
 
@@ -45,7 +45,7 @@
 
 ```bash
 # Install from npm
-npm install noobly-core
+npm install nooblyjs-core
 
 # Or clone and run the example application
 git clone https://github.com/nooblyjs/nooblyjs-core.git
@@ -62,7 +62,7 @@ npm start  # Runs on http://localhost:3001
 
 ```javascript
 const express = require('express');
-const serviceRegistry = require('noobly-core');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -99,7 +99,7 @@ app.listen(3000, () => {
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const serviceRegistry = require('noobly-core');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -119,8 +119,8 @@ app.use(passport.session());
 // Initialize with security
 const apiKeys = (process.env.NOOBLY_API_KEYS || '').split(',').filter(Boolean);
 serviceRegistry.initialize(app, null, {
-  logDir: './.noobly-core/logs',
-  dataDir: './.noobly-core/data',
+  logDir: './.nooblyjs-core/logs',
+  dataDir: './.nooblyjs-core/data',
   apiKeys: apiKeys,
   requireApiKey: apiKeys.length > 0,
   excludePaths: ['/services/*/status', '/services/', '/public/*']
@@ -208,7 +208,7 @@ const cache = serviceRegistry.cache('memcached', {
 
 // File-based
 const cache = serviceRegistry.cache('file', {
-  dataDir: './.noobly-core/cache'
+  dataDir: './.nooblyjs-core/cache'
 });
 
 // Remote API
@@ -226,7 +226,7 @@ const dataService = serviceRegistry.dataService('memory');
 
 // File-based (JSON files in containers)
 const dataService = serviceRegistry.dataService('file', {
-  dataDir: './.noobly-core/data'
+  dataDir: './.nooblyjs-core/data'
 });
 
 // MongoDB
@@ -304,7 +304,7 @@ const filing = serviceRegistry.filing('api', {
 const ai = serviceRegistry.aiservice('claude', {
   apiKey: process.env.ANTHROPIC_API_KEY,
   model: 'claude-3-5-sonnet-20241022',
-  tokensStorePath: './.noobly-core/ai-tokens.json'
+  tokensStorePath: './.nooblyjs-core/ai-tokens.json'
 });
 
 // ChatGPT (OpenAI)
@@ -331,7 +331,7 @@ const ai = serviceRegistry.aiservice('api', {
 ```javascript
 // File-based (development/production)
 const auth = serviceRegistry.authservice('file', {
-  dataDir: './.noobly-core/data'
+  dataDir: './.nooblyjs-core/data'
 });
 
 // Memory (development only)
@@ -368,7 +368,7 @@ NooblyJS Core supports distributed architectures where frontend applications con
 
 ```javascript
 const express = require('express');
-const serviceRegistry = require('noobly-core');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -401,7 +401,7 @@ app.listen(3000);
 
 ```javascript
 const express = require('express');
-const serviceRegistry = require('noobly-core');
+const serviceRegistry = require('nooblyjs-core');
 
 const app = express();
 app.use(express.json());
@@ -652,7 +652,7 @@ nooblyjs-core/
 │   ├── load/
 │   ├── api/
 │   └── app-*.js
-└── .noobly-core/              # Runtime data
+└── .nooblyjs-core/              # Runtime data
     ├── logs/
     └── data/
 ```
@@ -666,10 +666,10 @@ nooblyjs-core/
 ```javascript
 serviceRegistry.initialize(app, eventEmitter, {
   // Logging
-  logDir: './.noobly-core/logs',
+  logDir: './.nooblyjs-core/logs',
 
   // Data persistence
-  dataDir: './.noobly-core/data',
+  dataDir: './.nooblyjs-core/data',
 
   // API Key authentication
   apiKeys: ['key1', 'key2'],
@@ -822,4 +822,4 @@ ISC License - See LICENSE file for details
 
 - **GitHub Issues**: https://github.com/nooblyjs/nooblyjs-core/issues
 - **Documentation**: https://github.com/nooblyjs/nooblyjs-core#readme
-- **NPM Package**: https://www.npmjs.com/package/noobly-core
+- **NPM Package**: https://www.npmjs.com/package/nooblyjs-core
