@@ -56,8 +56,8 @@ if (configuredApiKeys.length === 0 && process.env.NODE_ENV !== 'production') {
 
 // Instantiate the options
 const options = {
-  logDir: path.join(__dirname, './.noobly-core/', 'logs'),
-  dataDir: path.join(__dirname, './.noobly-core/', 'data'),
+  logDir: path.join(__dirname, './.application/', 'logs'),
+  dataDir: path.join(__dirname, './.application/', 'data'),
   apiKeys: configuredApiKeys,
   requireApiKey: configuredApiKeys.length > 0,
   excludePaths: [
