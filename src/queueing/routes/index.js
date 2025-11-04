@@ -89,7 +89,7 @@ module.exports = (options, eventEmitter, queue) => {
           message: error.message
         });
       }
-    });s
+    });
 
     /**
      * Creates an async handler for enqueue operations
