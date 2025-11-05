@@ -211,10 +211,13 @@
                     <!-- Create Subscriber Card -->
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Create Subscriber</h2>
-                            <p class="card-subtitle">Subscribe to a topic with a JavaScript callback function</p>
+                            <h2 class="card-title">Create Subscriber (Local Service)</h2>
+                            <p class="card-subtitle">Subscribe to a topic with a JavaScript callback function (client-side, in-memory)</p>
                         </div>
                         <div class="card-content">
+                            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                                <strong>Note:</strong> This creates a local in-memory subscription. Subscribers are stored in your browser memory and will be lost on page reload.
+                            </div>
                             <form id="createSubscriberForm">
                                 <div class="form-group">
                                     <label class="form-label" for="subscriberTopic">Topic Name</label>
@@ -225,7 +228,7 @@
                                     <label class="form-label" for="callbackFunction">Callback Function (JavaScript)</label>
                                     <textarea id="callbackFunction" class="form-input form-textarea" placeholder="(msg) => {&#10;  console.log('Received:', msg);&#10;}" required></textarea>
                                     <div id="callbackValidation" class="validation-message" style="display: none;"></div>
-                                    <div class="helper-text">Enter a JavaScript function that will be called when a message is received. Example: <code>(msg) => { console.log(msg); }</code></div>
+                                    <div class="helper-text">Enter a JavaScript function that will be called when a message is received. This runs locally in your browser. Example: <code>(msg) => { console.log(msg); }</code></div>
                                 </div>
                                 <div class="btn-group">
                                     <button type="submit" class="btn btn-primary">Create Subscriber</button>
@@ -775,8 +778,9 @@
 
                     try {
                         setLoading('createSubscriberForm', true);
-                        const instanceName = getCurrentInstance();
-                        const notifying = new nooblyjsNotifying({ instanceName });
+                        // JavaScript callback functions are only for local pub/sub, not server-based
+                        // So we create a local notifying instance without instanceName
+                        const notifying = new nooblyjsNotifying();
                         const topic = document.getElementById('subscriberTopic').value.trim();
                         const callbackFunctionStr = document.getElementById('callbackFunction').value.trim();
 
@@ -803,7 +807,7 @@
 
                         const result = await notifying.subscribe(topic, callbackFunction);
                         showResponse('createSubscriberResponse', 'createSubscriberResponseContent', result);
-                        showAlert(`Subscriber created successfully for topic "${topic}"`);
+                        showAlert(`Subscriber created successfully for topic "${topic}" (Local Service)`);
                         document.getElementById('subscriberTopic').value = '';
                         document.getElementById('callbackFunction').value = '';
                     } catch (error) {
