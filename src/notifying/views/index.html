@@ -184,13 +184,72 @@
                 </div>
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                    <!-- Create Topic Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Create Topic</h2>
+                            <p class="card-subtitle">Create a new notification topic</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="createTopicForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="topicName">Topic Name</label>
+                                    <input type="text" id="topicName" class="form-input" placeholder="e.g., user-events, order-updates" required>
+                                    <div class="helper-text">Enter a unique topic name (e.g., user-notifications, order-updates)</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Create Topic</button>
+                                </div>
+                            </form>
+                            <div id="createTopicResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="createTopicResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Create Subscriber Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Create Subscriber</h2>
+                            <p class="card-subtitle">Subscribe to a topic via webhook callback</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="createSubscriberForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="subscriberTopic">Topic Name</label>
+                                    <input type="text" id="subscriberTopic" class="form-input" placeholder="e.g., user-events" required>
+                                    <div class="helper-text">Enter the topic you want to subscribe to</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="callbackUrl">Callback URL</label>
+                                    <input type="url" id="callbackUrl" class="form-input" placeholder="https://example.com/webhook/notifications" required>
+                                    <div class="helper-text">Enter the webhook URL that will receive notifications</div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Create Subscriber</button>
+                                </div>
+                            </form>
+                            <div id="createSubscriberResponse" class="response-container" style="display: none;">
+                                <div class="response-title">Response:</div>
+                                <div id="createSubscriberResponseContent" class="response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Notification Card -->
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Send Notification</h2>
-                            <p class="card-subtitle">Send a new notification payload</p>
+                            <p class="card-subtitle">Send a new notification to a topic</p>
                         </div>
                         <div class="card-content">
                             <form id="sendForm">
+                                <div class="form-group">
+                                    <label class="form-label" for="notificationTopic">Topic Name</label>
+                                    <input type="text" id="notificationTopic" class="form-input" placeholder="e.g., user-events" required>
+                                    <div class="helper-text">Select the topic to send the notification to</div>
+                                </div>
                                 <div class="form-group">
                                     <label class="form-label" for="sendMessage">Message (JSON)</label>
                                     <textarea id="sendMessage" class="form-input form-textarea" placeholder='{"channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification."}' required></textarea>
@@ -676,6 +735,71 @@
                 });
             }
 
+            // Handle Create Topic Form
+            const createTopicForm = document.getElementById('createTopicForm');
+            if (createTopicForm) {
+                createTopicForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    try {
+                        setLoading('createTopicForm', true);
+                        const instanceName = getCurrentInstance();
+                        const notifying = new nooblyjsNotifying({ instanceName });
+                        const topicName = document.getElementById('topicName').value.trim();
+
+                        if (!topicName) {
+                            showAlert('Please enter a topic name', 'error');
+                            return;
+                        }
+
+                        const result = await notifying.createTopic(topicName);
+                        showResponse('createTopicResponse', 'createTopicResponseContent', result);
+                        showAlert(`Topic "${topicName}" created successfully`);
+                        document.getElementById('topicName').value = '';
+                    } catch (error) {
+                        showAlert('Error creating topic: ' + error.message, 'error');
+                        showResponse('createTopicResponse', 'createTopicResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('createTopicForm', false);
+                    }
+                });
+            }
+
+            // Handle Create Subscriber Form
+            const createSubscriberForm = document.getElementById('createSubscriberForm');
+            if (createSubscriberForm) {
+                createSubscriberForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    try {
+                        setLoading('createSubscriberForm', true);
+                        const instanceName = getCurrentInstance();
+                        const notifying = new nooblyjsNotifying({ instanceName });
+                        const topic = document.getElementById('subscriberTopic').value.trim();
+                        const callbackUrl = document.getElementById('callbackUrl').value.trim();
+
+                        if (!topic || !callbackUrl) {
+                            showAlert('Please enter both topic name and callback URL', 'error');
+                            return;
+                        }
+
+                        const result = await notifying.subscribe(topic, {
+                            callbackUrl: callbackUrl
+                        });
+                        showResponse('createSubscriberResponse', 'createSubscriberResponseContent', result);
+                        showAlert(`Subscriber created successfully for topic "${topic}"`);
+                        document.getElementById('subscriberTopic').value = '';
+                        document.getElementById('callbackUrl').value = '';
+                    } catch (error) {
+                        showAlert('Error creating subscriber: ' + error.message, 'error');
+                        showResponse('createSubscriberResponse', 'createSubscriberResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('createSubscriberForm', false);
+                    }
+                });
+            }
+
+            // Handle Send Notification Form
             const sendForm = document.getElementById('sendForm');
             if (sendForm) {
                 sendForm.addEventListener('submit', async (event) => {
@@ -690,12 +814,18 @@
                         setLoading('sendForm', true);
                         const instanceName = getCurrentInstance();
                         const notifying = new nooblyjsNotifying({ instanceName });
+                        const topic = document.getElementById('notificationTopic').value.trim();
                         const message = JSON.parse(document.getElementById('sendMessage').value);
 
-                        // Use the client library to send notification to the 'admin-notifications' topic
-                        const result = await notifying.notify('admin-notifications', message);
+                        if (!topic) {
+                            showAlert('Please enter a topic name', 'error');
+                            return;
+                        }
+
+                        // Use the client library to send notification to the specified topic
+                        const result = await notifying.notify(topic, message);
                         showResponse('sendResponse', 'sendResponseContent', result);
-                        showAlert('Notification sent successfully');
+                        showAlert(`Notification sent successfully to topic "${topic}"`);
                     } catch (error) {
                         showAlert('Error sending notification: ' + error.message, 'error');
                         showResponse('sendResponse', 'sendResponseContent', 'Error: ' + error.message);
