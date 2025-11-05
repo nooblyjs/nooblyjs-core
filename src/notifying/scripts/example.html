@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NooblyJS Notifying Service - Client Library Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .status.success {
+            border-left-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        .status.error {
+            border-left-color: #f44336;
+            background: #fdf5f5;
+        }
+
+        .status.info {
+            border-left-color: #2196f3;
+            background: #f0f7ff;
+        }
+
+        .messages {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .message {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 3px;
+            word-break: break-all;
+        }
+
+        .message.received {
+            border-left: 3px solid #4caf50;
+        }
+
+        .message.error {
+            border-left: 3px solid #f44336;
+            color: #f44336;
+        }
+
+        .subscriptions {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .subscription-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subscription-info {
+            flex: 1;
+        }
+
+        .subscription-topic {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .subscription-id {
+            font-size: 0.85em;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+    </style>
+    <script src="/services/notifying/scripts"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔔 NooblyJS Notifying Service</h1>
+            <p>Client-side JavaScript Library Example</p>
+        </header>
+
+        <div class="content">
+            <!-- Initialization Section -->
+            <div class="section">
+                <h2>1. Initialize Service</h2>
+                <div class="form-group">
+                    <label for="instanceName">Instance Name:</label>
+                    <select id="instanceName">
+                        <option value="default">default</option>
+                        <option value="production">production</option>
+                        <option value="staging">staging</option>
+                    </select>
+                </div>
+                <button onclick="initializeService()">Initialize Service</button>
+                <div id="initStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Topic Management Section -->
+            <div class="section">
+                <h2>2. Manage Topics</h2>
+                <div class="form-group">
+                    <label for="topicName">Topic Name:</label>
+                    <input type="text" id="topicName" placeholder="e.g., user-events">
+                </div>
+                <button onclick="createTopic()">Create Topic</button>
+                <div id="topicStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Subscription Management Section -->
+            <div class="section">
+                <h2>3. Manage Subscriptions</h2>
+                <div class="form-group">
+                    <label for="subscribeTopic">Topic to Subscribe:</label>
+                    <input type="text" id="subscribeTopic" placeholder="e.g., user-events">
+                </div>
+                <div class="button-group">
+                    <button onclick="subscribeToTopic()">Subscribe</button>
+                    <button onclick="unsubscribeFromTopic()">Unsubscribe All</button>
+                </div>
+                <div id="subscriptionStatus" class="status" style="display: none;"></div>
+
+                <h3 style="margin-top: 20px; color: #666;">Active Subscriptions:</h3>
+                <div id="subscriptionsList" class="subscriptions">
+                    <div class="empty-state">No active subscriptions</div>
+                </div>
+            </div>
+
+            <!-- Notification Publishing Section -->
+            <div class="section">
+                <h2>4. Publish Notifications</h2>
+                <div class="form-group">
+                    <label for="publishTopic">Topic:</label>
+                    <input type="text" id="publishTopic" placeholder="e.g., user-events">
+                </div>
+                <div class="form-group">
+                    <label for="messageData">Message (JSON):</label>
+                    <input type="text" id="messageData" placeholder='{"type": "test", "data": "hello"}'>
+                </div>
+                <button onclick="publishNotification()">Publish</button>
+                <div id="publishStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Messages Section -->
+            <div class="section">
+                <h2>5. Received Messages</h2>
+                <div id="messagesList" class="messages">
+                    <div class="empty-state">No messages received yet</div>
+                </div>
+                <button onclick="clearMessages()" style="margin-top: 10px;">Clear Messages</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notifying = null;
+        const messageElements = [];
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+
+            // Auto-hide after 5 seconds for success
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function addMessage(text, type = 'received') {
+            const container = document.getElementById('messagesList');
+
+            // Remove empty state
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            container.appendChild(messageEl);
+
+            // Keep only last 50 messages
+            const messages = container.querySelectorAll('.message');
+            if (messages.length > 50) {
+                messages[0].remove();
+            }
+
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearMessages() {
+            const container = document.getElementById('messagesList');
+            container.innerHTML = '<div class="empty-state">No messages received yet</div>';
+        }
+
+        function updateSubscriptionsList() {
+            if (!notifying) return;
+
+            const subscriptions = notifying.getSubscriptions();
+            const container = document.getElementById('subscriptionsList');
+
+            if (Object.keys(subscriptions).length === 0) {
+                container.innerHTML = '<div class="empty-state">No active subscriptions</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            for (const [topic, subIds] of Object.entries(subscriptions)) {
+                for (const subId of subIds) {
+                    const item = document.createElement('div');
+                    item.className = 'subscription-item';
+                    item.innerHTML = `
+                        <div class="subscription-info">
+                            <div class="subscription-topic">📌 ${topic}</div>
+                            <div class="subscription-id">${subId}</div>
+                        </div>
+                        <button class="btn-small" onclick="unsubscribe('${topic}', '${subId}')">Remove</button>
+                    `;
+                    container.appendChild(item);
+                }
+            }
+        }
+
+        async function initializeService() {
+            try {
+                const instanceName = document.getElementById('instanceName').value;
+                notifying = new nooblyjsNotifying({ instanceName });
+                const status = await notifying.getStatus();
+                showStatus('initStatus', `✓ Service initialized (${instanceName}): ${status}`, 'success');
+            } catch (error) {
+                showStatus('initStatus', `✗ Error: ${error.message}`, 'error');
+                addMessage(`Error initializing service: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTopic() {
+            if (!notifying) {
+                showStatus('topicStatus', '✗ Service not initialized', 'error');
+                return;
+            }
+
+            try {
+                const topic = document.getElementById('topicName').value.trim();
+                if (!topic) {
+                    showStatus('topicStatus', '✗ Please enter a topic name', 'error');
+                    return;
+                }
+                await notifying.createTopic(topic);
+                showStatus('topicStatus', `✓ Topic "${topic}" created successfully`, 'success');
+                addMessage(`Created topic: ${topic}`);
+            } catch (error) {
+                showStatus('topicStatus', `✗ Error: ${error.message}`, 'error');
+                addMessage(`Error creating topic: ${error.message}`, 'error');
+            }
+        }
+
+        async function subscribeToTopic() {
+            if (!notifying) {
+                showStatus('subscriptionStatus', '✗ Service not initialized', 'error');
+                return;
+            }
+
+            try {
+                const topic = document.getElementById('subscribeTopic').value.trim();
+                if (!topic) {
+                    showStatus('subscriptionStatus', '✗ Please enter a topic name', 'error');
+                    return;
+                }
+
+                const subscription = await notifying.subscribe(topic, (message) => {
+                    addMessage(`[${topic}] ${JSON.stringify(message)}`);
+                });
+
+                showStatus('subscriptionStatus',
+                    `✓ Subscribed to "${topic}" (ID: ${subscription.subscriptionId.substring(0, 8)}...)`,
+                    'success');
+                addMessage(`Subscribed to topic: ${topic}`);
+                updateSubscriptionsList();
+            } catch (error) {
+                showStatus('subscriptionStatus', `✗ Error: ${error.message}`, 'error');
+                addMessage(`Error subscribing: ${error.message}`, 'error');
+            }
+        }
+
+        async function unsubscribeFromTopic() {
+            if (!notifying) {
+                showStatus('subscriptionStatus', '✗ Service not initialized', 'error');
+                return;
+            }
+
+            try {
+                const topic = document.getElementById('subscribeTopic').value.trim();
+                if (!topic) {
+                    showStatus('subscriptionStatus', '✗ Please enter a topic name', 'error');
+                    return;
+                }
+
+                await notifying.unsubscribe(topic);
+                showStatus('subscriptionStatus', `✓ Unsubscribed from "${topic}"`, 'success');
+                addMessage(`Unsubscribed from topic: ${topic}`);
+                updateSubscriptionsList();
+            } catch (error) {
+                showStatus('subscriptionStatus', `✗ Error: ${error.message}`, 'error');
+                addMessage(`Error unsubscribing: ${error.message}`, 'error');
+            }
+        }
+
+        async function unsubscribe(topic, subId) {
+            if (!notifying) return;
+            try {
+                await notifying.unsubscribe(topic, subId);
+                showStatus('subscriptionStatus', `✓ Unsubscribed from "${topic}"`, 'success');
+                updateSubscriptionsList();
+            } catch (error) {
+                showStatus('subscriptionStatus', `✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function publishNotification() {
+            if (!notifying) {
+                showStatus('publishStatus', '✗ Service not initialized', 'error');
+                return;
+            }
+
+            try {
+                const topic = document.getElementById('publishTopic').value.trim();
+                const messageStr = document.getElementById('messageData').value.trim();
+
+                if (!topic) {
+                    showStatus('publishStatus', '✗ Please enter a topic name', 'error');
+                    return;
+                }
+
+                let message;
+                if (messageStr) {
+                    try {
+                        message = JSON.parse(messageStr);
+                    } catch (e) {
+                        showStatus('publishStatus', '✗ Invalid JSON in message', 'error');
+                        return;
+                    }
+                } else {
+                    message = { timestamp: new Date().toISOString() };
+                }
+
+                await notifying.notify(topic, message);
+                showStatus('publishStatus', `✓ Notification published to "${topic}"`, 'success');
+                addMessage(`Published to ${topic}: ${JSON.stringify(message)}`);
+            } catch (error) {
+                showStatus('publishStatus', `✗ Error: ${error.message}`, 'error');
+                addMessage(`Error publishing: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            addMessage('Page loaded. Click "Initialize Service" to start.');
+        });
+    </script>
+</body>
+</html>

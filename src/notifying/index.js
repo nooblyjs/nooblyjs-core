@@ -9,10 +9,11 @@
  */
 
 'use strict';
-const NotificationService = require('./provider/notifying');
+const NotificationService = require('./providers/notifying');
 const NotifyingApi = require('./providers/notifyingApi');
 const Routes = require('./routes');
 const Views = require('./views');
+const Scripts = require('./scripts');
 const NotifyingAnalytics = require('./modules/analytics');
 
 /**
@@ -70,9 +71,10 @@ function createNotificationService(type, options, eventEmitter) {
   const instanceName = (options && options.instanceName) || 'default';
   analytics = new NotifyingAnalytics(eventEmitter, notifying, instanceName);
 
-  // Initialize routes and views for the notification service
+  // Initialize routes, views, and scripts for the notification service
   Routes(options, eventEmitter, notifying, analytics);
   Views(options, eventEmitter, notifying);
+  Scripts(options, eventEmitter, notifying);
 
   // Expose settings methods (save provider methods before overwriting)
   const providerGetSettings = notifying.getSettings.bind(notifying);

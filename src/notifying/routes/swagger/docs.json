@@ -1,0 +1,1409 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Notifying Service API",
+    "description": "RESTful API for pub/sub messaging system with topic management, subscription handling, and message broadcasting capabilities.",
+    "version": "1.0.15",
+    "contact": {
+      "name": "NooblyJS Core Team",
+      "url": "https://github.com/nooblyjs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/services/notifying/api",
+      "description": "Notifying Service API"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Topic Management",
+      "description": "Operations for managing notification topics"
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Operations for managing topic subscriptions"
+    },
+    {
+      "name": "Notifications",
+      "description": "Operations for sending notifications"
+    },
+    {
+      "name": "Analytics",
+      "description": "Retrieve analytics and metrics about topics and notifications"
+    },
+    {
+      "name": "Settings",
+      "description": "Manage service settings and configuration"
+    },
+    {
+      "name": "Service",
+      "description": "Service health and status endpoints"
+    }
+  ],
+  "paths": {
+    "/topic": {
+      "post": {
+        "tags": ["Topic Management"],
+        "summary": "Create a new notification topic",
+        "description": "Creates a new notification topic for pub/sub messaging in the default instance.",
+        "operationId": "createTopic",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["topic"],
+                "properties": {
+                  "topic": {
+                    "type": "string",
+                    "description": "The name of the topic to create",
+                    "example": "user-notifications"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Topic created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing topic parameter",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/topic": {
+      "post": {
+        "tags": ["Topic Management"],
+        "summary": "Create a new notification topic in a named instance",
+        "description": "Creates a new notification topic for pub/sub messaging in the specified instance.",
+        "operationId": "createTopicInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["topic"],
+                "properties": {
+                  "topic": {
+                    "type": "string",
+                    "description": "The name of the topic to create",
+                    "example": "user-notifications"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Topic created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing topic parameter",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscribe/topic/{topic}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Subscribe to a topic",
+        "description": "Subscribes a callback URL to receive notifications from a topic in the default instance.",
+        "operationId": "subscribeTopic",
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic name to subscribe to",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["callbackUrl"],
+                "properties": {
+                  "callbackUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The callback URL to receive notifications",
+                    "example": "https://example.com/notifications/webhook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully subscribed to topic",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or callback URL"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/subscribe/topic/{topic}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Subscribe to a topic in a named instance",
+        "description": "Subscribes a callback URL to receive notifications from a topic in the specified instance.",
+        "operationId": "subscribeTopicInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic name to subscribe to",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["callbackUrl"],
+                "properties": {
+                  "callbackUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The callback URL to receive notifications",
+                    "example": "https://example.com/notifications/webhook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully subscribed to topic",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or callback URL"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unsubscribe/topic/{topic}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Unsubscribe from a topic",
+        "description": "Unsubscribes a callback URL from a topic's notifications in the default instance.",
+        "operationId": "unsubscribeTopic",
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic name to unsubscribe from",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["callbackUrl"],
+                "properties": {
+                  "callbackUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The callback URL to remove",
+                    "example": "https://example.com/notifications/webhook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully unsubscribed from topic",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or callback URL"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/unsubscribe/topic/{topic}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Unsubscribe from a topic in a named instance",
+        "description": "Unsubscribes a callback URL from a topic in the specified instance.",
+        "operationId": "unsubscribeTopicInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic name to unsubscribe from",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["callbackUrl"],
+                "properties": {
+                  "callbackUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The callback URL to remove",
+                    "example": "https://example.com/notifications/webhook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully unsubscribed from topic",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or callback URL"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notify/topic/{topic}": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Send a notification to a topic",
+        "description": "Sends a notification message to all subscribers of a topic in the default instance.",
+        "operationId": "notifyTopic",
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic to send notification to",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": {
+                    "description": "The message to broadcast to subscribers",
+                    "example": {
+                      "type": "notification",
+                      "userId": "user-123",
+                      "content": "You have a new message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification sent successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/notify/topic/{topic}": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Send a notification to a topic in a named instance",
+        "description": "Sends a notification message to all subscribers of a topic in the specified instance.",
+        "operationId": "notifyTopicInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "description": "The topic to send notification to",
+            "schema": {
+              "type": "string",
+              "example": "user-notifications"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": {
+                    "description": "The message to broadcast to subscribers",
+                    "example": {
+                      "type": "notification",
+                      "userId": "user-123",
+                      "content": "You have a new message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification sent successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing topic or message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/overview": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get analytics overview",
+        "description": "Retrieve summary analytics for topics and notifications in the default instance.",
+        "operationId": "getAnalyticsOverview",
+        "responses": {
+          "200": {
+            "description": "Overview loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "integer",
+                      "description": "Total number of topics",
+                      "example": 42
+                    },
+                    "subscribers": {
+                      "type": "integer",
+                      "description": "Total number of subscribers",
+                      "example": 156
+                    },
+                    "notifications": {
+                      "type": "integer",
+                      "description": "Total number of notifications sent",
+                      "example": 1250
+                    },
+                    "lastNotificationAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp of the last notification",
+                      "example": "2024-11-05T10:30:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve analytics overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/analytics/overview": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get analytics overview for a named instance",
+        "description": "Retrieve summary analytics for topics and notifications in the specified instance.",
+        "operationId": "getAnalyticsOverviewInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overview loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "integer",
+                      "description": "Total number of topics",
+                      "example": 42
+                    },
+                    "subscribers": {
+                      "type": "integer",
+                      "description": "Total number of subscribers",
+                      "example": 156
+                    },
+                    "notifications": {
+                      "type": "integer",
+                      "description": "Total number of notifications sent",
+                      "example": 1250
+                    },
+                    "lastNotificationAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp of the last notification",
+                      "example": "2024-11-05T10:30:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve analytics overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/top-topics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get top topics by activity",
+        "description": "Retrieve the top topics ranked by notification count in the default instance.",
+        "operationId": "getTopTopics",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of topics to return (default: 10)",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top topics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "topic": {
+                            "type": "string",
+                            "example": "user-notifications"
+                          },
+                          "notificationCount": {
+                            "type": "integer",
+                            "example": 250
+                          },
+                          "subscriberCount": {
+                            "type": "integer",
+                            "example": 45
+                          },
+                          "lastNotificationAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-11-05T10:30:00Z"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve top topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/analytics/top-topics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get top topics for a named instance",
+        "description": "Retrieve the top topics ranked by notification count in the specified instance.",
+        "operationId": "getTopTopicsInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of topics to return (default: 10)",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top topics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "topic": {
+                            "type": "string",
+                            "example": "user-notifications"
+                          },
+                          "notificationCount": {
+                            "type": "integer",
+                            "example": 250
+                          },
+                          "subscriberCount": {
+                            "type": "integer",
+                            "example": 45
+                          },
+                          "lastNotificationAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-11-05T10:30:00Z"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve top topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/topics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get all topics with details",
+        "description": "Retrieve detailed information about all topics ordered by last publish time in the default instance.",
+        "operationId": "getTopicDetails",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of topics to return (default: 100)",
+            "schema": {
+              "type": "integer",
+              "example": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "topic": {
+                            "type": "string",
+                            "example": "user-notifications"
+                          },
+                          "subscriberCount": {
+                            "type": "integer",
+                            "example": 45
+                          },
+                          "notificationCount": {
+                            "type": "integer",
+                            "example": 250
+                          },
+                          "lastNotificationAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-11-05T10:30:00Z"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve topic list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/analytics/topics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get all topics for a named instance",
+        "description": "Retrieve detailed information about all topics in the specified instance.",
+        "operationId": "getTopicDetailsInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The notifier instance name",
+            "schema": {
+              "type": "string",
+              "example": "production"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of topics to return (default: 100)",
+            "schema": {
+              "type": "integer",
+              "example": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "topic": {
+                            "type": "string",
+                            "example": "user-notifications"
+                          },
+                          "subscriberCount": {
+                            "type": "integer",
+                            "example": 45
+                          },
+                          "notificationCount": {
+                            "type": "integer",
+                            "example": 250
+                          },
+                          "lastNotificationAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-11-05T10:30:00Z"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve topic list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get service settings",
+        "description": "Retrieves the current settings for the notifying service in the default instance.",
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Service settings object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Settings"],
+        "summary": "Save service settings",
+        "description": "Saves or updates the settings for the notifying service in the default instance.",
+        "operationId": "saveSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Settings object to save"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings saved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing settings",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing settings"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": ["Service"],
+        "summary": "Get service status",
+        "description": "Returns the operational status of the notification service.",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "notifying api running"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instances": {
+      "get": {
+        "tags": ["Service"],
+        "summary": "Get available instances",
+        "description": "Returns a list of all available notifying service instances.",
+        "operationId": "getInstances",
+        "responses": {
+          "200": {
+            "description": "Instances retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["default", "production", "staging"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swagger/docs.json": {
+      "get": {
+        "tags": ["Service"],
+        "summary": "Get Swagger documentation",
+        "description": "Returns the OpenAPI/Swagger specification for the Notifying Service API.",
+        "operationId": "getSwaggerDocs",
+        "responses": {
+          "200": {
+            "description": "Swagger specification retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "OpenAPI specification"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Topic": {
+        "type": "object",
+        "required": ["topic"],
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "Topic name",
+            "example": "user-notifications"
+          }
+        }
+      },
+      "Subscription": {
+        "type": "object",
+        "required": ["callbackUrl"],
+        "properties": {
+          "callbackUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Callback URL for notifications",
+            "example": "https://example.com/notifications/webhook"
+          }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "object",
+            "description": "Message payload to broadcast"
+          }
+        }
+      },
+      "TopicDetail": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "example": "user-notifications"
+          },
+          "subscriberCount": {
+            "type": "integer",
+            "example": 45
+          },
+          "notificationCount": {
+            "type": "integer",
+            "example": 250
+          },
+          "lastNotificationAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-11-05T10:30:00Z"
+          }
+        }
+      },
+      "AnalyticsOverview": {
+        "type": "object",
+        "properties": {
+          "topics": {
+            "type": "integer",
+            "example": 42
+          },
+          "subscribers": {
+            "type": "integer",
+            "example": 156
+          },
+          "notifications": {
+            "type": "integer",
+            "example": 1250
+          },
+          "lastNotificationAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-11-05T10:30:00Z"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error type or message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authentication"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer token authentication"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKey": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ]
+}

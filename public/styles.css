@@ -1651,3 +1651,45 @@ body {
 .table tbody tr:hover {
   background-color: #f8f9fa;
 }
+
+/* Metrics and Analytics Styles */
+.metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.metrics-summary .summary-item {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.metrics-summary .summary-item h5 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.metrics-summary .summary-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--custom-primary);
+  margin-bottom: 0.25rem;
+}
+
+.metrics-summary .summary-meta {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.list-group-item .badge {
+  font-size: 0.85rem;
+}
+
+.loading-row {
+  text-align: center;
+  color: #6c757d;
+}

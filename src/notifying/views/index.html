@@ -8,312 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <link rel="stylesheet" href="/services/css/navigation.css">
-    <style>
-        :root {
-            --custom-primary: #0066cc;
-            --custom-secondary: #6c757d;
-            --custom-success: #198754;
-            --custom-danger: #dc3545;
-        }
-
-    
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings"
-                        type="button" role="tab" aria-controls="settings" aria-selected="false">
-                        <i class="bi bi-gear"></i> Settings
-                    </button>
-                </li>    body {
-            background-color: #f8f9fa;
-        }
-
-        .app-container {
-            display: flex;
-        }
-
-        .sidebar {
-            background-color: #fff;
-            border-right: 1px solid #dee2e6;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            width: 280px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .main-content {
-            background-color: #fff;
-            min-height: 100vh;
-            flex: 1;
-            padding: 2rem;
-        }
-
-        .page-header {
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 1rem;
-        }
-
-        .page-title {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .page-subtitle {
-            margin: 0.5rem 0 0 0;
-            color: #6c757d;
-            font-size: 1.125rem;
-        }
-
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-success {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            border-color: #badbcc;
-        }
-
-        .alert-error {
-            color: #842029;
-            background-color: #f8d7da;
-            border-color: #f5c2c7;
-        }
-
-        .card {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            overflow: visible;
-        }
-
-        .card-header {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 0.375rem 0.375rem 0 0;
-        }
-
-        .card-title {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .card-subtitle {
-            margin: 0.25rem 0 0 0;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .card-content {
-            max-height: none;
-            overflow: visible;
-            padding: 1.5rem;
-        }
-
-        .metrics-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-        }
-
-        .metrics-summary .summary-item {
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            background-color: #fff;
-        }
-
-        .metrics-summary .summary-item h5 {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            color: #6c757d;
-            margin-bottom: 0.5rem;
-        }
-
-        .metrics-summary .summary-value {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--custom-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .metrics-summary .summary-meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: var(--custom-primary);
-            border-bottom-color: var(--custom-primary);
-            background-color: transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--custom-primary);
-            background-color: transparent;
-            border-bottom-color: var(--custom-primary);
-        }
-
-        .helper-text {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .validation-message {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-        }
-
-        .validation-success {
-            color: var(--custom-success);
-        }
-
-        .validation-error {
-            color: var(--custom-danger);
-        }
-
-        .json-valid {
-            border-color: var(--custom-success);
-        }
-
-        .json-invalid {
-            border-color: var(--custom-danger);
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            font-size: 1rem;
-        }
-
-        .form-textarea {
-            min-height: 120px;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .response-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0.375rem;
-            border: 1px solid #dee2e6;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        .response-title {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .response-content {
-            white-space: pre-wrap;
-            word-break: break-word;
-            margin: 0;
-            font-size: 0.95rem;
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .list-group-item .badge {
-            font-size: 0.85rem;
-        }
-
-        .loading-row {
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .table-responsive {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .table thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            z-index: 10;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        #swagger-ui .topbar {
-            display: none;
-        }
-
-        #swagger-ui .info .title {
-            font-size: 1.5rem;
-        }
-
-        #swagger-ui .prop-type {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .wrapper {
-            max-width: 100%;
-            overflow-x: auto;
-        }
-
-        #swagger-ui .swagger-ui table {
-            table-layout: auto;
-            width: 100%;
-        }
-
-        #swagger-ui .dialog-ux {
-            z-index: 1050;
-        }
-
-        #swagger-ui .model-box-control:focus {
-            outline: 2px solid var(--custom-primary);
-            outline-offset: 2px;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <div class="app-container">
@@ -548,6 +243,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
+    <script src="/services/notifying/scripts"></script>
     <script>
         NooblyNavigation.renderNavigation('navigation-sidebar', 'notifying');
     </script>
@@ -692,34 +388,6 @@
             element.classList.toggle('loading', Boolean(isLoading));
         }
 
-        async function makeRequest(url, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-
-            const response = await fetch(url, options);
-            const contentType = response.headers.get('content-type') || '';
-            const payload = contentType.includes('application/json')
-                ? await response.json()
-                : await response.text();
-
-            if (!response.ok) {
-                throw new Error(
-                    typeof payload === 'string' && payload
-                        ? payload
-                        : `Request failed with status ${response.status}`,
-                );
-            }
-
-            return payload;
-        }
 
         function toggleAnalyticsLoading(isLoading) {
             const button = document.getElementById('analyticsRefreshButton');
@@ -907,7 +575,9 @@
 
         async function checkStatus() {
             try {
-                const result = await makeRequest(getInstanceApiPath('/services/notifying/api/status'));
+                const instanceName = getCurrentInstance();
+                const notifying = new nooblyjsNotifying({ instanceName });
+                const result = await notifying.getStatus();
                 showResponse('statusResponse', 'statusResponseContent', result);
                 showAlert('Status checked successfully');
             } catch (error) {
@@ -916,86 +586,16 @@
             }
         }
 
-        function initializeSwagger() {
-            const spec = {
-                openapi: '3.0.0',
-                info: {
-                    title: 'Notifying API',
-                    description: 'REST API for notification operations',
-                    version: '1.0.0',
-                },
-                servers: [{ url: '/services/notifying/api', description: 'Notifying API' }],
-                paths: {
-                    '/send': {
-                        post: {
-                            summary: 'Send a notification',
-                            description: 'Sends a new notification',
-                            requestBody: {
-                                required: true,
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'object' },
-                                        example: {
-                                            channel: 'email',
-                                            recipient: 'test@test.com',
-                                            subject: 'Hello!',
-                                            body: 'This is a test notification.',
-                                        },
-                                    },
-                                },
-                            },
-                            responses: {
-                                '200': {
-                                    description: 'Notification sent successfully',
-                                    content: {
-                                        'text/plain': { schema: { type: 'string', example: 'OK' } },
-                                    },
-                                },
-                                '500': {
-                                    description: 'Server error',
-                                    content: {
-                                        'text/plain': { schema: { type: 'string' } },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    '/status': {
-                        get: {
-                            summary: 'Service status',
-                            description: 'Check if the notifying service is running',
-                            responses: {
-                                '200': {
-                                    description: 'Service is running',
-                                    content: {
-                                        'application/json': {
-                                            schema: { type: 'string', example: 'notifying api running' },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    '/analytics/overview': {
-                        get: {
-                            summary: 'Analytics overview',
-                            description: 'Retrieve summary analytics for topics and notifications',
-                            responses: {
-                                '200': {
-                                    description: 'Overview loaded',
-                                    content: {
-                                        'application/json': {
-                                            schema: { type: 'object' },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            };
-
+        async function initializeSwagger() {
             try {
+                // Fetch the Swagger specification from the API endpoint
+                const response = await fetch(getInstanceApiPath('/services/notifying/api/swagger/docs.json'));
+                if (!response.ok) {
+                    throw new Error(`Failed to load Swagger docs: ${response.status}`);
+                }
+                const spec = await response.json();
+
+                // Initialize Swagger UI with the fetched specification
                 SwaggerUIBundle({
                     spec,
                     dom_id: '#swagger-ui',
@@ -1088,8 +688,12 @@
 
                     try {
                         setLoading('sendForm', true);
-                        const payload = JSON.parse(document.getElementById('sendMessage').value);
-                        const result = await makeRequest('/services/notifying/api/send', 'POST', payload);
+                        const instanceName = getCurrentInstance();
+                        const notifying = new nooblyjsNotifying({ instanceName });
+                        const message = JSON.parse(document.getElementById('sendMessage').value);
+
+                        // Use the client library to send notification to the 'admin-notifications' topic
+                        const result = await notifying.notify('admin-notifications', message);
                         showResponse('sendResponse', 'sendResponseContent', result);
                         showAlert('Notification sent successfully');
                     } catch (error) {

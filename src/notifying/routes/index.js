@@ -500,5 +500,25 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         });
       }
     });
+
+    /**
+     * GET /services/notifying/api/swagger/docs.json
+     * Returns the OpenAPI/Swagger specification for the Notifying Service API.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/notifying/api/swagger/docs.json', (req, res) => {
+      try {
+        const swaggerDocs = require('./swagger/docs.json');
+        res.status(200).json(swaggerDocs);
+      } catch (error) {
+        res.status(500).json({
+          error: 'Failed to retrieve Swagger documentation',
+          message: error.message
+        });
+      }
+    });
   }
 };
