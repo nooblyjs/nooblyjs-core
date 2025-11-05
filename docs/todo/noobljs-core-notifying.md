@@ -37,6 +37,9 @@ test.html
 
 Please note that you can ignore the analytics endpoints and settings endpoints as consumers will not need this.
 
+# Feature: DogFooding 
+
+I would like to try some dog fooding. So we recently created some script libraries that will be available to consumers ofour cool service. So I would like us to use it ourselves. So this is how I would like it to work. In the @src/notifying/views back end screens , I would like you to use the script library in @src/notifying/scripts. Please note that you only need to use the core notifyinh methods not the analytics or settings aspect so feel free to keep that code as is in @src/notifying/views. So what I see you doing, add a script tag to the /services/notifying/scripts in the index.html, use these scripts to manage the "Data" tabs forms and then remove the code you are replacing
 
 # Feature: Client side notifyer (service bus)
 I would love to implement something cool, namely light client side versions of a service. I would love to continue with notifying by createing the local client (client side javascript) version of notifying. What I see us doing is in the @src/notfying/scripts/js/index.js file creating a local javascript pubsub using a javascript  where I can create topics and subscribe to those topics and then it rasies events to those method subcribers. This client side notifier should be used if no instance name is passed so the logic of using 'default' will have to be changed. Can you please implement that for me?
