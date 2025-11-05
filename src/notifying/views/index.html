@@ -212,7 +212,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Create Subscriber</h2>
-                            <p class="card-subtitle">Subscribe to a topic via webhook callback</p>
+                            <p class="card-subtitle">Subscribe to a topic with a JavaScript callback function</p>
                         </div>
                         <div class="card-content">
                             <form id="createSubscriberForm">
@@ -222,12 +222,14 @@
                                     <div class="helper-text">Enter the topic you want to subscribe to</div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" for="callbackUrl">Callback URL</label>
-                                    <input type="url" id="callbackUrl" class="form-input" placeholder="https://example.com/webhook/notifications" required>
-                                    <div class="helper-text">Enter the webhook URL that will receive notifications</div>
+                                    <label class="form-label" for="callbackFunction">Callback Function (JavaScript)</label>
+                                    <textarea id="callbackFunction" class="form-input form-textarea" placeholder="(msg) => {&#10;  console.log('Received:', msg);&#10;}" required></textarea>
+                                    <div id="callbackValidation" class="validation-message" style="display: none;"></div>
+                                    <div class="helper-text">Enter a JavaScript function that will be called when a message is received. Example: <code>(msg) => { console.log(msg); }</code></div>
                                 </div>
                                 <div class="btn-group">
                                     <button type="submit" class="btn btn-primary">Create Subscriber</button>
+                                    <button type="button" class="btn btn-secondary" id="exampleCallbackButton">Load Example</button>
                                 </div>
                             </form>
                             <div id="createSubscriberResponse" class="response-container" style="display: none;">
@@ -776,26 +778,57 @@
                         const instanceName = getCurrentInstance();
                         const notifying = new nooblyjsNotifying({ instanceName });
                         const topic = document.getElementById('subscriberTopic').value.trim();
-                        const callbackUrl = document.getElementById('callbackUrl').value.trim();
+                        const callbackFunctionStr = document.getElementById('callbackFunction').value.trim();
 
-                        if (!topic || !callbackUrl) {
-                            showAlert('Please enter both topic name and callback URL', 'error');
+                        if (!topic || !callbackFunctionStr) {
+                            showAlert('Please enter both topic name and callback function', 'error');
                             return;
                         }
 
-                        const result = await notifying.subscribe(topic, {
-                            callbackUrl: callbackUrl
-                        });
+                        // Parse and validate the callback function
+                        let callbackFunction;
+                        try {
+                            // Evaluate the function string
+                            callbackFunction = eval('(' + callbackFunctionStr + ')');
+
+                            // Validate it's a function
+                            if (typeof callbackFunction !== 'function') {
+                                showAlert('Callback must be a valid JavaScript function', 'error');
+                                return;
+                            }
+                        } catch (parseError) {
+                            showAlert('Invalid JavaScript function: ' + parseError.message, 'error');
+                            return;
+                        }
+
+                        const result = await notifying.subscribe(topic, callbackFunction);
                         showResponse('createSubscriberResponse', 'createSubscriberResponseContent', result);
                         showAlert(`Subscriber created successfully for topic "${topic}"`);
                         document.getElementById('subscriberTopic').value = '';
-                        document.getElementById('callbackUrl').value = '';
+                        document.getElementById('callbackFunction').value = '';
                     } catch (error) {
                         showAlert('Error creating subscriber: ' + error.message, 'error');
                         showResponse('createSubscriberResponse', 'createSubscriberResponseContent', 'Error: ' + error.message);
                     } finally {
                         setLoading('createSubscriberForm', false);
                     }
+                });
+            }
+
+            // Handle Load Example button for callback function
+            const exampleCallbackButton = document.getElementById('exampleCallbackButton');
+            if (exampleCallbackButton) {
+                exampleCallbackButton.addEventListener('click', () => {
+                    const element = document.getElementById('callbackFunction');
+                    if (!element) {
+                        return;
+                    }
+                    const example = `(msg) => {
+  console.log('Received message:', msg);
+  // You can add your custom logic here
+  // Example: update UI, store data, send to server, etc.
+}`;
+                    element.value = example;
                 });
             }
 
