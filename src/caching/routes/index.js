@@ -13,6 +13,9 @@
 
 'use strict';
 
+const path = require('path');
+const express = require('express');
+
 /**
  * Gets the appropriate cache instance based on instance name
  * Falls back to the provided default cache if no instance name is specified
@@ -433,5 +436,14 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(400).send('Bad Request: Missing settings');
       }
     });
+
+    // Serve static files from the views directory for caching service
+    app.use('/services/caching/api/swagger', express.static(path.join(__dirname,'swagger')));
+
+    // Advise that we have loaded routes
+    eventEmitter.emit('cache:loading routes', {
+      folder: path.join(__dirname),
+    });
+
   }
 };

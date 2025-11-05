@@ -65,7 +65,7 @@ module.exports = (options, eventEmitter, cache) => {
 
       try {
         // Read the client library file
-        const libraryPath = path.join(__dirname, '../scripts/js/index.js');
+        const libraryPath = path.join(__dirname, './js/index.js');
         const libraryCode = fs.readFileSync(libraryPath, 'utf8');
 
         // Set appropriate headers for JavaScript

@@ -2,6 +2,7 @@
  * @fileoverview NooblyJS Core Caching Client Library
  * A client-side JavaScript library for interacting with the NooblyJS Core caching service.
  * This library provides a simple, intuitive API for caching operations from web applications.
+ * Includes both remote (server-side) and local (client-side) cache implementations.
  *
  * @author NooblyJS Core Team
  * @version 1.0.0
@@ -11,22 +12,26 @@
  * // Include the library in your HTML
  * <script src="/services/caching/scripts"></script>
  *
- * // Create a cache instance
- * const cache = new nooblyjsCaching({ instanceName: 'default' });
+ * // Create a local cache instance (client-side only)
+ * const localCache = new nooblyjsCaching();
+ *
+ * // Create a remote cache instance (server-side)
+ * const remoteCache = new nooblyjsCaching({ instanceName: 'default' });
  *
  * // Store data in cache
- * cache.put('user:123', { name: 'John', age: 30 });
+ * localCache.put('user:123', { name: 'John', age: 30 });
+ * remoteCache.put('user:456', { name: 'Jane', age: 25 });
  *
  * // Retrieve data from cache
- * cache.get('user:123').then(data => {
+ * localCache.get('user:123').then(data => {
  *   console.log(data); // { name: 'John', age: 30 }
  * });
  *
  * // Delete data from cache
- * cache.delete('user:123');
+ * localCache.delete('user:123');
  *
  * // Check if key exists
- * cache.exists('user:123').then(exists => {
+ * localCache.exists('user:123').then(exists => {
  *   console.log(exists); // true or false
  * });
  */
@@ -35,22 +40,127 @@
   'use strict';
 
   /**
+   * Local Client-Side Cache Implementation
+   * Simple in-memory key-value store for client-side caching
+   *
+   * @class LocalCache
+   * @private
+   */
+  function LocalCache() {
+    this.store = {};
+    this.created = Date.now();
+  }
+
+  /**
+   * Store a value in the local cache
+   * @param {string} key - The cache key
+   * @param {*} value - The value to store
+   * @private
+   */
+  LocalCache.prototype.put = function(key, value) {
+    this.store[key] = {
+      value: value,
+      timestamp: Date.now()
+    };
+  };
+
+  /**
+   * Retrieve a value from the local cache
+   * @param {string} key - The cache key
+   * @returns {*} The cached value or undefined if not found
+   * @private
+   */
+  LocalCache.prototype.get = function(key) {
+    const entry = this.store[key];
+    return entry ? entry.value : undefined;
+  };
+
+  /**
+   * Check if a key exists in the local cache
+   * @param {string} key - The cache key
+   * @returns {boolean} True if key exists, false otherwise
+   * @private
+   */
+  LocalCache.prototype.exists = function(key) {
+    return key in this.store;
+  };
+
+  /**
+   * Delete a value from the local cache
+   * @param {string} key - The cache key
+   * @private
+   */
+  LocalCache.prototype.delete = function(key) {
+    delete this.store[key];
+  };
+
+  /**
+   * Get all keys in the local cache
+   * @returns {Array<string>} Array of all keys
+   * @private
+   */
+  LocalCache.prototype.keys = function() {
+    return Object.keys(this.store);
+  };
+
+  /**
+   * Get the size of the local cache
+   * @returns {number} Number of entries in the cache
+   * @private
+   */
+  LocalCache.prototype.size = function() {
+    return Object.keys(this.store).length;
+  };
+
+  /**
+   * Clear all entries from the local cache
+   * @private
+   */
+  LocalCache.prototype.clear = function() {
+    this.store = {};
+  };
+
+  /**
+   * Get analytics about the local cache
+   * @returns {Object} Analytics object with size and keys info
+   * @private
+   */
+  LocalCache.prototype.getAnalytics = function() {
+    return {
+      type: 'local',
+      size: this.size(),
+      keys: this.keys(),
+      uptime: Date.now() - this.created,
+      memoryUsage: JSON.stringify(this.store).length + ' bytes'
+    };
+  };
+
+  /**
    * NooblyJS Core Caching Client Library
-   * Provides client-side access to the caching service REST API
+   * Provides client-side access to both local and remote caching service APIs
    *
    * @class nooblyjsCaching
    * @param {Object} options - Configuration options
-   * @param {string} options.instanceName - Optional cache instance name (default: 'default')
+   * @param {string} options.instanceName - Optional cache instance name. If not provided, uses local client-side cache
    * @param {string} options.baseUrl - Optional base URL for API calls (default: window.location.origin)
    * @param {boolean} options.debug - Enable debug logging (default: false)
    * @param {number} options.timeout - Request timeout in milliseconds (default: 5000)
    */
   function nooblyjsCaching(options = {}) {
-    this.instanceName = options.instanceName || 'default';
-    this.baseUrl = options.baseUrl || window.location.origin;
+    // If no instanceName is provided, use local client-side cache
+    if (!options.instanceName) {
+      this.isLocal = true;
+      this.instanceName = 'local';
+      this.localCache = new LocalCache();
+    } else {
+      this.isLocal = false;
+      this.instanceName = options.instanceName;
+      this.baseUrl = options.baseUrl || window.location.origin;
+      this.apiBase = this.buildApiBase();
+    }
+
     this.debug = options.debug || false;
     this.timeout = options.timeout || 5000;
-    this.apiBase = this.buildApiBase();
   }
 
   /**
@@ -59,6 +169,9 @@
    * @returns {string} The base API URL
    */
   nooblyjsCaching.prototype.buildApiBase = function() {
+    if (this.isLocal) {
+      return null; // Local cache doesn't use API URLs
+    }
     if (this.instanceName === 'default') {
       return `${this.baseUrl}/services/caching/api`;
     }
@@ -129,9 +242,22 @@
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
 
-    const url = `${this.apiBase}/put/${encodeURIComponent(key)}`;
-
     this.log(`Storing key: ${key}`);
+
+    // Use local cache if no instanceName was provided
+    if (this.isLocal) {
+      try {
+        this.localCache.put(key, value);
+        this.log(`Successfully stored key: ${key}`);
+        return Promise.resolve();
+      } catch (error) {
+        this.log(`Failed to store key: ${key}`, error.message);
+        return Promise.reject(error);
+      }
+    }
+
+    // Otherwise use remote API
+    const url = `${this.apiBase}/put/${encodeURIComponent(key)}`;
 
     return this.fetchWithTimeout(url, {
       method: 'POST',
@@ -171,9 +297,22 @@
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
 
-    const url = `${this.apiBase}/get/${encodeURIComponent(key)}`;
-
     this.log(`Retrieving key: ${key}`);
+
+    // Use local cache if no instanceName was provided
+    if (this.isLocal) {
+      try {
+        const value = this.localCache.get(key);
+        this.log(`Successfully retrieved key: ${key}`, value);
+        return Promise.resolve(value);
+      } catch (error) {
+        this.log(`Failed to retrieve key: ${key}`, error.message);
+        return Promise.reject(error);
+      }
+    }
+
+    // Otherwise use remote API
+    const url = `${this.apiBase}/get/${encodeURIComponent(key)}`;
 
     return this.fetchWithTimeout(url, {
       method: 'GET',
@@ -211,9 +350,22 @@
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
 
-    const url = `${this.apiBase}/delete/${encodeURIComponent(key)}`;
-
     this.log(`Deleting key: ${key}`);
+
+    // Use local cache if no instanceName was provided
+    if (this.isLocal) {
+      try {
+        this.localCache.delete(key);
+        this.log(`Successfully deleted key: ${key}`);
+        return Promise.resolve();
+      } catch (error) {
+        this.log(`Failed to delete key: ${key}`, error.message);
+        return Promise.reject(error);
+      }
+    }
+
+    // Otherwise use remote API
+    const url = `${this.apiBase}/delete/${encodeURIComponent(key)}`;
 
     return this.fetchWithTimeout(url, {
       method: 'DELETE',
@@ -233,7 +385,7 @@
 
   /**
    * Check if a key exists in the cache
-   * Attempts to retrieve a key and returns true if it exists, false otherwise.
+   * Checks if a key exists in the cache (works for both local and remote).
    *
    * @param {string} key - The cache key to check
    * @returns {Promise<boolean>} A promise that resolves with true if key exists, false otherwise
@@ -245,6 +397,12 @@
    *   });
    */
   nooblyjsCaching.prototype.exists = function(key) {
+    // Use local cache if no instanceName was provided
+    if (this.isLocal) {
+      return Promise.resolve(this.localCache.exists(key));
+    }
+
+    // Otherwise use remote API via get
     return this.get(key)
       .then(value => value !== null && value !== undefined)
       .catch(() => false);
@@ -252,9 +410,9 @@
 
   /**
    * Get cache service status
-   * Checks if the caching service is running and accessible.
+   * For local cache, returns the local cache status. For remote, checks if the service is accessible.
    *
-   * @returns {Promise<string>} A promise that resolves with the status message
+   * @returns {Promise<Object>} A promise that resolves with the status message
    * @throws {Error} If the operation fails
    *
    * @example
@@ -263,9 +421,22 @@
    *   .catch(err => console.error('Failed to get status:', err));
    */
   nooblyjsCaching.prototype.status = function() {
-    const url = `${this.baseUrl}/services/caching/api/status`;
-
     this.log('Checking cache service status');
+
+    // Return local cache status
+    if (this.isLocal) {
+      const status = {
+        type: 'local',
+        status: 'active',
+        size: this.localCache.size(),
+        keys: this.localCache.keys().length
+      };
+      this.log('Cache service status:', status);
+      return Promise.resolve(status);
+    }
+
+    // Otherwise check remote API
+    const url = `${this.baseUrl}/services/caching/api/status`;
 
     return this.fetchWithTimeout(url, {
       method: 'GET',
@@ -286,7 +457,7 @@
 
   /**
    * Get list of available cache instances
-   * Retrieves a list of all configured cache instances.
+   * For local cache, returns only the local instance. For remote, retrieves all configured instances.
    *
    * @returns {Promise<Array>} A promise that resolves with array of instance objects
    * @throws {Error} If the operation fails
@@ -299,9 +470,22 @@
    *   });
    */
   nooblyjsCaching.prototype.listInstances = function() {
-    const url = `${this.baseUrl}/services/caching/api/instances`;
-
     this.log('Listing available cache instances');
+
+    // Return local instance info
+    if (this.isLocal) {
+      const instances = [{
+        name: 'local',
+        provider: 'memory',
+        status: 'active',
+        type: 'local'
+      }];
+      this.log('Available instances:', instances);
+      return Promise.resolve(instances);
+    }
+
+    // Otherwise fetch from remote API
+    const url = `${this.baseUrl}/services/caching/api/instances`;
 
     return this.fetchWithTimeout(url, {
       method: 'GET',
@@ -417,6 +601,76 @@
     });
 
     return Promise.all(promises);
+  };
+
+  /**
+   * Get all keys stored in the cache
+   * For local cache, returns all keys. For remote, this is not available.
+   *
+   * @returns {Promise<Array<string>>} A promise that resolves with array of all keys
+   *
+   * @example
+   * cache.keys()
+   *   .then(keys => console.log('All keys:', keys));
+   */
+  nooblyjsCaching.prototype.keys = function() {
+    if (this.isLocal) {
+      return Promise.resolve(this.localCache.keys());
+    }
+    return Promise.reject(new Error('keys() is only available for local cache instances'));
+  };
+
+  /**
+   * Get the number of entries in the cache
+   * For local cache, returns the entry count. For remote, this is not available.
+   *
+   * @returns {Promise<number>} A promise that resolves with the number of entries
+   *
+   * @example
+   * cache.size()
+   *   .then(size => console.log('Cache size:', size));
+   */
+  nooblyjsCaching.prototype.size = function() {
+    if (this.isLocal) {
+      return Promise.resolve(this.localCache.size());
+    }
+    return Promise.reject(new Error('size() is only available for local cache instances'));
+  };
+
+  /**
+   * Clear all entries from the cache
+   * For local cache, clears all entries. For remote, this is not available.
+   *
+   * @returns {Promise<void>} A promise that resolves when the cache is cleared
+   *
+   * @example
+   * cache.clearAll()
+   *   .then(() => console.log('Cache cleared'));
+   */
+  nooblyjsCaching.prototype.clearAll = function() {
+    if (this.isLocal) {
+      this.localCache.clear();
+      this.log('Cleared all cache entries');
+      return Promise.resolve();
+    }
+    return Promise.reject(new Error('clearAll() is only available for local cache instances'));
+  };
+
+  /**
+   * Get analytics for the cache
+   * For local cache, returns in-memory analytics. For remote, this is not available.
+   *
+   * @returns {Promise<Object>} A promise that resolves with cache analytics
+   *
+   * @example
+   * cache.getAnalytics()
+   *   .then(analytics => console.log('Analytics:', analytics));
+   */
+  nooblyjsCaching.prototype.getAnalytics = function() {
+    if (this.isLocal) {
+      return Promise.resolve(this.localCache.getAnalytics());
+    }
+    return Promise.reject(new Error('getAnalytics() is only available for local cache instances'));
   };
 
   // Expose the library globally

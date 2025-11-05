@@ -1,0 +1,1245 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Cache Service API",
+    "description": "RESTful API for cache operations with support for multiple named instances. Provides endpoints for storing, retrieving, and deleting cache entries, along with analytics and configuration management.",
+    "version": "1.0.15",
+    "contact": {
+      "name": "NooblyJS Core Team",
+      "url": "https://github.com/nooblyjs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/services/caching/api",
+      "description": "Cache API - Production"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authentication. Can also be provided via Authorization header (Bearer token) or api_key query parameter."
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key provided as Bearer token in Authorization header"
+      }
+    },
+    "schemas": {
+      "CacheValue": {
+        "type": "object",
+        "description": "Any JSON-serializable value to store in cache",
+        "example": {
+          "message": "Hello World",
+          "timestamp": "2024-01-01T00:00:00Z",
+          "data": [1, 2, 3]
+        }
+      },
+      "CacheInstance": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Instance name",
+            "example": "default"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Provider type (memory, redis, etc)",
+            "example": "memory"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"],
+            "description": "Instance status",
+            "example": "active"
+          }
+        }
+      },
+      "AnalyticsEntry": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Cache key",
+            "example": "user:123"
+          },
+          "hits": {
+            "type": "integer",
+            "description": "Number of hits",
+            "example": 42
+          },
+          "lastHit": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last access timestamp",
+            "example": "2024-01-01T12:00:00Z"
+          }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "totalKeys": {
+            "type": "integer",
+            "description": "Total number of keys in cache",
+            "example": 150
+          },
+          "totalHits": {
+            "type": "integer",
+            "description": "Total cache hits",
+            "example": 5000
+          },
+          "totalMisses": {
+            "type": "integer",
+            "description": "Total cache misses",
+            "example": 200
+          },
+          "totalReads": {
+            "type": "integer",
+            "description": "Total read operations",
+            "example": 5200
+          },
+          "totalWrites": {
+            "type": "integer",
+            "description": "Total write operations",
+            "example": 150
+          }
+        }
+      },
+      "HitDistribution": {
+        "type": "object",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Cache key names",
+            "example": ["user:1", "user:2", "config:app"]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Hit counts for each key",
+            "example": [100, 85, 45]
+          }
+        }
+      },
+      "Timeline": {
+        "type": "object",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Time period labels",
+            "example": ["00:00", "01:00", "02:00"]
+          },
+          "datasets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Dataset name",
+                  "example": "user:1"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "description": "Operations per minute",
+                  "example": [10, 15, 8]
+                }
+              }
+            }
+          }
+        }
+      },
+      "KeyListEntry": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Cache key name",
+            "example": "user:123"
+          },
+          "hitCount": {
+            "type": "integer",
+            "description": "Number of hits",
+            "example": 50
+          },
+          "missCount": {
+            "type": "integer",
+            "description": "Number of misses",
+            "example": 3
+          },
+          "totalReads": {
+            "type": "integer",
+            "description": "Total read operations",
+            "example": 53
+          },
+          "totalWrites": {
+            "type": "integer",
+            "description": "Total write operations",
+            "example": 1
+          }
+        }
+      },
+      "MissEntry": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Cache key with misses",
+            "example": "missing:key"
+          },
+          "missCount": {
+            "type": "integer",
+            "description": "Number of misses",
+            "example": 25
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "hitCount": {
+                "type": "integer",
+                "description": "Number of hits",
+                "example": 10
+              }
+            }
+          }
+        }
+      },
+      "AnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/Stats"
+          },
+          "hitDistribution": {
+            "$ref": "#/components/schemas/HitDistribution"
+          },
+          "timeline": {
+            "$ref": "#/components/schemas/Timeline"
+          },
+          "keyList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KeyListEntry"
+            }
+          },
+          "topMisses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissEntry"
+            }
+          }
+        }
+      },
+      "InstancesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CacheInstance"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "ListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of analytics entries",
+            "example": 10
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Unauthorized"
+          },
+          "message": {
+            "type": "string",
+            "example": "API key is required"
+          },
+          "code": {
+            "type": "string",
+            "example": "MISSING_API_KEY"
+          }
+        }
+      },
+      "SettingItem": {
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "string",
+            "description": "Setting name",
+            "example": "maxCacheSize"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["string", "integer", "number", "date", "list", "options"],
+            "description": "Setting type",
+            "example": "integer"
+          },
+          "description": {
+            "type": "string",
+            "description": "Setting description",
+            "example": "Maximum size of cache"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Possible values or default",
+            "example": ["1000000"]
+          }
+        }
+      },
+      "SettingsResponse": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "example": "Cache service configuration"
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettingItem"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/put/{key}": {
+      "post": {
+        "tags": ["Cache Operations"],
+        "summary": "Store cache entry",
+        "description": "Stores or updates a cache entry with the specified key",
+        "operationId": "putCache",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to store the value under. Can use hierarchical notation like 'user:123:profile'",
+            "schema": {
+              "type": "string"
+            },
+            "example": "user:123"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "The value to store in the cache (can be any JSON-serializable value)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CacheValue"
+              },
+              "examples": {
+                "object": {
+                  "value": {
+                    "name": "John Doe",
+                    "email": "john@example.com"
+                  }
+                },
+                "array": {
+                  "value": [1, 2, 3, 4, 5]
+                },
+                "primitive": {
+                  "value": "simple string value"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cache entry stored successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid key or value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/put/{key}": {
+      "post": {
+        "tags": ["Cache Operations"],
+        "summary": "Store cache entry in named instance",
+        "description": "Stores or updates a cache entry in a specific named cache instance",
+        "operationId": "putCacheInstance",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the cache instance",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session-cache"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to store the value under",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session:abc123"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "The value to store in the cache",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CacheValue"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cache entry stored successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/{key}": {
+      "get": {
+        "tags": ["Cache Operations"],
+        "summary": "Retrieve cache entry",
+        "description": "Retrieves a value from the cache by key",
+        "operationId": "getCache",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to retrieve",
+            "schema": {
+              "type": "string"
+            },
+            "example": "user:123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cache entry retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheValue"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found in cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/get/{key}": {
+      "get": {
+        "tags": ["Cache Operations"],
+        "summary": "Retrieve cache entry from named instance",
+        "description": "Retrieves a value from a specific named cache instance by key",
+        "operationId": "getCacheInstance",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the cache instance",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session-cache"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to retrieve",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session:abc123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cache entry retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheValue"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found in cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/{key}": {
+      "delete": {
+        "tags": ["Cache Operations"],
+        "summary": "Delete cache entry",
+        "description": "Removes a value from the cache by key",
+        "operationId": "deleteCache",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to delete",
+            "schema": {
+              "type": "string"
+            },
+            "example": "user:123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cache entry deleted successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/delete/{key}": {
+      "delete": {
+        "tags": ["Cache Operations"],
+        "summary": "Delete cache entry from named instance",
+        "description": "Removes a value from a specific named cache instance by key",
+        "operationId": "deleteCacheInstance",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the cache instance",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session-cache"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "The cache key to delete",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session:abc123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cache entry deleted successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": ["Service Management"],
+        "summary": "Service status",
+        "description": "Check if the cache service is running and accessible",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "caching api running"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service is unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "caching api error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instances": {
+      "get": {
+        "tags": ["Service Management"],
+        "summary": "List cache instances",
+        "description": "Returns a list of all available caching service instances",
+        "operationId": "listInstances",
+        "responses": {
+          "200": {
+            "description": "List of instances retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstancesResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/list": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Cache analytics",
+        "description": "Retrieve cache usage statistics and analytics data",
+        "operationId": "listAnalytics",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/list": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Cache analytics for named instance",
+        "description": "Retrieve cache usage statistics and analytics data for a specific named cache instance",
+        "operationId": "listAnalyticsInstance",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the cache instance",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session-cache"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Comprehensive cache analytics",
+        "description": "Returns comprehensive analytics data including statistics, hit distribution, timeline, and top misses",
+        "operationId": "getAnalytics",
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Analytics not available for this cache instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Analytics not available"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{instanceName}/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Comprehensive cache analytics for named instance",
+        "description": "Returns comprehensive analytics data for a specific named cache instance",
+        "operationId": "getAnalyticsInstance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the cache instance",
+            "schema": {
+              "type": "string"
+            },
+            "example": "session-cache"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Analytics not available for this cache instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Analytics not available"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Configuration"],
+        "summary": "Get service settings",
+        "description": "Retrieve all configurable settings for the cache service",
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Configuration"],
+        "summary": "Save service settings",
+        "description": "Update the configurable settings for the cache service",
+        "operationId": "saveSettings",
+        "requestBody": {
+          "required": true,
+          "description": "Settings object with key-value pairs to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "example": {
+                  "maxCacheSize": "1000000",
+                  "evictionPolicy": "LRU"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings saved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing settings",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing settings"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Cache Operations",
+      "description": "Core cache operations: store, retrieve, and delete entries"
+    },
+    {
+      "name": "Service Management",
+      "description": "Service status and instance management"
+    },
+    {
+      "name": "Analytics",
+      "description": "Cache analytics and usage statistics"
+    },
+    {
+      "name": "Configuration",
+      "description": "Service configuration and settings management"
+    }
+  ]
+}
