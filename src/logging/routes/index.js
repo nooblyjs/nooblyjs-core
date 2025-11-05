@@ -499,5 +499,31 @@ module.exports = (options, eventEmitter, logger, analytics) => {
         res.status(400).send('Bad Request: Missing settings');
       }
     });
+
+    /**
+     * GET /services/logging/api/swagger/docs.json
+     * Returns the OpenAPI/Swagger specification for the Logging Service API.
+     * Used by Swagger UI and other API documentation tools.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/logging/api/swagger/docs.json', (req, res) => {
+      try {
+        const swaggerPath = path.join(__dirname, 'swagger', 'docs.json');
+        const swaggerContent = fs.readFileSync(swaggerPath, 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).send(swaggerContent);
+        eventEmitter.emit('api-logging-swagger-docs-served', 'Swagger documentation served');
+      } catch (error) {
+        eventEmitter.emit('api-logging-swagger-docs-error', error.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to load Swagger documentation',
+          message: error.message
+        });
+      }
+    });
   }
 };

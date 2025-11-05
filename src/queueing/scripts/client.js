@@ -11,73 +11,145 @@
 'use strict';
 
 /**
+ * LocalQueue - In-memory FIFO queue for client-side storage
+ * Provides FIFO queue operations without server communication
+ *
+ * @private
+ */
+class LocalQueue {
+  constructor() {
+    /**
+     * @type {Map<string, Array>} - Map of queue names to their items
+     * @private
+     */
+    this.queues = new Map();
+  }
+
+  /**
+   * Enqueue an item to a queue
+   * @param {string} queueName - Name of the queue
+   * @param {*} item - Item to enqueue
+   */
+  enqueue(queueName, item) {
+    if (!this.queues.has(queueName)) {
+      this.queues.set(queueName, []);
+    }
+    this.queues.get(queueName).push(item);
+  }
+
+  /**
+   * Dequeue an item from a queue (FIFO)
+   * @param {string} queueName - Name of the queue
+   * @returns {*} The dequeued item or undefined if queue is empty
+   */
+  dequeue(queueName) {
+    if (!this.queues.has(queueName)) {
+      return undefined;
+    }
+    const queue = this.queues.get(queueName);
+    return queue.length > 0 ? queue.shift() : undefined;
+  }
+
+  /**
+   * Get the size of a queue
+   * @param {string} queueName - Name of the queue
+   * @returns {number} Number of items in the queue
+   */
+  size(queueName) {
+    if (!this.queues.has(queueName)) {
+      return 0;
+    }
+    return this.queues.get(queueName).length;
+  }
+
+  /**
+   * Get all queue names
+   * @returns {Array<string>} Array of queue names
+   */
+  listQueues() {
+    return Array.from(this.queues.keys());
+  }
+
+  /**
+   * Purge all items from a queue
+   * @param {string} queueName - Name of the queue
+   */
+  purge(queueName) {
+    if (this.queues.has(queueName)) {
+      this.queues.get(queueName).length = 0;
+    }
+  }
+
+  /**
+   * Clear all queues
+   */
+  clearAll() {
+    this.queues.clear();
+  }
+}
+
+/**
  * Noobly-core Queueing Service Client
  *
  * Provides a JavaScript client for consuming the queueing service API from browser applications.
- * Supports multiple named queue instances for different use cases.
+ * Supports both local (in-memory) queues and remote server-side instances.
+ *
+ * When no instance name is provided, uses local in-memory queues.
+ * When an instance name is provided, connects to the remote server API.
  *
  * @example
- * // Create a new queueing client
- * var queueClient = new nooblyjscorequeueing('default');
+ * // Create a local queueing client (no server needed)
+ * var localQueue = new nooblyjscorequeueing();
  *
  * // Enqueue an item
  * var item = {data: {userId: 123, action: 'process'}};
- * queueClient.enqueue('tasks', item)
+ * localQueue.enqueue('tasks', item)
  *   .then(function() {
- *     console.log('Item enqueued successfully');
- *   })
- *   .catch(function(error) {
- *     console.error('Failed to enqueue item:', error);
+ *     console.log('Item enqueued locally');
  *   });
  *
- * // Dequeue an item
- * queueClient.dequeue('tasks')
+ * // Create a remote queueing client
+ * var remoteQueue = new nooblyjscorequeueing('default');
+ *
+ * // Dequeue an item from remote queue
+ * remoteQueue.dequeue('tasks')
  *   .then(function(item) {
  *     console.log('Dequeued item:', item);
- *   })
- *   .catch(function(error) {
- *     console.error('Failed to dequeue item:', error);
- *   });
- *
- * // Check queue size
- * queueClient.size('tasks')
- *   .then(function(size) {
- *     console.log('Queue size:', size);
- *   });
- *
- * // List all queues
- * queueClient.listQueues()
- *   .then(function(queues) {
- *     console.log('Available queues:', queues);
- *   });
- *
- * // Purge a queue
- * queueClient.purge('tasks')
- *   .then(function() {
- *     console.log('Queue purged');
  *   });
  */
 class nooblyjscorequeueing {
   /**
    * Initializes a new Queueing Service client instance.
    *
-   * @param {string} [instanceName='default'] - The name of the queue instance to connect to.
-   *                                             Must match an instance on the server.
+   * When no instanceName is provided, uses local in-memory queues (no server needed).
+   * When instanceName is provided, connects to the remote server API.
+   *
+   * @param {string} [instanceName] - The name of the queue instance to connect to.
+   *                                  If not provided or undefined, uses local queue.
    * @param {Object} [options={}] - Configuration options
    * @param {string} [options.apiKey] - Optional API key for authentication
    * @param {boolean} [options.debug=false] - Enable debug logging
    * @throws {TypeError} If instanceName is provided but is not a string
    */
-  constructor(instanceName = 'default', options = {}) {
+  constructor(instanceName, options = {}) {
     if (instanceName && typeof instanceName !== 'string') {
       throw new TypeError('instanceName must be a string');
     }
 
     /**
+     * Determine if using local or remote mode
+     * Local mode: no instanceName provided (undefined or null)
+     * Remote mode: instanceName provided
+     * @type {boolean}
+     * @private
+     */
+    this.isLocal = !instanceName;
+
+    /**
      * @type {string}
      * @private
      */
-    this.instanceName = instanceName;
+    this.instanceName = instanceName || 'local';
 
     /**
      * @type {Object}
@@ -90,25 +162,40 @@ class nooblyjscorequeueing {
     };
 
     /**
+     * Local queue storage for client-side queueing
+     * @type {LocalQueue|null}
+     * @private
+     */
+    this.localQueue = this.isLocal ? new LocalQueue() : null;
+
+    /**
      * @type {string}
      * @private
      */
     this.baseUrl = this.getBaseUrl();
 
     if (this.options.debug) {
-      console.log('[nooblyjscorequeueing] Initialized with instance:', this.instanceName);
-      console.log('[nooblyjscorequeueing] Base URL:', this.baseUrl);
+      if (this.isLocal) {
+        console.log('[nooblyjscorequeueing] Initialized in LOCAL mode');
+      } else {
+        console.log('[nooblyjscorequeueing] Initialized with remote instance:', this.instanceName);
+        console.log('[nooblyjscorequeueing] Base URL:', this.baseUrl);
+      }
     }
   }
 
   /**
    * Get the base URL for the queueing API
-   * Handles both default and named instances
+   * For local mode, returns empty string (no API calls needed)
+   * For remote mode, returns the API endpoint URL
    *
    * @private
-   * @returns {string} The base URL for API calls
+   * @returns {string} The base URL for API calls (empty string for local mode)
    */
   getBaseUrl() {
+    if (this.isLocal) {
+      return ''; // No API calls for local mode
+    }
     if (this.instanceName === 'default' || !this.instanceName) {
       return '/services/queueing/api';
     }
@@ -191,6 +278,16 @@ class nooblyjscorequeueing {
       throw new Error('Object to be queued is required');
     }
 
+    if (this.isLocal) {
+      // Local mode: store in-memory
+      this.localQueue.enqueue(queueName, object_to_be_queued);
+      if (this.options.debug) {
+        console.log('[nooblyjscorequeueing] Local enqueue:', queueName, object_to_be_queued);
+      }
+      return Promise.resolve();
+    }
+
+    // Remote mode: send to server
     const endpoint = `/enqueue/${encodeURIComponent(queueName)}`;
     return await this.request(endpoint, 'POST', { task: object_to_be_queued });
   }
@@ -212,6 +309,16 @@ class nooblyjscorequeueing {
       throw new Error('Queue name is required');
     }
 
+    if (this.isLocal) {
+      // Local mode: get from in-memory queue
+      const item = this.localQueue.dequeue(queueName);
+      if (this.options.debug) {
+        console.log('[nooblyjscorequeueing] Local dequeue:', queueName, item);
+      }
+      return Promise.resolve(item);
+    }
+
+    // Remote mode: fetch from server
     const endpoint = `/dequeue/${encodeURIComponent(queueName)}`;
     return await this.request(endpoint, 'GET');
   }
@@ -233,6 +340,16 @@ class nooblyjscorequeueing {
       throw new Error('Queue name is required');
     }
 
+    if (this.isLocal) {
+      // Local mode: get size from in-memory queue
+      const queueSize = this.localQueue.size(queueName);
+      if (this.options.debug) {
+        console.log('[nooblyjscorequeueing] Local size:', queueName, queueSize);
+      }
+      return Promise.resolve(queueSize);
+    }
+
+    // Remote mode: fetch from server
     const endpoint = `/size/${encodeURIComponent(queueName)}`;
     return await this.request(endpoint, 'GET');
   }
@@ -249,6 +366,16 @@ class nooblyjscorequeueing {
    *   .catch(err => console.error(err));
    */
   async listQueues() {
+    if (this.isLocal) {
+      // Local mode: get queues from in-memory storage
+      const queues = this.localQueue.listQueues();
+      if (this.options.debug) {
+        console.log('[nooblyjscorequeueing] Local listQueues:', queues);
+      }
+      return Promise.resolve(queues);
+    }
+
+    // Remote mode: fetch from server
     const endpoint = '/queues';
     return await this.request(endpoint, 'GET');
   }
@@ -270,6 +397,16 @@ class nooblyjscorequeueing {
       throw new Error('Queue name is required');
     }
 
+    if (this.isLocal) {
+      // Local mode: purge from in-memory queue
+      this.localQueue.purge(queueName);
+      if (this.options.debug) {
+        console.log('[nooblyjscorequeueing] Local purge:', queueName);
+      }
+      return Promise.resolve();
+    }
+
+    // Remote mode: send to server
     const endpoint = `/purge/${encodeURIComponent(queueName)}`;
     return await this.request(endpoint, 'DELETE');
   }

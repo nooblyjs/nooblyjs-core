@@ -1,0 +1,1084 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Logging Service API",
+    "description": "Enterprise-grade logging service API for structured logging operations. Supports multiple named instances, real-time log retrieval, analytics, and timeline tracking.",
+    "version": "1.0.14",
+    "contact": {
+      "name": "NooblyJS Core Team",
+      "url": "https://github.com/nooblyjs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "http://api.example.com",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authentication"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer token authentication"
+      },
+      "ApiKeyQuery": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "api_key",
+        "description": "API key as query parameter"
+      }
+    },
+    "schemas": {
+      "LogMessage": {
+        "type": "object",
+        "description": "A log message object that can be any valid JSON structure",
+        "examples": [
+          {
+            "message": "User login successful",
+            "userId": "12345",
+            "timestamp": "2024-01-15T10:30:00Z"
+          },
+          {
+            "error": "Database connection failed",
+            "code": "DB_ERROR",
+            "details": "Connection timeout after 30s"
+          }
+        ]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "LogInstance": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "default"
+          },
+          "provider": {
+            "type": "string",
+            "example": "memory"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"],
+            "example": "active"
+          }
+        }
+      },
+      "InstancesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogInstance"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "LogEntry": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["INFO", "WARN", "ERROR", "LOG"]
+          },
+          "message": {
+            "type": "object"
+          }
+        }
+      },
+      "LogsResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "level": {
+            "type": "string",
+            "example": "ALL"
+          },
+          "logs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogEntry"
+            }
+          }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "info": {
+            "type": "integer",
+            "description": "Count of INFO level logs"
+          },
+          "warn": {
+            "type": "integer",
+            "description": "Count of WARN level logs"
+          },
+          "error": {
+            "type": "integer",
+            "description": "Count of ERROR level logs"
+          },
+          "log": {
+            "type": "integer",
+            "description": "Count of LOG level logs"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total count of all logs"
+          },
+          "info_percent": {
+            "type": "number"
+          },
+          "warn_percent": {
+            "type": "number"
+          },
+          "error_percent": {
+            "type": "number"
+          },
+          "log_percent": {
+            "type": "number"
+          }
+        }
+      },
+      "Timeline": {
+        "type": "object",
+        "description": "Timeline data showing log activity per minute for each log level",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "info": {
+            "type": "integer"
+          },
+          "warn": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "integer"
+          },
+          "log": {
+            "type": "integer"
+          }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "description": "Logger settings configuration",
+        "example": {
+          "maxLogs": 10000,
+          "retentionDays": 30,
+          "enableCompression": true
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/services/logging/scripts": {
+      "get": {
+        "summary": "Get Logging Client Library",
+        "description": "Serves the client-side JavaScript library for consuming the logging service API from browser applications",
+        "operationId": "getLoggingScripts",
+        "tags": ["Scripts"],
+        "responses": {
+          "200": {
+            "description": "JavaScript client library source code",
+            "content": {
+              "application/javascript": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to load script library",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/status": {
+      "get": {
+        "summary": "Get Service Status",
+        "description": "Returns the operational status of the logging service. No authentication required.",
+        "operationId": "getStatus",
+        "tags": ["Service"],
+        "responses": {
+          "200": {
+            "description": "Service is operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "logging api running"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/instances": {
+      "get": {
+        "summary": "List Logger Instances",
+        "description": "Returns a list of all available logging service instances",
+        "operationId": "listInstances",
+        "tags": ["Instances"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstancesResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/info": {
+      "post": {
+        "summary": "Log Info Message",
+        "description": "Logs an informational message through the default logging instance",
+        "operationId": "logInfo",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/info": {
+      "post": {
+        "summary": "Log Info Message to Instance",
+        "description": "Logs an informational message to a named logger instance",
+        "operationId": "logInfoToInstance",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          }
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/warn": {
+      "post": {
+        "summary": "Log Warning Message",
+        "description": "Logs a warning message through the default logging instance",
+        "operationId": "logWarn",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/warn": {
+      "post": {
+        "summary": "Log Warning Message to Instance",
+        "description": "Logs a warning message to a named logger instance",
+        "operationId": "logWarnToInstance",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          }
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/error": {
+      "post": {
+        "summary": "Log Error Message",
+        "description": "Logs an error message through the default logging instance",
+        "operationId": "logError",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/error": {
+      "post": {
+        "summary": "Log Error Message to Instance",
+        "description": "Logs an error message to a named logger instance",
+        "operationId": "logErrorToInstance",
+        "tags": ["Logging"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          }
+        ],
+        "requestBody": {
+          "description": "Log message (any valid JSON structure)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log entry created successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing message in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to log message",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/logs": {
+      "get": {
+        "summary": "Get Logs",
+        "description": "Retrieves the last 1000 logs from analytics in descending order. Optional query parameter 'level' can filter by log level (INFO, WARN, ERROR, LOG)",
+        "operationId": "getLogs",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["INFO", "WARN", "ERROR", "LOG"]
+            },
+            "description": "Optional log level filter (case-insensitive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/logs": {
+      "get": {
+        "summary": "Get Logs from Instance",
+        "description": "Retrieves the last 1000 logs from a named logger instance's analytics. Optional query parameter 'level' can filter by log level.",
+        "operationId": "getLogsFromInstance",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["INFO", "WARN", "ERROR", "LOG"]
+            },
+            "description": "Optional log level filter (case-insensitive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/stats": {
+      "get": {
+        "summary": "Get Log Statistics",
+        "description": "Retrieves statistics about log levels including counts and percentages",
+        "operationId": "getStats",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/stats": {
+      "get": {
+        "summary": "Get Log Statistics from Instance",
+        "description": "Retrieves statistics about log levels from a named logger instance",
+        "operationId": "getStatsFromInstance",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/timeline": {
+      "get": {
+        "summary": "Get Timeline Data",
+        "description": "Retrieves timeline data showing log activity per minute for each log level",
+        "operationId": "getTimeline",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved timeline data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Timeline"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/{instanceName}/timeline": {
+      "get": {
+        "summary": "Get Timeline Data from Instance",
+        "description": "Retrieves timeline data from a named logger instance",
+        "operationId": "getTimelineFromInstance",
+        "tags": ["Analytics"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The logger instance name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved timeline data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Timeline"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/logging/api/settings": {
+      "get": {
+        "summary": "Get Logger Settings",
+        "description": "Retrieves the current settings configuration for the default logger instance",
+        "operationId": "getSettings",
+        "tags": ["Settings"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Save Logger Settings",
+        "description": "Saves settings configuration for the default logger instance",
+        "operationId": "saveSettings",
+        "tags": ["Settings"],
+        "security": [
+          {"ApiKeyHeader": []},
+          {"BearerAuth": []},
+          {"ApiKeyQuery": []}
+        ],
+        "requestBody": {
+          "description": "Settings object to save",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Settings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings saved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing settings in request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Bad Request: Missing settings"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to save settings",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Scripts",
+      "description": "Client library endpoints"
+    },
+    {
+      "name": "Service",
+      "description": "Service status and health checks"
+    },
+    {
+      "name": "Instances",
+      "description": "Logger instance management"
+    },
+    {
+      "name": "Logging",
+      "description": "Core logging operations (Info, Warn, Error)"
+    },
+    {
+      "name": "Analytics",
+      "description": "Log retrieval and analytics (Logs, Stats, Timeline)"
+    },
+    {
+      "name": "Settings",
+      "description": "Configuration management"
+    }
+  ]
+}

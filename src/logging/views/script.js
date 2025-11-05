@@ -63,6 +63,12 @@
 
         // Instance selection state
         let selectedInstance = 'default';
+        let logger = null;
+
+        // Initialize logger with selected instance
+        function initializeLogger() {
+            logger = new nooblyjscorelogging(selectedInstance);
+        }
 
         // Instance management functions
         async function loadAvailableInstances() {
@@ -138,51 +144,33 @@
             }
         }
 
-        // API functions
-        async function makeRequest(url, method = 'GET', body = null) {
-            // Make URL instance-aware
-            const instanceAwareUrl = buildInstanceUrl(url);
-
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
-
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-
-            const response = await fetch(instanceAwareUrl, options);
-            const contentType = response.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                return await response.text();
-            }
-        }
-
-        // Form handlers
+        // Form handlers using logging client library
         document.getElementById('logForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const logginglevel = document.getElementById('logging-level-select').value
+
+            const logginglevel = document.getElementById('logging-level-select').value;
             const message = document.getElementById('logMessage').value;
-            
+
             if (!validateJSON('logMessage')) {
                 showAlert('Please enter a valid JSON log message', 'error');
                 return;
             }
-            
+
             try {
                 setLoading('logForm', true);
                 const parsedMessage = JSON.parse(message);
-                // Add level to the message object
-                parsedMessage.level = logginglevel;
-                const result = await makeRequest(`/services/logging/api/log`, 'POST', parsedMessage);
-                showResponse('logResponse', 'logResponseContent', result);
+
+                // Use logging client library to submit log
+                let result;
+                if (logginglevel === 'info') {
+                    result = await logger.info('Log entry', parsedMessage);
+                } else if (logginglevel === 'warn') {
+                    result = await logger.warn('Log entry', parsedMessage);
+                } else if (logginglevel === 'error') {
+                    result = await logger.error('Log entry', parsedMessage);
+                }
+
+                showResponse('logResponse', 'logResponseContent', { success: true, message: 'Log entry submitted successfully' });
                 showAlert(`Log entry submitted successfully`);
             } catch (error) {
                 showAlert('Error submitting log entry: ' + error.message, 'error');
@@ -194,7 +182,8 @@
 
         async function checkStatus() {
             try {
-                const result = await makeRequest('/services/logging/api/status');
+                const response = await fetch(buildInstanceUrl('/services/logging/api/status'));
+                const result = await response.json();
                 showResponse('statusResponse', 'statusResponseContent', result);
                 showAlert('Status checked successfully');
             } catch (error) {
@@ -607,199 +596,23 @@
             refreshDashboard();
         }
 
-        // Swagger UI setup
-        const spec = {
-            openapi: '3.0.0',
-            info: {
-                title: 'Logging API',
-                description: 'REST API for logging operations',
-                version: '1.0.0'
-            },
-            servers: [
-                { url: '/services/logging/api', description: 'Logging API' }
-            ],
-            paths: {
-                '/log': {
-                    post: {
-                        summary: 'Submit a log entry',
-                        description: 'Submits a new log entry to the logging service',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: { type: 'object' },
-                                    example: { "level": "info", "message": "User logged in" }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Log entry submitted successfully',
-                                content: {
-                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/status': {
-                    get: {
-                        summary: 'Service status',
-                        description: 'Check if the logging service is running',
-                        responses: {
-                            '200': {
-                                description: 'Service is running',
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'string', example: 'logging api running' }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/settings': {
-                    get: {
-                        summary: 'Service settings',
-                        description: 'Check the logging service settings',
-                        responses: {
-                            '200': {
-                                description: 'Service settings',
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'string', example: '{}' }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    post: {
-                        summary: 'Submit settings',
-                        description: 'Submits the settings for the provider',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: { type: 'object' },
-                                    example: { "minLogLevel": "info"}
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Settings submitted successfully',
-                                content: {
-                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/logs': {
-                    get: {
-                        summary: 'Get log analytics',
-                        description: 'Retrieves the last 1000 logs from analytics in descending order (newest to oldest). Optional query parameter to filter by log level.',
-                        parameters: [
-                            {
-                                name: 'level',
-                                in: 'query',
-                                description: 'Filter logs by level (INFO, WARN, ERROR, LOG)',
-                                required: false,
-                                schema: {
-                                    type: 'string',
-                                    enum: ['INFO', 'WARN', 'ERROR', 'LOG']
-                                }
-                            }
-                        ],
-                        responses: {
-                            '200': {
-                                description: 'Logs retrieved successfully',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                count: {
-                                                    type: 'number',
-                                                    example: 10
-                                                },
-                                                level: {
-                                                    type: 'string',
-                                                    example: 'ALL'
-                                                },
-                                                logs: {
-                                                    type: 'array',
-                                                    items: {
-                                                        type: 'object',
-                                                        properties: {
-                                                            level: {
-                                                                type: 'string',
-                                                                example: 'INFO'
-                                                            },
-                                                            message: {
-                                                                type: 'string',
-                                                                example: '2025-10-10T13:23:19.980Z - INFO - hostname - Application started'
-                                                            },
-                                                            timestamp: {
-                                                                type: 'string',
-                                                                example: '2025-10-10T13:23:19.980Z'
-                                                            },
-                                                            capturedAt: {
-                                                                type: 'number',
-                                                                example: 1728568999980
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                error: { type: 'string' },
-                                                message: { type: 'string' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            '503': {
-                                description: 'Analytics module not available',
-                                content: {
-                                    'application/json': {
-                                        schema: {
-                                            type: 'object',
-                                            properties: {
-                                                error: { type: 'string' }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+        // Swagger UI setup - Load spec from API endpoint
+        let swaggerSpec = null;
+
+        // Fetch Swagger specification from API
+        async function fetchSwaggerSpec() {
+            try {
+                const response = await fetch('/services/logging/api/swagger/docs.json');
+                if (!response.ok) {
+                    console.error('Failed to fetch Swagger spec:', response.statusText);
+                    return null;
                 }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching Swagger spec:', error);
+                return null;
             }
-        };
+        }
 
         // Settings functionality
         let currentSettings = {};
@@ -991,6 +804,8 @@
         // Instance selector handlers
         document.getElementById('instanceSelector')?.addEventListener('change', function (e) {
             selectedInstance = this.value;
+            // Re-initialize logger with new instance
+            initializeLogger();
             // Reload stats and timeline when instance changes
             loadStats();
             loadTimeline();
@@ -1001,14 +816,24 @@
             loadAvailableInstances();
         });
 
-        // Initialize Swagger UI
-        window.onload = function() {
+        // Initialize Swagger UI with fetched spec
+        window.onload = async function() {
+            // Initialize logging client library
+            initializeLogger();
             checkStatus();
             loadAvailableInstances();
+
             try {
-            checkStatus();
+                // Fetch Swagger specification from API
+                swaggerSpec = await fetchSwaggerSpec();
+
+                if (!swaggerSpec) {
+                    throw new Error('Failed to load Swagger specification');
+                }
+
+                // Initialize Swagger UI with fetched spec
                 const ui = SwaggerUIBundle({
-                    spec: spec,
+                    spec: swaggerSpec,
                     dom_id: '#swagger-ui',
                     deepLinking: true,
                     presets: [
@@ -1029,7 +854,7 @@
                         return response;
                     },
                     onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
+                        console.log('Swagger UI loaded successfully from /services/logging/api/swagger/docs.json');
                     },
                     onFailure: (error) => {
                         console.error('Swagger UI failed to load:', error);
@@ -1039,6 +864,9 @@
                 window.ui = ui;
             } catch (error) {
                 console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
+                const swaggerContainer = document.getElementById('swagger-ui');
+                if (swaggerContainer) {
+                    swaggerContainer.innerHTML = `<p style="color: red;">Error loading API documentation: ${error.message}</p><p style="color: #666; font-size: 14px;">Check the browser console for more details.</p>`;
+                }
             }
         };

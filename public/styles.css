@@ -20,12 +20,18 @@
   --destructive-foreground: 210 40% 98%;
   --border: 50 50% 90%;
   --input: 50 50% 90%;
-  --ring: 46 82% 55%;
+  --ring: #F8F9FA;
   --radius: 0.75rem;
   --robot-yellow: 46 82% 55%;
   --robot-blue: 46 82% 55%;
   --robot-light-blue: 50 100% 95%;
   --robot-gray: 210 9% 96%;
+  /* Caching Service Colors */
+  --custom-primary: #0066cc;
+  --custom-secondary: #6c757d;
+  --custom-success: #198754;
+  --custom-danger: #dc3545;
+  --custom-warning: #ffc107;
 }
 
 .dark {
@@ -867,20 +873,18 @@ body {
   outline-offset: 2px;
 }
 
+/* Override focus outline for nav-tabs to use custom primary color */
+.nav-tabs .nav-link:focus {
+  outline: 2px solid var(--custom-primary);
+  outline-offset: 2px;
+}
+
 /* Bootstrap Icons styling */
 .bi {
   color: silver;
 }
 
 /* Caching Service Styles */
-:root {
-  --custom-primary: #0066cc;
-  --custom-secondary: #6c757d;
-  --custom-success: #198754;
-  --custom-danger: #dc3545;
-  --custom-warning: #ffc107;
-}
-
 .sidebar {
   background-color: white;
   border-right: 1px solid #dee2e6;
@@ -1018,6 +1022,10 @@ body {
   background-color: transparent;
   border-bottom: 2px solid var(--custom-primary);
   margin-bottom: -2px;
+}
+
+.nav-tabs .nav-link.active::after {
+  display: none;
 }
 
 /* Alert Styles */
@@ -1302,7 +1310,7 @@ body {
   padding: 2rem;
 }
 
-.key-name, .key-cell {
+.key-name, .key-cell, .queue-name {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875rem;
   color: var(--custom-primary);
@@ -1624,4 +1632,22 @@ body {
 #swagger-ui .model-box-control:focus {
   outline: 2px solid var(--custom-primary);
   outline-offset: 2px;
+}
+
+/* Table styles for logging service */
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa;
+  z-index: 10;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
 }

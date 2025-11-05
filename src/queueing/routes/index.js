@@ -92,6 +92,32 @@ module.exports = (options, eventEmitter, queue) => {
     });
 
     /**
+     * GET /services/queueing/api/swagger/docs.json
+     * Serves the Swagger/OpenAPI documentation JSON for the queueing service API
+     * Contains complete API specification for API clients and documentation tools.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/queueing/api/swagger/docs.json', (req, res) => {
+      try {
+        const docsPath = path.join(__dirname, 'swagger', 'docs.json');
+        const docsContent = fs.readFileSync(docsPath, 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).send(docsContent);
+        eventEmitter.emit('api-queueing-swagger-docs-served', 'Queueing Swagger documentation served');
+      } catch (error) {
+        eventEmitter.emit('api-queueing-swagger-docs-error', error.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to load Swagger documentation',
+          message: error.message
+        });
+      }
+    });
+
+    /**
      * Creates an async handler for enqueue operations
      * @param {Object} queue - Queue instance
      * @returns {Function} Express middleware function

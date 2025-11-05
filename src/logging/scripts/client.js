@@ -3,6 +3,10 @@
  * Client-side library for logging from web applications.
  * Provides methods for logging at different levels: info, warn, error, and debug.
  *
+ * Supports two modes:
+ * 1. Local Mode (no instance name): Uses browser console for logging
+ * 2. Remote Mode (with instance name): Sends logs to the logging service API
+ *
  * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.0
@@ -11,17 +15,200 @@
 'use strict';
 
 /**
+ * LocalLogger - Client-side logging using browser console
+ * (Included inline for convenience - also available in index.js)
+ *
+ * @private
+ */
+class LocalLogger {
+  constructor(options = {}) {
+    this.options = {
+      debug: options.debug || false,
+      minLogLevel: options.minLogLevel || 'info',
+      prefix: options.prefix || '[Logger]',
+      useGroups: options.useGroups || false,
+      ...options
+    };
+
+    this.logLevels = ['debug', 'info', 'warn', 'error'];
+    this.localLogs = [];
+    this.maxLocalLogs = 100;
+
+    if (this.options.debug) {
+      console.log(`${this.options.prefix} LocalLogger initialized with level: ${this.options.minLogLevel}`);
+    }
+  }
+
+  shouldLog(level) {
+    const messagePriority = this.logLevels.indexOf(level);
+    const minPriority = this.logLevels.indexOf(this.options.minLogLevel);
+    return messagePriority >= minPriority;
+  }
+
+  storeLocalLog(level, message, meta) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level: level,
+      message: message,
+      meta: meta
+    };
+
+    this.localLogs.push(logEntry);
+
+    if (this.localLogs.length > this.maxLocalLogs) {
+      this.localLogs.shift();
+    }
+  }
+
+  formatLogMessage(level, message, meta) {
+    const timestamp = new Date().toLocaleTimeString();
+    const levelUpper = level.toUpperCase().padEnd(5);
+    let output = `${this.options.prefix} [${timestamp}] ${levelUpper} ${message}`;
+
+    if (meta !== undefined && meta !== null) {
+      output += ` | ${typeof meta === 'string' ? meta : JSON.stringify(meta)}`;
+    }
+
+    return output;
+  }
+
+  async info(message, meta) {
+    if (!message) throw new Error('Message is required');
+    if (!this.shouldLog('info')) return Promise.resolve();
+    this.storeLocalLog('info', message, meta);
+    const formattedMessage = this.formatLogMessage('info', message, meta);
+    console.info(formattedMessage);
+    return Promise.resolve();
+  }
+
+  async warn(message, meta) {
+    if (!message) throw new Error('Message is required');
+    if (!this.shouldLog('warn')) return Promise.resolve();
+    this.storeLocalLog('warn', message, meta);
+    const formattedMessage = this.formatLogMessage('warn', message, meta);
+    console.warn(formattedMessage);
+    return Promise.resolve();
+  }
+
+  async error(message, meta) {
+    if (!message) throw new Error('Message is required');
+    if (!this.shouldLog('error')) return Promise.resolve();
+    this.storeLocalLog('error', message, meta);
+    const formattedMessage = this.formatLogMessage('error', message, meta);
+    console.error(formattedMessage);
+    return Promise.resolve();
+  }
+
+  async debug(message, meta) {
+    if (!message) throw new Error('Message is required');
+    if (!this.shouldLog('debug')) return Promise.resolve();
+    this.storeLocalLog('debug', message, meta);
+    const formattedMessage = this.formatLogMessage('debug', message, meta);
+    console.debug(formattedMessage);
+    return Promise.resolve();
+  }
+
+  async getLocalLogs(limit = 10) {
+    return Promise.resolve(this.localLogs.slice(-limit));
+  }
+
+  async getAnalytics() {
+    const stats = {
+      totalLogs: this.localLogs.length,
+      debug: this.localLogs.filter(l => l.level === 'debug').length,
+      info: this.localLogs.filter(l => l.level === 'info').length,
+      warn: this.localLogs.filter(l => l.level === 'warn').length,
+      error: this.localLogs.filter(l => l.level === 'error').length,
+      source: 'local'
+    };
+    return Promise.resolve(stats);
+  }
+
+  async getSettings() {
+    return Promise.resolve({
+      minLogLevel: this.options.minLogLevel,
+      prefix: this.options.prefix,
+      useGroups: this.options.useGroups,
+      source: 'local'
+    });
+  }
+
+  async saveSettings(settings) {
+    if (!settings || typeof settings !== 'object') {
+      throw new Error('Settings must be a non-null object');
+    }
+    if (settings.minLogLevel) this.setLogLevel(settings.minLogLevel);
+    if (settings.prefix !== undefined) this.options.prefix = settings.prefix;
+    if (settings.useGroups !== undefined) this.options.useGroups = settings.useGroups;
+    return Promise.resolve();
+  }
+
+  clearLocalLogs() {
+    this.localLogs = [];
+    console.log(`${this.options.prefix} Local logs cleared`);
+  }
+
+  getLogLevel() {
+    return this.options.minLogLevel;
+  }
+
+  setLogLevel(level) {
+    if (!this.logLevels.includes(level)) {
+      throw new Error(`Invalid log level: ${level}. Must be one of: ${this.logLevels.join(', ')}`);
+    }
+    this.options.minLogLevel = level;
+    console.log(`${this.options.prefix} Log level set to: ${level}`);
+  }
+
+  getLogCount() {
+    return this.localLogs.length;
+  }
+
+  printLogs() {
+    if (this.localLogs.length === 0) {
+      console.log(`${this.options.prefix} No logs stored`);
+      return;
+    }
+
+    if (this.options.useGroups) {
+      console.group(`${this.options.prefix} Log History (${this.localLogs.length})`);
+    } else {
+      console.log(`${this.options.prefix} Log History (${this.localLogs.length}):`);
+    }
+
+    this.localLogs.forEach((log, index) => {
+      const message = `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}`;
+      if (log.meta) {
+        console.log(`  ${index + 1}. ${message}`, log.meta);
+      } else {
+        console.log(`  ${index + 1}. ${message}`);
+      }
+    });
+
+    if (this.options.useGroups) {
+      console.groupEnd();
+    }
+  }
+}
+
+/**
  * Noobly-core Logging Service Client
  *
  * Provides a JavaScript client for consuming the logging service API from browser applications.
- * Supports multiple named logger instances for different use cases and log routing.
+ * Supports two modes:
+ * 1. LOCAL MODE: When no instanceName is passed, uses browser console for logging
+ * 2. REMOTE MODE: When instanceName is provided, sends logs to the logging service API
  *
  * @example
- * // Create a new logging client
- * var logger = new nooblyjscorelogging('default');
+ * // Local mode - logs to browser console only
+ * var localLogger = new nooblyjscorelogging();
+ * localLogger.info('App started');
+ *
+ * // Remote mode - logs to server
+ * var remoteLogger = new nooblyjscorelogging('default');
+ * remoteLogger.info('User logged in', {userId: 123, timestamp: new Date()});
  *
  * // Log at different levels
- * logger.info('User logged in', {userId: 123, timestamp: new Date()});
  * logger.warn('Unusual activity detected', {activity: 'multiple_login_attempts'});
  * logger.error('Database connection failed', {error: 'timeout', duration: 5000});
  * logger.debug('Processing request', {requestId: 'abc123', params: {foo: 'bar'}});
@@ -35,24 +222,38 @@ class nooblyjscorelogging {
   /**
    * Initializes a new Logging Service client instance.
    *
-   * @param {string} [instanceName='default'] - The name of the logger instance to connect to.
-   *                                             Must match an instance on the server.
+   * When no instanceName is provided, uses LOCAL mode (browser console logging).
+   * When instanceName is provided, uses REMOTE mode (server-side logging API).
+   *
+   * @param {string} [instanceName] - The name of the logger instance to connect to.
+   *                                  If undefined or null, uses local console logging.
+   *                                  Must match an instance on the server for remote mode.
    * @param {Object} [options={}] - Configuration options
-   * @param {string} [options.apiKey] - Optional API key for authentication
+   * @param {string} [options.apiKey] - Optional API key for authentication (remote mode only)
    * @param {boolean} [options.debug=false] - Enable debug logging
    * @param {string} [options.minLogLevel='info'] - Minimum log level to send ('debug', 'info', 'warn', 'error')
+   * @param {string} [options.prefix='[Logger]'] - Prefix for console output (local mode only)
    * @throws {TypeError} If instanceName is provided but is not a string
    */
-  constructor(instanceName = 'default', options = {}) {
+  constructor(instanceName, options = {}) {
     if (instanceName && typeof instanceName !== 'string') {
       throw new TypeError('instanceName must be a string');
     }
 
     /**
-     * @type {string}
+     * Determine if using local or remote mode
+     * Local mode: no instanceName provided (undefined or null)
+     * Remote mode: instanceName provided (including 'default')
+     * @type {boolean}
      * @private
      */
-    this.instanceName = instanceName;
+    this.isLocal = !instanceName;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    this.instanceName = instanceName || null;
 
     /**
      * @type {Object}
@@ -62,8 +263,17 @@ class nooblyjscorelogging {
       apiKey: options.apiKey || null,
       debug: options.debug || false,
       minLogLevel: options.minLogLevel || 'info',
+      prefix: options.prefix || '[Logger]',
+      useGroups: options.useGroups || false,
       ...options
     };
+
+    /**
+     * Local logger instance (used in local mode)
+     * @type {LocalLogger|null}
+     * @private
+     */
+    this.localLogger = null;
 
     /**
      * @type {string}
@@ -92,10 +302,25 @@ class nooblyjscorelogging {
      */
     this.maxLocalLogs = 100;
 
-    if (this.options.debug) {
-      console.log('[nooblyjscorelogging] Initialized with instance:', this.instanceName);
-      console.log('[nooblyjscorelogging] Base URL:', this.baseUrl);
-      console.log('[nooblyjscorelogging] Min log level:', this.options.minLogLevel);
+    // Initialize local logger if in local mode
+    if (this.isLocal) {
+      this.localLogger = new LocalLogger({
+        debug: this.options.debug,
+        minLogLevel: this.options.minLogLevel,
+        prefix: this.options.prefix,
+        useGroups: this.options.useGroups
+      });
+
+      if (this.options.debug) {
+        console.log('[nooblyjscorelogging] Initialized in LOCAL mode');
+        console.log('[nooblyjscorelogging] Min log level:', this.options.minLogLevel);
+      }
+    } else {
+      if (this.options.debug) {
+        console.log('[nooblyjscorelogging] Initialized in REMOTE mode with instance:', this.instanceName);
+        console.log('[nooblyjscorelogging] Base URL:', this.baseUrl);
+        console.log('[nooblyjscorelogging] Min log level:', this.options.minLogLevel);
+      }
     }
   }
 
@@ -211,6 +436,12 @@ class nooblyjscorelogging {
    * @throws {Error} If the message is missing or the API request fails
    *
    * @example
+   * // Local mode
+   * var logger = new nooblyjscorelogging();
+   * logger.info('User action', {userId: 123})
+   *
+   * // Remote mode
+   * var logger = new nooblyjscorelogging('default');
    * logger.info('User action', {userId: 123, action: 'login'})
    *   .then(() => console.log('Logged'))
    *   .catch(err => console.error(err));
@@ -218,6 +449,11 @@ class nooblyjscorelogging {
   async info(message, meta) {
     if (!message) {
       throw new Error('Message is required');
+    }
+
+    // Delegate to local logger if in local mode
+    if (this.isLocal) {
+      return await this.localLogger.info(message, meta);
     }
 
     if (!this.shouldLog('info')) {
@@ -248,13 +484,22 @@ class nooblyjscorelogging {
    * @throws {Error} If the message is missing or the API request fails
    *
    * @example
+   * // Local mode
+   * var logger = new nooblyjscorelogging();
    * logger.warn('Unusual activity', {activity: 'multiple_failed_logins'})
-   *   .then(() => console.log('Logged'))
-   *   .catch(err => console.error(err));
+   *
+   * // Remote mode
+   * var logger = new nooblyjscorelogging('default');
+   * logger.warn('Unusual activity', {activity: 'multiple_failed_logins'})
    */
   async warn(message, meta) {
     if (!message) {
       throw new Error('Message is required');
+    }
+
+    // Delegate to local logger if in local mode
+    if (this.isLocal) {
+      return await this.localLogger.warn(message, meta);
     }
 
     if (!this.shouldLog('warn')) {
@@ -284,13 +529,22 @@ class nooblyjscorelogging {
    * @throws {Error} If the message is missing or the API request fails
    *
    * @example
+   * // Local mode
+   * var logger = new nooblyjscorelogging();
+   * logger.error('Connection failed', {error: 'timeout'})
+   *
+   * // Remote mode
+   * var logger = new nooblyjscorelogging('default');
    * logger.error('Connection failed', {error: 'timeout', url: 'https://api.example.com'})
-   *   .then(() => console.log('Logged'))
-   *   .catch(err => console.error(err));
    */
   async error(message, meta) {
     if (!message) {
       throw new Error('Message is required');
+    }
+
+    // Delegate to local logger if in local mode
+    if (this.isLocal) {
+      return await this.localLogger.error(message, meta);
     }
 
     if (!this.shouldLog('error')) {
@@ -320,13 +574,22 @@ class nooblyjscorelogging {
    * @throws {Error} If the message is missing or the API request fails
    *
    * @example
+   * // Local mode
+   * var logger = new nooblyjscorelogging();
+   * logger.debug('Processing request', {requestId: 'abc123'})
+   *
+   * // Remote mode
+   * var logger = new nooblyjscorelogging('default');
    * logger.debug('Processing request', {requestId: 'abc123', params: {foo: 'bar'}})
-   *   .then(() => console.log('Logged'))
-   *   .catch(err => console.error(err));
    */
   async debug(message, meta) {
     if (!message) {
       throw new Error('Message is required');
+    }
+
+    // Delegate to local logger if in local mode
+    if (this.isLocal) {
+      return await this.localLogger.debug(message, meta);
     }
 
     if (!this.shouldLog('debug')) {
@@ -350,8 +613,11 @@ class nooblyjscorelogging {
   /**
    * Gets analytics data for this logger instance
    *
+   * For local mode, returns statistics about logs stored in memory.
+   * For remote mode, fetches analytics from the server.
+   *
    * @returns {Promise<Object>} Promise that resolves to analytics data
-   * @throws {Error} If the API request fails
+   * @throws {Error} If the API request fails (remote mode only)
    *
    * @example
    * logger.getAnalytics()
@@ -359,6 +625,11 @@ class nooblyjscorelogging {
    *   .catch(err => console.error(err));
    */
   async getAnalytics() {
+    // Delegate to local logger if in local mode
+    if (this.isLocal) {
+      return await this.localLogger.getAnalytics();
+    }
+
     const url = `${this.baseUrl}/analytics`;
     const options = {
       method: 'GET',
