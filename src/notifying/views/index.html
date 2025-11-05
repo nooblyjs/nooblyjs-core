@@ -321,8 +321,18 @@
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Notification Management</h1>
-                <p class="page-subtitle">Monitor topics, subscribers, and notification activity</p>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h1 class="page-title">Notification Management</h1>
+                        <p class="page-subtitle">Monitor topics, subscribers, and notification activity</p>
+                    </div>
+                    <div style="min-width: 250px;">
+                        <label class="form-label mb-1" for="instanceSelect">Notifying Instance:</label>
+                        <select id="instanceSelect" class="form-select form-select-sm">
+                            <option value="default">default</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="alert alert-success" id="successAlert">
@@ -382,7 +392,12 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>
                                 <h2 class="card-title">Notification Overview</h2>
-                                <p class="card-subtitle">Aggregate insight into topics and messages</p>
+                                <p class="card-subtitle">
+                                    Aggregate insight into topics and messages
+                                    <span id="instanceLabel" style="font-size: 0.85rem; color: #6c757d; margin-left: 1rem;">
+                                        (Instance: <span id="instanceBadge" style="font-weight: 600;">default</span>)
+                                    </span>
+                                </p>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="spinner-border spinner-border-sm text-secondary d-none" id="analyticsRefreshSpinner" role="status">
@@ -537,7 +552,65 @@
         NooblyNavigation.renderNavigation('navigation-sidebar', 'notifying');
     </script>
     <script>
+        // Global variable to track current instance
+        let currentInstance = 'default';
         const numberFormatter = new Intl.NumberFormat();
+
+        /**
+         * Gets the current instance name
+         * @returns {string} The selected instance name
+         */
+        function getCurrentInstance() {
+            const select = document.getElementById('instanceSelect');
+            return select ? select.value : 'default';
+        }
+
+        /**
+         * Gets the API path for instance-specific endpoints
+         * @param {string} basePath - The base API path
+         * @returns {string} The full API path with instance if not default
+         */
+        function getInstanceApiPath(basePath) {
+            const instance = getCurrentInstance();
+            if (instance === 'default') {
+                return basePath;
+            }
+            // Insert instance name after /api/ in the path
+            return basePath.replace('/api/', `/api/${instance}/`);
+        }
+
+        /**
+         * Loads available instances and populates the dropdown
+         */
+        async function loadInstances() {
+            try {
+                const response = await fetch('/services/notifying/api/instances');
+                if (!response.ok) {
+                    throw new Error(`Failed to load instances: ${response.status}`);
+                }
+                const data = await response.json();
+                const instances = data.instances || ['default'];
+
+                const select = document.getElementById('instanceSelect');
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '';
+                    instances.forEach((instance) => {
+                        const option = document.createElement('option');
+                        option.value = instance;
+                        option.textContent = instance;
+                        select.appendChild(option);
+                    });
+                    if (instances.includes(currentValue)) {
+                        select.value = currentValue;
+                    } else {
+                        select.value = 'default';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading instances:', error);
+            }
+        }
 
         function formatNumber(value) {
             if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -696,6 +769,13 @@
             return response.json();
         }
 
+        function updateInstanceDisplay() {
+            const instanceBadge = document.getElementById('instanceBadge');
+            if (instanceBadge) {
+                instanceBadge.textContent = getCurrentInstance();
+            }
+        }
+
         function renderOverview(data) {
             const {
                 topics = 0,
@@ -713,6 +793,9 @@
             if (totalSubscribers) totalSubscribers.textContent = formatNumber(subscribers);
             if (totalNotifications) totalNotifications.textContent = formatNumber(notifications);
             if (lastNotification) lastNotification.textContent = formatDate(lastNotificationAt);
+
+            // Update instance display
+            updateInstanceDisplay();
         }
 
         function renderTopTopics(topics) {
@@ -807,9 +890,9 @@
             setAnalyticsPlaceholders();
             try {
                 const [overview, topTopicsPayload, topicsPayload] = await Promise.all([
-                    fetchAnalytics('/services/notifying/api/analytics/overview'),
-                    fetchAnalytics('/services/notifying/api/analytics/top-topics?limit=10'),
-                    fetchAnalytics('/services/notifying/api/analytics/topics?limit=100'),
+                    fetchAnalytics(getInstanceApiPath('/services/notifying/api/analytics/overview')),
+                    fetchAnalytics(getInstanceApiPath('/services/notifying/api/analytics/top-topics?limit=10')),
+                    fetchAnalytics(getInstanceApiPath('/services/notifying/api/analytics/topics?limit=100')),
                 ]);
 
                 renderOverview(overview);
@@ -824,7 +907,7 @@
 
         async function checkStatus() {
             try {
-                const result = await makeRequest('/services/notifying/api/status');
+                const result = await makeRequest(getInstanceApiPath('/services/notifying/api/status'));
                 showResponse('statusResponse', 'statusResponseContent', result);
                 showAlert('Status checked successfully');
             } catch (error) {
@@ -933,6 +1016,27 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Load instances and set up instance change listener
+            loadInstances();
+
+            const instanceSelect = document.getElementById('instanceSelect');
+            if (instanceSelect) {
+                instanceSelect.addEventListener('change', () => {
+                    currentInstance = getCurrentInstance();
+                    loadAnalytics();
+                    checkStatus();
+                    // Store instance preference in localStorage
+                    localStorage.setItem('notifying-instance-preference', currentInstance);
+                });
+            }
+
+            // Restore instance preference from localStorage
+            const savedInstance = localStorage.getItem('notifying-instance-preference');
+            if (savedInstance && instanceSelect) {
+                instanceSelect.value = savedInstance;
+                currentInstance = savedInstance;
+            }
+
             const sendMessageInput = document.getElementById('sendMessage');
             if (sendMessageInput) {
                 sendMessageInput.addEventListener('input', () => validateJSON('sendMessage'));
@@ -1020,7 +1124,7 @@
         // Fetch settings from API
         async function loadSettings() {
             try {
-                const response = await fetch('/services/notifying/api/settings');
+                const response = await fetch(getInstanceApiPath('/services/notifying/api/settings'));
                 const data = await response.json();
                 currentSettings = data;
                 renderSettingsForm(data);
@@ -1184,7 +1288,7 @@
                 }
 
                 // Send to API
-                const response = await fetch('/services/notifying/api/settings', {
+                const response = await fetch(getInstanceApiPath('/services/notifying/api/settings'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

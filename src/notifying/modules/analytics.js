@@ -12,13 +12,15 @@
 /**
  * Analytics helper for the notifying service.
  * Maintains per-topic statistics without mutating provider behavior.
+ * Supports instance-specific analytics tracking through instanceName parameter.
  */
 class NotifyingAnalytics {
   /**
    * @param {EventEmitter} eventEmitter Global event emitter instance.
    * @param {Object} notifier Notifying provider instance.
+   * @param {string} [instanceName='default'] The instance name this analytics module tracks.
    */
-  constructor(eventEmitter, notifier) {
+  constructor(eventEmitter, notifier, instanceName = 'default') {
     /** @private @type {Map<string, {
      *   topic: string,
      *   subscriberCount: number,
@@ -36,6 +38,8 @@ class NotifyingAnalytics {
     this.notifier_ = notifier;
     /** @private */
     this.useEventCounting_ = true;
+    /** @private */
+    this.instanceName_ = instanceName;
 
     if (this.notifier_) {
       this.initializeFromProvider_(this.notifier_);
@@ -68,24 +72,30 @@ class NotifyingAnalytics {
 
   /**
    * Registers listeners for notifying events.
+   * Listens to instance-specific events based on instanceName.
    * @param {EventEmitter} eventEmitter
    * @private
    */
   initializeListeners_(eventEmitter) {
-    eventEmitter.on('notification:createTopic', ({ topicName }) => {
+    const createTopicEvent = `notification:createTopic:${this.instanceName_}`;
+    const subscribeEvent = `notification:subscribe:${this.instanceName_}`;
+    const unsubscribeEvent = `notification:unsubscribe:${this.instanceName_}`;
+    const notifyEvent = `notification:notify:${this.instanceName_}`;
+
+    eventEmitter.on(createTopicEvent, ({ topicName }) => {
       this.ensureTopic_(topicName);
       this.syncTopicSnapshot_(topicName);
     });
 
-    eventEmitter.on('notification:subscribe', ({ topicName }) => {
+    eventEmitter.on(subscribeEvent, ({ topicName }) => {
       this.syncTopicSnapshot_(topicName);
     });
 
-    eventEmitter.on('notification:unsubscribe', ({ topicName }) => {
+    eventEmitter.on(unsubscribeEvent, ({ topicName }) => {
       this.syncTopicSnapshot_(topicName);
     });
 
-    eventEmitter.on('notification:notify', ({ topicName }) => {
+    eventEmitter.on(notifyEvent, ({ topicName }) => {
       if (this.useEventCounting_) {
         this.recordNotification_(topicName);
       } else {

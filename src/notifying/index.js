@@ -18,8 +18,11 @@ const NotifyingAnalytics = require('./modules/analytics');
 /**
  * Creates a notification service instance with messaging capabilities.
  * Automatically configures routes and views for the notification service.
+ * Supports multiple named instances through the instanceName option.
+ *
  * @param {string} type - The notification service type ('default', 'api')
  * @param {Object} options - Configuration options for the notification service
+ * @param {string} [options.instanceName='default'] - Unique identifier for this notifying instance
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
  * @param {Object} options.dependencies.queueing - Queueing service instance
@@ -28,19 +31,23 @@ const NotifyingAnalytics = require('./modules/analytics');
  * @return {NotificationService|NotifyingApi} Notification service instance for messaging
  * @throws {Error} When unsupported notification type is provided
  * @example
- * const notifyingService = createNotificationService('default', {
+ * const highPriority = createNotificationService('default', {
+ *   instanceName: 'high',
  *   dependencies: { logging, queueing, scheduling }
  * }, eventEmitter);
  *
- * // Subscribe to a topic
- * notifyingService.subscribe('user_events', (message) => {
- *   console.log('Received notification:', message);
- * });
+ * const normalPriority = createNotificationService('default', {
+ *   instanceName: 'normal',
+ *   dependencies: { logging, queueing, scheduling }
+ * }, eventEmitter);
+ *
+ * // Subscribe to a topic on high priority instance
+ * await highPriority.subscribe('critical_alerts', callbackUrl);
  *
  * // Publish a message to a topic
- * await notifyingService.publish('user_events', {
- *   type: 'user_created',
- *   userId: 123,
+ * await highPriority.notify('critical_alerts', {
+ *   type: 'system_alert',
+ *   severity: 'critical',
  *   timestamp: new Date()
  * });
  */
@@ -58,7 +65,10 @@ function createNotificationService(type, options, eventEmitter) {
       notifying = new NotificationService(options, eventEmitter);
       break;
   }
-  analytics = new NotifyingAnalytics(eventEmitter, notifying);
+
+  // Initialize analytics module with instance name support
+  const instanceName = (options && options.instanceName) || 'default';
+  analytics = new NotifyingAnalytics(eventEmitter, notifying, instanceName);
 
   // Initialize routes and views for the notification service
   Routes(options, eventEmitter, notifying, analytics);
