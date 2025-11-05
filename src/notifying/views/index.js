@@ -40,8 +40,15 @@ const express = require('express');
 module.exports = (options, eventEmitter, notifier) => {
   if (options['express-app']) {
     const app = options['express-app'];
-    
-    // Serve static files from the views directory for notifying service
-    app.use('/services/notifying', express.static(path.join(__dirname)));
+
+    // Serve the notifying service view
+    // Only serve index.html, not all static files (to avoid intercepting CSS/other assets)
+    app.get('/services/notifying', (req, res) => {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    });
+
+    app.get('/services/notifying/', (req, res) => {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    });
   }
 };
