@@ -183,7 +183,6 @@
       "quickLinks": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" },
         { "text": "API Reference", "href": "#" },
         { "text": "Examples", "href": "#" },
         { "text": "GitHub", "href": "#" }
@@ -355,8 +354,7 @@
       "quickLinks": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "/services" }
+        { "text": "Backend", "href": "/services" }
       ],
       "resources": [
         { "text": "Quick Start", "href": "#quick-start" },
@@ -494,8 +492,7 @@
       "quickLinks": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "/services" }
+        { "text": "Backend", "href": "/services" }
       ],
       "community": [
         { "text": "GitHub", "href": "#" },
@@ -514,16 +511,13 @@
       "links": [
         { "text": "Home", "href": "index.html" },
         { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" },
-        { "text": "Services", "href": "/services" }
+        { "text": "Backend", "href": "/services" }
       ]
     },
     "mobileMenu": {
       "links": [
         { "text": "Home", "href": "index.html" },
-        { "text": "Documentation", "href": "documentation.html" },
-        { "text": "Contact", "href": "contact.html" }
-      ]
+        { "text": "Documentation", "href": "documentation.html" }      ]
     },
     "footer": {
       "logo": {
