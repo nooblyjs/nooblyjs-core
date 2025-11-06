@@ -110,7 +110,16 @@ module.exports = function(type, options, eventEmitter) {
         logger.info(`${logprefx} Application service base styles loaded`)
     }
 
-
+    // if the docs folder exists expose it    
+    if (fs.existsSync('./docs')) {
+        app.use('/docs', express.static(path.join(__dirname, 'docs')));
+    }
+    
+    // If the readme file exists expose it
+    if (fs.existsSync('./README.md')) {
+        app.use('/readme', express.static(path.join(__dirname, 'README.md')));
+    }
+    
     var baseClasses = {    
         appViewBase,
         appRouteBase,
