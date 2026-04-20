@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
 
 const analytics = require('../modules/analytics');
 const { isValid: isValidCron } = require('../providers/cronExpression');
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 
 /**
  * Returns true for plain integer-coercible positive numbers (used by query

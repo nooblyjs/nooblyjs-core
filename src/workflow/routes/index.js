@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
 /**
  * Configures and registers workflow routes with the Express application.
  * Sets up endpoints for workflow definition and execution management.
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  *
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance

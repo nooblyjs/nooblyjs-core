@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
 
 /**
  * Configures and registers search routes with the Express application.
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  * Sets up endpoints for search index management and query operations.
  * All endpoints support an optional 'searchContainer' query parameter or field.
  *

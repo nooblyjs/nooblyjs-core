@@ -17,6 +17,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 
 /**
  * Configures and registers queueing routes with the Express application.
@@ -38,6 +40,9 @@ module.exports = (options, eventEmitter, queue) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
+
+    // Initialize audit logging for queueing service
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
 
     /**
      * GET /services/queueing/scripts
@@ -536,6 +541,59 @@ module.exports = (options, eventEmitter, queue) => {
         }
       } else {
         res.status(400).json({ error: 'Bad Request: Missing settings' });
+      }
+    });
+
+    /**
+     * GET /services/queueing/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/queueing/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'queueing', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'queueing-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/queueing/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/queueing/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'queueing', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'queueing-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/queueing/api/export
+     * Exports queue statistics
+     */
+    app.get('/services/queueing/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = queue.getStats ? await queue.getStats() : { note: 'Stats not available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('queue-stats', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'queueing-export' });
       }
     });
   }

@@ -17,6 +17,8 @@ const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  * Configures and registers notification routes with the Express application.
  * Sets up endpoints for pub/sub messaging and subscription management.
  * Supports both default routes and instance-specific routes.
