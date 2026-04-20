@@ -16,6 +16,8 @@
 const path = require('node:path');
 const express = require('express');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -38,6 +40,9 @@ module.exports = (options, eventEmitter, cache) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
+
+    // Initialize audit logging for caching service
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
 
     /**
      * Helper function to create put handler
@@ -391,6 +396,79 @@ module.exports = (options, eventEmitter, cache) => {
         }
       } else {
         sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+      }
+    });
+
+    /**
+     * GET /services/caching/api/audit
+     * Retrieves audit log entries for caching operations
+     */
+    app.get('/services/caching/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = {
+          service: 'caching',
+          limit: parseInt(req.query.limit) || 100,
+          operation: req.query.operation,
+          status: req.query.status,
+          userId: req.query.userId
+        };
+
+        Object.keys(filters).forEach(key =>
+          filters[key] === undefined && delete filters[key]
+        );
+
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved successfully');
+      } catch (error) {
+        handleError(res, error, { operation: 'caching-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/caching/api/audit/export
+     * Exports audit logs in specified format
+     */
+    app.post('/services/caching/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const filters = {
+          service: 'caching',
+          limit: parseInt(req.query.limit) || 10000
+        };
+
+        const exported = auditLog.export(format, filters);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'caching-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/caching/api/export
+     * Exports cache statistics and keys in specified format
+     */
+    app.get('/services/caching/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = cache.getStats ? await cache.getStats() : { note: 'Cache stats not available for this provider' };
+
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1).toUpperCase()}`]?.(data) ||
+                        DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('cache-export', format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'caching-export' });
       }
     });
 

@@ -10,6 +10,8 @@
 
 'use strict';
 
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -26,6 +28,9 @@ module.exports = (options, eventEmitter, fetching) => {
   if (options['express-app'] && fetching) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
+
+    // Initialize audit logging for fetching service
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
 
     /**
      * POST /services/fetching/api/fetch
@@ -225,6 +230,79 @@ module.exports = (options, eventEmitter, fetching) => {
         sendSuccess(res, {}, 'Cache cleared successfully');
       } catch (err) {
         handleError(res, err, { operation: 'fetch-clear-cache' });
+      }
+    });
+
+    /**
+     * GET /services/fetching/api/audit
+     * Retrieves audit log entries for fetching operations
+     */
+    app.get('/services/fetching/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = {
+          service: 'fetching',
+          limit: parseInt(req.query.limit) || 100,
+          operation: req.query.operation,
+          status: req.query.status,
+          userId: req.query.userId
+        };
+
+        Object.keys(filters).forEach(key =>
+          filters[key] === undefined && delete filters[key]
+        );
+
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved successfully');
+      } catch (error) {
+        handleError(res, error, { operation: 'fetching-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/fetching/api/audit/export
+     * Exports audit logs in specified format
+     */
+    app.post('/services/fetching/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const filters = {
+          service: 'fetching',
+          limit: parseInt(req.query.limit) || 10000
+        };
+
+        const exported = auditLog.export(format, filters);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'fetching-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/fetching/api/export
+     * Exports fetching statistics in specified format
+     */
+    app.get('/services/fetching/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = fetching.analytics ? fetching.analytics.getStats() : { note: 'Analytics not available' };
+
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1).toUpperCase()}`]?.(data) ||
+                        DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('fetch-stats-export', format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'fetching-export' });
       }
     });
   }

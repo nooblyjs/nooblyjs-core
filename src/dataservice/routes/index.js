@@ -11,6 +11,8 @@
 'use strict';
 
 const analytics = require('../modules/analytics');
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -27,6 +29,9 @@ module.exports = (options, eventEmitter, dataservice) => {
   if (options['express-app'] && dataservice) {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
+
+    // Initialize audit logging for dataservice
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
 
     /**
      * POST /services/dataservice/api/:container
@@ -371,5 +376,131 @@ module.exports = (options, eventEmitter, dataservice) => {
         sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
+
+    /**
+     * GET /services/dataservice/api/audit
+     * Retrieves audit log entries for dataservice operations
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = {
+          service: 'dataservice',
+          limit: parseInt(req.query.limit) || 100,
+          operation: req.query.operation,
+          status: req.query.status,
+          userId: req.query.userId
+        };
+
+        Object.keys(filters).forEach(key =>
+          filters[key] === undefined && delete filters[key]
+        );
+
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved successfully');
+      } catch (error) {
+        handleError(res, error, { operation: 'dataservice-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/dataservice/api/audit/export
+     * Exports audit logs in specified format
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.query.format - Export format (json, csv, jsonl)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/dataservice/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const filters = {
+          service: 'dataservice',
+          limit: parseInt(req.query.limit) || 10000
+        };
+
+        const exported = auditLog.export(format, filters);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'dataservice-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/export
+     * Exports dataservice data in specified format
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.query.format - Export format (json, csv, xml, jsonl)
+     * @param {string} req.query.container - Container to export (optional, exports all if not specified)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const container = req.query.container;
+
+        let data = [];
+
+        if (container) {
+          data = await dataservice.find(container, {});
+        } else {
+          // Export all containers
+          const containers = await dataservice.listContainers();
+          const exportData = {};
+
+          for (const containerName of containers) {
+            try {
+              exportData[containerName] = await dataservice.find(containerName, {});
+            } catch (err) {
+              // Skip containers that error
+            }
+          }
+
+          data = exportData;
+        }
+
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1).toUpperCase()}`]?.(data) ||
+                        DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename(`data-export-${container || 'all'}`, format);
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'dataservice-export' });
+      }
+    });
+
+    /**
+     * Record an operation to the audit log (internal use)
+     */
+    dataservice.recordAudit = (operation, details) => {
+      auditLog.record({
+        operation,
+        service: 'dataservice',
+        resourceType: details.resourceType || 'data',
+        resourceId: details.resourceId || null,
+        userId: details.userId || 'system',
+        status: details.status || 'SUCCESS',
+        errorMessage: details.errorMessage || null,
+        duration: details.duration || 0,
+        before: details.before,
+        after: details.after
+      });
+    };
   }
 };
