@@ -11,6 +11,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
@@ -228,10 +230,7 @@ module.exports = (options, eventEmitter, filing) => {
      */
     app.get('/services/filing/api/status', (req, res) => {
       eventEmitter.emit('api-filing-status', 'filing api running');
-      res.status(200).json({
-        status: 'filing api running',
-        timestamp: new Date().toISOString(),
-      });
+      sendStatus(res, 'filing api running');
     });
 
     /**

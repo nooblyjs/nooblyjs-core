@@ -13,6 +13,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 const path = require('node:path');
 const express = require('express');
 
@@ -70,7 +72,7 @@ module.exports = (options, eventEmitter, worker, analytics) => {
   app.get('/services/working/api/status', wrap(async (req, res) => {
     const status = await worker.getStatus();
     eventEmitter?.emit('api-working-status', status);
-    res.status(200).json(status);
+    sendSuccess(res, status);
   }));
 
   // ---------------------------------------------------------------------------

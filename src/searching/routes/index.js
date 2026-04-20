@@ -13,6 +13,7 @@
 
 const crypto = require('crypto');
 const analytics = require('../modules/analytics');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers search routes with the Express application.
@@ -49,12 +50,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const added = await search.add(key, value, searchContainer);
         if (added) {
-          res.status(200).json({ success: true });
+          sendSuccess(res, { key }, 'Document added to index', 201);
         } else {
-          res.status(400).json({ error: 'Key already exists' });
+          sendError(res, ERROR_CODES.DUPLICATE_FOUND, 'Key already exists');
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'addDocument');
       }
     });
 
@@ -75,12 +76,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const removed = await search.remove(key, searchContainer);
         if (removed) {
-          res.status(200).json({ success: true });
+          sendSuccess(res, { key }, 'Document removed from index');
         } else {
-          res.status(404).json({ error: 'Key not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Key not found');
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'deleteDocument');
       }
     });
 
@@ -101,12 +102,12 @@ module.exports = (options, eventEmitter, search) => {
       if (term) {
         try {
           const results = await search.search(term, searchContainer);
-          res.status(200).json(results);
+          sendSuccess(res, { results });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'search');
         }
       } else {
-        res.status(400).json({ error: 'Missing query' });
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Search term is required');
       }
     });
 
@@ -120,7 +121,7 @@ module.exports = (options, eventEmitter, search) => {
      */
     app.get('/services/searching/api/status', (req, res) => {
       eventEmitter.emit('api-searching-status', 'searching api running');
-      res.status(200).json('searching api is running');
+      sendStatus(res, 'searching api running');
     });
 
     /**
@@ -142,9 +143,9 @@ module.exports = (options, eventEmitter, search) => {
           };
         });
 
-        res.status(200).json({ indexes });
+        sendSuccess(res, { indexes, total: indexes.length });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'listIndexes');
       }
     });
 
@@ -163,12 +164,12 @@ module.exports = (options, eventEmitter, search) => {
         const stats = search.getIndexStats(searchContainer);
 
         if (stats) {
-          res.status(200).json(stats);
+          sendSuccess(res, stats);
         } else {
-          res.status(404).json({ error: 'Index not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getIndexStats');
       }
     });
 
@@ -187,12 +188,12 @@ module.exports = (options, eventEmitter, search) => {
         const result = search.deleteIndex(searchContainer);
 
         if (result) {
-          res.status(200).json({ message: `Index '${searchContainer}' deleted successfully` });
+          sendSuccess(res, { indexName: searchContainer }, `Index '${searchContainer}' deleted successfully`);
         } else {
-          res.status(404).json({ error: 'Index not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'deleteIndex');
       }
     });
 
@@ -211,12 +212,12 @@ module.exports = (options, eventEmitter, search) => {
         const result = search.clearIndex(searchContainer);
 
         if (result) {
-          res.status(200).json({ message: `Index '${searchContainer}' cleared successfully` });
+          sendSuccess(res, { indexName: searchContainer }, `Index '${searchContainer}' cleared successfully`);
         } else {
-          res.status(404).json({ error: 'Index not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'clearIndex');
       }
     });
 
@@ -242,12 +243,12 @@ module.exports = (options, eventEmitter, search) => {
           )
         ]);
 
-        res.status(200).json({
+        sendSuccess(res, {
           ...analyticsData,
           stats
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getAnalytics');
       }
     });
 
@@ -263,9 +264,9 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const searchContainer = req.query.searchContainer;
         const stats = analytics.getOperationStats(searchContainer);
-        res.status(200).json(stats);
+        sendSuccess(res, stats);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getOperationStats');
       }
     });
 
@@ -282,9 +283,9 @@ module.exports = (options, eventEmitter, search) => {
         const limit = parseInt(req.query.limit, 10) || 100;
         const searchContainer = req.query.searchContainer;
         const terms = analytics.getSearchTermAnalytics(limit, searchContainer);
-        res.status(200).json(terms);
+        sendSuccess(res, terms);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getSearchTermAnalytics');
       }
     });
 
@@ -299,9 +300,9 @@ module.exports = (options, eventEmitter, search) => {
     app.delete('/services/searching/api/analytics', (req, res) => {
       try {
         analytics.clear();
-        res.status(200).json({ message: 'Analytics data cleared successfully' });
+        sendSuccess(res, {}, 'Analytics data cleared successfully');
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'clearAnalytics');
       }
     });
 
@@ -316,13 +317,10 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/settings', async (req, res) => {
       try {
         const settings = await search.getSettings();
-        res.status(200).json(settings);
+        sendSuccess(res, settings);
       } catch (err) {
         eventEmitter.emit('api-searching-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, 'getSettings');
       }
     });
 
@@ -339,12 +337,12 @@ module.exports = (options, eventEmitter, search) => {
       if (message) {
         try {
           await search.saveSettings(message);
-          res.status(200).json({ success: true });
+          sendSuccess(res, {}, 'Settings saved successfully');
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'saveSettings');
         }
       } else {
-        res.status(400).json({ error: 'Missing settings' });
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
 
@@ -362,9 +360,7 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/suggest/:term', (req, res) => {
       try {
         if (!search.suggest) {
-          return res.status(501).json({
-            error: 'Suggestions not supported by this search provider'
-          });
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Suggestions not supported by this search provider', undefined, 501);
         }
 
         const term = req.params.term;
@@ -372,7 +368,7 @@ module.exports = (options, eventEmitter, search) => {
         const limit = parseInt(req.query.limit, 10) || 10;
 
         if (!term) {
-          return res.status(400).json({ error: 'Missing search term' });
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Search term is required');
         }
 
         const suggestions = search.suggest(term, {
@@ -380,9 +376,9 @@ module.exports = (options, eventEmitter, search) => {
           containerName: searchContainer
         });
 
-        res.status(200).json(suggestions);
+        sendSuccess(res, { suggestions });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getSuggestions');
       }
     });
 
@@ -401,14 +397,12 @@ module.exports = (options, eventEmitter, search) => {
         const stats = search.getStats(searchContainer);
 
         if (!stats.totalTokens) {
-          return res.status(501).json({
-            error: 'Token statistics not available for this search provider'
-          });
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Token statistics not available for this search provider', undefined, 501);
         }
 
-        res.status(200).json(stats);
+        sendSuccess(res, stats);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getTokenStats');
       }
     });
 
@@ -424,9 +418,7 @@ module.exports = (options, eventEmitter, search) => {
     app.post('/services/searching/api/rebuild', (req, res) => {
       try {
         if (!search.rebuild && !search.loadFromDisk) {
-          return res.status(501).json({
-            error: 'Rebuild not supported by this search provider'
-          });
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Rebuild not supported by this search provider', undefined, 501);
         }
 
         const searchContainer = req.body?.searchContainer;
@@ -440,12 +432,9 @@ module.exports = (options, eventEmitter, search) => {
           }
         });
 
-        res.status(202).json({
-          success: true,
-          message: 'Index rebuild started in background'
-        });
+        sendSuccess(res, {}, 'Index rebuild started in background', 202);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'rebuildIndex');
       }
     });
 

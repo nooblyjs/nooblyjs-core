@@ -10,6 +10,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 /**
  * Configures and registers measurement routes with the Express application.
  * Sets up endpoints for metric collection and analysis operations.
@@ -151,7 +153,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
      */
     app.get('/services/measuring/api/status', (req, res) => {
       eventEmitter.emit('api-measuring-status', 'measuring api running');
-      res.status(200).json('measuring api running');
+      sendStatus(res, 'measuring api running');
     });
 
     /**

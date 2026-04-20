@@ -1,0 +1,218 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Searching Service API",
+    "description": "Full-text search and document indexing service. Supports multiple search algorithms with real-time indexing, advanced querying, and autocomplete suggestions.",
+    "version": "1.0.15",
+    "contact": {
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/services/searching/api/status": {
+      "get": {
+        "summary": "Get service status",
+        "tags": ["Status"],
+        "responses": {
+          "200": {
+            "description": "Service status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/searching/api/add": {
+      "post": {
+        "summary": "Add document to index",
+        "tags": ["Indexing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document added"
+          }
+        }
+      }
+    },
+    "/services/searching/api/search/{term}": {
+      "get": {
+        "summary": "Search documents",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "term",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "searchContainer",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results"
+          }
+        }
+      }
+    },
+    "/services/searching/api/suggest/{term}": {
+      "get": {
+        "summary": "Get search suggestions",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "term",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suggestions"
+          }
+        }
+      }
+    },
+    "/services/searching/api/indexes": {
+      "get": {
+        "summary": "List all indexes",
+        "tags": ["Index Management"],
+        "responses": {
+          "200": {
+            "description": "Index list"
+          }
+        }
+      }
+    },
+    "/services/searching/api/indexes/{searchContainer}": {
+      "delete": {
+        "summary": "Delete index",
+        "tags": ["Index Management"],
+        "parameters": [
+          {
+            "name": "searchContainer",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Index deleted"
+          }
+        }
+      }
+    },
+    "/services/searching/api/analytics": {
+      "get": {
+        "summary": "Get analytics",
+        "tags": ["Analytics"],
+        "responses": {
+          "200": {
+            "description": "Analytics data"
+          }
+        }
+      }
+    },
+    "/services/searching/api/settings": {
+      "get": {
+        "summary": "Get settings",
+        "tags": ["Settings"],
+        "responses": {
+          "200": {
+            "description": "Service settings"
+          }
+        }
+      },
+      "post": {
+        "summary": "Update settings",
+        "tags": ["Settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated"
+          }
+        }
+      }
+    }
+  }
+}

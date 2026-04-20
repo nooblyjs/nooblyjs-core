@@ -16,6 +16,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const { sendSuccess, sendError, sendStatus, sendList, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers logging routes with the Express application.
@@ -221,7 +222,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.get('/services/logging/api/status', (req, res) => {
       eventEmitter.emit('api-logging-status', 'logging api running');
-      res.status(200).json('logging api running');
+      sendStatus(res, 'logging api running', { provider: providerType, instance: currentInstanceName });
     });
 
     /**

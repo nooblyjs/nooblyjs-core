@@ -16,6 +16,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers queueing routes with the Express application.
@@ -386,7 +387,7 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get('/services/queueing/api/status', (req, res) => {
       eventEmitter.emit('api-queueing-status', 'queueing api running');
-      res.status(200).json('queueing api running');
+      sendStatus(res, 'queueing api running', { provider: providerType, instance: currentInstanceName });
     });
 
     /**

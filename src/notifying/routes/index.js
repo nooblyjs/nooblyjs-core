@@ -14,6 +14,7 @@
 'use strict';
 
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers notification routes with the Express application.
@@ -48,12 +49,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic) {
           try {
             await notifier.createTopic(topic);
-            res.status(200).json({ success: true });
+            sendSuccess(res, { topic }, 'Topic created successfully', 201);
           } catch (err) {
-            res.status(500).json({ error: err.message });
+            handleError(res, err, 'createTopic');
           }
         } else {
-          res.status(400).json({ error: 'Missing topic' });
+          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic name is required');
         }
       };
     };
@@ -105,12 +106,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.subscribe(topic, callbackUrl);
-            res.status(200).json({ success: true });
+            sendSuccess(res, { topic, callbackUrl }, 'Subscription created successfully');
           } catch (err) {
-            res.status(500).json({ error: err.message });
+            handleError(res, err, 'subscribe');
           }
         } else {
-          res.status(400).json({ error: 'Missing topic or callback URL' });
+          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and callback URL are required');
         }
       };
     };
@@ -164,12 +165,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.unsubscribe(topic, callbackUrl);
-            res.status(200).json({ success: true });
+            sendSuccess(res, { topic, callbackUrl }, 'Subscription removed successfully');
           } catch (err) {
-            res.status(500).json({ error: err.message });
+            handleError(res, err, 'unsubscribe');
           }
         } else {
-          res.status(400).json({ error: 'Missing topic or callback URL' });
+          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and callback URL are required');
         }
       };
     };
@@ -223,12 +224,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && message) {
           try {
             await notifier.notify(topic, message);
-            res.status(200).json({ success: true });
+            sendSuccess(res, { topic }, 'Notification sent successfully');
           } catch (err) {
-            res.status(500).json({ error: err.message });
+            handleError(res, err, 'notify');
           }
         } else {
-          res.status(400).json({ error: 'Missing topic or message' });
+          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and message are required');
         }
       };
     };
@@ -280,7 +281,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.get('/services/notifying/api/status', (req, res) => {
       eventEmitter.emit('api-notifying-status', 'notifying api running');
-      res.status(200).json('notifying api running');
+      sendStatus(res, 'notifying api running', { provider: providerType, instance: currentInstanceName });
     });
 
     if (analytics) {
@@ -307,12 +308,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       app.get('/services/notifying/api/analytics/overview', (req, res) => {
         try {
           const overview = analytics.getOverview();
-          res.status(200).json(overview);
+          sendSuccess(res, overview);
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve notifying overview',
-            message: error.message,
-          });
+          handleError(res, error, 'getAnalyticsOverview');
         }
       });
 
@@ -321,12 +319,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const instanceName = req.params.instanceName;
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const overview = analyticsInstance.getOverview();
-          res.status(200).json(overview);
+          sendSuccess(res, overview);
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve notifying overview',
-            message: error.message,
-          });
+          handleError(res, error, 'getAnalyticsOverview');
         }
       });
 
@@ -334,14 +329,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const limit = parseInt(req.query.limit, 10);
           const topics = analytics.getTopTopics(Number.isNaN(limit) ? undefined : limit);
-          res.status(200).json({
-            topics,
-          });
+          sendSuccess(res, { topics });
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve top topics',
-            message: error.message,
-          });
+          handleError(res, error, 'getTopTopics');
         }
       });
 
@@ -351,14 +341,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const limit = parseInt(req.query.limit, 10);
           const topics = analyticsInstance.getTopTopics(Number.isNaN(limit) ? undefined : limit);
-          res.status(200).json({
-            topics,
-          });
+          sendSuccess(res, { topics });
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve top topics',
-            message: error.message,
-          });
+          handleError(res, error, 'getTopTopics');
         }
       });
 
@@ -366,14 +351,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const limit = parseInt(req.query.limit, 10);
           const topics = analytics.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
-          res.status(200).json({
-            topics,
-          });
+          sendSuccess(res, { topics });
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve topic list',
-            message: error.message,
-          });
+          handleError(res, error, 'getTopicDetails');
         }
       });
 
@@ -383,14 +363,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const limit = parseInt(req.query.limit, 10);
           const topics = analyticsInstance.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
-          res.status(200).json({
-            topics,
-          });
+          sendSuccess(res, { topics });
         } catch (error) {
-          res.status(500).json({
-            error: 'Failed to retrieve topic list',
-            message: error.message,
-          });
+          handleError(res, error, 'getTopicDetails');
         }
       });
     }
@@ -406,13 +381,10 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/settings', async (req, res) => {
       try {
         const settings = await notifier.getSettings();
-        res.status(200).json(settings);
+        sendSuccess(res, settings);
       } catch (err) {
         eventEmitter.emit('api-notifying-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, 'getSettings');
       }
     });
 
@@ -429,12 +401,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       if (message) {
         try {
           await notifier.saveSettings(message);
-          res.status(200).json({ success: true });
+          sendSuccess(res, {}, 'Settings saved successfully');
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'saveSettings');
         }
       } else {
-        res.status(400).json({ error: 'Missing settings' });
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
 
@@ -449,9 +421,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/instances', (req, res) => {
       try {
         if (!ServiceRegistry) {
-          res.status(200).json({
-            instances: ['default']
-          });
+          sendSuccess(res, { instances: ['default'] });
           return;
         }
 
@@ -464,14 +434,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           }
         }
 
-        res.status(200).json({
-          instances: Array.from(instances).sort()
-        });
+        sendSuccess(res, { instances: Array.from(instances).sort() });
       } catch (error) {
-        res.status(500).json({
-          error: 'Failed to retrieve instances',
-          message: error.message
-        });
+        handleError(res, error, 'listInstances');
       }
     });
 
@@ -486,12 +451,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/swagger/docs.json', (req, res) => {
       try {
         const swaggerDocs = require('./swagger/docs.json');
-        res.status(200).json(swaggerDocs);
+        sendSuccess(res, swaggerDocs);
       } catch (error) {
-        res.status(500).json({
-          error: 'Failed to retrieve Swagger documentation',
-          message: error.message
-        });
+        handleError(res, error, 'getSwaggerDocs');
       }
     });
   }

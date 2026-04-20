@@ -16,6 +16,7 @@
 const path = require('node:path');
 const express = require('express');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers caching routes with the Express application.
@@ -49,9 +50,9 @@ module.exports = (options, eventEmitter, cache) => {
         const value = req.body;
         try {
           await cache.put(key, value);
-          res.status(200).json({ success: true });
+          sendSuccess(res, { key });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'putCache');
         }
       };
     };
@@ -103,9 +104,9 @@ module.exports = (options, eventEmitter, cache) => {
         const key = req.params.key;
         try {
           const value = await cache.get(key);
-          res.status(200).json(value);
+          sendSuccess(res, { key, value });
         } catch (err) {
-          res.status(500).send(err.message);
+          handleError(res, err, 'getCache');
         }
       };
     };
@@ -155,9 +156,9 @@ module.exports = (options, eventEmitter, cache) => {
         const key = req.params.key;
         try {
           await cache.delete(key);
-          res.status(200).json({ success: true });
+          sendSuccess(res, { key });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'deleteCache');
         }
       };
     };
@@ -207,7 +208,7 @@ module.exports = (options, eventEmitter, cache) => {
      */
     app.get('/services/caching/api/status', (req, res) => {
       eventEmitter.emit('api-cache-status', 'caching api running');
-      res.status(200).json('caching api running');
+      sendStatus(res, 'caching api running', { provider: providerType, instance: currentInstanceName });
     });
 
     /**
@@ -247,17 +248,10 @@ module.exports = (options, eventEmitter, cache) => {
         }
 
         eventEmitter.emit('api-cache-instances', `retrieved ${instances.length} instances`);
-        res.status(200).json({
-          success: true,
-          instances: instances,
-          total: instances.length
-        });
+        sendSuccess(res, { instances, total: instances.length });
       } catch (error) {
         eventEmitter.emit('api-cache-instances-error', error.message);
-        res.status(500).json({
-          success: false,
-          error: error.message
-        });
+        handleError(res, error, 'listInstances');
       }
     });
 
@@ -268,17 +262,10 @@ module.exports = (options, eventEmitter, cache) => {
           const analytics = cache.getAnalytics ? cache.getAnalytics() : [];
           eventEmitter.emit('api-cache-list',
               `retrieved ${analytics.length} analytics entries`);
-          res.status(200).json({
-            success: true,
-            data: analytics,
-            total: analytics.length,
-          });
+          sendSuccess(res, { data: analytics, total: analytics.length });
         } catch (err) {
           eventEmitter.emit('api-cache-list-error', err.message);
-          res.status(500).json({
-            success: false,
-            error: err.message,
-          });
+          handleError(res, err, 'listAnalytics');
         }
       };
     };
@@ -317,7 +304,7 @@ module.exports = (options, eventEmitter, cache) => {
       return async (req, res) => {
         try {
           if (!cache.analytics) {
-            return res.status(503).json({ error: 'Analytics not available' });
+            return sendStatus(res, 'Analytics not available', { available: false }, 503);
           }
 
           const stats = cache.analytics.getStats();
@@ -326,15 +313,15 @@ module.exports = (options, eventEmitter, cache) => {
           const keyList = cache.analytics.getKeyList(100);
           const topMisses = cache.analytics.getTopMisses(50);
 
-          res.status(200).json({
-            stats: stats,
-            hitDistribution: hitDistribution,
-            timeline: timeline,
-            keyList: keyList,
-            topMisses: topMisses
+          sendSuccess(res, {
+            stats,
+            hitDistribution,
+            timeline,
+            keyList,
+            topMisses
           });
         } catch (error) {
-          res.status(500).json({ error: error.message });
+          handleError(res, error, 'getAnalytics');
         }
       };
     };
@@ -378,13 +365,10 @@ module.exports = (options, eventEmitter, cache) => {
     app.get('/services/caching/api/settings', async (req, res) => {
       try {
         const settings = await cache.getSettings();
-        res.status(200).json(settings);
+        sendSuccess(res, settings);
       } catch (err) {
         eventEmitter.emit('api-cache-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, 'getSettings');
       }
     });
 
@@ -401,12 +385,12 @@ module.exports = (options, eventEmitter, cache) => {
       if (message) {
         try {
           await cache.saveSettings(message);
-          res.status(200).json({ success: true });
+          sendSuccess(res, {}, 'Settings saved successfully');
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'saveSettings');
         }
       } else {
-        res.status(400).json({ error: 'Missing settings' });
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
 

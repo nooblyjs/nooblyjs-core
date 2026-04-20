@@ -1,0 +1,284 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Data Service API",
+    "description": "Persistent data storage and retrieval service. Supports multiple backends (memory, file, MongoDB) with container management, CRUD operations, and advanced querying.",
+    "version": "1.0.14",
+    "contact": {
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DataItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "paths": {
+    "/services/dataservice/api/status": {
+      "get": {
+        "summary": "Get service status",
+        "tags": ["Status"],
+        "responses": {
+          "200": {
+            "description": "Service status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/dataservice/api/{container}": {
+      "post": {
+        "summary": "Add data to container",
+        "tags": ["CRUD"],
+        "parameters": [
+          {
+            "name": "container",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Data created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/dataservice/api/{container}/{uuid}": {
+      "get": {
+        "summary": "Get data by UUID",
+        "tags": ["CRUD"],
+        "parameters": [
+          {
+            "name": "container",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update data",
+        "tags": ["CRUD"],
+        "parameters": [
+          {
+            "name": "container",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete data",
+        "tags": ["CRUD"],
+        "parameters": [
+          {
+            "name": "container",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data deleted"
+          }
+        }
+      }
+    },
+    "/services/dataservice/api/find/{container}": {
+      "get": {
+        "summary": "Find data in container",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "container",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results"
+          }
+        }
+      }
+    },
+    "/services/dataservice/api/analytics": {
+      "get": {
+        "summary": "Get analytics data",
+        "tags": ["Analytics"],
+        "responses": {
+          "200": {
+            "description": "Analytics data"
+          }
+        }
+      }
+    },
+    "/services/dataservice/api/settings": {
+      "get": {
+        "summary": "Get settings",
+        "tags": ["Settings"],
+        "responses": {
+          "200": {
+            "description": "Service settings"
+          }
+        }
+      },
+      "post": {
+        "summary": "Update settings",
+        "tags": ["Settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated"
+          }
+        }
+      }
+    }
+  }
+}

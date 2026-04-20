@@ -88,7 +88,8 @@
       "Read(//tmp/**)",
       "Bash(npm list:*)",
       "Bash(npx jest:*)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash([ -f \"src/$service/routes/swagger/docs.json\" ])"
     ],
     "deny": [],
     "ask": []
@@ -101,8 +102,8 @@
           {
             "type": "command",
             "command": "npm run tests 2>&1 | tail -20",
-            "statusMessage": "Running unit tests after changes",
             "timeout": 60,
+            "statusMessage": "Running unit tests after changes",
             "async": true
           }
         ]

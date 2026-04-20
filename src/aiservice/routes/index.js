@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 /**
  * Configures and registers AI service routes with the Express application.
  * Sets up endpoints for AI operations and monitoring.
@@ -32,8 +34,7 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
     app.get('/services/ai/api/status', (req, res) => {
       const status = aiService.enabled !== false ? 'ai api running' : 'ai api disabled - no api key';
       eventEmitter.emit('api-ai-status', status);
-      res.status(200).json({
-        status: status,
+      sendStatus(res, status, {
         provider: aiService.constructor.name,
         enabled: aiService.enabled !== false,
         hasApiKey: !!aiService.client_
@@ -48,16 +49,13 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       try {
         // Check if AI service is enabled
         if (aiService.enabled === false) {
-          return res.status(503).json({
-            error: 'AI service is disabled - API key not configured',
-            enabled: false
-          });
+          return sendStatus(res, 'AI service disabled - API key not configured', { enabled: false }, 503);
         }
 
         const { prompt, options = {}, username } = req.body;
 
         if (!prompt || typeof prompt !== 'string') {
-          return res.status(400).json({ error: 'Prompt is required and must be a string' });
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Prompt is required and must be a string');
         }
 
         const effectiveUsername =
@@ -106,12 +104,12 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
           eventEmitter.emit('api-ai-prompt', { prompt, username: effectiveUsername, response });
         }
 
-        res.status(200).json(response);
+        sendSuccess(res, response);
       } catch (error) {
         if (eventEmitter) {
           eventEmitter.emit('api-ai-error', { error: error.message });
         }
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'prompt');
       }
     });
 
@@ -139,12 +137,12 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
         if (eventEmitter) {
           eventEmitter.emit('api-ai-analytics', payload);
         }
-        res.status(200).json(payload);
+        sendSuccess(res, payload);
       } catch (error) {
         if (eventEmitter) {
           eventEmitter.emit('api-ai-error', { error: error.message });
         }
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getAnalytics');
       }
     });
 
@@ -157,16 +155,16 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
         if (typeof aiService.listModels === 'function') {
           const models = await aiService.listModels();
           eventEmitter.emit('api-ai-models', models);
-          res.status(200).json({ models });
+          sendSuccess(res, { models });
         } else {
-          res.status(200).json({ 
+          sendSuccess(res, {
             message: 'Model listing not supported by this provider',
-            currentModel: aiService.model_ 
+            currentModel: aiService.model_
           });
         }
       } catch (error) {
         eventEmitter.emit('api-ai-error', { error: error.message });
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'listModels');
       }
     });
 
@@ -178,21 +176,18 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       try {
         if (typeof aiService.isRunning === 'function') {
           const isRunning = await aiService.isRunning();
-          res.status(200).json({ 
+          sendStatus(res, isRunning ? 'healthy' : 'unhealthy', {
             healthy: isRunning,
-            provider: aiService.constructor.name 
+            provider: aiService.constructor.name
           });
         } else {
-          res.status(200).json({ 
+          sendStatus(res, 'healthy', {
             healthy: true,
-            provider: aiService.constructor.name 
+            provider: aiService.constructor.name
           });
         }
       } catch (error) {
-        res.status(500).json({ 
-          healthy: false,
-          error: error.message 
-        });
+        handleError(res, error, 'healthCheck');
       }
     });
 
@@ -207,13 +202,10 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
     app.get('/services/ai/api/settings', async (req, res) => {
       try {
         const settings = await aiService.getSettings();
-        res.status(200).json(settings);
+        sendSuccess(res, settings);
       } catch (err) {
         eventEmitter.emit('api-ai-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, 'getSettings');
       }
     });
 
@@ -230,12 +222,12 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       if (message) {
         try {
           await aiService.saveSettings(message);
-          res.status(200).send('OK');
+          sendSuccess(res, {}, 'Settings saved successfully');
         } catch (err) {
-          res.status(500).send(err.message);
+          handleError(res, err, 'saveSettings');
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
 

@@ -11,6 +11,7 @@
 'use strict';
 
 const analytics = require('../modules/analytics');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers data service routes with the Express application.
@@ -50,9 +51,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const uuid = await dataservice.add(container, jsonObject);
-        res.status(201).json({ id: uuid });
+        sendSuccess(res, { id: uuid }, 'Data added successfully', 201);
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'addData');
       }
     });
 
@@ -71,9 +72,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       const searchTerm = req.query.q || '';
       try {
         const results = await dataservice.find(container, searchTerm);
-        res.status(200).json(results);
+        sendSuccess(res, { results });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'findData');
       }
     });
 
@@ -90,9 +91,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       const container = req.params.container;
       try {
         const count = await dataservice.count(container);
-        res.status(200).json({ count });
+        sendSuccess(res, { count });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'countData');
       }
     });
 
@@ -112,11 +113,11 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const value = await dataservice.getByUuid(container, uuid);
         if (value === null) {
-          return res.status(404).json({ error: 'Not found' });
+          return sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
         }
-        res.status(200).json(value);
+        sendSuccess(res, value);
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'getByUuid');
       }
     });
 
@@ -138,12 +139,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const updated = await dataservice.update(container, uuid, jsonObject);
         if (updated) {
-          res.status(200).json({ updated: true });
+          sendSuccess(res, { uuid }, 'Data updated successfully');
         } else {
-          res.status(404).json({ error: 'Not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
         }
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'updateData');
       }
     });
 
@@ -163,12 +164,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const success = await dataservice.remove(container, uuid);
         if (success) {
-          res.status(200).json({ deleted: true });
+          sendSuccess(res, { uuid }, 'Data deleted successfully');
         } else {
-          res.status(404).json({ error: 'Not found' });
+          sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
         }
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'deleteData');
       }
     });
 
@@ -191,14 +192,14 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         if (!criteria || typeof criteria !== 'object') {
-          return res.status(400).json({ error: 'Request body must contain a "criteria" object with path/value pairs' });
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Request body must contain a "criteria" object with path/value pairs');
         }
 
         // Use safe criteria-based search instead of arbitrary code execution
         const results = await dataservice.jsonFindByCriteria(containerName, criteria);
-        res.status(200).json(results);
+        sendSuccess(res, { results });
       } catch (err) {
-        res.status(400).json({ error: `Search failed: ${err.message}` });
+        handleError(res, err, 'jsonFind');
       }
     });
 
@@ -220,9 +221,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const results = await dataservice.jsonFindByPath(containerName, path, value);
-        res.status(200).json(results);
+        sendSuccess(res, { results });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'jsonFindByPath');
       }
     });
 
@@ -243,9 +244,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const results = await dataservice.jsonFindByCriteria(containerName, criteria);
-        res.status(200).json(results);
+        sendSuccess(res, { results });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        handleError(res, err, 'jsonFindByCriteria');
       }
     });
 
@@ -259,7 +260,7 @@ module.exports = (options, eventEmitter, dataservice) => {
      */
     app.get('/services/dataservice/api/status', (req, res) => {
       eventEmitter.emit('api-dataservice-status', 'dataservice api running');
-      res.status(200).json('dataservice api running');
+      sendStatus(res, 'dataservice api running');
     });
 
     /**
@@ -273,9 +274,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/analytics', (req, res) => {
       try {
         const data = analytics.getAllAnalytics();
-        res.status(200).json(data);
+        sendSuccess(res, data);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getAnalytics');
       }
     });
 
@@ -290,9 +291,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/analytics/totals', (req, res) => {
       try {
         const stats = analytics.getTotalStats();
-        res.status(200).json(stats);
+        sendSuccess(res, stats);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getTotalStats');
       }
     });
 
@@ -308,9 +309,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const limit = parseInt(req.query.limit) || 100;
         const containers = analytics.getContainerAnalytics(limit);
-        res.status(200).json(containers);
+        sendSuccess(res, { containers, total: containers.length });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'getContainerAnalytics');
       }
     });
 
@@ -325,9 +326,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.delete('/services/dataservice/api/analytics', (req, res) => {
       try {
         analytics.clear();
-        res.status(200).json({ message: 'Analytics data cleared successfully' });
+        sendSuccess(res, {}, 'Analytics data cleared successfully');
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        handleError(res, error, 'clearAnalytics');
       }
     });
 
@@ -342,13 +343,10 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/settings', async (req, res) => {
       try {
         const settings = await dataservice.getSettings();
-        res.status(200).json(settings);
+        sendSuccess(res, settings);
       } catch (err) {
         eventEmitter.emit('api-dataservice-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, 'getSettings');
       }
     });
 
@@ -365,12 +363,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       if (message) {
         try {
           await dataservice.saveSettings(message);
-          res.status(200).json({ updated: true });
+          sendSuccess(res, {}, 'Settings saved successfully');
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          handleError(res, err, 'saveSettings');
         }
       } else {
-        res.status(400).json({ error: 'Bad Request: Missing settings' });
+        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
       }
     });
   }

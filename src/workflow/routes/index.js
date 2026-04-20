@@ -4,7 +4,7 @@
  * and service status monitoring with event-driven completion callbacks.
  *
  * @author Noobly JS Core Team
- * @version 1.0.14
+ * @version 1.0.15
  * @since 1.0.0
  */
 
@@ -12,6 +12,7 @@
 
 const path = require('node:path');
 const express = require('express');
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers workflow routes with the Express application.
@@ -40,15 +41,15 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      */
     app.post('/services/workflow/api/defineworkflow', async (req, res) => {
       const {name, steps} = req.body;
-      if (name) {
-        try {
-          const workflowId = await workflow.defineWorkflow(name, steps);
-          res.status(200).json({workflowId});
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing workflow name');
+      if (!name) {
+        return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Workflow name is required');
+      }
+
+      try {
+        const workflowId = await workflow.defineWorkflow(name, steps);
+        sendSuccess(res, { workflowId }, 'Workflow defined successfully', 201);
+      } catch (err) {
+        handleError(res, err, 'defineWorkflow');
       }
     });
 
@@ -64,17 +65,17 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      */
     app.post('/services/workflow/api/start', async (req, res) => {
       const {name, data} = req.body;
-      if (name) {
-        try {
-          const workflowId = await workflow.runWorkflow(name, data, (data) => {
-            eventEmitter.emit('workflow-complete', data);
-          });
-          res.status(200).json({workflowId});
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing workflow name');
+      if (!name) {
+        return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Workflow name is required');
+      }
+
+      try {
+        const workflowId = await workflow.runWorkflow(name, data, (data) => {
+          eventEmitter.emit('workflow-complete', data);
+        });
+        sendSuccess(res, { workflowId }, 'Workflow started', 202);
+      } catch (err) {
+        handleError(res, err, 'runWorkflow');
       }
     });
 
@@ -88,7 +89,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      */
     app.get('/services/workflow/api/status', (req, res) => {
       eventEmitter.emit('api-workflow-status', 'workflow api running');
-      res.status(200).json('workflow api running');
+      sendStatus(res, 'workflow api running', { provider: 'memory' });
     });
 
     /**

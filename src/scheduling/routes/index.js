@@ -13,6 +13,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 const analytics = require('../modules/analytics');
 const { isValid: isValidCron } = require('../providers/cronExpression');
 
@@ -66,7 +68,7 @@ module.exports = (options, eventEmitter, scheduler) => {
 
   app.get('/services/scheduling/api/status', (req, res) => {
     eventEmitter?.emit('api-scheduling-status', 'scheduling api running');
-    res.status(200).json('scheduling api running');
+    sendStatus(res, 'scheduling api running');
   });
 
   // ---------------------------------------------------------------------------

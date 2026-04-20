@@ -10,6 +10,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 /**
  * Configures and registers authentication routes with the Express application.
  * Sets up endpoints for auth operations including login, logout, user management,
@@ -345,10 +347,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     app.get('/services/authservice/api/status', asyncHandler(async (req, res) => {
       const status = await auth.getStatus();
       eventEmitter.emit('api-auth-status', 'auth api running');
-      res.status(200).json({
-        success: true,
-        data: status
-      });
+      sendSuccess(res, status);
     }));
 
     /**

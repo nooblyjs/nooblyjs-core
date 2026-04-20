@@ -10,6 +10,8 @@
 
 'use strict';
 
+const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+
 /**
  * Configures and registers fetching routes with the Express application.
  * Sets up endpoints for fetch operations and monitoring.
@@ -48,27 +50,20 @@ module.exports = (options, eventEmitter, fetching) => {
           const { url, options = {} } = req.body;
 
           if (!url) {
-            return res.status(400).json({
-              success: false,
-              error: 'URL is required'
-            });
+            return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'URL is required', {});
           }
 
           const response = await fetching.fetch(url, options);
 
-          res.status(200).json({
-            success: true,
+          sendSuccess(res, {
             status: response.status,
             statusText: response.statusText,
             headers: response.headers,
             data: response.data
-          });
+          }, 'Fetch completed successfully');
         } catch (error) {
           eventEmitter.emit('api-fetching-error', error.message);
-          res.status(500).json({
-            success: false,
-            error: error.message
-          });
+          handleError(res, error, { operation: 'fetch', url: req.body.url });
         }
       }
     );
@@ -92,19 +87,15 @@ module.exports = (options, eventEmitter, fetching) => {
 
           const response = await fetching.fetch(url);
 
-          res.status(200).json({
-            success: true,
+          sendSuccess(res, {
             status: response.status,
             statusText: response.statusText,
             headers: response.headers,
             data: response.data
-          });
+          }, 'Fetch completed successfully');
         } catch (error) {
           eventEmitter.emit('api-fetching-error', error.message);
-          res.status(500).json({
-            success: false,
-            error: error.message
-          });
+          handleError(res, error, { operation: 'fetch-by-url', url: req.params.url });
         }
       }
     );
@@ -119,11 +110,7 @@ module.exports = (options, eventEmitter, fetching) => {
      */
     app.get('/services/fetching/api/status', (req, res) => {
       eventEmitter.emit('api-fetching-status', 'fetching api running');
-      res.status(200).json({
-        success: true,
-        status: 'fetching api running',
-        timestamp: new Date().toISOString()
-      });
+      sendStatus(res, 'fetching api running');
     });
 
     /**
@@ -137,7 +124,7 @@ module.exports = (options, eventEmitter, fetching) => {
     app.get('/services/fetching/api/analytics', async (req, res) => {
       try {
         if (!fetching.analytics) {
-          return res.status(503).json({ error: 'Analytics not available' });
+          return sendError(res, ERROR_CODES.SERVICE_UNAVAILABLE, 'Analytics not available', {}, 503);
         }
 
         const stats = fetching.analytics.getStats();
@@ -146,19 +133,15 @@ module.exports = (options, eventEmitter, fetching) => {
         const urlList = fetching.analytics.getUrlList(100);
         const topErrors = fetching.analytics.getTopErrors(50);
 
-        res.status(200).json({
-          success: true,
-          stats: stats,
-          urlDistribution: urlDistribution,
-          timeline: timeline,
-          urlList: urlList,
-          topErrors: topErrors
-        });
+        sendSuccess(res, {
+          stats,
+          urlDistribution,
+          timeline,
+          urlList,
+          topErrors
+        }, 'Analytics retrieved successfully');
       } catch (error) {
-        res.status(500).json({
-          success: false,
-          error: error.message
-        });
+        handleError(res, error, { operation: 'fetch-analytics' });
       }
     });
 
@@ -173,26 +156,16 @@ module.exports = (options, eventEmitter, fetching) => {
     app.get('/services/fetching/api/list', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       try {
         if (!fetching.getAnalytics) {
-          return res.status(503).json({
-            success: false,
-            error: 'Analytics not available'
-          });
+          return sendError(res, ERROR_CODES.SERVICE_UNAVAILABLE, 'Analytics not available', {}, 503);
         }
 
         const analytics = fetching.getAnalytics();
         eventEmitter.emit('api-fetching-list',
             `retrieved ${analytics.length} analytics entries`);
-        res.status(200).json({
-          success: true,
-          data: analytics,
-          total: analytics.length
-        });
+        sendSuccess(res, analytics, `Retrieved ${analytics.length} analytics entries`);
       } catch (err) {
         eventEmitter.emit('api-fetching-list-error', err.message);
-        res.status(500).json({
-          success: false,
-          error: err.message
-        });
+        handleError(res, err, { operation: 'fetch-analytics-list' });
       }
     });
 
@@ -207,16 +180,9 @@ module.exports = (options, eventEmitter, fetching) => {
     app.get('/services/fetching/api/settings', async (req, res) => {
       try {
         const settings = await fetching.getSettings();
-        res.status(200).json({
-          success: true,
-          data: settings
-        });
+        sendSuccess(res, settings, 'Settings retrieved successfully');
       } catch (err) {
-        res.status(500).json({
-          success: false,
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        handleError(res, err, { operation: 'fetch-get-settings' });
       }
     });
 
@@ -230,25 +196,15 @@ module.exports = (options, eventEmitter, fetching) => {
      * @return {void}
      */
     app.post('/services/fetching/api/settings', async (req, res) => {
-      const message = req.body;
-      if (message) {
-        try {
-          await fetching.saveSettings(message);
-          res.status(200).json({
-            success: true,
-            message: 'Settings saved successfully'
-          });
-        } catch (err) {
-          res.status(500).json({
-            success: false,
-            error: err.message
-          });
-        }
-      } else {
-        res.status(400).json({
-          success: false,
-          error: 'Bad Request: Missing settings'
-        });
+      const settings = req.body;
+      if (!settings || Object.keys(settings).length === 0) {
+        return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Missing settings in request body', {});
+      }
+      try {
+        await fetching.saveSettings(settings);
+        sendSuccess(res, {}, 'Settings saved successfully');
+      } catch (err) {
+        handleError(res, err, { operation: 'fetch-save-settings' });
       }
     });
 
@@ -262,23 +218,13 @@ module.exports = (options, eventEmitter, fetching) => {
      */
     app.delete('/services/fetching/api/cache', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       try {
-        if (fetching.clear) {
-          await fetching.clear();
-          res.status(200).json({
-            success: true,
-            message: 'Cache cleared successfully'
-          });
-        } else {
-          res.status(503).json({
-            success: false,
-            error: 'Cache clear not available'
-          });
+        if (!fetching.clear) {
+          return sendError(res, ERROR_CODES.SERVICE_UNAVAILABLE, 'Cache clear not available', {}, 503);
         }
+        await fetching.clear();
+        sendSuccess(res, {}, 'Cache cleared successfully');
       } catch (err) {
-        res.status(500).json({
-          success: false,
-          error: err.message
-        });
+        handleError(res, err, { operation: 'fetch-clear-cache' });
       }
     });
   }

@@ -1,0 +1,235 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Fetching Service API",
+    "description": "HTTP fetching and data retrieval service. Supports multiple providers (Node.js, Axios) with request management, caching integration, and comprehensive analytics.",
+    "version": "1.0.15",
+    "contact": {
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authentication"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FetchResult": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "Response body from the fetched URL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code"
+          },
+          "headers": {
+            "type": "object",
+            "description": "Response headers"
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "example": "fetching api running"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/services/fetching/api/status": {
+      "get": {
+        "summary": "Get service status",
+        "description": "Returns the operational status of the fetching service",
+        "tags": ["Status"],
+        "responses": {
+          "200": {
+            "description": "Service status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/fetching/api/fetch": {
+      "post": {
+        "summary": "Fetch data from URL",
+        "description": "Fetch data from a specified URL with optional parameters",
+        "tags": ["Fetching"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "URL to fetch"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": ["GET", "POST", "PUT", "DELETE"],
+                    "default": "GET"
+                  },
+                  "headers": {
+                    "type": "object",
+                    "description": "Custom headers"
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "Request body data"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Timeout in milliseconds"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fetch successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/services/fetching/api/analytics": {
+      "get": {
+        "summary": "Get analytics data",
+        "description": "Retrieve analytics about fetch operations",
+        "tags": ["Analytics"],
+        "responses": {
+          "200": {
+            "description": "Analytics data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/fetching/api/settings": {
+      "get": {
+        "summary": "Get service settings",
+        "description": "Retrieve current service settings",
+        "tags": ["Settings"],
+        "responses": {
+          "200": {
+            "description": "Service settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update service settings",
+        "description": "Update fetching service settings",
+        "tags": ["Settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timeout": {
+                    "type": "integer"
+                  },
+                  "maxRetries": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
