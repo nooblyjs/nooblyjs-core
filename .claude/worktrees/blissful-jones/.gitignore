@@ -1,0 +1,26 @@
+#application specific
+.application/
+.cache/
+.data/
+documents/
+documents-readonly/
+documents-shared/
+
+#nodent goes here...
+node_modules/
+
+#electron
+dist/
+.DS_Store
+*.log
+
+#env
+.env
+*.env.*
+
+#tests
+.test/
+.test-files/
+
+#screenshots
+screenshots/

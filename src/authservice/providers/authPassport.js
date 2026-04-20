@@ -1,7 +1,7 @@
 /**
  * @fileoverview Passport Authentication Provider
  * Passport.js local strategy authentication provider.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -27,7 +27,7 @@ class AuthPassport extends AuthBase {
     super(options, eventEmitter);
 
     this.settings = {};
-    this.settings.desciption = "There are not settinsg for the noobly-core passpwrt auth implementation"
+    this.settings.desciption = "There are not settinsg for the nooblyjs-core passpwrt auth implementation"
     this.settings.list = []
 
     this.passport_ = null;

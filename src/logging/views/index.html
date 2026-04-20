@@ -4,48 +4,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logging Management - Noobly JS Admin</title>
+    <title>Logging Management - Noobly JS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
-    <link rel="stylesheet" href="/services/css/navigation.css">
-    <link rel="stylesheet" href="/styles.css">
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
-    <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </nav>
-
-        <main class="main-content">
-            <div class="page-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
-                    <div>
-                        <h1 class="page-title">Logging Management</h1>
-                        <p class="page-subtitle">Submit and manage log entries</p>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Noobly JS Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div>
-                            <label for="instanceSelector" style="margin-right: 8px; font-weight: 500;">Instance:</label>
-                            <select id="instanceSelector" class="form-select" style="width: 200px; display: inline-block;">
-                                <option value="default">default</option>
-                            </select>
-                        </div>
-                        <button id="refreshInstanceBtn" class="btn btn-sm btn-outline-primary" title="Refresh instances list">
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <div class="core-app-container">
+        <!-- LEFT SIDEBAR NAVIGATION -->
+        <aside class="core-sidebar" id="core-navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="core-main-content">
+            <!-- PAGE HEADER -->
+            <div class="core-page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem;">
+                    <div>
+                        <h1 class="core-page-title">Logging Management</h1>
+                        <p class="core-page-subtitle">Submit and manage log entries</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                        <label for="instanceSelector" style="font-weight: 500;">Instance:</label>
+                        <select id="instanceSelector" class="core-form-select" style="width: 200px; display: inline-block;">
+                            <option value="default">default</option>
+                        </select>
+                        <button id="refreshInstanceBtn" class="btn btn-outline-secondary btn-sm" title="Refresh instances list">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="alert alert-success" id="successAlert">
-                <strong>Success!</strong> <span id="successMessage"></span>
-            </div>
+            <!-- CONTENT WRAPPER -->
+            <div class="core-page-content">
+                <!-- ALERTS -->
+                <div class="alert alert-success" id="successAlert">
+                    <strong>Success!</strong> <span id="successMessage"></span>
+                </div>
 
-            <div class="alert alert-error" id="errorAlert">
-                <strong>Error!</strong> <span id="errorMessage"></span>
-            </div>
+                <div class="alert alert-error" id="errorAlert">
+                    <strong>Error!</strong> <span id="errorMessage"></span>
+                </div>
 
             <!-- Bootstrap 5 Tabs -->
             <ul class="nav nav-tabs mb-4" id="loggingTabs" role="tablist">
@@ -76,21 +104,21 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
 
                     <!-- Statistics Card with Pie Chart -->
-                    <div class="card mb-4">
-                        <div class="card-header">
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="flex-grow-1">
-                                    <h2 class="card-title">Log Level Distribution</h2>
-                                    <p class="card-subtitle">Visual breakdown of log entries by level</p>
+                                    <h2 class="core-card-title">Log Level Distribution</h2>
+                                    <p class="core-card-subtitle">Visual breakdown of log entries by level</p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="refreshDashboard()">
                                         <i class="bi bi-arrow-clockwise"></i> Refresh All
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div style="position: relative; height: 300px;">
@@ -98,21 +126,21 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="stats-summary">
+                                    <div class="core-stats-summary">
                                         <h5 class="mb-3">Statistics Summary</h5>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span><span class="badge bg-primary">INFO</span></span>
+                                                <span><span class="badge bg-secondary">INFO</span></span>
                                                 <strong id="statInfoCount">0</strong>
                                             </div>
                                             <div class="progress" style="height: 20px;">
-                                                <div id="statInfoBar" class="progress-bar bg-primary" role="progressbar"
+                                                <div id="statInfoBar" class="progress-bar bg-secondary" role="progressbar"
                                                     style="width: 0%">
                                                     <span id="statInfoPercent">0%</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-warning text-dark">WARN</span></span>
                                                 <strong id="statWarnCount">0</strong>
@@ -124,7 +152,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-danger">ERROR</span></span>
                                                 <strong id="statErrorCount">0</strong>
@@ -136,7 +164,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-secondary">LOG</span></span>
                                                 <strong id="statLogCount">0</strong>
@@ -160,16 +188,16 @@
                     </div>
 
                     <!-- Timeline Chart Card -->
-                    <div class="card mb-4">
-                        <div class="card-header">
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="flex-grow-1">
-                                    <h2 class="card-title">Log Activity Timeline</h2>
-                                    <p class="card-subtitle">Real-time log activity per minute across all levels</p>
+                                    <h2 class="core-card-title">Log Activity Timeline</h2>
+                                    <p class="core-card-subtitle">Real-time log activity per minute across all levels</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div style="position: relative; height: 400px;">
                                 <canvas id="logTimelineChart"></canvas>
                             </div>
@@ -177,12 +205,12 @@
                     </div>
 
                     <!-- Logs Table Card -->
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="core-card">
+                        <div class="core-card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h2 class="card-title">Log Entries</h2>
-                                    <p class="card-subtitle">Recent log entries (last 1000 logs)</p>
+                                    <h2 class="core-card-title">Log Entries</h2>
+                                    <p class="core-card-subtitle">Recent log entries (last 1000 logs)</p>
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <select class="form-select form-select-sm" id="logLevelFilter"
@@ -196,12 +224,12 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped">
                                     <thead>
                                         <tr>
-                                            <th style="width: 120px;">Log Level</th>
+                                            <th style="width: 60px;">Log Level</th>
                                             <th>Message</th>
                                             <th style="width: 200px;">Date Created</th>
                                         </tr>
@@ -231,68 +259,74 @@
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
                     <!-- Log Message Form -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Log Message</h2>
-                            <p class="card-subtitle">Submit a new log entry</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Log Message</h2>
+                            <p class="core-card-subtitle">Submit a new log entry</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <form id="logForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="logging-level-select">Logging Level</label>
-                                    <select name="logging-level" id="logging-level-select" class="form-select">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="logging-level-select">Logging Level</label>
+                                    <select name="logging-level" id="logging-level-select" class="core-form-select">
                                         <option value="info">Information</option>
                                         <option value="warn">Warning</option>
                                         <option value="error">Error</option>
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="logMessage">Message (JSON)</label>
-                                    <textarea id="logMessage" class="form-input form-textarea"
-                                        placeholder='{"message": "User logged in"}' required></textarea>
-                                    <div id="logValidation" class="validation-message" style="display: none;"></div>
-                                    <div class="helper-text">Enter a valid JSON object for the log entry</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="logMessageText">Message</label>
+                                    <input type="text" id="logMessageText" class="core-form-input"
+                                        placeholder='[ServiceName] Operation completed' required>
+                                    <div class="core-helper-text">Descriptive text for the log entry (e.g., "[ServiceName] Fallback triggered")</div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Submit Log</button>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="logMessage">Metadata (JSON)</label>
+                                    <textarea id="logMessage" class="core-form-input core-form-textarea"
+                                        placeholder='{"provider": "redis", "duration": 5000}'></textarea>
+                                    <div id="logValidation" class="core-validation-message" style="display: none;"></div>
+                                    <div class="core-helper-text">Optional JSON object with additional context (leave empty for no metadata)</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Submit Log</button>
                                     <button type="button" class="btn btn-secondary"
                                         onclick="formatJSON('logMessage')">Format JSON</button>
                                     <button type="button" class="btn btn-secondary"
                                         onclick="loadExample('logMessage')">Load Example</button>
                                 </div>
                             </form>
-                            <div id="logResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Response:</div>
-                                <div id="logResponseContent" class="response-content"></div>
+                            <div id="logResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="logResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Status Check -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Service Status</h2>
-                            <p class="card-subtitle">Check logging service status</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Service Status</h2>
+                            <p class="core-card-subtitle">Check logging service status</p>
                         </div>
-                        <div class="card-content">
-                            <div class="btn-group">
+                        <div class="core-card-content">
+                            <div class="core-btn-group">
                                 <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check
                                     Status</button>
                             </div>
-                            <div id="statusResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="response-content"></div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- API Documentation -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">API Documentation</h2>
-                            <p class="card-subtitle">Interactive API documentation for Logging service</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">API Documentation</h2>
+                            <p class="core-card-subtitle">Interactive API documentation for Logging service</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="swagger-ui"></div>
                         </div>
                     </div>
@@ -304,25 +338,25 @@
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
 
                     <!-- Settings Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Logging Service Settings</h2>
-                            <p class="card-subtitle">Configure the logging service parameters</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Logging Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the logging service parameters</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary"
                                         onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="response-container"
+                            <div id="settingsSaveResponse" class="core-response-container"
                                 style="display: none; margin-top: 1rem;">
-                                <div class="response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="response-content"></div>
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -332,19 +366,178 @@
 
             </div>
             <!-- End Tab Content -->
-
+            </div>
+            <!-- End Page Content -->
         </main>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
-    <script src="/services/logging/scripts/client.js"></script>
+    <script src="/services/js/header-init.js"></script>
+    <script src="/services/logging/scripts"></script>
+
+    <!-- Shared Navigation & Swagger -->
     <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'logging');
+
+        // Initialize header user profile
+        function initializeHeaderUserProfile() {
+            const currentUser = localStorage.getItem('currentUser');
+            const headerUserAvatar = document.getElementById('headerUserAvatar');
+            const headerUserLabel = document.getElementById('headerUserLabel');
+            const headerUserName = document.getElementById('headerUserName');
+            const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    const userName = user.username || 'User';
+                    const initials = userName.substring(0, 1).toUpperCase();
+
+                    if (headerUserAvatar) headerUserAvatar.textContent = initials;
+                    if (headerUserLabel) headerUserLabel.textContent = 'User';
+                    if (headerUserName) headerUserName.textContent = userName;
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+
+            // Setup logout functionality
+            if (headerLogoutBtn) {
+                headerLogoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        try {
+                            await fetch('/services/authservice/api/logout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token })
+                            });
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                        }
+                    }
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = '/services/authservice/views/login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeHeaderUserProfile();
+            if (typeof DigitalTechnologiesNavigation !== 'undefined') {
+                DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'logging');
+            }
+        });
+
+        // Load Swagger spec from external docs.json file
+        async function initializeSwaggerUI() {
+            try {
+                // Fetch the Swagger specification from the external docs.json file
+                const response = await fetch('/services/logging/api/swagger/docs.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to load Swagger docs: ${response.status}`);
+                }
+                const spec = await response.json();
+
+                // Initialize Swagger UI with the loaded spec
+                initializeSwagger(spec);
+            } catch (error) {
+                console.error('Error loading Swagger documentation:', error);
+                document.getElementById('swagger-ui').innerHTML = `
+                    <div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;">
+                        <strong>Error loading API documentation</strong><br>
+                        Failed to load Swagger specification from docs.json<br>
+                        Error: ${error.message}<br>
+                        <button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize Swagger UI with the provided spec
+        function initializeSwagger(spec) {
+            // Ensure Swagger UI dependencies are loaded
+            if (typeof SwaggerUIBundle === 'undefined') {
+                console.error('SwaggerUIBundle not loaded');
+                document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px; text-align: center;">Swagger UI failed to load. Please check your internet connection and refresh the page.</div>';
+                return;
+            }
+
+            try {
+                const container = document.getElementById('swagger-ui');
+                container.innerHTML = '';
+
+                const ui = SwaggerUIBundle({
+                    spec: spec,
+                    dom_id: '#swagger-ui',
+                    deepLinking: false,
+                    presets: [
+                        SwaggerUIBundle.presets.apis
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "BaseLayout",
+                    validatorUrl: null,
+                    tryItOutEnabled: true,
+                    displayOperationId: false,
+                    showExtensions: false,
+                    showCommonExtensions: false,
+                    docExpansion: 'list',
+                    defaultModelsExpandDepth: 1,
+                    defaultModelExpandDepth: 1,
+                    filter: false,
+                    showRequestHeaders: false,
+                    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                    onComplete: function() {
+                        console.log('Swagger UI initialized successfully');
+                        const topbar = document.querySelector('#swagger-ui .topbar');
+                        if (topbar) {
+                            topbar.style.display = 'none';
+                        }
+                        const swaggerContainer = document.querySelector('#swagger-ui');
+                        if (swaggerContainer) {
+                            swaggerContainer.style.fontFamily = 'inherit';
+                        }
+                    },
+                    onFailure: function(error) {
+                        console.error('Swagger UI initialization failed:', error);
+                        document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px;">Failed to initialize API documentation: ' + error.message + '</div>';
+                    }
+                });
+
+                window.swaggerUI = ui;
+
+                setTimeout(function() {
+                    const swaggerContent = document.querySelector('#swagger-ui .swagger-ui');
+                    if (!swaggerContent) {
+                        console.warn('Swagger UI may not have initialized properly');
+                        document.getElementById('swagger-ui').innerHTML = '<div style="color: orange; padding: 20px;">API documentation is loading... If this message persists, please refresh the page.</div>';
+                    }
+                }, 3000);
+
+            } catch (error) {
+                console.error('Critical error initializing Swagger UI:', error);
+                document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;"><strong>Error loading API documentation</strong><br>Error: ' + error.message + '<br><button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button></div>';
+            }
+        }
+
+        // Initialize: Load analytics and Swagger docs on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeSwaggerUI();
+
+            // Load data analytics when tab is shown
+            document.getElementById('data-tab').addEventListener('shown.bs.tab', function() {
+                // Data analytics loading handled by script.js
+            });
+        });
     </script>
     <script src="script.js"></script>
+
 </body>
 
 </html>

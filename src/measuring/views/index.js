@@ -1,10 +1,10 @@
 /**
- * @fileoverview Measuring service views module for noobly-core framework.
+ * @fileoverview Measuring service views module for nooblyjs-core framework.
  * This module provides Express.js view registration and static file serving 
  * capabilities for the measuring service. It registers static routes to serve
  * measuring-related view files and templates through the Express application.
  * 
- * @author NooblyJS
+ * @author Digital Technologies
  * @version 1.0.14
  * @since 1.0.0
  * @module MeasuringViews
@@ -12,7 +12,7 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
 
 /**

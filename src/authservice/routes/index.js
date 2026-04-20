@@ -3,7 +3,7 @@
  * Provides RESTful endpoints for user authentication, user management,
  * role management, and session handling.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -76,38 +76,47 @@ module.exports = (options, eventEmitter, auth, analytics) => {
       '/services/authservice/api/login',
       asyncHandler(async (req, res) => {
         const { username, password, returnUrl } = req.body;
-        const result = await auth.authenticateUser(username, password);
-        eventEmitter.emit('auth:login-api', { username });
 
-        // Establish Passport session so req.isAuthenticated() returns true
-        // This is critical for middleware protection to work
-        // MUST wait for logIn to complete before sending response
-        if (result.user && req.logIn) {
-          try {
-            await new Promise((resolve, reject) => {
-              req.logIn(result.user, (err) => {
-                if (err) {
-                  eventEmitter.emit('auth:passport-error', { error: err.message });
-                  return reject(err);
-                }
-                resolve();
+        try {
+          const result = await auth.authenticateUser(username, password);
+          eventEmitter.emit('auth:login-api', { username });
+
+          // Establish Passport session so req.isAuthenticated() returns true
+          // This is critical for middleware protection to work
+          // MUST wait for logIn to complete before sending response
+          if (result.user && req.logIn) {
+            try {
+              await new Promise((resolve, reject) => {
+                req.logIn(result.user, (err) => {
+                  if (err) {
+                    eventEmitter.emit('auth:passport-error', { error: err.message });
+                    return reject(err);
+                  }
+                  resolve();
+                });
               });
-            });
-          } catch (err) {
-            eventEmitter.emit('auth:passport-error', { error: err.message });
-            throw err;
+            } catch (err) {
+              eventEmitter.emit('auth:passport-error', { error: err.message });
+              throw err;
+            }
           }
+
+          // Determine redirect URL: options override > request returnUrl > default
+          const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+
+          res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            data: result,
+            redirectUrl: redirectUrl
+          });
+        } catch (error) {
+          // Return user-friendly error response
+          res.status(401).json({
+            success: false,
+            error: 'Login failed'
+          });
         }
-
-        // Determine redirect URL: options override > request returnUrl > default
-        const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
-
-        res.status(200).json({
-          success: true,
-          message: 'Login successful',
-          data: result,
-          redirectUrl: redirectUrl
-        });
       })
     );
 
@@ -352,7 +361,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get('/services/authservice/api/branding', asyncHandler(async (req, res) => {
       const brandingConfig = {
-        appName: options.brandingConfig?.appName || 'Noobly JS',
+        appName: options.brandingConfig?.appName || 'Digital Technologies',
         logoUrl: options.brandingConfig?.logoUrl || null,
         stylesheetUrl: options.brandingConfig?.stylesheetUrl || null,
         primaryColor: options.brandingConfig?.primaryColor || '#0066cc',
@@ -496,6 +505,186 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         res.status(400).send('Bad Request: Missing settings');
       }
     }));
+
+    // ===== Secure Email Authentication Routes (Teams/Edge Extensions) =====
+
+    /**
+     * POST /services/authservice/api/secure-email/login
+     * Authenticates a user with email and secure key.
+     * Returns a bearer token for use with all authenticated endpoints.
+     * No authentication required for this endpoint.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {Object} req.body - Authentication data
+     * @param {string} req.body.email - User email address
+     * @param {string} req.body.secureKey - Secure API key for the email
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    if (auth.authenticateWithSecureEmail) {
+      app.post(
+        '/services/authservice/api/secure-email/login',
+        asyncHandler(async (req, res) => {
+          const { email, secureKey } = req.body;
+
+          if (!email || !secureKey) {
+            return res.status(400).json({
+              success: false,
+              error: 'Bad Request',
+              message: 'Email and secureKey are required'
+            });
+          }
+
+          try {
+            const result = await auth.authenticateWithSecureEmail(email, secureKey);
+
+            // Establish Passport session if available
+            if (result.user && req.logIn) {
+              await new Promise((resolve, reject) => {
+                req.logIn(result.user, (err) => {
+                  if (err) {
+                    eventEmitter.emit('auth:passport-error', { error: err.message });
+                    return reject(err);
+                  }
+                  resolve();
+                });
+              });
+            }
+
+            res.json({
+              success: true,
+              message: 'Authentication successful',
+              data: result
+            });
+          } catch (error) {
+            res.status(401).json({
+              success: false,
+              error: 'Unauthorized',
+              message: error.message
+            });
+          }
+        })
+      );
+
+      /**
+       * POST /services/authservice/api/secure-email/users
+       * Adds a new secure email user to the system.
+       * Requires API key authentication.
+       *
+       * @param {express.Request} req - Express request object
+       * @param {Object} req.body - User data
+       * @param {string} req.body.email - User email address
+       * @param {string} req.body.secureKey - Secure key for authentication
+       * @param {string} req.body.username - Username (optional, defaults to email)
+       * @param {string} req.body.role - User role (optional, defaults to 'user')
+       * @param {express.Response} res - Express response object
+       * @return {void}
+       */
+      app.post(
+        '/services/authservice/api/secure-email/users',
+        authMiddleware || ((req, res, next) => next()),
+        asyncHandler(async (req, res) => {
+          const { email, secureKey, username, role } = req.body;
+
+          if (!email || !secureKey) {
+            return res.status(400).json({
+              success: false,
+              error: 'Bad Request',
+              message: 'Email and secureKey are required'
+            });
+          }
+
+          try {
+            const user = await auth.addSecureEmailUser(email, secureKey, username, role);
+
+            res.status(201).json({
+              success: true,
+              message: 'Secure email user added successfully',
+              data: user
+            });
+          } catch (error) {
+            res.status(400).json({
+              success: false,
+              error: 'Bad Request',
+              message: error.message
+            });
+          }
+        })
+      );
+
+      /**
+       * GET /services/authservice/api/secure-email/users
+       * Lists all secure email users.
+       * Requires API key authentication.
+       *
+       * @param {express.Request} req - Express request object
+       * @param {express.Response} res - Express response object
+       * @return {void}
+       */
+      app.get(
+        '/services/authservice/api/secure-email/users',
+        authMiddleware || ((req, res, next) => next()),
+        asyncHandler(async (req, res) => {
+          try {
+            const users = await auth.listSecureEmailUsers();
+
+            res.json({
+              success: true,
+              message: 'Secure email users retrieved successfully',
+              data: { users }
+            });
+          } catch (error) {
+            res.status(500).json({
+              success: false,
+              error: 'Server Error',
+              message: error.message
+            });
+          }
+        })
+      );
+
+      /**
+       * DELETE /services/authservice/api/secure-email/users/:email
+       * Removes a secure email user from the system.
+       * Requires API key authentication.
+       *
+       * @param {express.Request} req - Express request object
+       * @param {string} req.params.email - Email address of user to remove
+       * @param {express.Response} res - Express response object
+       * @return {void}
+       */
+      app.delete(
+        '/services/authservice/api/secure-email/users/:email',
+        authMiddleware || ((req, res, next) => next()),
+        asyncHandler(async (req, res) => {
+          const { email } = req.params;
+
+          if (!email) {
+            return res.status(400).json({
+              success: false,
+              error: 'Bad Request',
+              message: 'Email is required'
+            });
+          }
+
+          try {
+            await auth.removeSecureEmailUser(email);
+
+            res.json({
+              success: true,
+              message: 'Secure email user removed successfully',
+              data: { email }
+            });
+          } catch (error) {
+            res.status(404).json({
+              success: false,
+              error: 'Not Found',
+              message: error.message
+            });
+          }
+        })
+      );
+    }
   }
 };
 

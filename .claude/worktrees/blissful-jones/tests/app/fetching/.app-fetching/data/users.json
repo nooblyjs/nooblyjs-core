@@ -1,0 +1,22 @@
+{
+  "administrator": {
+    "id": "zl0lvv5e6mjtoih9y",
+    "username": "administrator",
+    "email": "admin@localhost",
+    "password": "0e8cbc6a59587d216c61a74ccbd6596048db86926997feb3d9449cc88df70d63",
+    "role": "admin",
+    "createdAt": "2025-12-31T07:12:46.583Z",
+    "lastLogin": null,
+    "isActive": true
+  },
+  "srbooysen@shoprite.co.za": {
+    "id": "asblq0z8mmluiv9ro",
+    "username": "srbooysen@shoprite.co.za",
+    "email": "srbooysen@shoprite.co.za",
+    "password": "6ad5b02e27d516db5471d80d0b20ba37ee758d84678389f999a63a24da22e08b",
+    "role": "user",
+    "createdAt": "2026-02-20T06:41:56.533Z",
+    "lastLogin": null,
+    "isActive": true
+  }
+}

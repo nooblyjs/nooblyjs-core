@@ -20,7 +20,7 @@
     "index.js"
   ],
   "license": "ISC",
-  "author": "NooblyJS",
+  "author": "Noobly JS Contributors",
   "type": "commonjs",
   "main": "index.js",
   "engines": {
@@ -28,15 +28,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nooblyjs/nooblyjs-core.git"
+    "url": " https://srbooysen@bitbucket.org/shopritelabs/nooblyjs-core.git"
   },
   "scripts": {
+    "clean": "rimraf node_modules dist",
     "start": "node ./app.js",
     "dev:web": "nodemon --watch ./src ./app.js",
-    "test": "jest",
+    "dev:web:noauth": "nodemon --watch ./src ./app-noauth.js",
+    "dev:filing": "nodemon --watch ./src ./tests/app/filing/app-filing.js",
+    "tests": "jest",
     "test-load": "node ./tests-load/",
-    "kill": "kill -9 $(lsof -t -i:3001)",
-    "analyze-tokens": "node ./scripts/count-tokens.js"
+    "kill": "node scripts/kill-port.js",
+    "kill-test": "node scripts/kill-test-port.js",
+    "analyze-tokens": "node ./scripts/count-tokens.js",
+    "docker:build": "docker build -t nooblyjs-core:latest .",
+    "docker:run": "docker run -p 11000:11000 nooblyjs-core:latest",
+    "docker:publish": "npm run docker:build && docker tag nooblyjs-core:latest stephenbooysen/nooblyjs-core:latest && docker push stephenbooysen/nooblyjs-core:latest"
   },
   "jest": {
     "modulePaths": [
@@ -51,13 +58,13 @@
     "nock": "^13.5.6"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "^1.0.81",
+    "@anthropic-ai/claude-code": "^2.1.110",
     "@anthropic-ai/sdk": "^0.60.0",
     "@aws-sdk/client-s3": "^3.614.0",
-    "@google-cloud/storage": "^7.17.0",
-    "@google/gemini-cli": "^0.1.22",
+    "@azure/identity": "^4.13.0",
+    "@google-cloud/storage": "^5.18.3",
+    "@google/gemini-cli": "^0.38.1",
     "amqplib": "^0.10.9",
-    "aws-sdk": "^2.1620.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.2",
     "dotenv": "^17.2.1",
@@ -71,10 +78,11 @@
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
-    "openai": "^5.16.0",
+    "openai": "^5.23.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
+    "pdf-parse": "^1.1.4",
     "redis": "^5.5.6",
     "rimraf": "^6.0.1",
     "simple-git": "^3.28.0",

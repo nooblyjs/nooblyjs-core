@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noobly-core Logging Script Library Example</title>
+    <title>nooblyjs-core Logging Script Library Example</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -161,7 +161,7 @@
         }
         .log-entry.info {
             background-color: #cfe2ff;
-            border-left-color: #0d6efd;
+            border-left-color: #059da2;
         }
         .log-entry.warn {
             background-color: #fff3cd;
@@ -184,7 +184,7 @@
             margin-right: 8px;
         }
         .level-indicator.info {
-            background-color: #0d6efd;
+            background-color: #059da2;
             color: white;
         }
         .level-indicator.warn {
@@ -202,11 +202,11 @@
     </style>
 </head>
 <body>
-    <h1>🔍 Noobly-core Logging Script Library Example</h1>
+    <h1>🔍 nooblyjs-core Logging Script Library Example</h1>
 
     <div class="container">
         <h2>Overview</h2>
-        <p>This example demonstrates how to use the Noobly-core Logging service JavaScript library in a browser environment.</p>
+        <p>This example demonstrates how to use the nooblyjs-core Logging service JavaScript library in a browser environment.</p>
         <p>The library is served from <code>/services/logging/scriptlibrary</code> and provides logging at different levels: info, warn, error, and debug.</p>
     </div>
 
@@ -318,7 +318,7 @@
                     minLogLevel: minLogLevel
                 };
 
-                logger = new nooblyjscorelogging(instanceName, options);
+                logger = new digitaltechnologieslogging(instanceName, options);
 
                 const statusDiv = document.getElementById('clientStatus');
                 statusDiv.classList.remove('disconnected');
@@ -491,11 +491,11 @@
             log('Page loaded. Script library ready. Configure and click "Initialize Client" to begin.', 'info');
 
             // Check if the library is available
-            if (typeof nooblyjscorelogging === 'undefined') {
-                log('✗ ERROR: nooblyjscorelogging library is not available!', 'error');
+            if (typeof digitaltechnologieslogging === 'undefined') {
+                log('✗ ERROR: digitaltechnologieslogging library is not available!', 'error');
                 log('Make sure the script library endpoint is accessible at /services/logging/scriptlibrary', 'error');
             } else {
-                log('✓ nooblyjscorelogging library is available', 'info');
+                log('✓ digitaltechnologieslogging library is available', 'info');
             }
         });
 

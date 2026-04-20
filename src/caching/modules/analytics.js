@@ -3,7 +3,7 @@
  * Captures and stores cache activity metrics for analytics purposes.
  * Tracks get/put/delete operations, hits, misses, and provides statistics.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -46,8 +46,10 @@ class CacheAnalytics {
     const putEventName = `cache:put:${this.instanceName_}`;
     const deleteEventName = `cache:delete:${this.instanceName_}`;
 
-    // Listen for get events (can be hit or miss)
-    this.eventEmitter_.on(getEventName, (data) => {
+    // Store listener references for cleanup
+    this.listeners_ = {};
+
+    this.listeners_.get = (data) => {
       const isHit = data.value !== undefined;
       if (isHit) {
         this.recordActivity_(data.key, 'hit', data.value);
@@ -57,17 +59,30 @@ class CacheAnalytics {
         const currentMisses = this.keyMisses_.get(data.key) || 0;
         this.keyMisses_.set(data.key, currentMisses + 1);
       }
-    });
+    };
+
+    this.listeners_.put = (data) => {
+      this.recordActivity_(data.key, 'put', data.value);
+    };
+
+    this.listeners_.delete = (data) => {
+      this.recordActivity_(data.key, 'delete', null);
+    };
+
+    this.listeners_.eventNames_ = {
+      get: getEventName,
+      put: putEventName,
+      delete: deleteEventName
+    };
+
+    // Listen for get events (can be hit or miss)
+    this.eventEmitter_.on(getEventName, this.listeners_.get);
 
     // Listen for put events (writes)
-    this.eventEmitter_.on(putEventName, (data) => {
-      this.recordActivity_(data.key, 'put', data.value);
-    });
+    this.eventEmitter_.on(putEventName, this.listeners_.put);
 
     // Listen for delete events
-    this.eventEmitter_.on(deleteEventName, (data) => {
-      this.recordActivity_(data.key, 'delete', null);
-    });
+    this.eventEmitter_.on(deleteEventName, this.listeners_.delete);
   }
 
   /**
@@ -342,7 +357,24 @@ class CacheAnalytics {
   }
 
   /**
-   * Clears all stored analytics data.
+   * Removes event listeners and clears all stored analytics data to prevent memory leaks.
+   * Call this when a caching instance is no longer needed.
+   * @return {void}
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_ && this.listeners_.eventNames_) {
+      const names = this.listeners_.eventNames_;
+      this.eventEmitter_.removeListener(names.get, this.listeners_.get);
+      this.eventEmitter_.removeListener(names.put, this.listeners_.put);
+      this.eventEmitter_.removeListener(names.delete, this.listeners_.delete);
+    }
+    this.keyStats_.clear();
+    this.keyActivity_.clear();
+    this.keyMisses_.clear();
+  }
+
+  /**
+   * Clears all stored analytics data without removing event listeners.
    * @return {void}
    */
   clear() {

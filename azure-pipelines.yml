@@ -1,0 +1,201 @@
+# Noobly JS Core - Azure DevOps Pipeline
+# Build, test, and package Node.js application
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    exclude:
+    - README.md
+    - USAGE.md
+    - .claude/**
+
+pr:
+  branches:
+    include:
+    - main
+    - develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- name: NODE_VERSION
+  value: '20.x'
+- name: npm_config_cache
+  value: $(Pipeline.Workspace)/.npm
+- group: Veracode
+
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: Build
+    displayName: 'Build Application'
+    steps:
+    
+    # Install Node.js
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(NODE_VERSION)
+      displayName: 'Install Node.js $(NODE_VERSION)'
+    
+    # Cache npm dependencies
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: $(npm_config_cache)
+      displayName: 'Cache npm dependencies'
+    
+    # Install dependencies
+    - script: |
+        npm ci
+      displayName: 'Install dependencies'
+    
+    # Copy essential files for artifact
+    - task: CopyFiles@2
+      displayName: 'Copy files to staging'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: |
+          **
+          !node_modules/**
+          !.git/**
+          !tests/**
+          !temp/**
+          !.npm/**
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    
+    # Publish build artifacts
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+      displayName: 'Publish build artifacts'
+
+- stage: Package
+  displayName: 'Package Application'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  
+  - job: PackageApp
+    displayName: 'Create Application Package'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(NODE_VERSION)
+    - script: |
+        npm ci
+      displayName: 'Install dependencies'
+    - task: CopyFiles@2
+      displayName: 'Copy application files'
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)'
+        Contents: |
+          **
+          !node_modules/**
+          !tests/**
+          !.git/**
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/app'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/app'
+        ArtifactName: 'application-package'
+      displayName: 'Publish application package'
+
+- stage: Docker
+  displayName: 'Build Docker Image'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: DockerBuild
+    displayName: 'Build and Push Docker Image'
+    steps:
+    - task: Docker@2
+      displayName: 'Build Docker image'
+      inputs:
+        command: 'build'
+        Dockerfile: 'Dockerfile'
+        tags: |
+          $(Build.BuildId)
+          latest
+    
+    # Uncomment and configure for Docker registry push
+    # - task: Docker@2
+    #   displayName: 'Push Docker image'
+    #   inputs:
+    #     command: 'push'
+    #     containerRegistry: 'your-registry-connection'
+    #     repository: 'nooblyjs-core'
+    #     tags: |
+    #       $(Build.BuildId)
+    #       latest
+
+- stage: SonarQube_Scan
+  displayName: SonarQube Scan
+  dependsOn: []
+  jobs:
+  - job: SonarQube_Agent
+    pool:
+        name: 'sonarqube-agent'
+    steps:
+    - task: PowerShell@2
+      displayName: Run SonarScanner
+      inputs:
+        targetType: 'inline'
+        script: 
+          SonarQubeScanner -repoName '$(Build.Repository.Name)' -repoSource '$(Build.Repository.Uri)' -projectName '$(System.TeamProject)' -sonarQubeInstance 'Prod'
+
+- stage: Veracode_Scan
+  displayName: Veracode Scan
+  dependsOn: []
+  jobs:
+    - job: Veracode_Scan
+      pool: 
+        vmImage: ubuntu-latest
+      steps:
+      - task: Bash@3
+        displayName: Veracode SCA
+        inputs:
+          targetType: 'inline'
+          script: |
+              curl -sSL https://sca-downloads.veracode.com/ci.sh | sh
+              curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+              ./veracode package --source $(System.DefaultWorkingDirectory) --output $(Build.ArtifactStagingDirectory)/VeracodePackage/ --trust
+              files=$(find $(Build.ArtifactStagingDirectory)/VeracodePackage/ -maxdepth 1 -iname "*veracode*.zip" -type f | head -n 1)
+              echo "##vso[task.setvariable variable=VeracodeZipFile]$files"
+
+              if [ "$(Build.SourceBranch)" = "refs/heads/master" ]; then
+              echo "##vso[task.setvariable variable=VeracodeSandbox]"
+              else
+              echo "##vso[task.setvariable variable=VeracodeSandbox]Development Sandbox"
+              fi
+      
+      - task: VeracodePipelineScan@0
+        inputs:
+          authenticationMethod: 'UsernamePassword'
+          fileToScan: '$(VeracodeZipFile)'
+          baselineFileStorageProject: 'Helix_Population_Integration'
+          baselineFileStorageReponame: 'Helix_Population_Integration'
+          baselineFileStorageBranch: 'refs/heads/feature/veracode_scan'
+          
+      - task: Veracode@3
+        inputs:
+          ConnectionDetailsSelection: 'Credentials'
+          apiId: '$(vid)'
+          apiKey: '$(vkey)'
+          veracodeAppProfile: 'DigitalTechnologies_nooblyjs-core'
+          version: '$(build.buildNumber)'
+          filepath: '$(VeracodeZipFile)'
+          sandboxName: '$(VeracodeSandbox)'
+          maximumWaitTime: '360'

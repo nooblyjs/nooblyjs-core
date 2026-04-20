@@ -1,7 +1,7 @@
 /**
  * @fileoverview In-memory DataService provider for storing and searching JSON objects
  * with container-based organization and event emission support.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -30,34 +30,15 @@ class InMemoryDataServiceProvider {
     this.settings = {};
     this.settings.description = "Configuration settings for the Data Service";
     this.settings.list = [
-      {setting: "dataDir", type: "string", values: ['./.noobly-core/data']},
+      {setting: "dataDir", type: "string", values: ['./.nooblyjs-core/data']},
       {setting: "autoCreateContainers", type: "boolean", values: [true, false]},
       {setting: "persistData", type: "boolean", values: [true, false]}
     ];
 
-    this.settings.dataDir = options.dataDir || this.settings.dataDir || './.noobly-core/data';
+    this.settings.dataDir = options.dataDir || this.settings.dataDir;
     this.settings.autoCreateContainers = options.autoCreateContainers !== undefined ? options.autoCreateContainers : true;
     this.settings.persistData = options.persistData !== undefined ? options.persistData : false;
 
-  }
-
-  /**
-   * Get all settings
-   */
-  async getSettings(){
-    return this.settings;
-  }
-
-  /**
-   * Save/update settings
-   */
-  async saveSettings(settings){
-    for (let i = 0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
-      }
-    }
   }
 
   /**
@@ -228,11 +209,11 @@ class InMemoryDataServiceProvider {
    * Finds JSON objects in the specified container that contain the search term.
    * Performs a recursive search through all string values in the objects.
    * @param {string} containerName The name of the container to search in.
-   * @param {string} searchTerm The term to search for (case-insensitive).
+   * @param {string} searchTerm The term to search for (case-insensitive). Empty string returns all.
    * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects.
-   * @throws {Error} When containerName or searchTerm is invalid.
+   * @throws {Error} When containerName is invalid.
    */
-  async find(containerName, searchTerm) {
+  async find(containerName, searchTerm = '') {
     // Validate containerName parameter
     if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
       const error = new Error('Invalid containerName: must be a non-empty string');
@@ -241,20 +222,6 @@ class InMemoryDataServiceProvider {
           method: 'find',
           error: error.message,
           containerName
-        });
-      }
-      throw error;
-    }
-
-    // Validate searchTerm parameter
-    if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
-      const error = new Error('Invalid searchTerm: must be a non-empty string');
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-validation-error', {
-          method: 'find',
-          error: error.message,
-          containerName,
-          searchTerm
         });
       }
       throw error;
@@ -269,33 +236,44 @@ class InMemoryDataServiceProvider {
         });
       return [];
     }
+
     const results = [];
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
-    for (const [key, obj] of this.containers.get(containerName).entries()) {
-      let found = false;
-      const searchInObject = (currentObj) => {
-        for (const prop in currentObj) {
-          if (Object.prototype.hasOwnProperty.call(currentObj, prop)) {
-            const value = currentObj[prop];
-            if (typeof value === 'string') {
-              if (value.toLowerCase().includes(lowerCaseSearchTerm)) {
-                found = true;
-                return;
-              }
-            } else if (typeof value === 'object' && value !== null) {
-              searchInObject(value);
-              if (found) return;
-            }
-          }
-        }
-      };
-
-      searchInObject(obj);
-      if (found) {
+    // If no search term, return all objects
+    if (!searchTerm || searchTerm.trim() === '') {
+      for (const obj of this.containers.get(containerName).values()) {
         results.push(obj);
       }
+    } else {
+      // Search with case-insensitive matching
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+      for (const [key, obj] of this.containers.get(containerName).entries()) {
+        let found = false;
+        const searchInObject = (currentObj) => {
+          for (const prop in currentObj) {
+            if (Object.prototype.hasOwnProperty.call(currentObj, prop)) {
+              const value = currentObj[prop];
+              if (typeof value === 'string') {
+                if (value.toLowerCase().includes(lowerCaseSearchTerm)) {
+                  found = true;
+                  return;
+                }
+              } else if (typeof value === 'object' && value !== null) {
+                searchInObject(value);
+                if (found) return;
+              }
+            }
+          }
+        };
+
+        searchInObject(obj);
+        if (found) {
+          results.push(obj);
+        }
+      }
     }
+
     if (this.eventEmitter_)
       this.eventEmitter_.emit('api-dataservice-find', {
         containerName,
@@ -303,6 +281,113 @@ class InMemoryDataServiceProvider {
         results,
       });
     return results;
+  }
+
+  /**
+   * Gets all objects in a container.
+   * @param {string} containerName The name of the container to list.
+   * @return {Promise<Array<!Object>>} A promise that resolves to an array of all objects.
+   */
+  async listAll(containerName) {
+    return this.find(containerName, '');
+  }
+
+  /**
+   * Gets the count of objects in a container.
+   * @param {string} containerName The name of the container to count.
+   * @return {Promise<number>} A promise that resolves to the count of objects.
+   */
+  async count(containerName) {
+    // Validate containerName parameter
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      throw new Error('Invalid containerName: must be a non-empty string');
+    }
+
+    if (!this.containers.has(containerName)) {
+      if (this.eventEmitter_)
+        this.eventEmitter_.emit('api-dataservice-count', { containerName, count: 0 });
+      return 0;
+    }
+
+    const count = this.containers.get(containerName).size;
+
+    if (this.eventEmitter_)
+      this.eventEmitter_.emit('api-dataservice-count', { containerName, count });
+
+    return count;
+  }
+
+  /**
+   * Updates an existing object in the container.
+   * @param {string} containerName The name of the container.
+   * @param {string} objectKey The unique key of the object to update.
+   * @param {!Object} jsonObject The updated JSON object.
+   * @return {Promise<boolean>} A promise that resolves to true if updated, false if not found.
+   */
+  async update(containerName, objectKey, jsonObject) {
+    // Validate parameters
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      throw new Error('Invalid containerName: must be a non-empty string');
+    }
+
+    if (!objectKey || typeof objectKey !== 'string' || objectKey.trim() === '') {
+      throw new Error('Invalid objectKey: must be a non-empty string');
+    }
+
+    if (!jsonObject || typeof jsonObject !== 'object' || Array.isArray(jsonObject)) {
+      throw new Error('Invalid jsonObject: must be a non-null object');
+    }
+
+    if (!this.containers.has(containerName)) {
+      return false;
+    }
+
+    const container = this.containers.get(containerName);
+    if (!container.has(objectKey)) {
+      return false;
+    }
+
+    // Update the object
+    container.set(objectKey, jsonObject);
+
+    if (this.eventEmitter_) {
+      this.eventEmitter_.emit('api-dataservice-update', {
+        containerName,
+        objectKey,
+        jsonObject
+      });
+    }
+
+    return true;
+  }
+
+  /**
+   * Get all settings
+   * @return {Promise<Object>} The settings object.
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Save/update settings
+   * @param {Object} settings The settings to save.
+   * @return {Promise<void>}
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+      }
+    }
+  }
+
+  /**
+   * Closes the in-memory data service provider (no-op for in-memory provider).
+   * @return {Promise<void>}
+   */
+  async close() {
+    // No-op for in-memory provider, included for API consistency
   }
 
 }

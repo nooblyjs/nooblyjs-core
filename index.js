@@ -1,12 +1,12 @@
 /**
- * @fileoverview NooblyJS Core - Service Registry
+ * @fileoverview Noobly JS Core - Service Registry
  * This is the container of all the services. It manages the various dependancies of the services
  */
 'use strict';
 
 const EventEmitter = require('events');
 const express = require('express');
-const path = require('path');
+const path = require('node:path');
 
 // Retrieve the auth middleware
 const {
@@ -191,8 +191,11 @@ class ServiceRegistry {
 
     // Serve the service registry landing page (protected) - MUST come before static middleware
     this.expressApp.get('/services/', this.servicesAuthMiddleware, (req, res) => {
-      res.sendFile(path.join(__dirname, 'src/views', 'index.html'));
+      res.sendFile(path.join(__dirname, '/src/views', 'index.html'));
     });
+
+    // Serve UI Service assets (CSS, JS) at /services/uiservice
+    expressApp.use('/services/uiservice', express.static(path.join(__dirname, '/src/views')));
 
     // Serve static files from the views directory for caching service (excluding index.html)
     expressApp.use(
@@ -204,7 +207,7 @@ class ServiceRegistry {
         }
         next();
       },
-      express.static(path.join(__dirname, 'src/views')),
+      express.static(path.join(__dirname, '/src/views')),
     );
 
     // Add system monitoring API endpoints
@@ -688,6 +691,53 @@ class ServiceRegistry {
    */
   generateApiKey(length = 32) {
     return generateApiKey(length);
+  }
+
+  /**
+   * Gracefully shuts down all initialized services by closing their connections
+   * @return {Promise<void>}
+   */
+  async shutdown() {
+    if (!this.initialized) {
+      return;
+    }
+
+    const shutdownPromises = [];
+
+    for (const [key, service] of this.services.entries()) {
+      const [serviceName] = key.split(':');
+      
+      try {
+        // Handle services with close() method (MongoDB, DocumentDB, etc.)
+        if (typeof service.close === 'function') {
+          shutdownPromises.push(service.close());
+        } 
+        // Handle services with disconnect() method (Redis, FTP, etc.)
+        else if (typeof service.disconnect === 'function') {
+          shutdownPromises.push(service.disconnect());
+        }
+        // Handle services with stopIndexing() or similar (Searching, Workflow)
+        else if (serviceName === 'searching' && typeof service.stopIndexing === 'function') {
+          shutdownPromises.push(service.stopIndexing());
+        }
+        else if (serviceName === 'workflow' && typeof service.stop === 'function') {
+          shutdownPromises.push(service.stop());
+        }
+      } catch (error) {
+        console.error(`Error shutting down service ${key}:`, error.message);
+      }
+    }
+
+    await Promise.allSettled(shutdownPromises);
+    this.services.clear();
+    this.initialized = false;
+    
+    if (this.eventEmitter_) {
+      this.eventEmitter_.emit('registry:shutdown', {
+        message: 'Service Registry shut down successfully',
+        servicesCount: shutdownPromises.length
+      });
+    }
   }
 
   /**

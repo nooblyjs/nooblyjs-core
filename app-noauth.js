@@ -1,15 +1,17 @@
 /**
- * @fileoverview Application demonstrating NooblyJS Core services.
+ * @fileoverview Application demonstrating Noobly JS Core services.
  * This file serves as a comprehensive example of how to use all available
- * services in the NooblyJS Core framework.
+ * services in the Noobly JS Core framework.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { EventEmitter } = require('events');
@@ -23,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter, {
+  logDir: path.join(__dirname, './.application/', 'logs'),
+  dataDir: path.join(__dirname, './.application/', 'data'),
   security: {
     apiKeyAuth: {
       requireApiKey: false,
@@ -34,11 +38,11 @@ serviceRegistry.initialize(app, eventEmitter, {
   }
 });
 
-const log = serviceRegistry.logger('file');
-// Default instance (backward compatible)
+const log = serviceRegistry.logger('memory');
 const defaultCache = serviceRegistry.cache('memory');
 const cacheSessions = serviceRegistry.getService('caching', 'memory', { instanceName: 'sessions' });
 const cacheMetrics = serviceRegistry.getService('caching', 'memory', { instanceName: 'metrics' });
+const fetching = serviceRegistry.fetching('node');
 const dataservice = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
 const queue = serviceRegistry.queue('memory');
@@ -48,21 +52,107 @@ const measuring = serviceRegistry.measuring('memory');
 const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
+const aiservice = serviceRegistry.aiservice('ollama', {});
 
 const authservice = serviceRegistry.authservice('file', {
-  'express-app': app,
-  dataDir: './data/auth'
+  'express-app': app
 });
 
-defaultCache.put('running status','running');
+// Launch the application docs folder to show the docs on the public site
+// /docs retrieves the document
+// /docs/list retrieves the list of documents
+app.use('/docs', express.static(path.join(__dirname, 'docs')));
+app.get('/docs/list', (req, res) => {
+    let files = [];
+    fs.readdirSync(path.join(__dirname, 'docs')).forEach(file => {
+      const filePath = path.join(__dirname, 'docs', file);
+      const stat = fs.lstatSync(filePath);
 
-cacheSessions.put('currentdate', new Date());
-log.info(cacheSessions.get('currentdate'));
-queue.enqueue('test queue',new Date());
+      if (stat.isDirectory()) {
+        fs.readdirSync(filePath).forEach(subfile => {
+          if (subfile.endsWith('.md')) {
+            const subFilePath = path.join(filePath, subfile);
+            const content = fs.readFileSync(subFilePath, 'utf-8');
+            const docData = extractDocumentMetadata(content);
+            files.push({
+              path: '/' + file + '/' + subfile,
+              title: docData.title,
+              description: docData.description
+            });
+          }
+        });
+      } else if (file.endsWith('.md')) {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const docData = extractDocumentMetadata(content);
+        files.push({
+          path: '/' + file,
+          title: docData.title,
+          description: docData.description
+        });
+      }
+    });
 
-cacheMetrics.put('Startup Time', new Date());
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(files));
+});
 
-const PORT = process.env.PORT || 3001;
+// Helper function to extract title and description from markdown
+function extractDocumentMetadata(content) {
+  const lines = content.split('\n');
+  let title = '';
+  let description = '';
+  let collectingDescription = false;
+  let descriptionLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Extract title from first h1
+    if (!title && line.startsWith('#') && !line.startsWith('##')) {
+      title = line.replace(/^#+\s*/, '').trim();
+      continue;
+    }
+
+    // Collect description until we hit a table of contents or another heading
+    if (title && !collectingDescription && line.trim() && !line.startsWith('#')) {
+      collectingDescription = true;
+    }
+
+    if (collectingDescription) {
+      // Stop collecting if we hit a heading or table of contents
+      if (line.startsWith('#') || line.toLowerCase().includes('table of contents') ||
+          line.toLowerCase().includes('documentation') || line.toLowerCase().includes('---')) {
+        break;
+      }
+      // Skip empty lines at the start
+      if (line.trim() || descriptionLines.length > 0) {
+        descriptionLines.push(line);
+      }
+    }
+  }
+
+  // Clean up description (remove trailing empty lines and join)
+  description = descriptionLines
+    .join('\n')
+    .trim()
+    .split('\n')
+    .filter(line => line.trim())
+    .slice(0, 3) // Take first 3 lines max
+    .join(' ')
+    .replace(/\[.*?\]\(.*?\)/g, '') // Remove markdown links
+    .substring(0, 200) // Limit to 200 characters
+    .trim();
+
+  return {
+    title: title || 'Untitled Document',
+    description: description || 'No description available'
+  };
+}
+
+// Launch the application readme file to be shown on the docs readme area
+app.use('/readme', express.static(path.join(__dirname, 'README.md')));
+
+const PORT = process.env.PORT || 11000;
 app.use('/', express.static(__dirname + '/public'));
 app.listen(PORT, () => {
   log.info(`Server is running on port ${PORT}`);

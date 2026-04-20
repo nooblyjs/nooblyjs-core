@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Logging API Tests
+### Noobly JS Core - Logging API Tests
 ### 
 ### These tests demonstrate the Logging service API endpoints with API key authentication.
 ### The Logging service provides structured logging with various output options.

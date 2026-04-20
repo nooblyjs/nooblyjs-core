@@ -3,7 +3,7 @@
  * Captures and stores analytics about workflow executions including run counts, error counts,
  * completion counts, duration, and last run timestamps for each unique workflow.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Azure Cache for Redis provider for NooblyJS Core caching service.
+ * @fileoverview Azure Cache for Redis provider for Noobly JS Core caching service.
  * Leverages Redis-based Azure Cache for distributed caching with managed authentication.
  * Uses the existing CacheRedis provider under the hood with Azure-specific configuration.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -201,10 +201,27 @@ class CacheAzureRedis extends CacheRedis {
   }
 
   /**
-   * Detect Azure Cache tier and update configuration
-   * Call this after connection to optimize for Standard or Premium mode
+   * Detects the tier and capacity of the Azure Cache for Redis instance.
+   * Queries the Redis memory configuration to determine pricing tier (Standard or Premium)
+   * and available capacity. Useful for capacity planning and cost optimization.
    *
-   * @return {!Promise<{tier: string, size: string, region: string, endpoints: Array}>}
+   * @return {Promise<Object>} A promise that resolves to tier detection information including:
+   *   - tier: {string} Configured Azure tier: 'standard' or 'premium'
+   *   - estimatedTier: {string} Estimated tier based on memory capacity
+   *   - maxMemory: {number} Maximum memory available in bytes
+   *   - usedMemory: {string} Currently used memory (human-readable)
+   *   - hostname: {string} Azure Redis hostname
+   *   - resourceGroup: {string} Azure resource group name
+   *   - resourceName: {string} Azure Cache resource name
+   * @throws Does not throw - returns fallback tier info on error
+   *
+   * @example
+   * // Detect Azure Cache tier to monitor capacity
+   * const tierInfo = await cacheAzure.detectCacheTier();
+   * console.log(`Tier: ${tierInfo.tier}, Used: ${tierInfo.usedMemory}`);
+   * if (tierInfo.maxMemory < 1000000000) {
+   *   console.warn('Cache nearing capacity, consider upgrading tier');
+   * }
    */
   async detectCacheTier() {
     try {
@@ -240,7 +257,11 @@ class CacheAzureRedis extends CacheRedis {
 
       return tierInfo;
     } catch (error) {
-      console.warn('Could not detect Azure Cache tier:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not detect Azure Cache tier`, {
+        error: error.message,
+        hostname: this.azureHostname_,
+        resourceGroup: this.azureResourceGroup_
+      });
       return {
         tier: this.azureTier_,
         hostname: this.azureHostname_,
@@ -272,10 +293,25 @@ class CacheAzureRedis extends CacheRedis {
   }
 
   /**
-   * Get Azure Cache for Redis connection information
-   * Extends parent method with Azure-specific metadata
+   * Retrieves connection information for the Azure Cache for Redis instance.
+   * Extends parent method with Azure-specific metadata about the managed Redis service.
    *
-   * @return {Object} Connection info with Azure metadata
+   * @return {Object} Connection info object containing:
+   *   - status: {string} Connection status ('ready', 'connecting', 'close')
+   *   - poolSize: {number} Client connection pool size
+   *   - connectedClients: {number} Number of connected clients
+   *   - hostname: {string} Azure Redis hostname (*.redis.cache.windows.net)
+   *   - port: {number} Cache port (6380 for SSL, 6379 for non-SSL)
+   *   - resourceGroup: {string} Azure resource group containing the cache
+   *   - resourceName: {string} Azure Cache resource name
+   *   - tier: {string} Azure pricing tier ('standard' or 'premium')
+   *   - provider: {string} 'azure-redis'
+   *   - ssl: {boolean} Whether SSL/TLS encryption is enabled (always true for managed)
+   *
+   * @example
+   * // Get connection details for diagnostics
+   * const connInfo = cacheAzure.getConnectionInfo();
+   * console.log(`Connected to ${connInfo.resourceName} tier: ${connInfo.tier}`);
    */
   getConnectionInfo() {
     const parentInfo = super.getConnectionInfo();
@@ -292,10 +328,30 @@ class CacheAzureRedis extends CacheRedis {
   }
 
   /**
-   * Get Azure Cache for Redis-specific analytics
-   * Extends parent analytics with Azure metrics
+   * Retrieves performance analytics and cache statistics from the Azure Cache for Redis instance.
+   * Collects metrics including hit/miss rates, memory usage, evictions, and connected clients.
    *
-   * @return {Object} Analytics with Azure-specific metrics
+   * @return {Promise<Object>} A promise that resolves to analytics object containing:
+   *   - cacheHits: {number} Total number of cache hits
+   *   - cacheMisses: {number} Total number of cache misses
+   *   - evictions: {number} Total number of evicted keys
+   *   - usedMemory: {string} Currently used memory (human-readable, e.g., '256M')
+   *   - maxMemory: {string} Maximum available memory (human-readable, e.g., '1GB')
+   *   - connectedClients: {number} Number of currently connected clients
+   *   - hostname: {string} Azure Redis hostname
+   *   - resourceGroup: {string} Azure resource group
+   *   - resourceName: {string} Azure Cache resource name
+   *   - tier: {string} Azure pricing tier
+   *   - provider: {string} 'azure-redis'
+   *   - (Parent class analytics): connections, operations/sec, etc.
+   * @throws Does not throw - returns parent analytics on error
+   *
+   * @example
+   * // Monitor Azure Cache performance and capacity
+   * const analytics = await cacheAzure.getAnalytics();
+   * const hitRate = analytics.cacheHits / (analytics.cacheHits + analytics.cacheMisses);
+   * console.log(`Cache hit rate: ${(hitRate * 100).toFixed(2)}%`);
+   * console.log(`Memory used: ${analytics.usedMemory}/${analytics.maxMemory}`);
    */
   async getAnalytics() {
     try {
@@ -331,16 +387,34 @@ class CacheAzureRedis extends CacheRedis {
         provider: 'azure-redis'
       };
     } catch (error) {
-      console.warn('Could not get Azure analytics:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not get Azure analytics`, {
+        error: error.message,
+        operation: 'getAnalytics'
+      });
       return super.getAnalytics();
     }
   }
 
   /**
-   * Get Azure Cache for Redis-specific settings
-   * Includes information about the Azure Cache resource
+   * Retrieves all configuration settings for the Azure Cache for Redis provider.
+   * Includes both cache-level settings and Azure-specific resource configuration.
    *
-   * @return {Object} Settings with Azure configuration
+   * @return {Promise<Object>} A promise that resolves to settings object containing:
+   *   - (Parent class settings): cache configuration, list of available settings
+   *   - azure: {Object} Azure-specific configuration:
+   *     - hostname: {string} Azure Redis hostname (*.redis.cache.windows.net)
+   *     - port: {number} Cache port
+   *     - resourceGroup: {string} Azure resource group name
+   *     - resourceName: {string} Azure Cache resource name
+   *     - tier: {string} Pricing tier ('standard' or 'premium')
+   *     - provider: {string} 'azure-redis'
+   *     - ssl: {boolean} SSL/TLS encryption status
+   *     - connectionInfo: {Object} Current connection information
+   *
+   * @example
+   * // Get all settings including Azure resource details
+   * const settings = await cacheAzure.getSettings();
+   * console.log(`Resource: ${settings.azure.resourceName} in ${settings.azure.resourceGroup}`);
    */
   async getSettings() {
     const settings = await super.getSettings();

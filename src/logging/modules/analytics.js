@@ -3,7 +3,7 @@
  * Captures and stores the last 1000 log entries in memory for analytics purposes.
  * Provides methods to retrieve logs filtered by level in descending order.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -41,30 +41,44 @@ class LogAnalytics {
       return;
     }
 
+    // Store listener references for cleanup
+    this.listeners_ = [];
+
     const infoEventName = `log:info:${this.instanceName_}`;
     const warnEventName = `log:warn:${this.instanceName_}`;
     const errorEventName = `log:error:${this.instanceName_}`;
     const logEventName = `log:log:${this.instanceName_}`;
 
-    // Listen for info logs
-    this.eventEmitter_.on(infoEventName, (data) => {
-      this.captureLog_('INFO', data.message);
-    });
+    const infoHandler = (data) => { this.captureLog_('INFO', data.message); };
+    const warnHandler = (data) => { this.captureLog_('WARN', data.message); };
+    const errorHandler = (data) => { this.captureLog_('ERROR', data.message); };
+    const logHandler = (data) => { this.captureLog_('LOG', data.message); };
 
-    // Listen for warning logs
-    this.eventEmitter_.on(warnEventName, (data) => {
-      this.captureLog_('WARN', data.message);
-    });
+    this.eventEmitter_.on(infoEventName, infoHandler);
+    this.eventEmitter_.on(warnEventName, warnHandler);
+    this.eventEmitter_.on(errorEventName, errorHandler);
+    this.eventEmitter_.on(logEventName, logHandler);
 
-    // Listen for error logs
-    this.eventEmitter_.on(errorEventName, (data) => {
-      this.captureLog_('ERROR', data.message);
-    });
+    this.listeners_ = [
+      { event: infoEventName, handler: infoHandler },
+      { event: warnEventName, handler: warnHandler },
+      { event: errorEventName, handler: errorHandler },
+      { event: logEventName, handler: logHandler }
+    ];
+  }
 
-    // Listen for generic logs
-    this.eventEmitter_.on(logEventName, (data) => {
-      this.captureLog_('LOG', data.message);
-    });
+  /**
+   * Removes all event listeners to prevent memory leaks.
+   * Call this when the analytics module is no longer needed.
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const { event, handler } of this.listeners_) {
+        this.eventEmitter_.off(event, handler);
+      }
+      this.listeners_ = [];
+    }
+    this.logs_ = [];
   }
 
   /**

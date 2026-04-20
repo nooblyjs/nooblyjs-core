@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[[SERVICE_TITLE]] - Noobly JS Core</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Swagger UI CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Unified Navigation Styles -->
+    
+
+    <!-- Service-Specific Styles -->
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-gear-fill"></i>
+            <span>Digital Technologies - [[SERVICE_TITLE]]</span>
+        </a>
+
+        <div class="navbar-nav">
+            <a class="nav-link" href="/services" title="Back to Services">
+                <i class="bi bi-house"></i>
+            </a>
+            <a class="nav-link" href="#" id="logoutBtn" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- LEFT SIDEBAR NAVIGATION -->
+        <aside class="sidebar" id="navigation-sidebar">
+            <!-- Navigation will be populated by navigation.js -->
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1 class="page-title">[[SERVICE_TITLE]]</h1>
+                <p class="page-subtitle">[[SERVICE_SUBTITLE]]</p>
+            </div>
+
+            <!-- CONTENT WRAPPER -->
+            <div class="page-content">
+                <!-- ALERTS -->
+                <div class="alert alert-success" id="successAlert">
+                    <strong>Success!</strong> <span id="successMessage"></span>
+                </div>
+
+                <div class="alert alert-error" id="errorAlert">
+                    <strong>Error!</strong> <span id="errorMessage"></span>
+                </div>
+
+                <!-- INSTANCE SELECTOR (if applicable) -->
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; margin-bottom: 1.5rem;" id="instanceSelectorContainer" style="display: none;">
+                    <div>
+                        <label for="instanceSelector" style="margin-right: 8px; font-weight: 500;">Instance:</label>
+                        <select id="instanceSelector" class="core-form-select" style="width: 200px; display: inline-block;">
+                            <option value="default">default</option>
+                        </select>
+                    </div>
+                    <button id="refreshInstanceBtn" class="btn btn-outline-secondary btn-sm" title="Refresh instances list">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+
+                <!-- NAVIGATION TABS -->
+                <ul class="nav nav-tabs" id="serviceTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
+                            type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data"
+                            type="button" role="tab" aria-controls="data" aria-selected="false">
+                            <i class="bi bi-database"></i> Data
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings"
+                            type="button" role="tab" aria-controls="settings" aria-selected="false">
+                            <i class="bi bi-gear"></i> Settings
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- TAB CONTENT -->
+                <div class="tab-content" id="serviceTabContent">
+                    <!-- DASHBOARD TAB -->
+                    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <!-- Dashboard content placeholder -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Dashboard</h2>
+                                <p class="card-subtitle">Service metrics and overview</p>
+                            </div>
+                            <div class="card-content">
+                                <p>Dashboard content will be populated by service-specific script</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DATA TAB -->
+                    <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                        <!-- Data content placeholder -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Data Operations</h2>
+                                <p class="card-subtitle">Manage service data</p>
+                            </div>
+                            <div class="card-content">
+                                <p>Data content will be populated by service-specific script</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SETTINGS TAB -->
+                    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                        <!-- Settings content placeholder -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Service Settings</h2>
+                                <p class="card-subtitle">Configure service parameters</p>
+                            </div>
+                            <div class="card-content">
+                                <form id="settingsForm">
+                                    <div id="settingsFormFields"></div>
+                                    <div class="btn-group">
+                                        <button type="submit" class="btn btn-secondary">Save Settings</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="loadSettings()">Reload</button>
+                                    </div>
+                                </form>
+                                <div id="settingsSaveResponse" class="response-container" style="display: none; margin-top: 1rem;">
+                                    <div class="response-title">Save Response:</div>
+                                    <div id="settingsSaveResponseContent" class="response-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+
+    <!-- Shared Navigation JavaScript -->
+    <script src="/services/js/navigation.js"></script>
+
+    <!-- Service-Specific JavaScript will be loaded here -->
+    <script>
+        // Initialize navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof DigitalTechnologiesNavigation !== 'undefined') {
+                DigitalTechnologiesNavigation.renderNavigation('navigation-sidebar', '[[SERVICE_NAME]]');
+            }
+        });
+
+        // Shared utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            if (messageElement && alertElement) {
+                messageElement.textContent = message;
+                alertElement.classList.add('show');
+                setTimeout(() => alertElement.classList.remove('show'), 5000);
+            }
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            if (content && container) {
+                content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+                container.style.display = 'block';
+            }
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (form) {
+                if (isLoading) {
+                    form.classList.add('loading');
+                } else {
+                    form.classList.remove('loading');
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Settings form submission handler
+        document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const formData = new FormData(document.getElementById('settingsForm'));
+                const payload = {};
+
+                for (let [key, value] of formData.entries()) {
+                    payload[key] = value;
+                }
+
+                const response = await fetch('./api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseText = await response.text();
+
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', responseText);
+
+                if (response.ok) {
+                    showAlert('Settings saved successfully', 'success');
+                    setTimeout(() => loadSettings(), 1000);
+                } else {
+                    showAlert('Error saving settings: ' + responseText, 'error');
+                }
+            } catch (error) {
+                showAlert('Error saving settings: ' + error.message, 'error');
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', 'Error: ' + error.message);
+            }
+        });
+
+        // Load settings form
+        async function loadSettings() {
+            try {
+                const response = await fetch('./api/settings');
+                const data = await response.json();
+                renderSettingsForm(data);
+            } catch (error) {
+                showAlert('Error loading settings: ' + error.message, 'error');
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        function renderSettingsForm(data) {
+            const formFieldsContainer = document.getElementById('settingsFormFields');
+            formFieldsContainer.innerHTML = '';
+
+            if (data.list && Array.isArray(data.list)) {
+                data.list.forEach((setting) => {
+                    const formGroup = createFormField(setting, data);
+                    formFieldsContainer.appendChild(formGroup);
+                });
+            }
+        }
+
+        function createFormField(setting, settingsData) {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.className = 'form-label';
+            label.htmlFor = 'setting_' + setting.setting;
+            label.textContent = setting.setting;
+            formGroup.appendChild(label);
+
+            const currentValue = settingsData[setting.setting] || '';
+
+            let input;
+            switch (setting.type) {
+                case 'string':
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    break;
+
+                case 'integer':
+                case 'number':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    input.step = setting.type === 'integer' ? '1' : 'any';
+                    break;
+
+                case 'list':
+                case 'options':
+                    input = document.createElement('select');
+                    input.className = 'form-select';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+
+                    if (setting.values && Array.isArray(setting.values)) {
+                        setting.values.forEach((value) => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = value;
+                            if (value === currentValue) {
+                                option.selected = true;
+                            }
+                            input.appendChild(option);
+                        });
+                    }
+                    break;
+
+                default:
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+            }
+
+            formGroup.appendChild(input);
+
+            if (setting.description || setting.desciption) {
+                const helperText = document.createElement('div');
+                helperText.className = 'helper-text';
+                helperText.textContent = setting.description || setting.desciption;
+                formGroup.appendChild(helperText);
+            }
+
+            return formGroup;
+        }
+
+        // Load settings when settings tab is shown
+        document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadSettings();
+        });
+    </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 /**
- * @fileoverview AWS ElastiCache provider for NooblyJS Core caching service.
+ * @fileoverview AWS ElastiCache provider for Noobly JS Core caching service.
  * Leverages Redis and Memcached ElastiCache clusters for distributed caching.
  * Uses the existing CacheRedis provider under the hood with AWS-specific configuration.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -136,10 +136,26 @@ class CacheAWSElastiCache extends CacheRedis {
   }
 
   /**
-   * Detect ElastiCache cluster mode and update configuration
-   * Call this after connection to optimize for cluster or single-node mode
+   * Detects the cluster mode configuration of the AWS ElastiCache Redis instance.
+   * Queries the Redis cluster information to determine if the instance is in cluster mode or single-node mode.
+   * This is useful for optimizing configuration and understanding available partition strategies.
    *
-   * @return {!Promise<{mode: string, nodes: number, engine: string}>}
+   * @return {Promise<Object>} A promise that resolves to cluster detection information including:
+   *   - mode: {string} Cluster mode: 'cluster' or 'single-node'
+   *   - engine: {string} Cache engine: 'redis'
+   *   - endpoint: {string} ElastiCache endpoint address
+   *   - region: {string} AWS region
+   *   - nodes: {number} Number of cluster nodes (if in cluster mode)
+   * @throws Does not throw - returns fallback single-node config on error
+   *
+   * @example
+   * // Detect if ElastiCache is using cluster mode
+   * const clusterInfo = await cacheAWS.detectClusterMode();
+   * if (clusterInfo.mode === 'cluster') {
+   *   console.log(`ElastiCache cluster with ${clusterInfo.nodes} nodes`);
+   * } else {
+   *   console.log('Using single-node ElastiCache');
+   * }
    */
   async detectClusterMode() {
     try {
@@ -169,7 +185,11 @@ class CacheAWSElastiCache extends CacheRedis {
 
       return clusterInfo;
     } catch (error) {
-      console.warn('Could not detect cluster mode:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not detect cluster mode`, {
+        error: error.message,
+        endpoint: this.elasticacheEndpoint_,
+        region: this.awsRegion_
+      });
       return {
         mode: 'single-node',
         engine: 'redis',
@@ -180,17 +200,23 @@ class CacheAWSElastiCache extends CacheRedis {
   }
 
   /**
-   * Get AWS ElastiCache connection information
-   * Extends parent method with AWS-specific metadata
+   * Retrieves connection information for the AWS ElastiCache instance.
+   * Extends parent method with AWS-specific metadata about the ElastiCache cluster.
    *
-   * @return {{
-   *   status: string,
-   *   poolSize: number,
-   *   connectedClients: number,
-   *   endpoint: string,
-   *   region: string,
-   *   provider: string
-   * }}
+   * @return {Object} Connection info object containing:
+   *   - status: {string} Connection status ('ready', 'connecting', 'close')
+   *   - poolSize: {number} Client connection pool size
+   *   - connectedClients: {number} Number of connected clients
+   *   - endpoint: {string} ElastiCache endpoint address
+   *   - port: {number} Cache port (typically 6379)
+   *   - region: {string} AWS region
+   *   - provider: {string} 'aws-elasticache'
+   *   - tls: {boolean} Whether TLS encryption is enabled
+   *
+   * @example
+   * // Get connection details for monitoring
+   * const connInfo = cacheAWS.getConnectionInfo();
+   * console.log(`Connected to ${connInfo.endpoint} in ${connInfo.region}`);
    */
   getConnectionInfo() {
     const parentInfo = super.getConnectionInfo();
@@ -205,17 +231,25 @@ class CacheAWSElastiCache extends CacheRedis {
   }
 
   /**
-   * Get AWS ElastiCache-specific analytics
-   * Extends parent analytics with AWS metrics
+   * Retrieves performance analytics and cache statistics from the AWS ElastiCache instance.
+   * Collects metrics including hit/miss rates, evictions, and other performance indicators.
    *
-   * @return {{
-   *   cacheHits: number,
-   *   cacheMisses: number,
-   *   evictions: number,
-   *   endpoint: string,
-   *   region: string,
-   *   keys: Array
-   * }}
+   * @return {Promise<Object>} A promise that resolves to analytics object containing:
+   *   - cacheHits: {number} Total number of cache hits
+   *   - cacheMisses: {number} Total number of cache misses
+   *   - evictions: {number} Total number of evicted keys
+   *   - endpoint: {string} ElastiCache endpoint
+   *   - region: {string} AWS region
+   *   - provider: {string} 'aws-elasticache'
+   *   - (Parent class analytics): connections, memory usage, operations/sec, etc.
+   * @throws Does not throw - returns parent analytics on error
+   *
+   * @example
+   * // Monitor cache performance
+   * const analytics = await cacheAWS.getAnalytics();
+   * const hitRate = analytics.cacheHits / (analytics.cacheHits + analytics.cacheMisses);
+   * console.log(`Cache hit rate: ${(hitRate * 100).toFixed(2)}%`);
+   * console.log(`Keys evicted: ${analytics.evictions}`);
    */
   async getAnalytics() {
     try {
@@ -243,16 +277,31 @@ class CacheAWSElastiCache extends CacheRedis {
         provider: 'aws-elasticache'
       };
     } catch (error) {
-      console.warn('Could not get AWS analytics:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not get AWS analytics`, {
+        error: error.message,
+        operation: 'getAnalytics'
+      });
       return super.getAnalytics();
     }
   }
 
   /**
-   * Get AWS ElastiCache-specific settings
-   * Includes information about the ElastiCache cluster
+   * Retrieves all configuration settings for the AWS ElastiCache provider.
+   * Includes both cache-level settings and AWS-specific ElastiCache configuration.
    *
-   * @return {Object}
+   * @return {Promise<Object>} A promise that resolves to settings object containing:
+   *   - (Parent class settings): cache configuration, list of available settings
+   *   - elasticache: {Object} AWS-specific configuration:
+   *     - endpoint: {string} ElastiCache endpoint
+   *     - port: {number} Cache port
+   *     - region: {string} AWS region
+   *     - provider: {string} 'aws-elasticache'
+   *     - connectionInfo: {Object} Current connection information
+   *
+   * @example
+   * // Get all settings including AWS-specific config
+   * const settings = await cacheAWS.getSettings();
+   * console.log(`ElastiCache endpoint: ${settings.elasticache.endpoint}`);
    */
   async getSettings() {
     const settings = await super.getSettings();

@@ -3,7 +3,7 @@
  * Provides RESTful endpoints for data storage and retrieval operations
  * including put, get, delete, and status monitoring.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -50,9 +50,49 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const uuid = await dataservice.add(container, jsonObject);
-        res.status(200).json({ id: uuid });
+        res.status(201).json({ id: uuid });
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/find/:container
+     * Searches for objects in a container by text query.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.container - The container to search
+     * @param {string} req.query.q - The search term
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/find/:container', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      const container = req.params.container;
+      const searchTerm = req.query.q || '';
+      try {
+        const results = await dataservice.find(container, searchTerm);
+        res.status(200).json(results);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/count/:container
+     * Returns the count of objects in a container.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.container - The container to count
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/count/:container', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      const container = req.params.container;
+      try {
+        const count = await dataservice.count(container);
+        res.status(200).json({ count });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -71,9 +111,39 @@ module.exports = (options, eventEmitter, dataservice) => {
       const uuid = req.params.uuid;
       try {
         const value = await dataservice.getByUuid(container, uuid);
+        if (value === null) {
+          return res.status(404).json({ error: 'Not found' });
+        }
         res.status(200).json(value);
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    /**
+     * PUT /services/dataservice/api/:container/:uuid
+     * Updates an existing object by UUID.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.container - The container
+     * @param {string} req.params.uuid - The UUID of the object to update
+     * @param {Object} req.body - The updated data
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.put('/services/dataservice/api/:container/:uuid', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      const container = req.params.container;
+      const uuid = req.params.uuid;
+      const jsonObject = req.body;
+      try {
+        const updated = await dataservice.update(container, uuid, jsonObject);
+        if (updated) {
+          res.status(200).json({ updated: true });
+        } else {
+          res.status(404).json({ error: 'Not found' });
+        }
+      } catch (err) {
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -93,12 +163,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const success = await dataservice.remove(container, uuid);
         if (success) {
-          res.status(200).send('OK');
+          res.status(200).json({ deleted: true });
         } else {
-          res.status(404).send('Not found');
+          res.status(404).json({ error: 'Not found' });
         }
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -117,16 +187,18 @@ module.exports = (options, eventEmitter, dataservice) => {
      */
     app.post('/services/dataservice/api/jsonFind/:containerName', authMiddleware || ((req, res, next) => next()), async (req, res) => {
       const containerName = req.params.containerName;
-      const { predicate } = req.body;
+      const { criteria } = req.body;
 
       try {
-        // Create predicate function from string (be careful with eval in production)
-        const predicateFunc = new Function('obj', `return ${predicate}`);
+        if (!criteria || typeof criteria !== 'object') {
+          return res.status(400).json({ error: 'Request body must contain a "criteria" object with path/value pairs' });
+        }
 
-        const results = await dataservice.jsonFind(containerName, predicateFunc);
+        // Use safe criteria-based search instead of arbitrary code execution
+        const results = await dataservice.jsonFindByCriteria(containerName, criteria);
         res.status(200).json(results);
       } catch (err) {
-        res.status(400).send(`Invalid predicate: ${err.message}`);
+        res.status(400).json({ error: `Search failed: ${err.message}` });
       }
     });
 
@@ -150,7 +222,7 @@ module.exports = (options, eventEmitter, dataservice) => {
         const results = await dataservice.jsonFindByPath(containerName, path, value);
         res.status(200).json(results);
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -173,7 +245,7 @@ module.exports = (options, eventEmitter, dataservice) => {
         const results = await dataservice.jsonFindByCriteria(containerName, criteria);
         res.status(200).json(results);
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -293,12 +365,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       if (message) {
         try {
           await dataservice.saveSettings(message);
-          res.status(200).send('OK');
+          res.status(200).json({ updated: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Bad Request: Missing settings' });
       }
     });
   }

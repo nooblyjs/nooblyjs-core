@@ -4,7 +4,7 @@
  * This test suite covers the API cache provider that connects to remote backend services.
  * Tests verify HTTP requests, API key authentication, and proper error handling.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -26,7 +26,7 @@ describe('Cache API Provider', () => {
   /** @type {EventEmitter} Mock event emitter for testing cache events */
   let mockEventEmitter;
   /** @type {string} Mock API root URL */
-  const apiRoot = 'http://backend.example.com';
+  const apiRoot = 'https://nooblyjs-core-latest.onrender.com/';
   /** @type {string} Mock API key */
   const apiKey = 'test-api-key-12345';
 

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Google Cloud Platform (GCP) Cloud Memorystore provider for NooblyJS Core caching service.
+ * @fileoverview Google Cloud Platform (GCP) Cloud Memorystore provider for Noobly JS Core caching service.
  * Supports both Redis and Memcached engines in Cloud Memorystore with IAM authentication.
  * Uses the existing CacheRedis provider under the hood with GCP-specific configuration.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -215,10 +215,28 @@ class CacheGCPMemorystore extends CacheRedis {
   }
 
   /**
-   * Detect GCP Cloud Memorystore configuration and update settings
-   * Call this after connection to optimize for Basic or Standard tier
+   * Detects the current configuration of the GCP Cloud Memorystore Redis instance.
+   * Queries Redis configuration to determine instance tier (basic vs standard),
+   * memory allocation, and network topology. Useful for capacity planning and optimization.
    *
-   * @return {!Promise<{tier: string, memorySizeGb: number, region: string, projectId: string}>}
+   * @return {Promise<Object>} A promise that resolves to Memorystore configuration including:
+   *   - tier: {string} Configured GCP tier: 'basic' or 'standard'
+   *   - estimatedTier: {string} Estimated tier based on actual memory capacity
+   *   - memorySizeGb: {number} Configured memory size in GB
+   *   - maxMemory: {number} Maximum memory available in bytes
+   *   - usedMemory: {string} Currently used memory (human-readable)
+   *   - projectId: {string} GCP project ID
+   *   - region: {string} GCP region
+   *   - instanceId: {string} Cloud Memorystore instance ID
+   *   - network: {string} VPC network name
+   *   - authEnabled: {boolean} Whether Redis AUTH is enabled
+   * @throws Does not throw - returns fallback config on error
+   *
+   * @example
+   * // Detect GCP Memorystore configuration
+   * const config = await cacheGCP.detectMemorystoreConfig();
+   * console.log(`Instance tier: ${config.tier}, Memory: ${config.memorySizeGb}GB`);
+   * console.log(`Used: ${config.usedMemory}/${config.maxMemory}`);
    */
   async detectMemorystoreConfig() {
     try {
@@ -259,7 +277,11 @@ class CacheGCPMemorystore extends CacheRedis {
 
       return config;
     } catch (error) {
-      console.warn('Could not detect GCP Memorystore config:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not detect GCP Memorystore config`, {
+        error: error.message,
+        projectId: this.gcpProjectId_,
+        region: this.gcpRegion_
+      });
       return {
         tier: this.gcpTier_,
         memorySizeGb: this.gcpMemorySizeGb_,
@@ -292,10 +314,26 @@ class CacheGCPMemorystore extends CacheRedis {
   }
 
   /**
-   * Get GCP Cloud Memorystore connection information
-   * Extends parent method with GCP-specific metadata
+   * Retrieves connection information for the GCP Cloud Memorystore Redis instance.
+   * Extends parent method with GCP-specific metadata about the managed Redis service.
    *
-   * @return {Object} Connection info with GCP metadata
+   * @return {Object} Connection info object containing:
+   *   - status: {string} Connection status ('ready', 'connecting', 'close')
+   *   - poolSize: {number} Client connection pool size
+   *   - connectedClients: {number} Number of connected clients
+   *   - projectId: {string} GCP project ID
+   *   - region: {string} GCP region
+   *   - instanceId: {string} Cloud Memorystore instance ID
+   *   - tier: {string} Instance tier ('basic' or 'standard')
+   *   - memorySizeGb: {number} Memory size in GB
+   *   - network: {string} VPC network name for Private IP access
+   *   - authEnabled: {boolean} Whether Redis AUTH is enabled
+   *   - provider: {string} 'gcp-memorystore'
+   *
+   * @example
+   * // Get connection details for monitoring
+   * const connInfo = cacheGCP.getConnectionInfo();
+   * console.log(`Connected to ${connInfo.instanceId} in ${connInfo.region}`);
    */
   getConnectionInfo() {
     const parentInfo = super.getConnectionInfo();
@@ -313,10 +351,32 @@ class CacheGCPMemorystore extends CacheRedis {
   }
 
   /**
-   * Get GCP Cloud Memorystore-specific analytics
-   * Extends parent analytics with GCP metrics
+   * Retrieves performance analytics and cache statistics from the GCP Cloud Memorystore instance.
+   * Collects metrics including hit/miss rates, memory usage, evictions, and connected clients.
    *
-   * @return {Object} Analytics with GCP-specific metrics
+   * @return {Promise<Object>} A promise that resolves to analytics object containing:
+   *   - cacheHits: {number} Total number of cache hits
+   *   - cacheMisses: {number} Total number of cache misses
+   *   - evictions: {number} Total number of evicted keys
+   *   - usedMemory: {string} Currently used memory (human-readable, e.g., '256M')
+   *   - maxMemory: {string} Maximum available memory (human-readable, e.g., '1GB')
+   *   - connectedClients: {number} Number of currently connected clients
+   *   - totalConnectionsReceived: {number} Total connections since instance creation
+   *   - projectId: {string} GCP project ID
+   *   - region: {string} GCP region
+   *   - instanceId: {string} Cloud Memorystore instance ID
+   *   - tier: {string} Instance tier
+   *   - memorySizeGb: {number} Memory allocation in GB
+   *   - provider: {string} 'gcp-memorystore'
+   *   - (Parent class analytics): operations/sec, throughput, etc.
+   * @throws Does not throw - returns parent analytics on error
+   *
+   * @example
+   * // Monitor GCP Memorystore performance
+   * const analytics = await cacheGCP.getAnalytics();
+   * const hitRate = analytics.cacheHits / (analytics.cacheHits + analytics.cacheMisses);
+   * console.log(`Hit rate: ${(hitRate * 100).toFixed(2)}%`);
+   * console.log(`Total connections: ${analytics.totalConnectionsReceived}`);
    */
   async getAnalytics() {
     try {
@@ -355,16 +415,35 @@ class CacheGCPMemorystore extends CacheRedis {
         provider: 'gcp-memorystore'
       };
     } catch (error) {
-      console.warn('Could not get GCP analytics:', error.message);
+      this.logger?.warn(`[${this.constructor.name}] Could not get GCP analytics`, {
+        error: error.message,
+        operation: 'getAnalytics'
+      });
       return super.getAnalytics();
     }
   }
 
   /**
-   * Get GCP Cloud Memorystore-specific settings
-   * Includes information about the GCP instance
+   * Retrieves all configuration settings for the GCP Cloud Memorystore provider.
+   * Includes both cache-level settings and GCP-specific resource configuration.
    *
-   * @return {Object} Settings with GCP configuration
+   * @return {Promise<Object>} A promise that resolves to settings object containing:
+   *   - (Parent class settings): cache configuration, list of available settings
+   *   - gcp: {Object} GCP-specific configuration:
+   *     - projectId: {string} GCP project ID
+   *     - region: {string} GCP region
+   *     - instanceId: {string} Cloud Memorystore instance ID
+   *     - tier: {string} Instance tier ('basic' or 'standard')
+   *     - memorySizeGb: {number} Memory allocation in GB
+   *     - network: {string} VPC network name
+   *     - authEnabled: {boolean} Whether AUTH is enabled
+   *     - provider: {string} 'gcp-memorystore'
+   *     - connectionInfo: {Object} Current connection information
+   *
+   * @example
+   * // Get all settings including GCP resource details
+   * const settings = await cacheGCP.getSettings();
+   * console.log(`Project: ${settings.gcp.projectId}, Instance: ${settings.gcp.instanceId}`);
    */
   async getSettings() {
     const settings = await super.getSettings();

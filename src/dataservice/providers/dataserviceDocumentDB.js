@@ -2,29 +2,28 @@
  * @fileoverview DocumentDB DataService provider for storing and searching JSON objects
  * with container-based organization using DocumentDB collections and event emission support.
  * Compatible with MongoDB-compatible DocumentDB implementations.
- * @author NooblyJS Team
- * @version 1.0.14
+ * @author Digital Technologies Team
+ * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
 const { MongoClient } = require('mongodb');
-const { v4: uuidv4 } = require('uuid');
+const MongoBaseProvider = require('./MongoBaseProvider');
 
 /**
  * A class that implements a DocumentDB data storage provider.
- * Provides methods for creating containers (collections) and storing, retrieving, and searching JSON objects.
- * Compatible with MongoDB-compatible DocumentDB implementations including open-source DocumentDB.
+ * Extends MongoBaseProvider for shared functionality.
  * @class
  */
-class DocumentDBDataServiceProvider {
+class DocumentDBDataServiceProvider extends MongoBaseProvider {
   /**
    * Initializes the DocumentDB data storage provider.
    * @param {Object=} options Configuration options for DocumentDB connection.
    * @param {string=} options.host DocumentDB host (defaults to '127.0.0.1').
    * @param {number=} options.port DocumentDB port (defaults to 10260).
-   * @param {string=} options.database Database name to use (defaults to 'nooblyjs').
+   * @param {string=} options.database Database name to use (defaults to digitaltechnologies).
    * @param {string=} options.username Username for authentication (optional).
    * @param {string=} options.password Password for authentication (optional).
    * @param {boolean=} options.ssl Enable SSL connection (defaults to false for local development).
@@ -32,6 +31,8 @@ class DocumentDBDataServiceProvider {
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options = {}, eventEmitter) {
+    super('documentdb', options, eventEmitter);
+    
     /** @private @const {string} */
     this.host_ = options.host || '127.0.0.1';
     
@@ -39,7 +40,7 @@ class DocumentDBDataServiceProvider {
     this.port_ = options.port || 10260;
     
     /** @private @const {string} */
-    this.databaseName_ = options.database || 'nooblyjs';
+    this.databaseName_ = options.database || 'digitaltechnologies';
     
     /** @private @const {string} */
     this.username_ = options.username || '';
@@ -53,30 +54,6 @@ class DocumentDBDataServiceProvider {
     /** @private @const {string} */
     this.connectionString_ = this.buildConnectionString_(options);
     
-    /** @private @const {EventEmitter} */
-    this.eventEmitter_ = eventEmitter;
-    
-    /** @private @type {MongoClient|null} */
-    this.client_ = null;
-    
-    /** @private @type {Object|null} */
-    this.db_ = null;
-    
-    /** @private @const {Set<string>} */
-    this.initializedContainers_ = new Set();
-
-    // Settings for dataservice DocumentDB provider
-    this.settings = {};
-    this.settings.description = "Configuration settings for the DataService DocumentDB Provider";
-    this.settings.list = [
-      {setting: "connectionTimeout", type: "number", values: [30000]},
-      {setting: "queryTimeout", type: "number", values: [60000]},
-      {setting: "maxConnections", type: "number", values: [100]}
-    ];
-    this.settings.connectionTimeout = options.connectionTimeout || this.settings.list[0].values[0];
-    this.settings.queryTimeout = options.queryTimeout || this.settings.list[1].values[0];
-    this.settings.maxConnections = options.maxConnections || this.settings.list[2].values[0];
-
     // Initialize connection
     this.initializeConnection_();
   }
@@ -93,26 +70,14 @@ class DocumentDBDataServiceProvider {
     }
     
     let connectionString = 'mongodb://';
-    
-    // Add authentication if provided
     if (this.username_ && this.password_) {
       connectionString += `${encodeURIComponent(this.username_)}:${encodeURIComponent(this.password_)}@`;
     }
+    connectionString += `${this.host_}:${this.port_}/${this.databaseName_}`;
     
-    // Add host and port
-    connectionString += `${this.host_}:${this.port_}`;
-    
-    // Add database
-    connectionString += `/${this.databaseName_}`;
-    
-    // Add SSL option if enabled
     const queryParams = [];
-    if (this.ssl_) {
-      queryParams.push('ssl=true');
-    }
-    
-    // DocumentDB specific options for compatibility
-    queryParams.push('retryWrites=false'); // DocumentDB doesn't support retryable writes
+    if (this.ssl_) queryParams.push('ssl=true');
+    queryParams.push('retryWrites=false');
     
     if (queryParams.length > 0) {
       connectionString += '?' + queryParams.join('&');
@@ -127,11 +92,9 @@ class DocumentDBDataServiceProvider {
    */
   async initializeConnection_() {
     try {
-      // DocumentDB connection options
       const clientOptions = {
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 5000,
-        // DocumentDB specific options
         retryWrites: false,
         readPreference: 'primary'
       };
@@ -140,412 +103,56 @@ class DocumentDBDataServiceProvider {
       await this.client_.connect();
       this.db_ = this.client_.db(this.databaseName_);
       
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:connected', {
-          host: this.host_,
-          port: this.port_,
-          database: this.databaseName_,
-          ssl: this.ssl_
-        });
-      }
+      this.emitEvent_('connected', {
+        host: this.host_,
+        port: this.port_,
+        database: this.databaseName_,
+        ssl: this.ssl_
+      });
     } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'connect',
-          error: error.message
-        });
-      }
+      this.emitEvent_('error', {
+        operation: 'connect',
+        error: error.message
+      });
       throw new Error(`DocumentDB connection failed: ${error.message}`);
     }
   }
 
   /**
-   * Ensures DocumentDB connection is established.
-   * @private
-   */
-  async ensureConnection_() {
-    if (!this.client_ || !this.db_) {
-      await this.initializeConnection_();
-    }
-  }
-
-  /**
-   * Gets a DocumentDB collection (container).
-   * @param {string} containerName The name of the container/collection.
-   * @return {Object} DocumentDB collection object.
-   * @private
-   */
-  getCollection_(containerName) {
-    return this.db_.collection(containerName);
-  }
-
-  /**
-   * Creates a new container (DocumentDB collection) for storing JSON objects.
-   * @param {string} containerName The name of the container to create.
-   * @return {Promise<void>} A promise that resolves when the container is created.
+   * Creates a new container (DocumentDB collection).
    */
   async createContainer(containerName) {
     await this.ensureConnection_();
     
     try {
-      // DocumentDB creates collections implicitly, but we can explicitly create them if needed
       if (!this.initializedContainers_.has(containerName)) {
         const collection = this.getCollection_(containerName);
         
-        // Create an index on the uuid field for better performance
-        // Note: DocumentDB has some limitations on index creation
         try {
           await collection.createIndex({ uuid: 1 }, { unique: true });
         } catch (indexError) {
-          // DocumentDB might not support unique indexes in all configurations
-          console.warn(`DocumentDB index creation warning for ${containerName}: ${indexError.message}`);
-          // Create a non-unique index instead
+          this.logger?.warn(`[${this.constructor.name}] DocumentDB index fallback`, {
+            containerName,
+            error: indexError.message
+          });
           await collection.createIndex({ uuid: 1 });
         }
         
         this.initializedContainers_.add(containerName);
-
-        if (this.eventEmitter_) {
-          this.eventEmitter_.emit('api-dataservice-createContainer', { containerName });
-        }
+        this.emitEvent_('createContainer', { containerName });
       }
     } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'createContainer',
-          containerName,
-          error: error.message
-        });
-      }
+      this.emitEvent_('error', {
+        operation: 'createContainer',
+        containerName,
+        error: error.message
+      });
       throw new Error(`Failed to create container '${containerName}': ${error.message}`);
     }
   }
 
   /**
-   * Adds a JSON object to the specified container (DocumentDB collection).
-   * @param {string} containerName The name of the container to add the object to.
-   * @param {!Object} jsonObject The JSON object to store.
-   * @return {Promise<string>} A promise that resolves to the unique key for the stored object.
-   */
-  async add(containerName, jsonObject) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      const objectKey = uuidv4();
-      
-      // Add uuid to the object for consistent retrieval
-      const documentToInsert = {
-        ...jsonObject,
-        uuid: objectKey,
-        _createdAt: new Date(),
-        _updatedAt: new Date()
-      };
-      
-      const result = await collection.insertOne(documentToInsert);
-      
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-add', {
-          containerName,
-          objectKey,
-          jsonObject: documentToInsert,
-          documentdbId: result.insertedId
-        });
-      }
-
-      return objectKey;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'add',
-          containerName,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to add object to container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Gets a JSON object from the specified container by UUID.
-   * @param {string} containerName The name of the container to retrieve the object from.
-   * @param {string} objectKey The unique UUID of the object to retrieve.
-   * @return {Promise<Object|null>} A promise that resolves to the object or null if not found.
-   */
-  async getByUuid(containerName, objectKey) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      const result = await collection.findOne({ uuid: objectKey });
-      
-      if (result) {
-        // Remove DocumentDB-specific fields from the result
-        const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = result;
-        
-        if (this.eventEmitter_) {
-          this.eventEmitter_.emit('api-dataservice-getByUuid', {
-            containerName,
-            objectKey,
-            obj: cleanObject
-          });
-        }
-
-        return cleanObject;
-      }
-
-      return null;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'getByUuid',
-          containerName,
-          objectKey,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to retrieve object from container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Removes a JSON object from the specified container.
-   * @param {string} containerName The name of the container to remove the object from.
-   * @param {string} objectKey The unique key of the object to remove.
-   * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false otherwise.
-   */
-  async remove(containerName, objectKey) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      const result = await collection.deleteOne({ uuid: objectKey });
-      
-      const removed = result.deletedCount > 0;
-
-      if (removed && this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-remove', { containerName, objectKey });
-      }
-
-      return removed;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'remove',
-          containerName,
-          objectKey,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to remove object from container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Finds JSON objects in the specified container that contain the search term.
-   * Uses DocumentDB-compatible queries and regex matching for comprehensive searching.
-   * @param {string} containerName The name of the container to search in.
-   * @param {string} searchTerm The term to search for (case-insensitive).
-   * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects.
-   */
-  async find(containerName, searchTerm) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      let results = [];
-      
-      if (!searchTerm || searchTerm.trim() === '') {
-        // If no search term, return all objects
-        const cursor = await collection.find({});
-        const documents = await cursor.toArray();
-        
-        results = documents.map(doc => {
-          const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = doc;
-          return cleanObject;
-        });
-      } else {
-        // Get all documents and perform client-side search for comprehensive matching
-        // DocumentDB may have limitations on complex text search operations
-        const cursor = await collection.find({});
-        const documents = await cursor.toArray();
-        
-        const searchRegex = new RegExp(searchTerm, 'i');
-        
-        results = documents.filter(doc => {
-          // Remove DocumentDB-specific fields
-          const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = doc;
-          
-          // Recursive search function
-          const searchInObject = (obj) => {
-            for (const prop in obj) {
-              if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-                const value = obj[prop];
-                if (typeof value === 'string') {
-                  if (searchRegex.test(value)) {
-                    return true;
-                  }
-                } else if (typeof value === 'object' && value !== null) {
-                  if (searchInObject(value)) {
-                    return true;
-                  }
-                }
-              }
-            }
-            return false;
-          };
-          
-          return searchInObject(cleanObject);
-        }).map(doc => {
-          const { _id, uuid, _createdAt, _updatedAt, ...cleanObject } = doc;
-          return cleanObject;
-        });
-      }
-      
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-find', {
-          containerName,
-          searchTerm,
-          results
-        });
-      }
-
-      return results;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'find',
-          containerName,
-          searchTerm,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to search in container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Gets all objects in a container.
-   * @param {string} containerName The name of the container to list.
-   * @return {Promise<Array<!Object>>} A promise that resolves to an array of all objects.
-   */
-  async listAll(containerName) {
-    return this.find(containerName, '');
-  }
-
-  /**
-   * Gets the count of objects in a container.
-   * @param {string} containerName The name of the container to count.
-   * @return {Promise<number>} A promise that resolves to the count of objects.
-   */
-  async count(containerName) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      const count = await collection.countDocuments();
-
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-count', { containerName, count });
-      }
-
-      return count;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'count',
-          containerName,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to count objects in container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Updates an existing object in the container.
-   * @param {string} containerName The name of the container.
-   * @param {string} objectKey The unique key of the object to update.
-   * @param {!Object} jsonObject The updated JSON object.
-   * @return {Promise<boolean>} A promise that resolves to true if updated, false if not found.
-   */
-  async update(containerName, objectKey, jsonObject) {
-    await this.ensureConnection_();
-    
-    try {
-      const collection = this.getCollection_(containerName);
-      const updateDoc = {
-        ...jsonObject,
-        uuid: objectKey,
-        _updatedAt: new Date()
-      };
-      
-      const result = await collection.updateOne(
-        { uuid: objectKey },
-        { $set: updateDoc }
-      );
-      
-      const updated = result.modifiedCount > 0;
-
-      if (updated && this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-update', {
-          containerName,
-          objectKey,
-          jsonObject: updateDoc
-        });
-      }
-
-      return updated;
-    } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-          operation: 'update',
-          containerName,
-          objectKey,
-          error: error.message
-        });
-      }
-      throw new Error(`Failed to update object in container '${containerName}': ${error.message}`);
-    }
-  }
-
-  /**
-   * Closes the DocumentDB connection.
-   * @return {Promise<void>} A promise that resolves when the connection is closed.
-   */
-  async close() {
-    if (this.client_) {
-      try {
-        await this.client_.close();
-        this.client_ = null;
-        this.db_ = null;
-
-        if (this.eventEmitter_) {
-          this.eventEmitter_.emit('api-dataservice-documentdb:disconnected');
-        }
-      } catch (error) {
-        if (this.eventEmitter_) {
-          this.eventEmitter_.emit('api-dataservice-documentdb:error', {
-            operation: 'close',
-            error: error.message
-          });
-        }
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Gets the connection status.
-   * @return {string} Connection status ('connected' or 'disconnected').
-   */
-  get status() {
-    return this.client_ && this.db_ ? 'connected' : 'disconnected';
-  }
-
-  /**
    * Gets connection information.
-   * @return {Object} Connection information including host, port, database, and SSL status.
    */
   getConnectionInfo() {
     return {
@@ -555,25 +162,6 @@ class DocumentDBDataServiceProvider {
       ssl: this.ssl_,
       status: this.status
     };
-  }
-
-  /**
-   * Get all settings
-   */
-  async getSettings(){
-    return this.settings;
-  }
-
-  /**
-   * Save/update settings
-   */
-  async saveSettings(settings){
-    for (let i = 0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
-      }
-    }
   }
 }
 

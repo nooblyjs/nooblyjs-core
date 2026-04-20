@@ -4,7 +4,7 @@
  * content removal, and service status monitoring with UUID-based keys.
  * Supports multiple named indexes for organizing different types of searchable content.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -49,12 +49,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const added = await search.add(key, value, searchContainer);
         if (added) {
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } else {
-          res.status(400).send('Bad Request: Key already exists.');
+          res.status(400).json({ error: 'Key already exists' });
         }
       } catch (error) {
-        res.status(500).send(error.message);
+        res.status(500).json({ error: error.message });
       }
     });
 
@@ -75,12 +75,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const removed = await search.remove(key, searchContainer);
         if (removed) {
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } else {
-          res.status(404).send('Not Found: Key not found.');
+          res.status(404).json({ error: 'Key not found' });
         }
       } catch (error) {
-        res.status(500).send(error.message);
+        res.status(500).json({ error: error.message });
       }
     });
 
@@ -103,10 +103,10 @@ module.exports = (options, eventEmitter, search) => {
           const results = await search.search(term, searchContainer);
           res.status(200).json(results);
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing query');
+        res.status(400).json({ error: 'Missing query' });
       }
     });
 
@@ -304,5 +304,150 @@ module.exports = (options, eventEmitter, search) => {
         res.status(500).json({ error: error.message });
       }
     });
+
+    /**
+     * GET /services/searching/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/settings', async (req, res) => {
+      try {
+        const settings = await search.getSettings();
+        res.status(200).json(settings);
+      } catch (err) {
+        eventEmitter.emit('api-searching-settings-error', err.message);
+        res.status(500).json({
+          error: 'Failed to retrieve settings',
+          message: err.message
+        });
+      }
+    });
+
+     /**
+     * POST /services/searching/api/settings
+     * Saves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/searching/api/settings', async (req, res) => {
+      const message = req.body;
+      if (message) {
+        try {
+          await search.saveSettings(message);
+          res.status(200).json({ success: true });
+        } catch (err) {
+          res.status(500).json({ error: err.message });
+        }
+      } else {
+        res.status(400).json({ error: 'Missing settings' });
+      }
+    });
+
+    /**
+     * GET /services/searching/api/suggest/:term
+     * Returns autocomplete suggestions (for token-based providers).
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.term - The search term to get suggestions for
+     * @param {string} [req.query.searchContainer] - Optional container name
+     * @param {string} [req.query.limit] - Max suggestions to return (default: 10)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/suggest/:term', (req, res) => {
+      try {
+        if (!search.suggest) {
+          return res.status(501).json({
+            error: 'Suggestions not supported by this search provider'
+          });
+        }
+
+        const term = req.params.term;
+        const searchContainer = req.query.searchContainer || 'default';
+        const limit = parseInt(req.query.limit, 10) || 10;
+
+        if (!term) {
+          return res.status(400).json({ error: 'Missing search term' });
+        }
+
+        const suggestions = search.suggest(term, {
+          maxSuggestions: limit,
+          containerName: searchContainer
+        });
+
+        res.status(200).json(suggestions);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * GET /services/searching/api/token-stats
+     * Returns token-based statistics (for token-based providers).
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} [req.query.searchContainer] - Optional container name
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/searching/api/token-stats', (req, res) => {
+      try {
+        const searchContainer = req.query.searchContainer;
+        const stats = search.getStats(searchContainer);
+
+        if (!stats.totalTokens) {
+          return res.status(501).json({
+            error: 'Token statistics not available for this search provider'
+          });
+        }
+
+        res.status(200).json(stats);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    /**
+     * POST /services/searching/api/rebuild
+     * Triggers a rebuild of the search index (for token-based providers).
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} [req.body.searchContainer] - Optional container name
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/searching/api/rebuild', (req, res) => {
+      try {
+        if (!search.rebuild && !search.loadFromDisk) {
+          return res.status(501).json({
+            error: 'Rebuild not supported by this search provider'
+          });
+        }
+
+        const searchContainer = req.body?.searchContainer;
+
+        // Trigger rebuild in background
+        setImmediate(() => {
+          if (search.rebuild) {
+            search.rebuild(searchContainer).catch(error => {
+              eventEmitter?.emit('search:rebuild:error', { error: error.message });
+            });
+          }
+        });
+
+        res.status(202).json({
+          success: true,
+          message: 'Index rebuild started in background'
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
   }
 };

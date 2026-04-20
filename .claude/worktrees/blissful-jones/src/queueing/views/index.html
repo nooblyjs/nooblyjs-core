@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queueing Dashboard - Digital Technologies Core</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Digital Technologies Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="core-navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </aside>
+
+        <main class="core-main-content">
+            <div class="core-page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem;">
+                    <div>
+                        <h1 class="core-page-title">Queue Management</h1>
+                        <p class="core-page-subtitle">Monitor and analyze queue performance</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                        <label for="instanceSelector" style="font-weight: 500;">Instance:</label>
+                        <select id="instanceSelector" class="core-form-select" style="width: 200px; display: inline-block;">
+                            <option value="default">default</option>
+                        </select>
+                        <button id="refreshInstanceBtn" class="btn btn-sm btn-outline-primary" title="Refresh instances list">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="core-page-content">
+                <!-- Bootstrap 5 Alerts -->
+                <div class="alert alert-success" id="successAlert">
+                    <strong>Success!</strong> <span id="successMessage"></span>
+                </div>
+
+                <div class="alert alert-error" id="errorAlert">
+                    <strong>Error!</strong> <span id="errorMessage"></span>
+                </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs queue-nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="data-tab" data-bs-toggle="tab" href="#data" role="tab">
+                        <i class="bi bi-database"></i> Data
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="settings-tab" data-bs-toggle="tab" href="#settings" role="tab">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="bi bi-stack stat-icon"></i>
+                            <div class="stat-label">Total Queues</div>
+                            <div class="stat-value" id="totalQueues">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="bi bi-inbox stat-icon"></i>
+                            <div class="stat-label">Total Messages</div>
+                            <div class="stat-value" id="totalMessages">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="bi bi-arrow-up stat-icon"></i>
+                            <div class="stat-label">Total Enqueued</div>
+                            <div class="stat-value" id="totalEnqueued">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="bi bi-arrow-down stat-icon"></i>
+                            <div class="stat-label">Total Dequeued</div>
+                            <div class="stat-value" id="totalDequeued">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <button class="refresh-btn" onclick="loadAnalytics()" id="refreshBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Analytics
+                        </button>
+                    </div>
+
+                    <!-- Queue Distribution Pie Chart -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Queue Distribution</h2>
+                            <p class="core-card-subtitle">Total messages per queue</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="chart-container">
+                                <canvas id="distributionChart"></canvas>
+                                <div id="distributionEmpty" class="core-empty-state" style="display: none;">
+                                    <i class="bi bi-inbox"></i>
+                                    <h3>No queue data available</h3>
+                                    <p>Queue distribution will appear here once messages are enqueued</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Top 10 Queues Activity</h2>
+                            <p class="core-card-subtitle">Activity over time (operations per minute)</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="chart-container">
+                                <canvas id="activityChart"></canvas>
+                                <div id="activityEmpty" class="core-empty-state" style="display: none;">
+                                    <i class="bi bi-graph-up"></i>
+                                    <h3>No activity data available</h3>
+                                    <p>Activity timeline will appear here once queue operations are recorded</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Queue List Table -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Queue Details</h2>
+                            <p class="core-card-subtitle">Top 100 queues with current sizes</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="table-responsive" id="queueTableContainer">
+                                <table class="table table-hover table-striped" id="queueTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 35%;" class="sortable" onclick="sortTable('name')">Queue Name<span id="sort-name"></span></th>
+                                            <th class="sortable" onclick="sortTable('currentSize')">Current Size<span id="sort-currentSize"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalEnqueued')">Total Enqueued<span id="sort-totalEnqueued"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalDequeued')">Total Dequeued<span id="sort-totalDequeued"></span></th>
+                                            <th class="sortable" onclick="sortTable('totalMessages')">Total Messages<span id="sort-totalMessages"></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="queueTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading queues...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div id="queueEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <h3>No queues found</h3>
+                                    <p>Queues will appear here once messages are enqueued</p>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="queueCount">0</span> queues displayed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data  Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel">
+
+                    <!-- Enqueue Form -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Enqueue Item</h2>
+                            <p class="core-card-subtitle">Add an item to a named queue</p>
+                        </div>
+                        <div class="core-card-content">
+                            <form id="enqueueForm">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="enqueueQueueName">Queue Name</label>
+                                    <input type="text" id="enqueueQueueName" class="core-form-input" placeholder="emailQueue" required>
+                                    <div class="core-helper-text">Enter the name of the queue (e.g., emailQueue, imageQueue, dataQueue)</div>
+                                </div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="enqueueItem">Task/Item (JSON)</label>
+                                    <textarea id="enqueueItem" class="core-form-input core-form-textarea" placeholder='{"task": "process-payment", "orderId": 12345}' required></textarea>
+                                    <div id="enqueueValidation" class="core-validation-message" style="display: none;"></div>
+                                    <div class="core-helper-text">Enter a valid JSON object to add to the queue</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Enqueue</button>
+                                    <button type="button" class="btn btn-secondary" onclick="formatJSON('enqueueItem')">Format JSON</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadExample('enqueueItem')">Load Example</button>
+                                </div>
+                            </form>
+                            <div id="enqueueResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="enqueueResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dequeue Form -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Dequeue Item</h2>
+                            <p class="core-card-subtitle">Remove and retrieve the next item from a named queue</p>
+                        </div>
+                        <div class="core-card-content">
+                            <form id="dequeueForm">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="dequeueQueueName">Queue Name</label>
+                                    <input type="text" id="dequeueQueueName" class="core-form-input" placeholder="emailQueue" required>
+                                    <div class="core-helper-text">Enter the name of the queue to dequeue from</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Dequeue</button>
+                                </div>
+                            </form>
+                            <div id="dequeueResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Dequeued Item:</div>
+                                <div id="dequeueResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Queue Size Form -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Queue Size</h2>
+                            <p class="core-card-subtitle">Get the current number of items in a named queue</p>
+                        </div>
+                        <div class="core-card-content">
+                            <form id="sizeForm">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="sizeQueueName">Queue Name</label>
+                                    <input type="text" id="sizeQueueName" class="core-form-input" placeholder="emailQueue" required>
+                                    <div class="core-helper-text">Enter the name of the queue to check size</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Get Size</button>
+                                </div>
+                            </form>
+                            <div id="sizeResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Queue Size:</div>
+                                <div id="sizeResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List Queues -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">List All Queues</h2>
+                            <p class="core-card-subtitle">View all active queue names</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="core-btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="listQueues()">List Queues</button>
+                            </div>
+                            <div id="listQueuesResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Active Queues:</div>
+                                <div id="listQueuesResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Purge Queue -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Purge Queue</h2>
+                            <p class="core-card-subtitle">Clear all items from a named queue</p>
+                        </div>
+                        <div class="core-card-content">
+                            <form id="purgeForm">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="purgeQueueName">Queue Name</label>
+                                    <input type="text" id="purgeQueueName" class="core-form-input" placeholder="emailQueue" required>
+                                    <div class="core-helper-text">Enter the name of the queue to purge (WARNING: This will delete all items)</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-error">Purge Queue</button>
+                                </div>
+                            </form>
+                            <div id="purgeResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Purge Result:</div>
+                                <div id="purgeResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Check -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Service Status</h2>
+                            <p class="core-card-subtitle">Check queueing service status</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="core-btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                            </div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Documentation -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">API Documentation</h2>
+                            <p class="core-card-subtitle">Interactive API documentation for Queueing service</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div id="swagger-ui"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-pane fade" id="settings" role="tabpanel">
+
+                    <!-- Settings Card -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Queueing Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the queueing service parameters</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
+                            <form id="settingsForm">
+                                <div id="settingsFormFields"></div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
+                                </div>
+                            </form>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- End Settings Tab -->
+
+            </div>
+            </div>
+            <!-- End Page Content -->
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
+    <script src="/services/queueing/scripts"></script>
+    <script>
+        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'queueing');
+    </script>
+    <script>
+        let distributionChart = null;
+        let activityChart = null;
+        let queueListData = [];
+        let sortColumn = 'currentSize';
+        let sortDirection = 'desc';
+
+        // Instance selection state
+        let selectedInstance = 'default';
+
+        // Color palette for charts
+        const chartColors = [
+            '#059da2', '#198754', '#dc3545', '#ffc107', '#6610f2',
+            '#fd7e14', '#20c997', '#0dcaf0', '#d63384', '#6c757d',
+            '#059da2', '#198754', '#ffc107', '#dc3545', '#0dcaf0'
+        ];
+
+        // Instance management functions
+        async function loadAvailableInstances() {
+            try {
+                const response = await fetch('/services/queueing/api/instances');
+                if (!response.ok) {
+                    console.error('Failed to fetch instances');
+                    return;
+                }
+                const data = await response.json();
+                if (data.instances && Array.isArray(data.instances)) {
+                    updateInstanceSelector(data.instances);
+                }
+            } catch (error) {
+                console.error('Error loading instances:', error);
+            }
+        }
+
+        function updateInstanceSelector(instances) {
+            const selector = document.getElementById('instanceSelector');
+            const currentValue = selector.value;
+
+            // Clear existing options
+            selector.innerHTML = '';
+
+            // Add instances as options
+            instances.forEach(instance => {
+                const option = document.createElement('option');
+                option.value = instance.name;
+                option.textContent = `${instance.name}${instance.name === 'default' ? ' (default)' : ''}`;
+                selector.appendChild(option);
+            });
+
+            // Restore previously selected instance if it still exists
+            if (instances.some(i => i.name === currentValue)) {
+                selector.value = currentValue;
+            } else {
+                selector.value = 'default';
+                selectedInstance = 'default';
+            }
+        }
+
+        function buildInstanceUrl(basePath) {
+            if (selectedInstance === 'default') {
+                return basePath;
+            }
+            // Insert instance name after /api/ in the path
+            return basePath.replace('/services/queueing/api/', `/services/queueing/api/${selectedInstance}/`);
+        }
+
+        // Load analytics data
+        async function loadAnalytics() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Loading<span class="loading-spinner"></span>';
+
+            try {
+                const analyticsUrl = buildInstanceUrl('/services/queueing/api/analytics');
+                const response = await fetch(analyticsUrl);
+                const data = await response.json();
+
+                updateStats(data.stats);
+                updateDistributionChart(data.distribution);
+                updateActivityChart(data.timeline);
+                updateQueueTable(data.queueList);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('queueTableBody').innerHTML = '<tr><td colspan="5" class="no-data">Error loading analytics data</td></tr>';
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Analytics';
+            }
+        }
+
+        // Update stats cards
+        function updateStats(stats) {
+            const totalQueues = stats.totalQueues || 0;
+            let totalMessages = 0;
+            let totalEnqueued = 0;
+            let totalDequeued = 0;
+
+            Object.values(stats.queues || {}).forEach(queueStats => {
+                totalMessages += queueStats.totalMessages || 0;
+                totalEnqueued += queueStats.enqueueCount || 0;
+                totalDequeued += queueStats.dequeueCount || 0;
+            });
+
+            document.getElementById('totalQueues').textContent = totalQueues;
+            document.getElementById('totalMessages').textContent = totalMessages.toLocaleString();
+            document.getElementById('totalEnqueued').textContent = totalEnqueued.toLocaleString();
+            document.getElementById('totalDequeued').textContent = totalDequeued.toLocaleString();
+        }
+
+        // Update distribution pie chart
+        function updateDistributionChart(distribution) {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            if (!distribution.labels || distribution.labels.length === 0) {
+                document.getElementById('distributionChart').style.display = 'none';
+                document.getElementById('distributionEmpty').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('distributionChart').style.display = 'block';
+            document.getElementById('distributionEmpty').style.display = 'none';
+
+            distributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: distribution.labels,
+                    datasets: [{
+                        data: distribution.data,
+                        backgroundColor: chartColors,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update activity line chart
+        function updateActivityChart(timeline) {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+
+            if (activityChart) {
+                activityChart.destroy();
+            }
+
+            if (!timeline.labels || timeline.labels.length === 0) {
+                document.getElementById('activityChart').style.display = 'none';
+                document.getElementById('activityEmpty').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('activityChart').style.display = 'block';
+            document.getElementById('activityEmpty').style.display = 'none';
+
+            const datasets = timeline.datasets.map((dataset, index) => ({
+                label: dataset.name,
+                data: dataset.data,
+                borderColor: chartColors[index % chartColors.length],
+                backgroundColor: chartColors[index % chartColors.length] + '20',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: false
+            }));
+
+            activityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeline.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} operations`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Operations per Minute'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update queue table
+        function updateQueueTable(queueList) {
+            queueListData = queueList || [];
+            renderQueueTable();
+        }
+
+        // Render queue table
+        function renderQueueTable() {
+            const tbody = document.getElementById('queueTableBody');
+            const table = document.getElementById('queueTable');
+            const emptyDiv = document.getElementById('queueEmpty');
+
+            if (queueListData.length === 0) {
+                table.style.display = 'none';
+                emptyDiv.style.display = 'flex';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyDiv.style.display = 'none';
+
+            // Sort data
+            const sortedData = [...queueListData].sort((a, b) => {
+                const aVal = a[sortColumn];
+                const bVal = b[sortColumn];
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update sort indicators
+            document.querySelectorAll('.sortable span').forEach(span => {
+                span.className = '';
+            });
+            const sortIndicator = document.getElementById(`sort-${sortColumn}`);
+            if (sortIndicator) {
+                sortIndicator.className = sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
+            }
+
+            // Render rows
+            tbody.innerHTML = sortedData.map(queue => `
+                <tr>
+                    <td><span class="queue-name">${escapeHtml(queue.name)}</span></td>
+                    <td>${queue.currentSize.toLocaleString()}</td>
+                    <td>${queue.totalEnqueued.toLocaleString()}</td>
+                    <td>${queue.totalDequeued.toLocaleString()}</td>
+                    <td>${queue.totalMessages.toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            // Update count
+            document.getElementById('queueCount').textContent = sortedData.length;
+        }
+
+        // Sort table
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            renderQueueTable();
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load analytics on page load
+        window.addEventListener('load', () => {
+            checkStatus();
+            loadAvailableInstances();
+            loadAnalytics();
+            // Auto-refresh every 30 seconds
+            setInterval(loadAnalytics, 30000);
+        });
+
+        // Instance selector handlers
+        document.getElementById('instanceSelector')?.addEventListener('change', function (e) {
+            selectedInstance = this.value;
+            loadAnalytics();
+        });
+
+        document.getElementById('refreshInstanceBtn')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            loadAvailableInstances();
+        });
+
+        // Data Tab - Functions
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace('Item', 'Validation'));
+            const value = element.value.trim();
+
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                if (validation) validation.style.display = 'none';
+                return true;
+            }
+
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                if (validation) {
+                    validation.textContent = '✓ Valid JSON';
+                    validation.className = 'core-validation-message validation-success';
+                    validation.style.display = 'block';
+                }
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                if (validation) {
+                    validation.textContent = '✗ Invalid JSON: ' + e.message;
+                    validation.className = 'core-validation-message validation-error';
+                    validation.style.display = 'block';
+                }
+                return false;
+            }
+        }
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                enqueueItem: {
+                    "task": "send-welcome-email",
+                    "userId": "user-xyz-123",
+                    "template": "welcome-template-v2"
+                }
+            };
+
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            if (messageElement && alertElement) {
+                messageElement.textContent = message;
+                alertElement.classList.add('show');
+                setTimeout(() => alertElement.classList.remove('show'), 5000);
+            }
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            if (content && container) {
+                content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+                container.style.display = 'block';
+            }
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (form) {
+                if (isLoading) {
+                    form.classList.add('loading');
+                } else {
+                    form.classList.remove('loading');
+                }
+            }
+        }
+
+        // Initialize queueing client
+        const queueClient = new digitaltechnologiesqueueing('default', { debug: false });
+
+        // Form handlers using queueing script library
+        document.addEventListener('DOMContentLoaded', () => {
+            // Real-time validation
+            const enqueueItem = document.getElementById('enqueueItem');
+            if (enqueueItem) {
+                enqueueItem.addEventListener('input', () => validateJSON('enqueueItem'));
+            }
+
+            // Enqueue form
+            const enqueueForm = document.getElementById('enqueueForm');
+            if (enqueueForm) {
+                enqueueForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const queueName = document.getElementById('enqueueQueueName').value.trim();
+                    const item = document.getElementById('enqueueItem').value;
+
+                    if (!queueName) {
+                        showAlert('Please enter a queue name', 'error');
+                        return;
+                    }
+
+                    if (!validateJSON('enqueueItem')) {
+                        showAlert('Please enter a valid JSON item', 'error');
+                        return;
+                    }
+
+                    try {
+                        setLoading('enqueueForm', true);
+                        const parsedItem = JSON.parse(item);
+                        const result = await queueClient.enqueue(queueName, parsedItem);
+                        showResponse('enqueueResponse', 'enqueueResponseContent', result);
+                        showAlert(`Item enqueued to '${queueName}' successfully`);
+                    } catch (error) {
+                        showAlert('Error enqueuing item: ' + error.message, 'error');
+                        showResponse('enqueueResponse', 'enqueueResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('enqueueForm', false);
+                    }
+                });
+            }
+
+            // Dequeue form
+            const dequeueForm = document.getElementById('dequeueForm');
+            if (dequeueForm) {
+                dequeueForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const queueName = document.getElementById('dequeueQueueName').value.trim();
+
+                    if (!queueName) {
+                        showAlert('Please enter a queue name', 'error');
+                        return;
+                    }
+
+                    try {
+                        setLoading('dequeueForm', true);
+                        const result = await queueClient.dequeue(queueName);
+                        showResponse('dequeueResponse', 'dequeueResponseContent', result);
+                        showAlert(`Item dequeued from '${queueName}' successfully`);
+                    } catch (error) {
+                        showAlert('Error dequeuing item: ' + error.message, 'error');
+                        showResponse('dequeueResponse', 'dequeueResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('dequeueForm', false);
+                    }
+                });
+            }
+
+            // Size form
+            const sizeForm = document.getElementById('sizeForm');
+            if (sizeForm) {
+                sizeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const queueName = document.getElementById('sizeQueueName').value.trim();
+
+                    if (!queueName) {
+                        showAlert('Please enter a queue name', 'error');
+                        return;
+                    }
+
+                    try {
+                        setLoading('sizeForm', true);
+                        const result = await queueClient.size(queueName);
+                        showResponse('sizeResponse', 'sizeResponseContent', result);
+                        showAlert(`Queue size for '${queueName}' retrieved successfully`);
+                    } catch (error) {
+                        showAlert('Error retrieving queue size: ' + error.message, 'error');
+                        showResponse('sizeResponse', 'sizeResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('sizeForm', false);
+                    }
+                });
+            }
+
+            // Purge form
+            const purgeForm = document.getElementById('purgeForm');
+            if (purgeForm) {
+                purgeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const queueName = document.getElementById('purgeQueueName').value.trim();
+
+                    if (!queueName) {
+                        showAlert('Please enter a queue name', 'error');
+                        return;
+                    }
+
+                    if (!confirm(`Are you sure you want to purge all items from queue '${queueName}'? This cannot be undone.`)) {
+                        return;
+                    }
+
+                    try {
+                        setLoading('purgeForm', true);
+                        const result = await queueClient.purge(queueName);
+                        showResponse('purgeResponse', 'purgeResponseContent', result);
+                        showAlert(`Queue '${queueName}' purged successfully`);
+                    } catch (error) {
+                        showAlert('Error purging queue: ' + error.message, 'error');
+                        showResponse('purgeResponse', 'purgeResponseContent', 'Error: ' + error.message);
+                    } finally {
+                        setLoading('purgeForm', false);
+                    }
+                });
+            }
+        });
+
+        async function listQueues() {
+            try {
+                const result = await queueClient.listQueues();
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', result);
+                showAlert('Queue list retrieved successfully');
+            } catch (error) {
+                showAlert('Error listing queues: ' + error.message, 'error');
+                showResponse('listQueuesResponse', 'listQueuesResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/services/queueing/api/status');
+                const result = await response.json();
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Settings functionality
+        let currentSettings = {};
+
+        // Fetch settings from API
+        async function loadSettings() {
+            try {
+                const response = await fetch('/services/queueing/api/settings');
+                const data = await response.json();
+                currentSettings = data;
+                renderSettingsForm(data);
+            } catch (error) {
+                showAlert('Error loading settings: ' + error.message, 'error');
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Render settings form based on settings structure
+        function renderSettingsForm(data) {
+            const formFieldsContainer = document.getElementById('settingsFormFields');
+            const infoContainer = document.getElementById('settingsInfo');
+
+            // Clear existing form fields
+            formFieldsContainer.innerHTML = '';
+
+            // Display description if available
+            if (data.desciption) {
+                infoContainer.textContent = data.desciption;
+                infoContainer.style.display = 'block';
+            }
+
+            // Render form fields from settings list
+            if (data.list && Array.isArray(data.list)) {
+                data.list.forEach((setting) => {
+                    const formGroup = createFormField(setting, data);
+                    formFieldsContainer.appendChild(formGroup);
+                });
+            }
+        }
+
+        // Create form field based on setting type
+        function createFormField(setting, settingsData) {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'core-form-group';
+
+            // Create label
+            const label = document.createElement('label');
+            label.className = 'core-form-label';
+            label.htmlFor = 'setting_' + setting.setting;
+            label.textContent = setting.setting;
+            formGroup.appendChild(label);
+
+            // Get current value from settings
+            const currentValue = settingsData[setting.setting] || '';
+
+            // Create input based on type
+            let input;
+            switch (setting.type) {
+                case 'string':
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'core-form-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    if (setting.values && setting.values.length > 0) {
+                        input.placeholder = setting.values[0];
+                    }
+                    break;
+
+                case 'integer':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'core-form-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    input.step = '1';
+                    break;
+
+                case 'number':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'core-form-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    input.step = 'any';
+                    break;
+
+                case 'date':
+                    input = document.createElement('input');
+                    input.type = 'date';
+                    input.className = 'core-form-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    break;
+
+                case 'list':
+                case 'options':
+                    input = document.createElement('select');
+                    input.className = 'form-select';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+
+                    // Add options
+                    if (setting.values && Array.isArray(setting.values)) {
+                        setting.values.forEach((value) => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = value;
+                            if (value === currentValue) {
+                                option.selected = true;
+                            }
+                            input.appendChild(option);
+                        });
+                    }
+                    break;
+
+                default:
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'core-form-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+            }
+
+            formGroup.appendChild(input);
+
+            // Add description helper text if available
+            if (setting.desciption) {
+                const helperText = document.createElement('div');
+                helperText.className = 'core-helper-text';
+                helperText.textContent = setting.desciption;
+                formGroup.appendChild(helperText);
+            }
+
+            return formGroup;
+        }
+
+        // Handle settings form submission
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                // Collect form data
+                const formData = new FormData(document.getElementById('settingsForm'));
+                const payload = {};
+
+                // Build payload from form fields
+                for (let [key, value] of formData.entries()) {
+                    payload[key] = value;
+                }
+
+                // Send to API
+                const response = await fetch('/services/queueing/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseText = await response.text();
+
+                // Show response
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', responseText);
+
+                if (response.ok) {
+                    showAlert('Settings saved successfully', 'success');
+                    // Reload settings to reflect changes
+                    setTimeout(() => loadSettings(), 1000);
+                } else {
+                    showAlert('Error saving settings: ' + responseText, 'error');
+                }
+            } catch (error) {
+                showAlert('Error saving settings: ' + error.message, 'error');
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', 'Error: ' + error.message);
+            }
+        });
+
+        // Load settings when settings tab is shown
+        document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadSettings();
+        });
+
+        // Swagger UI setup - Load spec from docs.json endpoint
+        let spec = null;
+
+        // Initialize Swagger UI
+
+        // Initialize header user profile
+        function initializeHeaderUserProfile() {
+            const currentUser = localStorage.getItem('currentUser');
+            const headerUserAvatar = document.getElementById('headerUserAvatar');
+            const headerUserLabel = document.getElementById('headerUserLabel');
+            const headerUserName = document.getElementById('headerUserName');
+            const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    const userName = user.username || 'User';
+                    const initials = userName.substring(0, 1).toUpperCase();
+
+                    if (headerUserAvatar) headerUserAvatar.textContent = initials;
+                    if (headerUserLabel) headerUserLabel.textContent = 'User';
+                    if (headerUserName) headerUserName.textContent = userName;
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+
+            // Setup logout functionality
+            if (headerLogoutBtn) {
+                headerLogoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        try {
+                            await fetch('/services/authservice/api/logout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token })
+                            });
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                        }
+                    }
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = '/services/authservice/views/login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeHeaderUserProfile();
+            if (typeof SwaggerUIBundle === 'undefined') {
+                console.error('SwaggerUIBundle not loaded');
+                const swaggerContainer = document.getElementById('swagger-ui');
+                if (swaggerContainer) {
+                    swaggerContainer.innerHTML = '<div style="color: red; padding: 20px; text-align: center;">Swagger UI failed to load. Please check your internet connection and refresh the page.</div>';
+                }
+                return;
+            }
+
+            // Fetch Swagger spec from docs.json endpoint
+            fetch('/services/queueing/api/swagger/docs.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch API documentation');
+                    }
+                    return response.json();
+                })
+                .then(swaggerSpec => {
+                    initializeSwaggerUI(swaggerSpec);
+                })
+                .catch(error => {
+                    console.error('Error loading Swagger documentation:', error);
+                    const container = document.getElementById('swagger-ui');
+                    if (container) {
+                        container.innerHTML = '<div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;"><strong>Error loading API documentation</strong><br>Error: ' + error.message + '<br><button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button></div>';
+                    }
+                });
+
+            function initializeSwaggerUI(swaggerSpec) {
+                try {
+                    const container = document.getElementById('swagger-ui');
+                    if (!container) return;
+
+                    container.innerHTML = '';
+
+                    const ui = SwaggerUIBundle({
+                        spec: swaggerSpec,
+                    dom_id: '#swagger-ui',
+                    deepLinking: false,
+                    presets: [
+                        SwaggerUIBundle.presets.apis
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "BaseLayout",
+                    validatorUrl: null,
+                    tryItOutEnabled: true,
+                    displayOperationId: false,
+                    showExtensions: false,
+                    showCommonExtensions: false,
+                    docExpansion: 'list',
+                    defaultModelsExpandDepth: 1,
+                    defaultModelExpandDepth: 1,
+                    filter: false,
+                    showRequestHeaders: false,
+                    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                    onComplete: function() {
+                        console.log('Swagger UI initialized successfully');
+                        const topbar = document.querySelector('#swagger-ui .topbar');
+                        if (topbar) {
+                            topbar.style.display = 'none';
+                        }
+                        const swaggerContainer = document.querySelector('#swagger-ui');
+                        if (swaggerContainer) {
+                            swaggerContainer.style.fontFamily = 'inherit';
+                        }
+                    },
+                    onFailure: function(error) {
+                        console.error('Swagger UI initialization failed:', error);
+                        document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px;">Failed to initialize API documentation: ' + error.message + '</div>';
+                    }
+                });
+
+                    window.swaggerUI = ui;
+                } catch (error) {
+                    console.error('Critical error initializing Swagger UI:', error);
+                    const swaggerContainer = document.getElementById('swagger-ui');
+                    if (swaggerContainer) {
+                        swaggerContainer.innerHTML = '<div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;"><strong>Error loading API documentation</strong><br>Error: ' + error.message + '<br><button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button></div>';
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

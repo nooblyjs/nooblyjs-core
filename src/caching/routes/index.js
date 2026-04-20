@@ -6,43 +6,16 @@
  * Supports multiple named instances of caching service through optional
  * instance parameter in URL paths.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
-
-/**
- * Gets the appropriate cache instance based on instance name
- * Falls back to the provided default cache if no instance name is specified
- *
- * @param {string} instanceName - Optional instance name
- * @param {Object} defaultCache - Default cache instance
- * @param {Object} options - Options containing service registry reference
- * @param {string} providerType - Provider type for the cache service
- * @returns {Object} Cache instance to use
- */
-function getCacheInstance(instanceName, defaultCache, options, providerType = 'memory') {
-  if (!instanceName || instanceName === 'default') {
-    return defaultCache;
-  }
-
-  // Try to get from service registry if available
-  const ServiceRegistry = options.ServiceRegistry;
-  if (ServiceRegistry) {
-    const instance = ServiceRegistry.getServiceInstance('caching', providerType, instanceName);
-    if (instance) {
-      return instance;
-    }
-  }
-
-  // If not found, return default
-  return defaultCache;
-}
+const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
 /**
  * Configures and registers caching routes with the Express application.
@@ -76,15 +49,15 @@ module.exports = (options, eventEmitter, cache) => {
         const value = req.body;
         try {
           await cache.put(key, value);
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
 
     /**
-     * PUT /services/caching/api/put/:key
+     * POST /services/caching/api/put/:key
      * Stores a value in the cache with the specified key.
      *
      * @param {express.Request} req - Express request object
@@ -100,7 +73,7 @@ module.exports = (options, eventEmitter, cache) => {
     );
 
     /**
-     * PUT /services/caching/api/:instanceName/put/:key
+     * POST /services/caching/api/:instanceName/put/:key
      * Stores a value in a named cache instance with the specified key.
      *
      * @param {express.Request} req - Express request object
@@ -115,7 +88,7 @@ module.exports = (options, eventEmitter, cache) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const cacheInstance = getCacheInstance(instanceName, cache, options, providerType);
+        const cacheInstance = getServiceInstance('caching', instanceName, cache, options, providerType);
         createPutHandler(cacheInstance)(req, res);
       }
     );
@@ -167,7 +140,7 @@ module.exports = (options, eventEmitter, cache) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const cacheInstance = getCacheInstance(instanceName, cache, options, providerType);
+        const cacheInstance = getServiceInstance('caching', instanceName, cache, options, providerType);
         createGetHandler(cacheInstance)(req, res);
       }
     );
@@ -182,9 +155,9 @@ module.exports = (options, eventEmitter, cache) => {
         const key = req.params.key;
         try {
           await cache.delete(key);
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
@@ -219,7 +192,7 @@ module.exports = (options, eventEmitter, cache) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const cacheInstance = getCacheInstance(instanceName, cache, options, providerType);
+        const cacheInstance = getServiceInstance('caching', instanceName, cache, options, providerType);
         createDeleteHandler(cacheInstance)(req, res);
       }
     );
@@ -334,7 +307,7 @@ module.exports = (options, eventEmitter, cache) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const cacheInstance = getCacheInstance(instanceName, cache, options, providerType);
+        const cacheInstance = getServiceInstance('caching', instanceName, cache, options, providerType);
         createListHandler(cacheInstance)(req, res);
       }
     );
@@ -389,12 +362,12 @@ module.exports = (options, eventEmitter, cache) => {
       '/services/caching/api/:instanceName/analytics',
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const cacheInstance = getCacheInstance(instanceName, cache, options, providerType);
+        const cacheInstance = getServiceInstance('caching', instanceName, cache, options, providerType);
         createAnalyticsHandler(cacheInstance)(req, res);
       }
     );
 
-        /**
+    /**
      * GET /services/caching/api/settings
      * Retrieves the settings
      *
@@ -417,7 +390,7 @@ module.exports = (options, eventEmitter, cache) => {
 
      /**
      * POST /services/caching/api/settings
-     * Retrieves the settings
+     * Updates the settings for the caching service.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -428,12 +401,12 @@ module.exports = (options, eventEmitter, cache) => {
       if (message) {
         try {
           await cache.saveSettings(message);
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Missing settings' });
       }
     });
 

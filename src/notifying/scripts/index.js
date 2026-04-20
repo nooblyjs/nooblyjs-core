@@ -1,10 +1,10 @@
 /**
- * @fileoverview Notifying service scripts module for noobly-core framework.
+ * @fileoverview Notifying service scripts module for nooblyjs-core framework.
  * This module provides Express.js static file serving for client-side JavaScript libraries
  * and scripts related to the notifying service. It registers routes to serve the notifying
  * client library through the Express application.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  * @module NotifyingScripts
@@ -12,9 +12,9 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
-const fs = require('fs');
+const fs = require('node:fs');
 
 /**
  * Registers notifying service scripts with the Express application.
@@ -44,7 +44,7 @@ const fs = require('fs');
  * // In HTML:
  * // <script src="/services/notifying/scripts"></script>
  * // <script>
- * //   const notifying = new nooblyjsNotifying({ instanceName: 'default' });
+ * //   const notifying = new digitaltechnologiesNotifying({ instanceName: 'default' });
  * //   await notifying.createTopic('my-topic');
  * // </script>
  */
@@ -79,8 +79,5 @@ module.exports = (options, eventEmitter, notifier) => {
       }
     });
 
-    // Also serve static files from the scripts directory
-    // This allows access to individual files like /services/notifying/scripts/js/index.js
-    app.use('/services/notifying/scripts', express.static(scriptsPath));
   }
 };

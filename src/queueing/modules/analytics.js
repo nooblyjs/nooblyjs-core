@@ -3,7 +3,7 @@
  * Captures and stores queue activity metrics for analytics purposes.
  * Tracks enqueue/dequeue operations and provides statistics about queue usage.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -54,20 +54,39 @@ class QueueAnalytics {
     const dequeueEventName = `queue:dequeue:${this.instanceName_}`;
     const purgeEventName = `queue:purge:${this.instanceName_}`;
 
-    // Listen for enqueue events
-    this.eventEmitter_.on(enqueueEventName, (data) => {
-      this.recordActivity_(data.queueName, 'enqueue', data.item);
-    });
+    // Store named listener references for cleanup in destroy()
+    this.listeners_ = {
+      [enqueueEventName]: (data) => {
+        this.recordActivity_(data.queueName, 'enqueue', data.item);
+      },
+      [dequeueEventName]: (data) => {
+        this.recordActivity_(data.queueName, 'dequeue', data.item);
+      },
+      [purgeEventName]: (data) => {
+        this.recordActivity_(data.queueName, 'purge', null);
+      }
+    };
 
-    // Listen for dequeue events
-    this.eventEmitter_.on(dequeueEventName, (data) => {
-      this.recordActivity_(data.queueName, 'dequeue', data.item);
-    });
+    // Listen for queue events
+    this.eventEmitter_.on(enqueueEventName, this.listeners_[enqueueEventName]);
+    this.eventEmitter_.on(dequeueEventName, this.listeners_[dequeueEventName]);
+    this.eventEmitter_.on(purgeEventName, this.listeners_[purgeEventName]);
+  }
 
-    // Listen for purge events
-    this.eventEmitter_.on(purgeEventName, (data) => {
-      this.recordActivity_(data.queueName, 'purge', null);
-    });
+  /**
+   * Removes all event listeners and clears stored analytics data.
+   * Should be called when the analytics module is no longer needed to prevent memory leaks.
+   * @return {void}
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const [eventName, listener] of Object.entries(this.listeners_)) {
+        this.eventEmitter_.removeListener(eventName, listener);
+      }
+      this.listeners_ = null;
+    }
+    this.queueStats_.clear();
+    this.queueActivity_.clear();
   }
 
   /**

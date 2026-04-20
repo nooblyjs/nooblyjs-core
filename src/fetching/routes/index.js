@@ -3,7 +3,7 @@
  * Provides RESTful endpoints for fetch operations including fetch,
  * status monitoring, and analytics retrieval.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */

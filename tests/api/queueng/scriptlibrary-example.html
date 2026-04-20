@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noobly-core Queueing Script Library Example</title>
+    <title>nooblyjs-core Queueing Script Library Example</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -110,11 +110,11 @@
     </style>
 </head>
 <body>
-    <h1>🎯 Noobly-core Queueing Script Library Example</h1>
+    <h1>🎯 nooblyjs-core Queueing Script Library Example</h1>
 
     <div class="container">
         <h2>Overview</h2>
-        <p>This example demonstrates how to use the Noobly-core Queueing service JavaScript library in a browser environment.</p>
+        <p>This example demonstrates how to use the nooblyjs-core Queueing service JavaScript library in a browser environment.</p>
         <p>The library is served from <code>/services/queueing/scriptlibrary</code> and provides a simple API for enqueueing and dequeueing items.</p>
     </div>
 
@@ -222,7 +222,7 @@
                     debug: debugMode
                 };
 
-                queueClient = new nooblyjscorequeueing(instanceName, options);
+                queueClient = new digitaltechnologiesqueueing(instanceName, options);
 
                 const statusDiv = document.getElementById('clientStatus');
                 statusDiv.classList.remove('disconnected');
@@ -364,11 +364,11 @@
             log('Page loaded. Script library ready. Configure and click "Initialize Client" to begin.');
 
             // Check if the library is available
-            if (typeof nooblyjscorequeueing === 'undefined') {
-                log('✗ ERROR: nooblyjscorequeueing library is not available!', true);
+            if (typeof digitaltechnologiesqueueing === 'undefined') {
+                log('✗ ERROR: digitaltechnologiesqueueing library is not available!', true);
                 log('Make sure the script library endpoint is accessible at /services/queueing/scriptlibrary', true);
             } else {
-                log('✓ nooblyjscorequeueing library is available');
+                log('✓ digitaltechnologiesqueueing library is available');
             }
         });
     </script>

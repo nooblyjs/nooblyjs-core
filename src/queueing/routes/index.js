@@ -6,43 +6,16 @@
  * Supports multiple named instances of queueing service through optional
  * instance parameter in URL paths.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-
-/**
- * Gets the appropriate queue instance based on instance name
- * Falls back to the provided default queue if no instance name is specified
- *
- * @param {string} instanceName - Optional instance name
- * @param {Object} defaultQueue - Default queue instance
- * @param {Object} options - Options containing service registry reference
- * @param {string} providerType - Provider type for the queue service
- * @returns {Object} Queue instance to use
- */
-function getQueueInstance(instanceName, defaultQueue, options, providerType = 'memory') {
-  if (!instanceName || instanceName === 'default') {
-    return defaultQueue;
-  }
-
-  // Try to get from service registry if available
-  const ServiceRegistry = options.ServiceRegistry;
-  if (ServiceRegistry) {
-    const instance = ServiceRegistry.getServiceInstance('queueing', providerType, instanceName);
-    if (instance) {
-      return instance;
-    }
-  }
-
-  // If not found, return default
-  return defaultQueue;
-}
+const fs = require('node:fs');
+const path = require('node:path');
+const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
 /**
  * Configures and registers queueing routes with the Express application.
@@ -127,19 +100,19 @@ module.exports = (options, eventEmitter, queue) => {
         const { queueName } = req.params;
         const { task } = req.body;
         if (!queueName) {
-          return res.status(400).send('Bad Request: Missing queue name');
+          return res.status(400).json({ error: 'Bad Request: Missing queue name' });
         }
         if (task) {
           try {
             await queue.enqueue(queueName, task);
             eventEmitter.emit('api-queueing-enqueue', { queueName });
-            res.status(200).send('OK');
+            res.status(200).json({ success: true });
           } catch (err) {
             eventEmitter.emit('api-queueing-enqueue-error', { error: err.message });
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing task');
+          res.status(400).json({ error: 'Bad Request: Missing task' });
         }
       };
     };
@@ -176,7 +149,7 @@ module.exports = (options, eventEmitter, queue) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createEnqueueHandler(queueInstance)(req, res);
       }
     );
@@ -190,7 +163,7 @@ module.exports = (options, eventEmitter, queue) => {
       return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
-          return res.status(400).send('Bad Request: Missing queue name');
+          return res.status(400).json({ error: 'Bad Request: Missing queue name' });
         }
         try {
           const task = await queue.dequeue(queueName);
@@ -198,7 +171,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(task);
         } catch (err) {
           eventEmitter.emit('api-queueing-dequeue-error', { error: err.message });
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
@@ -233,7 +206,7 @@ module.exports = (options, eventEmitter, queue) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createDequeueHandler(queueInstance)(req, res);
       }
     );
@@ -247,7 +220,7 @@ module.exports = (options, eventEmitter, queue) => {
       return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
-          return res.status(400).send('Bad Request: Missing queue name');
+          return res.status(400).json({ error: 'Bad Request: Missing queue name' });
         }
         try {
           const size = await queue.size(queueName);
@@ -255,7 +228,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(size);
         } catch (err) {
           eventEmitter.emit('api-queueing-size-error', { error: err.message });
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
@@ -290,7 +263,7 @@ module.exports = (options, eventEmitter, queue) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createSizeHandler(queueInstance)(req, res);
       }
     );
@@ -308,7 +281,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(queues);
         } catch (err) {
           eventEmitter.emit('api-queueing-list-error', { error: err.message });
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
@@ -341,7 +314,7 @@ module.exports = (options, eventEmitter, queue) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createListHandler(queueInstance)(req, res);
       }
     );
@@ -355,15 +328,15 @@ module.exports = (options, eventEmitter, queue) => {
       return async (req, res) => {
         const { queueName } = req.params;
         if (!queueName) {
-          return res.status(400).send('Bad Request: Missing queue name');
+          return res.status(400).json({ error: 'Bad Request: Missing queue name' });
         }
         try {
           await queue.purge(queueName);
           eventEmitter.emit('api-queueing-purge', { queueName });
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
           eventEmitter.emit('api-queueing-purge-error', { error: err.message });
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       };
     };
@@ -398,7 +371,7 @@ module.exports = (options, eventEmitter, queue) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createPurgeHandler(queueInstance)(req, res);
       }
     );
@@ -515,7 +488,7 @@ module.exports = (options, eventEmitter, queue) => {
       '/services/queueing/api/:instanceName/analytics',
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const queueInstance = getQueueInstance(instanceName, queue, options, providerType);
+        const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
         createAnalyticsHandler(queueInstance)(req, res);
       }
     );
@@ -555,13 +528,13 @@ module.exports = (options, eventEmitter, queue) => {
         try {
           await queue.saveSettings(message);
           eventEmitter.emit('api-queueing-settings-saved', { timestamp: Date.now() });
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
           eventEmitter.emit('api-queueing-settings-save-error', err.message);
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Bad Request: Missing settings' });
       }
     });
   }

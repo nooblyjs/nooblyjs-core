@@ -6,40 +6,14 @@
  * Supports multiple named instances of notifying service through optional
  * instance parameter in URL paths.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
-/**
- * Gets the appropriate notifier instance based on instance name
- * Falls back to the provided default notifier if no instance name is specified
- *
- * @param {string} instanceName - Optional instance name
- * @param {Object} defaultNotifier - Default notifier instance
- * @param {Object} options - Options containing service registry reference
- * @param {string} providerType - Provider type for the notifying service
- * @returns {Object} Notifier instance to use
- */
-function getNotifierInstance(instanceName, defaultNotifier, options, providerType = 'memory') {
-  if (!instanceName || instanceName === 'default') {
-    return defaultNotifier;
-  }
-
-  // Try to get from service registry if available
-  const ServiceRegistry = options.ServiceRegistry;
-  if (ServiceRegistry) {
-    const instance = ServiceRegistry.getServiceInstance('notifying', providerType, instanceName);
-    if (instance) {
-      return instance;
-    }
-  }
-
-  // If not found, return default
-  return defaultNotifier;
-}
+const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
 /**
  * Configures and registers notification routes with the Express application.
@@ -74,12 +48,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic) {
           try {
             await notifier.createTopic(topic);
-            res.status(200).send('OK');
+            res.status(200).json({ success: true });
           } catch (err) {
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing topic');
+          res.status(400).json({ error: 'Missing topic' });
         }
       };
     };
@@ -114,7 +88,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const notifierInstance = getNotifierInstance(instanceName, notifier, options, providerType);
+        const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
         createTopicHandler(notifierInstance)(req, res);
       }
     );
@@ -131,12 +105,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.subscribe(topic, callbackUrl);
-            res.status(200).send('OK');
+            res.status(200).json({ success: true });
           } catch (err) {
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing topic or callback URL');
+          res.status(400).json({ error: 'Missing topic or callback URL' });
         }
       };
     };
@@ -173,7 +147,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const notifierInstance = getNotifierInstance(instanceName, notifier, options, providerType);
+        const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
         createSubscribeHandler(notifierInstance)(req, res);
       }
     );
@@ -190,12 +164,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.unsubscribe(topic, callbackUrl);
-            res.status(200).send('OK');
+            res.status(200).json({ success: true });
           } catch (err) {
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing topic or callback URL');
+          res.status(400).json({ error: 'Missing topic or callback URL' });
         }
       };
     };
@@ -232,7 +206,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const notifierInstance = getNotifierInstance(instanceName, notifier, options, providerType);
+        const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
         createUnsubscribeHandler(notifierInstance)(req, res);
       }
     );
@@ -249,12 +223,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && message) {
           try {
             await notifier.notify(topic, message);
-            res.status(200).send('OK');
+            res.status(200).json({ success: true });
           } catch (err) {
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing topic or message');
+          res.status(400).json({ error: 'Missing topic or message' });
         }
       };
     };
@@ -291,7 +265,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
-        const notifierInstance = getNotifierInstance(instanceName, notifier, options, providerType);
+        const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
         createNotifyHandler(notifierInstance)(req, res);
       }
     );
@@ -455,12 +429,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       if (message) {
         try {
           await notifier.saveSettings(message);
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Missing settings' });
       }
     });
 

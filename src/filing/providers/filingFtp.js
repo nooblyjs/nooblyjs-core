@@ -1,7 +1,7 @@
 /**
  * @fileoverview FTP filing provider for remote file operations over FTP protocol
  * with automatic connection management and event emission support.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -49,7 +49,11 @@ class FtpFilingProvider {
     });
 
     this.client.on('error', (err) => {
-      console.error('FTP Client Error:', err);
+      this.logger?.error(`[${this.constructor.name}] FTP Client Error`, {
+        error: err.message,
+        stack: err.stack,
+        connectionString: this.connectionString
+      });
       this.isConnected = false;
       if (this.eventEmitter_)
         this.eventEmitter_.emit('filing:ftp:error', {
@@ -101,6 +105,27 @@ class FtpFilingProvider {
   }
 
   /**
+   * Helper to wrap FTP operations with automatic connection management.
+   * @param {Function} operation The operation to perform.
+   * @return {Promise<*>} The result of the operation.
+   * @private
+   */
+  async _withConnection(operation) {
+    const wasConnected = this.isConnected;
+    await this.connect();
+    try {
+      return await operation();
+    } finally {
+      // Only disconnect if we weren't connected before this operation
+      // and we want to prevent long-running idle connections.
+      // For production readiness, we'll disconnect after each op if it wasn't pre-connected.
+      if (!wasConnected) {
+        await this.disconnect();
+      }
+    }
+  }
+
+  /**
    * Creates a new file on the FTP server.
    * @param {string} filePath The path where the file should be created.
    * @param {Buffer|ReadableStream|string} content The content to write to the file.
@@ -108,36 +133,37 @@ class FtpFilingProvider {
    * @throws {Error} When file creation fails.
    */
   async create(filePath, content) {
-    await this.connect();
-    return new Promise((resolve, reject) => {
-      let dataToUpload;
+    return this._withConnection(() => {
+      return new Promise((resolve, reject) => {
+        let dataToUpload;
 
-      if (content && typeof content.pipe === 'function') {
-        // Handle ReadableStream
-        dataToUpload = content;
-      } else if (Buffer.isBuffer(content)) {
-        // Handle Buffer
-        dataToUpload = content;
-      } else {
-        // Handle string
-        dataToUpload = Buffer.from(content);
-      }
-
-      this.client.put(dataToUpload, filePath, (err) => {
-        if (err) {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:create:error', {
-              filePath,
-              error: err.message,
-            });
-          return reject(err);
+        if (content && typeof content.pipe === 'function') {
+          // Handle ReadableStream
+          dataToUpload = content;
+        } else if (Buffer.isBuffer(content)) {
+          // Handle Buffer
+          dataToUpload = content;
+        } else {
+          // Handle string
+          dataToUpload = Buffer.from(content);
         }
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('filing:create', {
-            filePath,
-            contentType: typeof content,
-          });
-        resolve();
+
+        this.client.put(dataToUpload, filePath, (err) => {
+          if (err) {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:create:error', {
+                filePath,
+                error: err.message,
+              });
+            return reject(err);
+          }
+          if (this.eventEmitter_)
+            this.eventEmitter_.emit('filing:create', {
+              filePath,
+              contentType: typeof content,
+            });
+          resolve();
+        });
       });
     });
   }
@@ -150,37 +176,38 @@ class FtpFilingProvider {
    * @throws {Error} When file reading fails.
    */
   async read(filePath, encoding) {
-    await this.connect();
-    return new Promise((resolve, reject) => {
-      const chunks = [];
-      this.client.get(filePath, (err, stream) => {
-        if (err) {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:read:error', {
-              filePath,
-              error: err.message,
-            });
-          return reject(err);
-        }
-        stream.on('data', (chunk) => chunks.push(chunk));
-        stream.on('end', () => {
-          const buffer = Buffer.concat(chunks);
-          const content = encoding ? buffer.toString(encoding) : buffer;
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:read', {
-              filePath,
-              encoding,
-              contentType: encoding ? 'string' : 'Buffer',
-            });
-          resolve(content);
-        });
-        stream.on('error', (err) => {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:read:error', {
-              filePath,
-              error: err.message,
-            });
-          reject(err);
+    return this._withConnection(() => {
+      return new Promise((resolve, reject) => {
+        const chunks = [];
+        this.client.get(filePath, (err, stream) => {
+          if (err) {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:read:error', {
+                filePath,
+                error: err.message,
+              });
+            return reject(err);
+          }
+          stream.on('data', (chunk) => chunks.push(chunk));
+          stream.on('end', () => {
+            const buffer = Buffer.concat(chunks);
+            const content = encoding ? buffer.toString(encoding) : buffer;
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:read', {
+                filePath,
+                encoding,
+                contentType: encoding ? 'string' : 'Buffer',
+              });
+            resolve(content);
+          });
+          stream.on('error', (err) => {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:read:error', {
+                filePath,
+                error: err.message,
+              });
+            reject(err);
+          });
         });
       });
     });
@@ -193,20 +220,21 @@ class FtpFilingProvider {
    * @throws {Error} When file deletion fails.
    */
   async delete(filePath) {
-    await this.connect();
-    return new Promise((resolve, reject) => {
-      this.client.delete(filePath, (err) => {
-        if (err) {
+    return this._withConnection(() => {
+      return new Promise((resolve, reject) => {
+        this.client.delete(filePath, (err) => {
+          if (err) {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:delete:error', {
+                filePath,
+                error: err.message,
+              });
+            return reject(err);
+          }
           if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:delete:error', {
-              filePath,
-              error: err.message,
-            });
-          return reject(err);
-        }
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('filing:delete', { filePath });
-        resolve();
+            this.eventEmitter_.emit('filing:delete', { filePath });
+          resolve();
+        });
       });
     });
   }
@@ -218,21 +246,22 @@ class FtpFilingProvider {
    * @throws {Error} When directory listing fails.
    */
   async list(dirPath) {
-    await this.connect();
-    return new Promise((resolve, reject) => {
-      this.client.list(dirPath, (err, list) => {
-        if (err) {
+    return this._withConnection(() => {
+      return new Promise((resolve, reject) => {
+        this.client.list(dirPath, (err, list) => {
+          if (err) {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:list:error', {
+                dirPath,
+                error: err.message,
+              });
+            return reject(err);
+          }
+          const files = list.map((item) => item.name);
           if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:list:error', {
-              dirPath,
-              error: err.message,
-            });
-          return reject(err);
-        }
-        const files = list.map((item) => item.name);
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('filing:list', { dirPath, files });
-        resolve(files);
+            this.eventEmitter_.emit('filing:list', { dirPath, files });
+          resolve(files);
+        });
       });
     });
   }
@@ -245,37 +274,37 @@ class FtpFilingProvider {
    * @throws {Error} When file update fails.
    */
   async update(filePath, content) {
-    // For FTP, update is essentially create (put) as it overwrites if exists
-    await this.connect();
-    return new Promise((resolve, reject) => {
-      let dataToUpload;
+    return this._withConnection(() => {
+      return new Promise((resolve, reject) => {
+        let dataToUpload;
 
-      if (content && typeof content.pipe === 'function') {
-        // Handle ReadableStream
-        dataToUpload = content;
-      } else if (Buffer.isBuffer(content)) {
-        // Handle Buffer
-        dataToUpload = content;
-      } else {
-        // Handle string
-        dataToUpload = Buffer.from(content);
-      }
-
-      this.client.put(dataToUpload, filePath, (err) => {
-        if (err) {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('filing:update:error', {
-              filePath,
-              error: err.message,
-            });
-          return reject(err);
+        if (content && typeof content.pipe === 'function') {
+          // Handle ReadableStream
+          dataToUpload = content;
+        } else if (Buffer.isBuffer(content)) {
+          // Handle Buffer
+          dataToUpload = content;
+        } else {
+          // Handle string
+          dataToUpload = Buffer.from(content);
         }
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('filing:update', {
-            filePath,
-            contentType: typeof content,
-          });
-        resolve();
+
+        this.client.put(dataToUpload, filePath, (err) => {
+          if (err) {
+            if (this.eventEmitter_)
+              this.eventEmitter_.emit('filing:update:error', {
+                filePath,
+                error: err.message,
+              });
+            return reject(err);
+          }
+          if (this.eventEmitter_)
+            this.eventEmitter_.emit('filing:update', {
+              filePath,
+              contentType: typeof content,
+            });
+          resolve();
+        });
       });
     });
   }
@@ -294,7 +323,11 @@ class FtpFilingProvider {
     for (let i = 0; i < this.settings.list.length; i++){
       if (settings[this.settings.list[i].setting] != null){
         this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+        this.logger?.info(`[${this.constructor.name}] Setting changed`, {
+          setting: this.settings.list[i].setting,
+          newValue: settings[this.settings.list[i].setting],
+          operation: 'saveSettings'
+        });
       }
     }
   }

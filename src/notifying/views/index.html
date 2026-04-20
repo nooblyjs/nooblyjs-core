@@ -3,32 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifying Management - Noobly JS Admin</title>
+    <title>Notifying Management - Noobly JS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
-    <link rel="stylesheet" href="/services/css/navigation.css">
-    <link rel="stylesheet" href="/styles.css">
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar"></nav>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Noobly JS Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
 
-        <main class="main-content">
-            <div class="page-header">
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="core-navigation-sidebar"></aside>
+        
+        <main class="core-main-content">
+            <div class="core-page-header">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
-                        <h1 class="page-title">Notification Management</h1>
-                        <p class="page-subtitle">Monitor topics, subscribers, and notification activity</p>
+                        <h1 class="core-page-title">Notification Management</h1>
+                        <p class="core-page-subtitle">Monitor topics, subscribers, and notification activity</p>
                     </div>
-                    <div style="min-width: 250px;">
-                        <label class="form-label mb-1" for="instanceSelect">Notifying Instance:</label>
-                        <select id="instanceSelect" class="form-select form-select-sm">
+
+            <div class="core-page-content">
+                    <div style="display: flex; gap: 1rem; align-items: center; justify-content: flex-end;">
+                        <label for="instanceSelect" style="font-weight: 500; margin: 0;">Instance:</label>
+                        <select id="instanceSelect" class="core-form-select" style="width: 200px; display: inline-block;">
                             <option value="default">default</option>
                         </select>
                     </div>
                 </div>
             </div>
+
+            <div class="core-page-content">
 
             <div class="alert alert-success" id="successAlert">
                 <strong>Success!</strong> <span id="successMessage"></span>
@@ -49,9 +77,14 @@
                         <i class="bi bi-database"></i> Data
                     </button>
                 </li>
-                            <li class="nav-item" role="presentation">
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
                         <i class="bi bi-gear"></i> Settings
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">
+                        <i class="bi bi-window-desktop"></i> UI
                     </button>
                 </li>
             </ul>
@@ -60,34 +93,34 @@
                 <!-- Settings Tab -->
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
                     <!-- Settings Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Notifying Service Settings</h2>
-                            <p class="card-subtitle">Configure the notifying service parameters</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Notifying Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the notifying service parameters</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="response-container" style="display: none; margin-top: 1rem;">
-                                <div class="response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="response-content"></div>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-                    <div class="card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="core-card mb-4">
+                        <div class="core-card-header d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="card-title">Notification Overview</h2>
-                                <p class="card-subtitle">
+                                <h2 class="core-card-title">Notification Overview</h2>
+                                <p class="core-card-subtitle">
                                     Aggregate insight into topics and messages
                                     <span id="instanceLabel" style="font-size: 0.85rem; color: #6c757d; margin-left: 1rem;">
                                         (Instance: <span id="instanceBadge" style="font-weight: 600;">default</span>)
@@ -98,43 +131,43 @@
                                 <div class="spinner-border spinner-border-sm text-secondary d-none" id="analyticsRefreshSpinner" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" id="analyticsRefreshButton">
+                                <button type="button" class="btn btn-secondary btn-sm" id="analyticsRefreshButton">
                                     <i class="bi bi-arrow-clockwise"></i> Refresh
                                 </button>
                             </div>
                         </div>
-                        <div class="card-content">
-                            <div class="metrics-summary">
-                                <div class="summary-item">
+                        <div class="core-card-content">
+                            <div class="core-metrics-summary">
+                                <div class="core-summary-item">
                                     <h5>Total Topics</h5>
-                                    <div class="summary-value" id="totalTopics">0</div>
-                                    <div class="summary-meta">Distinct topics created</div>
+                                    <div class="core-summary-value" id="totalTopics">0</div>
+                                    <div class="core-summary-meta">Distinct topics created</div>
                                 </div>
-                                <div class="summary-item">
+                                <div class="core-summary-item">
                                     <h5>Total Subscribers</h5>
-                                    <div class="summary-value" id="totalSubscribers">0</div>
-                                    <div class="summary-meta">Subscribers across all topics</div>
+                                    <div class="core-summary-value" id="totalSubscribers">0</div>
+                                    <div class="core-summary-meta">Subscribers across all topics</div>
                                 </div>
-                                <div class="summary-item">
+                                <div class="core-summary-item">
                                     <h5>Total Notifications</h5>
-                                    <div class="summary-value" id="totalNotifications">0</div>
-                                    <div class="summary-meta">Messages delivered to topics</div>
+                                    <div class="core-summary-value" id="totalNotifications">0</div>
+                                    <div class="core-summary-meta">Messages delivered to topics</div>
                                 </div>
-                                <div class="summary-item">
+                                <div class="core-summary-item">
                                     <h5>Last Notification</h5>
-                                    <div class="summary-value" id="lastNotification">—</div>
-                                    <div class="summary-meta">Most recent publish time</div>
+                                    <div class="core-summary-value" id="lastNotification">—</div>
+                                    <div class="core-summary-meta">Most recent publish time</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">Top Topics by Activity</h2>
-                            <p class="card-subtitle">Top 10 topics ranked by notifications delivered</p>
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title mb-0">Top Topics by Activity</h2>
+                            <p class="core-card-subtitle">Top 10 topics ranked by notifications delivered</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="list-group list-group-flush" id="topTopicsList">
                                 <div class="list-group-item loading-row">
                                     <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -143,15 +176,20 @@
                                     Loading topics...
                                 </div>
                             </div>
+                            <div id="topTopicsEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
+                                <i class="bi bi-chat-dots"></i>
+                                <h3>No topics captured yet</h3>
+                                <p>Topics will appear here once notifications are published</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">Top Topics (Last Activity)</h2>
-                            <p class="card-subtitle">Latest 100 topics ordered by last publish time</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title mb-0">Top Topics (Last Activity)</h2>
+                            <p class="core-card-subtitle">Latest 100 topics ordered by last publish time</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped">
                                     <thead>
@@ -185,131 +223,231 @@
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
                     <!-- Create Topic Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Create Topic</h2>
-                            <p class="card-subtitle">Create a new notification topic</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Create Topic</h2>
+                            <p class="core-card-subtitle">Create a new notification topic</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <form id="createTopicForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="topicName">Topic Name</label>
-                                    <input type="text" id="topicName" class="form-input" placeholder="e.g., user-events, order-updates" required>
-                                    <div class="helper-text">Enter a unique topic name (e.g., user-notifications, order-updates)</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="topicName">Topic Name</label>
+                                    <input type="text" id="topicName" class="core-form-input" placeholder="e.g., user-events, order-updates" required>
+                                    <div class="core-helper-text">Enter a unique topic name (e.g., user-notifications, order-updates)</div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Create Topic</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Create Topic</button>
                                 </div>
                             </form>
-                            <div id="createTopicResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Response:</div>
-                                <div id="createTopicResponseContent" class="response-content"></div>
+                            <div id="createTopicResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="createTopicResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Create Subscriber Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Create Subscriber (Local Service)</h2>
-                            <p class="card-subtitle">Subscribe to a topic with a JavaScript callback function (client-side, in-memory)</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Create Subscriber (Local Service)</h2>
+                            <p class="core-card-subtitle">Subscribe to a topic with a JavaScript callback function (client-side, in-memory)</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="alert alert-info" style="margin-bottom: 1rem;">
                                 <strong>Note:</strong> This creates a local in-memory subscription. Subscribers are stored in your browser memory and will be lost on page reload.
                             </div>
                             <form id="createSubscriberForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="subscriberTopic">Topic Name</label>
-                                    <input type="text" id="subscriberTopic" class="form-input" placeholder="e.g., user-events" required>
-                                    <div class="helper-text">Enter the topic you want to subscribe to</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="subscriberTopic">Topic Name</label>
+                                    <input type="text" id="subscriberTopic" class="core-form-input" placeholder="e.g., user-events" required>
+                                    <div class="core-helper-text">Enter the topic you want to subscribe to</div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="callbackFunction">Callback Function (JavaScript)</label>
-                                    <textarea id="callbackFunction" class="form-input form-textarea" placeholder="(msg) => {&#10;  console.log('Received:', msg);&#10;}" required></textarea>
-                                    <div id="callbackValidation" class="validation-message" style="display: none;"></div>
-                                    <div class="helper-text">Enter a JavaScript function that will be called when a message is received. This runs locally in your browser. Example: <code>(msg) => { console.log(msg); }</code></div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="callbackFunction">Callback Function (JavaScript)</label>
+                                    <textarea id="callbackFunction" class="core-form-input core-form-textarea" placeholder="(msg) => {&#10;  console.log('Received:', msg);&#10;}" required></textarea>
+                                    <div id="callbackValidation" class="core-validation-message" style="display: none;"></div>
+                                    <div class="core-helper-text">Enter a JavaScript function that will be called when a message is received. This runs locally in your browser. Example: <code>(msg) => { console.log(msg); }</code></div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Create Subscriber</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Create Subscriber</button>
                                     <button type="button" class="btn btn-secondary" id="exampleCallbackButton">Load Example</button>
                                 </div>
                             </form>
-                            <div id="createSubscriberResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Response:</div>
-                                <div id="createSubscriberResponseContent" class="response-content"></div>
+                            <div id="createSubscriberResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="createSubscriberResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Send Notification Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Send Notification</h2>
-                            <p class="card-subtitle">Send a new notification to a topic</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Send Notification</h2>
+                            <p class="core-card-subtitle">Send a new notification to a topic</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <form id="sendForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="notificationTopic">Topic Name</label>
-                                    <input type="text" id="notificationTopic" class="form-input" placeholder="e.g., user-events" required>
-                                    <div class="helper-text">Select the topic to send the notification to</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="notificationTopic">Topic Name</label>
+                                    <input type="text" id="notificationTopic" class="core-form-input" placeholder="e.g., user-events" required>
+                                    <div class="core-helper-text">Select the topic to send the notification to</div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="sendMessage">Message (JSON)</label>
-                                    <textarea id="sendMessage" class="form-input form-textarea" placeholder='{"channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification."}' required></textarea>
-                                    <div id="sendValidation" class="validation-message" style="display: none;"></div>
-                                    <div class="helper-text">Enter a valid JSON object for the notification</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="sendMessage">Message (JSON)</label>
+                                    <textarea id="sendMessage" class="core-form-input core-form-textarea" placeholder='{"channel": "email", "recipient": "test@test.com", "subject": "Hello!", "body": "This is a test notification."}' required></textarea>
+                                    <div id="sendValidation" class="core-validation-message" style="display: none;"></div>
+                                    <div class="core-helper-text">Enter a valid JSON object for the notification</div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Send Notification</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Send Notification</button>
                                     <button type="button" class="btn btn-secondary" id="formatSendButton">Format JSON</button>
                                     <button type="button" class="btn btn-secondary" id="exampleSendButton">Load Example</button>
                                 </div>
                             </form>
-                            <div id="sendResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Response:</div>
-                                <div id="sendResponseContent" class="response-content"></div>
+                            <div id="sendResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="sendResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Service Status</h2>
-                            <p class="card-subtitle">Check notifying service status</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Service Status</h2>
+                            <p class="core-card-subtitle">Check notifying service status</p>
                         </div>
-                        <div class="card-content">
-                            <div class="btn-group">
+                        <div class="core-card-content">
+                            <div class="core-btn-group">
                                 <button type="button" class="btn btn-secondary" id="statusButton">Check Status</button>
                             </div>
-                            <div id="statusResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="response-content"></div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">API Documentation</h2>
-                            <p class="card-subtitle">Interactive API documentation for Notifying service</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">API Documentation</h2>
+                            <p class="core-card-subtitle">Interactive API documentation for Notifying service</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="swagger-ui"></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- UI Tab -->
+                <div class="tab-pane fade" id="ui" role="tabpanel" aria-labelledby="ui-tab">
+
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Notification Inbox</h2>
+                            <p class="core-card-subtitle">View and manage your notifications</p>
+                        </div>
+                        <div class="core-card-content" style="padding: 0; height: 600px;">
+                            <div class="notification-container">
+                                <!-- Left Navigation -->
+                                <div class="notification-left-nav" id="contentLeftNav">
+                                    <div class="notification-search">
+                                        <input type="text" id="contentSearch" placeholder="Search topics..." class="form-control form-control-sm">
+                                    </div>
+                                    <div class="notification-tree" id="notificationTree">
+                                        <!-- Inbox Folder -->
+                                        <div class="notification-folder" data-folder="inbox">
+                                            <div class="notification-folder-header" onclick="toggleFolder('inbox')">
+                                                <i class="bi bi-chevron-right" id="inbox-toggle"></i>
+                                                <i class="bi bi-inbox"></i>
+                                                <span>Inbox</span>
+                                                <span class="notification-folder-count" id="inboxCount">0</span>
+                                            </div>
+                                            <div class="notification-folder-content" id="inbox-topics" style="display: none;"></div>
+                                        </div>
+
+                                        <!-- Read Folder -->
+                                        <div class="notification-folder" data-folder="read">
+                                            <div class="notification-folder-header" onclick="toggleFolder('read')">
+                                                <i class="bi bi-chevron-right" id="read-toggle"></i>
+                                                <i class="bi bi-check-circle"></i>
+                                                <span>Read</span>
+                                                <span class="notification-folder-count" id="readCount">0</span>
+                                            </div>
+                                            <div class="notification-folder-content" id="read-topics" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Center Content -->
+                                <div class="notification-content" id="contentMain">
+                                    <div class="notification-content-header">
+                                        <div>
+                                            <div class="notification-content-title" id="contentTitle">Select a topic</div>
+                                            <div class="notification-content-subtitle" id="contentSubtitle"></div>
+                                        </div>
+                                    </div>
+                                    <div class="notification-content-body" id="contentBody">
+                                        <div class="no-selection">Select a topic from the list to view notifications</div>
+                                    </div>
+                                    <div class="notification-content-actions" id="contentActions" style="display: none;">
+                                        <button id="toggleReadBtn" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-envelope"></i> Mark as Unread
+                                        </button>
+                                        <button id="deleteBtn" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Right Panel -->
+                                <div class="notification-right-panel" id="contentRightNav">
+                                    <div class="notification-right-panel-header">
+                                        <span>Subscriptions</span>
+                                        <button onclick="toggleRightPanel()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+                                    </div>
+                                    <div class="notification-right-panel-content" id="subscriptionsPanel"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="core-card mt-4">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Subscribe to Topics</h2>
+                            <p class="core-card-subtitle">Manage your topic subscriptions</p>
+                        </div>
+                        <div class="core-card-content">
+                            <form id="subscribeForm">
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="topicToSubscribe">Topic Name</label>
+                                    <input type="text" id="topicToSubscribe" class="core-form-input" placeholder="e.g., user-events, order-updates" required>
+                                    <div class="core-helper-text">Enter a topic to subscribe to</div>
+                                </div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Subscribe</button>
+                                </div>
+                            </form>
+                            <div id="subscribeResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="subscribeResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            </div>
+            <!-- End Page Content -->
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
     <script src="/services/notifying/scripts"></script>
     <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'notifying');
+        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'notifying');
     </script>
     <script>
         // Global variable to track current instance
@@ -410,14 +548,14 @@
                 element.classList.remove('json-invalid');
                 element.classList.add('json-valid');
                 validation.textContent = '✓ Valid JSON';
-                validation.className = 'validation-message validation-success';
+                validation.className = 'core-validation-message validation-success';
                 validation.style.display = 'block';
                 return true;
             } catch (error) {
                 element.classList.remove('json-valid');
                 element.classList.add('json-invalid');
                 validation.textContent = '✗ Invalid JSON: ' + error.message;
-                validation.className = 'validation-message validation-error';
+                validation.className = 'core-validation-message validation-error';
                 validation.style.display = 'block';
                 return false;
             }
@@ -532,6 +670,7 @@
 
         function renderTopTopics(topics) {
             const list = document.getElementById('topTopicsList');
+            const emptyDiv = document.getElementById('topTopicsEmpty');
             if (!list) {
                 return;
             }
@@ -539,9 +678,13 @@
             list.innerHTML = '';
 
             if (!topics || topics.length === 0) {
-                list.innerHTML = '<div class="list-group-item text-muted">No topics captured yet.</div>';
+                list.style.display = 'none';
+                if (emptyDiv) emptyDiv.style.display = 'flex';
                 return;
             }
+
+            list.style.display = 'block';
+            if (emptyDiv) emptyDiv.style.display = 'none';
 
             topics.forEach((topic, index) => {
                 const item = document.createElement('div');
@@ -560,7 +703,7 @@
                 details.appendChild(meta);
 
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-primary rounded-pill';
+                badge.className = 'badge bg-secondary rounded-pill';
                 badge.textContent = formatNumber(topic.notificationCount);
 
                 item.appendChild(details);
@@ -640,7 +783,7 @@
         async function checkStatus() {
             try {
                 const instanceName = getCurrentInstance();
-                const notifying = new nooblyjsNotifying({ instanceName });
+                const notifying = new digitaltechnologiesNotifying({ instanceName });
                 const result = await notifying.getStatus();
                 showResponse('statusResponse', 'statusResponseContent', result);
                 showAlert('Status checked successfully');
@@ -749,7 +892,7 @@
                     try {
                         setLoading('createTopicForm', true);
                         const instanceName = getCurrentInstance();
-                        const notifying = new nooblyjsNotifying({ instanceName });
+                        const notifying = new digitaltechnologiesNotifying({ instanceName });
                         const topicName = document.getElementById('topicName').value.trim();
 
                         if (!topicName) {
@@ -780,7 +923,7 @@
                         setLoading('createSubscriberForm', true);
                         // JavaScript callback functions are only for local pub/sub, not server-based
                         // So we create a local notifying instance without instanceName
-                        const notifying = new nooblyjsNotifying();
+                        const notifying = new digitaltechnologiesNotifying();
                         const topic = document.getElementById('subscriberTopic').value.trim();
                         const callbackFunctionStr = document.getElementById('callbackFunction').value.trim();
 
@@ -850,7 +993,7 @@
                     try {
                         setLoading('sendForm', true);
                         const instanceName = getCurrentInstance();
-                        const notifying = new nooblyjsNotifying({ instanceName });
+                        const notifying = new digitaltechnologiesNotifying({ instanceName });
                         const topic = document.getElementById('notificationTopic').value.trim();
                         const message = JSON.parse(document.getElementById('sendMessage').value);
 
@@ -931,11 +1074,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'form-group mb-3';
+            formGroup.className = 'core-form-group mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'form-label';
+            label.className = 'core-form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -1090,6 +1233,506 @@
             loadSettings();
         });
 
+        // ============================================================
+        // NOTIFICATION UI TAB FUNCTIONALITY
+        // ============================================================
+
+        let notificationStore = {
+            notifications: [],
+            subscriptions: [],
+            currentNotification: null,
+            currentTopic: null,
+            currentFolder: 'inbox'
+        };
+
+        /**
+         * Toggle right panel visibility
+         */
+        function toggleRightPanel() {
+            const panel = document.getElementById('contentRightNav');
+            if (panel) {
+                panel.classList.toggle('open');
+            }
+        }
+
+        /**
+         * Fetch notifications from API
+         */
+        async function fetchNotificationsFromAPI() {
+            try {
+                // Try to fetch from the test server API
+                const response = await fetch('/api/notifications');
+                if (!response.ok) {
+                    console.warn('API not available, no notifications to display');
+                    return [];
+                }
+
+                const data = await response.json();
+                if (data.success && data.notifications) {
+                    return data.notifications.sort((a, b) => b.timestamp - a.timestamp);
+                }
+                return [];
+            } catch (error) {
+                console.warn('Could not fetch notifications from API:', error.message);
+                return [];
+            }
+        }
+
+        /**
+         * Fetch subscription topics from API
+         */
+        async function fetchSubscriptionsFromAPI() {
+            try {
+                const response = await fetch('/api/notifications/stats');
+                if (!response.ok) {
+                    return [];
+                }
+
+                const data = await response.json();
+                if (data.messagesByTopic) {
+                    return Object.keys(data.messagesByTopic);
+                }
+                return [];
+            } catch (error) {
+                console.warn('Could not fetch subscriptions from API:', error.message);
+                return [];
+            }
+        }
+
+        /**
+         * Initialize the notification UI
+         */
+        async function initializeNotificationUI() {
+            // Fetch real data from API
+            const notifications = await fetchNotificationsFromAPI();
+            const subscriptions = await fetchSubscriptionsFromAPI();
+
+            notificationStore.notifications = notifications;
+            notificationStore.subscriptions = subscriptions.length > 0 ? subscriptions : [];
+
+            // Setup event listeners
+            setupFolderListeners();
+            setupSearchListener();
+            setupSubscriptionForm();
+            setupNotificationActions();
+            setupRightPanel();
+
+            // Update folder counts
+            updateFolderCounts();
+
+            // Refresh notifications every 5 seconds
+            setInterval(refreshNotifications, 5000);
+        }
+
+        /**
+         * Update folder counts without expanding them
+         */
+        function updateFolderCounts() {
+            const inboxCount = notificationStore.notifications.filter(n => !n.read).length;
+            const readCount = notificationStore.notifications.filter(n => n.read).length;
+
+            const inboxCountEl = document.getElementById('inboxCount');
+            const readCountEl = document.getElementById('readCount');
+            if (inboxCountEl) inboxCountEl.textContent = inboxCount;
+            if (readCountEl) readCountEl.textContent = readCount;
+        }
+
+        /**
+         * Refresh notifications from API
+         */
+        async function refreshNotifications() {
+            try {
+                const response = await fetch('/api/notifications');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.notifications) {
+                        notificationStore.notifications = data.notifications.sort((a, b) => b.timestamp - a.timestamp);
+
+                        // Update folder counts
+                        updateFolderCounts();
+
+                        // Refresh current topic view if one is selected
+                        if (notificationStore.currentTopic && notificationStore.currentFolder) {
+                            loadNotificationsForTopic(notificationStore.currentTopic, notificationStore.currentFolder);
+                        }
+
+                        // Refresh expanded folder if any
+                        const expandedFolders = document.querySelectorAll('.notification-folder-content[style*="display: block"]');
+                        expandedFolders.forEach(folderContent => {
+                            const folderName = folderContent.id.replace('-topics', '');
+                            loadTopicsForFolder(folderName);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.warn('Error refreshing notifications:', error.message);
+            }
+        }
+
+        /**
+         * Setup folder click listeners
+         */
+        function setupFolderListeners() {
+            // Folders are now handled by toggleFolder function
+        }
+
+        /**
+         * Toggle folder expansion
+         */
+        function toggleFolder(folderName) {
+            const folderContent = document.getElementById(`${folderName}-topics`);
+            const toggleIcon = document.getElementById(`${folderName}-toggle`);
+
+            if (!folderContent) return;
+
+            const isOpen = folderContent.style.display !== 'none';
+
+            if (isOpen) {
+                folderContent.style.display = 'none';
+                toggleIcon.classList.remove('rotated');
+            } else {
+                folderContent.style.display = 'block';
+                toggleIcon.classList.add('rotated');
+                loadTopicsForFolder(folderName);
+            }
+        }
+
+        /**
+         * Load topics for a specific folder
+         */
+        function loadTopicsForFolder(folderName) {
+            const folderContent = document.getElementById(`${folderName}-topics`);
+            if (!folderContent) return;
+
+            // Get notifications for this folder
+            const folderNotifications = folderName === 'inbox'
+                ? notificationStore.notifications.filter(n => !n.read)
+                : notificationStore.notifications.filter(n => n.read);
+
+            // Get unique topics
+            const topicMap = {};
+            folderNotifications.forEach(notification => {
+                if (!topicMap[notification.topic]) {
+                    const topicNotifs = folderNotifications.filter(n => n.topic === notification.topic);
+                    topicMap[notification.topic] = topicNotifs.length;
+                }
+            });
+
+            // Update folder count
+            const countEl = document.getElementById(`${folderName}Count`);
+            if (countEl) countEl.textContent = folderNotifications.length;
+
+            // Render topics
+            if (Object.keys(topicMap).length === 0) {
+                folderContent.innerHTML = '<div style="padding: 0.5rem 1rem; color: #999; font-size: 0.9rem;">No notifications</div>';
+                return;
+            }
+
+            folderContent.innerHTML = Object.entries(topicMap)
+                .sort((a, b) => b[1] - a[1])
+                .map(([topic, count]) => `
+                    <div class="topic-item" data-topic="${topic}" data-folder="${folderName}">
+                        <span class="topic-item-name">${topic}</span>
+                        <span class="topic-item-count">${count}</span>
+                    </div>
+                `).join('');
+
+            // Setup topic click listeners
+            folderContent.querySelectorAll('.topic-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const topic = item.dataset.topic;
+                    const folder = item.dataset.folder;
+
+                    // Update active state
+                    document.querySelectorAll('.topic-item').forEach(t => t.classList.remove('active'));
+                    item.classList.add('active');
+
+                    // Load notifications for this topic
+                    loadNotificationsForTopic(topic, folder);
+                });
+            });
+        }
+
+        /**
+         * Get notifications for the current folder
+         */
+        function getNotificationsForFolder(folder) {
+            if (folder === 'inbox') {
+                return notificationStore.notifications.filter(n => !n.read);
+            } else if (folder === 'read') {
+                return notificationStore.notifications.filter(n => n.read);
+            }
+            return notificationStore.notifications;
+        }
+
+        /**
+         * Get unique topics for the current folder
+         */
+        function getTopicsForFolder(folder) {
+            const folderNotifications = getNotificationsForFolder(folder);
+            const topicMap = {};
+
+            folderNotifications.forEach(notification => {
+                if (!topicMap[notification.topic]) {
+                    const unreadCount = folderNotifications.filter(n => n.topic === notification.topic && !n.read).length;
+                    const totalCount = folderNotifications.filter(n => n.topic === notification.topic).length;
+
+                    topicMap[notification.topic] = {
+                        name: notification.topic,
+                        total: totalCount,
+                        unread: unreadCount
+                    };
+                }
+            });
+
+            return Object.values(topicMap).sort((a, b) => b.total - a.total);
+        }
+
+        /**
+         * Load notifications for a specific topic
+         */
+        function loadNotificationsForTopic(topicName, folderName) {
+            notificationStore.currentTopic = topicName;
+            notificationStore.currentFolder = folderName;
+            notificationStore.currentNotification = null;
+
+            // Get notifications for this topic and folder
+            const folderNotifications = folderName === 'inbox'
+                ? notificationStore.notifications.filter(n => !n.read)
+                : notificationStore.notifications.filter(n => n.read);
+
+            const topicNotifications = folderNotifications.filter(n => n.topic === topicName);
+
+            const contentBody = document.getElementById('contentBody');
+            if (!contentBody) return;
+
+            // Update header
+            const titleEl = document.getElementById('contentTitle');
+            const subtitleEl = document.getElementById('contentSubtitle');
+            if (titleEl) titleEl.textContent = topicName;
+            if (subtitleEl) subtitleEl.textContent = `${topicNotifications.length} message${topicNotifications.length !== 1 ? 's' : ''}`;
+
+            if (topicNotifications.length === 0) {
+                contentBody.innerHTML = '<div class="no-selection">No messages for this topic</div>';
+                return;
+            }
+
+            // Render notification list for this topic
+            contentBody.innerHTML = `
+                <div class="notification-list-by-topic">
+                    ${topicNotifications.map(notification => `
+                        <div class="notification-item-in-topic ${notification.read ? '' : 'unread'}" data-notification-id="${notification.id}">
+                            <div class="notification-item-preview">${notification.message.substring(0, 100)}</div>
+                            <div class="notification-item-time">${new Date(notification.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Setup notification item click listeners
+            contentBody.querySelectorAll('.notification-item-in-topic').forEach(item => {
+                item.addEventListener('click', () => {
+                    contentBody.querySelectorAll('.notification-item-in-topic').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+
+                    const notificationId = item.dataset.notificationId;
+                    const notification = topicNotifications.find(n => n.id === notificationId);
+                    if (notification) {
+                        loadNotificationDetails(notification);
+                    }
+                });
+            });
+
+            const contentActions = document.getElementById('contentActions');
+            if (contentActions) {
+                contentActions.style.display = 'none';
+            }
+        }
+
+        /**
+         * Load and display notification details
+         */
+        function loadNotificationDetails(notification) {
+            notificationStore.currentNotification = notification;
+
+            const contentBody = document.getElementById('contentBody');
+            if (!contentBody) return;
+
+            // Mark as read automatically
+            if (!notification.read) {
+                notification.read = true;
+                loadNotificationFolder(notificationStore.currentFolder);
+            }
+
+            // Render detailed view
+            contentBody.innerHTML = `
+                <div class="notification-detail-view">
+                    <div class="notification-detail-header">
+                        <div class="notification-detail-topic">${notification.topic}</div>
+                        <div class="notification-detail-title">${notification.message}</div>
+                        <div class="notification-detail-time">${new Date(notification.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="notification-detail-content">${notification.fullContent}</div>
+                    <div class="notification-detail-actions">
+                        <button id="toggleReadDetailBtn">
+                            <i class="bi bi-check-circle"></i> Mark as Unread
+                        </button>
+                        <button id="deleteDetailBtn" style="color: #dc3545; border-color: #dc3545;">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Setup action buttons
+            const toggleBtn = contentBody.querySelector('#toggleReadDetailBtn');
+            const deleteBtn = contentBody.querySelector('#deleteDetailBtn');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    notification.read = !notification.read;
+                    loadNotificationFolder(notificationStore.currentFolder);
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to delete this notification?')) {
+                        notificationStore.notifications = notificationStore.notifications.filter(n => n.id !== notification.id);
+                        loadNotificationFolder(notificationStore.currentFolder);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Setup search functionality
+         */
+        function setupSearchListener() {
+            const searchInput = document.getElementById('contentSearch');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('.notification-list-item');
+
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    item.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        }
+
+        /**
+         * Setup notification action buttons (legacy - no longer needed)
+         */
+        function setupNotificationActions() {
+            // Action buttons are now part of the notification detail view
+        }
+
+        /**
+         * Setup right panel subscriptions
+         */
+        async function setupRightPanel() {
+            await loadSubscriptions();
+        }
+
+        /**
+         * Load subscriptions in right panel
+         */
+        async function loadSubscriptions() {
+            const panel = document.getElementById('subscriptionsPanel');
+            if (!panel) return;
+
+            // If no subscriptions loaded, try to fetch from API
+            if (notificationStore.subscriptions.length === 0) {
+                notificationStore.subscriptions = await fetchSubscriptionsFromAPI();
+            }
+
+            if (notificationStore.subscriptions.length === 0) {
+                panel.innerHTML = `
+                    <div class="subscription-section">
+                        <div class="subscription-section-title">No Subscriptions</div>
+                        <p style="color: #999; font-size: 0.9rem; margin-top: 0.5rem;">
+                            No active topic subscriptions. Subscribe to a topic to get started.
+                        </p>
+                    </div>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <div class="subscription-section">
+                        <div class="subscription-section-title">Active Topics</div>
+                        ${notificationStore.subscriptions.map(topic => `
+                            <div class="subscription-topic">
+                                <span class="subscription-topic-name">${topic}</span>
+                                <button class="subscription-btn subscribed" onclick="unsubscribeTopic('${topic}')">Unsubscribe</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Subscribe to a topic
+         */
+        function subscribeTopic(topic) {
+            if (!notificationStore.subscriptions.includes(topic)) {
+                notificationStore.subscriptions.push(topic);
+                loadSubscriptions();
+                showAlert(`Successfully subscribed to "${topic}"`, 'success');
+            }
+        }
+
+        /**
+         * Unsubscribe from a topic
+         */
+        function unsubscribeTopic(topic) {
+            notificationStore.subscriptions = notificationStore.subscriptions.filter(t => t !== topic);
+            loadSubscriptions();
+            showAlert(`Unsubscribed from "${topic}"`, 'success');
+        }
+
+        /**
+         * Setup subscription form
+         */
+        function setupSubscriptionForm() {
+            const form = document.getElementById('subscribeForm');
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const topicInput = document.getElementById('topicToSubscribe');
+                const topic = topicInput.value.trim();
+
+                if (!topic) {
+                    showAlert('Please enter a topic name', 'error');
+                    return;
+                }
+
+                subscribeTopic(topic);
+                topicInput.value = '';
+
+                // Show response
+                const responseContainer = document.getElementById('subscribeResponse');
+                const responseContent = document.getElementById('subscribeResponseContent');
+                if (responseContainer && responseContent) {
+                    responseContent.textContent = JSON.stringify({
+                        success: true,
+                        message: `Successfully subscribed to topic: ${topic}`,
+                        subscription: { topic, subscribedAt: new Date().toISOString() }
+                    }, null, 2);
+                    responseContainer.style.display = 'block';
+                }
+            });
+        }
+
+        // Initialize notification UI when the tab is shown
+        document.getElementById('ui-tab')?.addEventListener('shown.bs.tab', function (e) {
+            initializeNotificationUI();
+        });
+
         </script>
+
 </body>
 </html>

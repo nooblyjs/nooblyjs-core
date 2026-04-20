@@ -1,7 +1,7 @@
 /**
  * @fileoverview Search service for loading and searching JSON objects
  * with recursive string matching, multiple named indexes, and event emission support.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -26,13 +26,23 @@ class SearchFileService {
    * @param {Object=} dependencies Injected service dependencies.
    */
   constructor(options = {}, eventEmitter, dependencies = {}) {
+    this.settings = {};
+    this.settings.description = "The following settings are needed for this provider";
+    this.settings.list = [
+      {setting: "QUEUE_INDEXING", type: "string", values : ['nooblyjs-core-searching']}
+    ];
+    this.settings.QUEUE_INDEXING = options.QUEUE_INDEXING || this.settings.QUEUE_INDEXING || 'nooblyjs-core-searching';
+
     this.indexes = new Map();
     this.defaultIndex_ = this.normalizeIndexName_(options.defaultIndex);
     this.eventEmitter_ = eventEmitter;
     this.queueService_ = dependencies.queueing;
     this.workingService_ = dependencies.working;
     this.schedulingService_ = dependencies.scheduling;
-    this.QUEUE_INDEXING_ = 'noobly-core-searching';
+    this.QUEUE_INDEXING_ = this.settings.QUEUE_INDEXING;
+
+    // Initialize logger from dependencies
+    this.logger = dependencies.logging || null;
 
     // Create default index
     this.indexes.set(this.defaultIndex_, new Map());
@@ -40,6 +50,28 @@ class SearchFileService {
     // Initialize the queue if queueing service is available
     if (this.queueService_) {
       this.initializeQueue_();
+    }
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (let i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        this.logger?.info(`[${this.constructor.name}] Setting changed: ${this.settings.list[i].setting}`, {
+          setting: this.settings.list[i].setting,
+          newValue: settings[this.settings.list[i].setting]
+        });
+      }
     }
   }
 
@@ -86,6 +118,32 @@ class SearchFileService {
    * @return {Promise<boolean>} A promise that resolves to true if the object was queued/added, false if the key already exists.
    */
   async add(key, jsonObject, searchContainer = this.defaultIndex_) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'add',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
+    // Validate jsonObject parameter
+    if (!jsonObject || typeof jsonObject !== 'object' || Array.isArray(jsonObject)) {
+      const error = new Error('Invalid jsonObject: must be a non-null object');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'add',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     // Track add operation
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     analytics.trackAdd(resolvedContainer);
@@ -149,6 +207,19 @@ class SearchFileService {
    * @return {Promise<boolean>} A promise that resolves to true if the object was removed, false if the key was not found.
    */
   async remove(key, searchContainer = this.defaultIndex_) {
+    // Validate key parameter
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      const error = new Error('Invalid key: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'remove',
+          error: error.message,
+          key
+        });
+      }
+      throw error;
+    }
+
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     if (!this.indexes.has(resolvedContainer)) {
       return false;
@@ -171,12 +242,20 @@ class SearchFileService {
    * @return {Promise<Array<!Object>>} A promise that resolves to an array of matching objects with their keys.
    */
   async search(searchTerm, searchContainer = this.defaultIndex_) {
-    const results = [];
-    if (!searchTerm) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('search:search', { searchTerm, searchContainer: this.normalizeIndexName_(searchContainer), results });
-      return results;
+    // Validate searchTerm parameter
+    if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+      const error = new Error('Invalid searchTerm: must be a non-empty string');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('search:validation-error', {
+          method: 'search',
+          error: error.message,
+          searchTerm
+        });
+      }
+      throw error;
     }
+
+    const results = [];
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     const resolvedContainer = this.normalizeIndexName_(searchContainer);
     const index = this.indexes.get(resolvedContainer);
@@ -401,7 +480,10 @@ class SearchFileService {
             }
           } catch (error) {
             errorCount++;
-            console.error(`Error indexing item ${item.key}:`, error.message);
+            this.logger?.error(`[${this.constructor.name}] Error indexing item`, {
+              key: item.key,
+              error: error.message
+            });
           }
         }
 
@@ -413,7 +495,9 @@ class SearchFileService {
           });
         }
       } catch (error) {
-        console.error('Error in indexing processor:', error);
+        this.logger?.error(`[${this.constructor.name}] Error in indexing processor`, {
+          error: error.message
+        });
       }
     };
 

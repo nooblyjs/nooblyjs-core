@@ -1,5 +1,5 @@
 /**
- * @fileoverview Noobly-core Logging JavaScript Client Library
+ * @fileoverview nooblyjs-core Logging JavaScript Client Library
  * Client-side library for logging from web applications.
  * Provides methods for logging at different levels: info, warn, error, and debug.
  *
@@ -7,7 +7,7 @@
  * 1. Local Mode (no instance name): Uses browser console for logging
  * 2. Remote Mode (with instance name): Sends logs to the logging service API
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -192,7 +192,7 @@ class LocalLogger {
 }
 
 /**
- * Noobly-core Logging Service Client
+ * nooblyjs-core Logging Service Client
  *
  * Provides a JavaScript client for consuming the logging service API from browser applications.
  * Supports two modes:
@@ -201,11 +201,11 @@ class LocalLogger {
  *
  * @example
  * // Local mode - logs to browser console only
- * var localLogger = new nooblyjscorelogging();
+ * var localLogger = new digitaltechnologieslogging();
  * localLogger.info('App started');
  *
  * // Remote mode - logs to server
- * var remoteLogger = new nooblyjscorelogging('default');
+ * var remoteLogger = new digitaltechnologieslogging('default');
  * remoteLogger.info('User logged in', {userId: 123, timestamp: new Date()});
  *
  * // Log at different levels
@@ -218,7 +218,7 @@ class LocalLogger {
  *   .then(analytics => console.log('Log stats:', analytics))
  *   .catch(err => console.error(err));
  */
-class nooblyjscorelogging {
+class digitaltechnologieslogging {
   /**
    * Initializes a new Logging Service client instance.
    *
@@ -312,14 +312,14 @@ class nooblyjscorelogging {
       });
 
       if (this.options.debug) {
-        console.log('[nooblyjscorelogging] Initialized in LOCAL mode');
-        console.log('[nooblyjscorelogging] Min log level:', this.options.minLogLevel);
+        console.log('[digitaltechnologieslogging] Initialized in LOCAL mode');
+        console.log('[digitaltechnologieslogging] Min log level:', this.options.minLogLevel);
       }
     } else {
       if (this.options.debug) {
-        console.log('[nooblyjscorelogging] Initialized in REMOTE mode with instance:', this.instanceName);
-        console.log('[nooblyjscorelogging] Base URL:', this.baseUrl);
-        console.log('[nooblyjscorelogging] Min log level:', this.options.minLogLevel);
+        console.log('[digitaltechnologieslogging] Initialized in REMOTE mode with instance:', this.instanceName);
+        console.log('[digitaltechnologieslogging] Base URL:', this.baseUrl);
+        console.log('[digitaltechnologieslogging] Min log level:', this.options.minLogLevel);
       }
     }
   }
@@ -376,7 +376,7 @@ class nooblyjscorelogging {
     options.body = JSON.stringify(logData);
 
     if (this.options.debug) {
-      console.log('[nooblyjscorelogging] Request:', url, logData);
+      console.log('[digitaltechnologieslogging] Request:', url, logData);
     }
 
     try {
@@ -395,7 +395,7 @@ class nooblyjscorelogging {
       }
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Request failed:', error);
+        console.error('[digitaltechnologieslogging] Request failed:', error);
       }
       // Still store locally even if API fails
       this.storeLocalLog('error', 'Failed to send log to server', { error: error.message });
@@ -437,11 +437,11 @@ class nooblyjscorelogging {
    *
    * @example
    * // Local mode
-   * var logger = new nooblyjscorelogging();
+   * var logger = new digitaltechnologieslogging();
    * logger.info('User action', {userId: 123})
    *
    * // Remote mode
-   * var logger = new nooblyjscorelogging('default');
+   * var logger = new digitaltechnologieslogging('default');
    * logger.info('User action', {userId: 123, action: 'login'})
    *   .then(() => console.log('Logged'))
    *   .catch(err => console.error(err));
@@ -470,7 +470,7 @@ class nooblyjscorelogging {
     } catch (error) {
       // Log locally on failure, but don't throw - allow app to continue
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Info log failed:', error.message);
+        console.error('[digitaltechnologieslogging] Info log failed:', error.message);
       }
     }
   }
@@ -485,11 +485,11 @@ class nooblyjscorelogging {
    *
    * @example
    * // Local mode
-   * var logger = new nooblyjscorelogging();
+   * var logger = new digitaltechnologieslogging();
    * logger.warn('Unusual activity', {activity: 'multiple_failed_logins'})
    *
    * // Remote mode
-   * var logger = new nooblyjscorelogging('default');
+   * var logger = new digitaltechnologieslogging('default');
    * logger.warn('Unusual activity', {activity: 'multiple_failed_logins'})
    */
   async warn(message, meta) {
@@ -515,7 +515,7 @@ class nooblyjscorelogging {
       return await this.request(endpoint, logData);
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Warn log failed:', error.message);
+        console.error('[digitaltechnologieslogging] Warn log failed:', error.message);
       }
     }
   }
@@ -530,11 +530,11 @@ class nooblyjscorelogging {
    *
    * @example
    * // Local mode
-   * var logger = new nooblyjscorelogging();
+   * var logger = new digitaltechnologieslogging();
    * logger.error('Connection failed', {error: 'timeout'})
    *
    * // Remote mode
-   * var logger = new nooblyjscorelogging('default');
+   * var logger = new digitaltechnologieslogging('default');
    * logger.error('Connection failed', {error: 'timeout', url: 'https://api.example.com'})
    */
   async error(message, meta) {
@@ -560,7 +560,7 @@ class nooblyjscorelogging {
       return await this.request(endpoint, logData);
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Error log failed:', error.message);
+        console.error('[digitaltechnologieslogging] Error log failed:', error.message);
       }
     }
   }
@@ -575,11 +575,11 @@ class nooblyjscorelogging {
    *
    * @example
    * // Local mode
-   * var logger = new nooblyjscorelogging();
+   * var logger = new digitaltechnologieslogging();
    * logger.debug('Processing request', {requestId: 'abc123'})
    *
    * // Remote mode
-   * var logger = new nooblyjscorelogging('default');
+   * var logger = new digitaltechnologieslogging('default');
    * logger.debug('Processing request', {requestId: 'abc123', params: {foo: 'bar'}})
    */
   async debug(message, meta) {
@@ -605,7 +605,7 @@ class nooblyjscorelogging {
       return await this.request(endpoint, logData);
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Debug log failed:', error.message);
+        console.error('[digitaltechnologieslogging] Debug log failed:', error.message);
       }
     }
   }
@@ -643,7 +643,7 @@ class nooblyjscorelogging {
     }
 
     if (this.options.debug) {
-      console.log('[nooblyjscorelogging] Getting analytics');
+      console.log('[digitaltechnologieslogging] Getting analytics');
     }
 
     try {
@@ -657,7 +657,7 @@ class nooblyjscorelogging {
       return await response.json();
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Failed to get analytics:', error);
+        console.error('[digitaltechnologieslogging] Failed to get analytics:', error);
       }
       throw error;
     }
@@ -698,7 +698,7 @@ class nooblyjscorelogging {
       return await response.json();
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Failed to get settings:', error);
+        console.error('[digitaltechnologieslogging] Failed to get settings:', error);
       }
       throw error;
     }
@@ -746,7 +746,7 @@ class nooblyjscorelogging {
       return await response.text();
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorelogging] Failed to save settings:', error);
+        console.error('[digitaltechnologieslogging] Failed to save settings:', error);
       }
       throw error;
     }
@@ -797,10 +797,10 @@ class nooblyjscorelogging {
 // Export for use in browser or Node.js environments
 if (typeof window !== 'undefined') {
   // Browser environment - attach to window object
-  window.nooblyjscorelogging = nooblyjscorelogging;
+  window.digitaltechnologieslogging = digitaltechnologieslogging;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   // Node.js/CommonJS environment
-  module.exports = nooblyjscorelogging;
+  module.exports = digitaltechnologieslogging;
 }

@@ -1,10 +1,10 @@
 /**
- * @fileoverview Caching service views module for noobly-core framework.
+ * @fileoverview Caching service views module for nooblyjs-core framework.
  * This module provides Express.js view registration and static file serving 
  * capabilities for the caching service. It registers static routes to serve
  * caching-related view files and templates through the Express application.
  * 
- * @author NooblyJS
+ * @author Digital Technologies
  * @version 1.0.14
  * @since 1.0.0
  * @module CachingViews
@@ -12,7 +12,7 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
 
 /**

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly-core Logging JavaScript LocalLogger
+ * @fileoverview nooblyjs-core Logging JavaScript LocalLogger
  * Client-side local logging implementation using browser console methods.
  * Provides methods for logging directly to the browser console without server communication.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */

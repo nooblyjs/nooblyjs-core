@@ -1,10 +1,10 @@
 /**
- * @fileoverview Fetching service views module for noobly-core framework.
+ * @fileoverview Fetching service views module for nooblyjs-core framework.
  * This module provides Express.js view registration and static file serving
  * capabilities for the fetching service. It registers static routes to serve
  * fetching-related view files and templates through the Express application.
  *
- * @author NooblyJS
+ * @author Digital Technologies
  * @version 1.0.0
  * @since 1.0.0
  * @module FetchingViews
@@ -12,7 +12,7 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
 
 /**

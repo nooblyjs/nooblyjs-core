@@ -1,10 +1,10 @@
 /**
- * @fileoverview DataService service views module for noobly-core framework.
+ * @fileoverview DataService service views module for nooblyjs-core framework.
  * This module provides Express.js view registration and static file serving 
  * capabilities for the dataservice service. It registers static routes to serve
  * dataservice-related view files and templates through the Express application.
  * 
- * @author NooblyJS
+ * @author Digital Technologies
  * @version 1.0.14
  * @since 1.0.0
  * @module DataServiceViews
@@ -13,7 +13,7 @@
 'use strict';
 
 const express = require('express');
-const path = require('path');
+const path = require('node:path');
 
 /**
  * Registers dataservice service views with the Express application.

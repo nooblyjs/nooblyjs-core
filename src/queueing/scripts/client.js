@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly-core Queueing JavaScript Client Library
+ * @fileoverview nooblyjs-core Queueing JavaScript Client Library
  * Client-side library for interacting with the queueing service from web applications.
  * Provides a simple interface for enqueue and dequeue operations.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -89,7 +89,7 @@ class LocalQueue {
 }
 
 /**
- * Noobly-core Queueing Service Client
+ * nooblyjs-core Queueing Service Client
  *
  * Provides a JavaScript client for consuming the queueing service API from browser applications.
  * Supports both local (in-memory) queues and remote server-side instances.
@@ -99,7 +99,7 @@ class LocalQueue {
  *
  * @example
  * // Create a local queueing client (no server needed)
- * var localQueue = new nooblyjscorequeueing();
+ * var localQueue = new digitaltechnologiesqueueing();
  *
  * // Enqueue an item
  * var item = {data: {userId: 123, action: 'process'}};
@@ -109,7 +109,7 @@ class LocalQueue {
  *   });
  *
  * // Create a remote queueing client
- * var remoteQueue = new nooblyjscorequeueing('default');
+ * var remoteQueue = new digitaltechnologiesqueueing('default');
  *
  * // Dequeue an item from remote queue
  * remoteQueue.dequeue('tasks')
@@ -117,7 +117,7 @@ class LocalQueue {
  *     console.log('Dequeued item:', item);
  *   });
  */
-class nooblyjscorequeueing {
+class digitaltechnologiesqueueing {
   /**
    * Initializes a new Queueing Service client instance.
    *
@@ -176,10 +176,10 @@ class nooblyjscorequeueing {
 
     if (this.options.debug) {
       if (this.isLocal) {
-        console.log('[nooblyjscorequeueing] Initialized in LOCAL mode');
+        console.log('[digitaltechnologiesqueueing] Initialized in LOCAL mode');
       } else {
-        console.log('[nooblyjscorequeueing] Initialized with remote instance:', this.instanceName);
-        console.log('[nooblyjscorequeueing] Base URL:', this.baseUrl);
+        console.log('[digitaltechnologiesqueueing] Initialized with remote instance:', this.instanceName);
+        console.log('[digitaltechnologiesqueueing] Base URL:', this.baseUrl);
       }
     }
   }
@@ -230,7 +230,7 @@ class nooblyjscorequeueing {
     }
 
     if (this.options.debug) {
-      console.log('[nooblyjscorequeueing] Request:', method, url, body);
+      console.log('[digitaltechnologiesqueueing] Request:', method, url, body);
     }
 
     try {
@@ -250,7 +250,7 @@ class nooblyjscorequeueing {
       }
     } catch (error) {
       if (this.options.debug) {
-        console.error('[nooblyjscorequeueing] Request failed:', error);
+        console.error('[digitaltechnologiesqueueing] Request failed:', error);
       }
       throw error;
     }
@@ -282,7 +282,7 @@ class nooblyjscorequeueing {
       // Local mode: store in-memory
       this.localQueue.enqueue(queueName, object_to_be_queued);
       if (this.options.debug) {
-        console.log('[nooblyjscorequeueing] Local enqueue:', queueName, object_to_be_queued);
+        console.log('[digitaltechnologiesqueueing] Local enqueue:', queueName, object_to_be_queued);
       }
       return Promise.resolve();
     }
@@ -313,7 +313,7 @@ class nooblyjscorequeueing {
       // Local mode: get from in-memory queue
       const item = this.localQueue.dequeue(queueName);
       if (this.options.debug) {
-        console.log('[nooblyjscorequeueing] Local dequeue:', queueName, item);
+        console.log('[digitaltechnologiesqueueing] Local dequeue:', queueName, item);
       }
       return Promise.resolve(item);
     }
@@ -344,7 +344,7 @@ class nooblyjscorequeueing {
       // Local mode: get size from in-memory queue
       const queueSize = this.localQueue.size(queueName);
       if (this.options.debug) {
-        console.log('[nooblyjscorequeueing] Local size:', queueName, queueSize);
+        console.log('[digitaltechnologiesqueueing] Local size:', queueName, queueSize);
       }
       return Promise.resolve(queueSize);
     }
@@ -370,7 +370,7 @@ class nooblyjscorequeueing {
       // Local mode: get queues from in-memory storage
       const queues = this.localQueue.listQueues();
       if (this.options.debug) {
-        console.log('[nooblyjscorequeueing] Local listQueues:', queues);
+        console.log('[digitaltechnologiesqueueing] Local listQueues:', queues);
       }
       return Promise.resolve(queues);
     }
@@ -401,7 +401,7 @@ class nooblyjscorequeueing {
       // Local mode: purge from in-memory queue
       this.localQueue.purge(queueName);
       if (this.options.debug) {
-        console.log('[nooblyjscorequeueing] Local purge:', queueName);
+        console.log('[digitaltechnologiesqueueing] Local purge:', queueName);
       }
       return Promise.resolve();
     }
@@ -468,10 +468,10 @@ class nooblyjscorequeueing {
 // Export for use in browser or Node.js environments
 if (typeof window !== 'undefined') {
   // Browser environment - attach to window object
-  window.nooblyjscorequeueing = nooblyjscorequeueing;
+  window.digitaltechnologiesqueueing = digitaltechnologiesqueueing;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   // Node.js/CommonJS environment
-  module.exports = nooblyjscorequeueing;
+  module.exports = digitaltechnologiesqueueing;
 }

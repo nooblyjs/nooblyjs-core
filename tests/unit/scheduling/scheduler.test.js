@@ -5,14 +5,14 @@
  * execution management, and worker integration. Tests verify proper task
  * lifecycle management, singleton behavior, and event emission.
  * 
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const EventEmitter = require('events');
 
 /**
@@ -33,6 +33,7 @@ jest.doMock('../../../src/working', () => {
 });
 
 const getSchedulerInstance = require('../../../src/scheduling');
+const schedulingAnalytics = require('../../../src/scheduling/modules/analytics');
 
 /**
  * Test suite for scheduler service operations.
@@ -52,9 +53,19 @@ describe('SchedulerProvider', () => {
    */
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restore the default no-op implementation in case a previous test
+    // installed its own (e.g. the concurrency test).
+    workerInstanceMock.start.mockImplementation(() => {});
+    workerInstanceMock.stop.mockImplementation(() => {});
+    schedulingAnalytics.reset();
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
-    schedulerInstance = getSchedulerInstance('default', {}, mockEventEmitter);
+    // Provide working as a dependency so the singleton picks it up.
+    schedulerInstance = getSchedulerInstance(
+      'default',
+      { dependencies: { working: workerInstanceMock } },
+      mockEventEmitter
+    );
   });
 
   /**
@@ -147,7 +158,7 @@ describe('SchedulerProvider', () => {
    * Verifies that all running tasks can be stopped at once
    * with proper cleanup and event emission.
    */
-  it('should stop all scheduled tasks', async () => {
+  it('should stop all scheduled tasks without stopping the shared worker', async () => {
     const task1 = 'task1';
     const task2 = 'task2';
     const mockScriptPath = path.resolve(__dirname, 'mockScript.js');
@@ -161,7 +172,9 @@ describe('SchedulerProvider', () => {
     expect(await schedulerInstance.isRunning(task1)).toBe(false);
     expect(await schedulerInstance.isRunning(task2)).toBe(false);
     expect(await schedulerInstance.isRunning()).toBe(false);
-    expect(workerInstanceMock.stop).toHaveBeenCalledTimes(1);
+    // The scheduler must not stop the shared working service — other parts
+    // of the framework rely on it.
+    expect(workerInstanceMock.stop).not.toHaveBeenCalled();
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('scheduler:stopped', { taskName: task1 });
     expect(mockEventEmitter.emit).toHaveBeenCalledWith('scheduler:stopped', { taskName: task2 });
   });
@@ -205,11 +218,118 @@ describe('SchedulerProvider', () => {
     workerCallback('completed', 'some data');
 
     expect(executionCallback).toHaveBeenCalledWith('completed', 'some data');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('scheduler:taskExecuted', {
-      taskName,
-      scriptPath: mockScriptPath,
-      status: 'completed',
-      data: 'some data',
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'scheduler:taskExecuted',
+      expect.objectContaining({
+        taskName,
+        scriptPath: mockScriptPath,
+        status: 'completed',
+        data: 'some data',
+      })
+    );
+  });
+
+  /**
+   * CRON expression validation.
+   *
+   * Verifies that startCron rejects malformed expressions before any state
+   * is registered, and stores valid CRON tasks in the schedule list.
+   */
+  it('should validate cron expressions', async () => {
+    await expect(
+      schedulerInstance.startCron({ scriptPath: 'job.js' }, 'not-a-cron', 'bad-cron-task')
+    ).rejects.toThrow(/Invalid cron expression/);
+
+    expect(await schedulerInstance.isRunning('bad-cron-task')).toBe(false);
+
+    const name = await schedulerInstance.startCron(
+      { scriptPath: 'job.js' },
+      '*/5 * * * *',
+      'good-cron-task'
+    );
+    expect(name).toBe('good-cron-task');
+    expect(await schedulerInstance.isRunning('good-cron-task')).toBe(true);
+  });
+
+  /**
+   * Live schedule listing.
+   *
+   * Verifies that listSchedules and getSchedule return serialisable
+   * snapshots of currently registered tasks.
+   */
+  it('should expose listSchedules and getSchedule', async () => {
+    const mockScriptPath = path.resolve(__dirname, 'mockScript.js');
+    await schedulerInstance.start('list-task', mockScriptPath, 60);
+    await schedulerInstance.startCron({ scriptPath: 'job.js' }, '0 * * * *', 'cron-task');
+
+    const schedules = await schedulerInstance.listSchedules();
+    expect(schedules).toHaveLength(2);
+
+    const intervalSummary = await schedulerInstance.getSchedule('list-task');
+    expect(intervalSummary).toMatchObject({
+      name: 'list-task',
+      type: 'interval',
+      intervalSeconds: 60
     });
+
+    const cronSummary = await schedulerInstance.getSchedule('cron-task');
+    expect(cronSummary).toMatchObject({
+      name: 'cron-task',
+      type: 'cron',
+      cron: '0 * * * *'
+    });
+
+    expect(await schedulerInstance.getSchedule('does-not-exist')).toBeNull();
+  });
+
+  /**
+   * Concurrency limit enforcement.
+   *
+   * Verifies that the maxConcurrentJobs setting prevents new executions
+   * from starting when the cap is reached, emitting a skip event instead.
+   */
+  it('should skip executions when at maxConcurrentJobs cap', async () => {
+    await schedulerInstance.saveSettings({ maxConcurrentJobs: 1 });
+
+    // Worker.start never invokes its callback in this test, so the first
+    // execution stays "in flight" and the next start() call should be
+    // skipped due to the concurrency cap.
+    workerInstanceMock.start.mockImplementation(() => {});
+
+    const mockScriptPath = path.resolve(__dirname, 'mockScript.js');
+    await schedulerInstance.start('first', mockScriptPath, 60);
+    await schedulerInstance.start('second', mockScriptPath, 60);
+
+    // First task fires once and consumes the only slot. Second task is
+    // immediately skipped at fire time.
+    expect(workerInstanceMock.start).toHaveBeenCalledTimes(1);
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'scheduler:execution-skipped',
+      expect.objectContaining({ taskName: 'second', reason: 'maxConcurrentJobs' })
+    );
+  });
+
+  /**
+   * Settings update event emission.
+   *
+   * Verifies that saveSettings emits a setting-changed event for each
+   * accepted setting and applies the new values.
+   */
+  it('should update settings and emit setting-changed events', async () => {
+    await schedulerInstance.saveSettings({
+      maxConcurrentJobs: 25,
+      retryAttempts: 5,
+      jobTimeout: 60000
+    });
+
+    const settings = await schedulerInstance.getSettings();
+    expect(settings.maxConcurrentJobs).toBe(25);
+    expect(settings.retryAttempts).toBe(5);
+    expect(settings.jobTimeout).toBe(60000);
+
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'scheduler:setting-changed',
+      expect.objectContaining({ setting: 'maxConcurrentJobs', value: 25 })
+    );
   });
 });

@@ -1,262 +1,192 @@
 /**
- * @fileoverview Worker management API routes for Express.js application.
- * Provides RESTful endpoints for background task execution, worker lifecycle
- * management, and service status monitoring with event-driven callbacks.
+ * @fileoverview HTTP routes for the working service.
  *
- * @author NooblyJS Core Team
- * @version 1.0.14
+ * Mounts a REST API at `/services/working/api/*` for queueing tasks,
+ * inspecting their state, and managing service settings. All handlers
+ * convert validation failures into 4xx responses and unexpected failures
+ * into 5xx responses, and route through the optional logger.
+ *
+ * @author Noobly JS Core Team
+ * @version 2.0.0
  * @since 1.0.0
  */
 
 'use strict';
 
+const path = require('node:path');
+const express = require('express');
+
 /**
- * Configures and registers worker routes with the Express application.
- * Sets up endpoints for background task execution and worker management.
+ * Returns true for plain integer-coercible positive numbers (used by query
+ * params like `?limit=20`).
+ * @param {*} value
+ * @param {number} fallback
+ * @return {number}
+ */
+function parsePositiveInt(value, fallback) {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+/**
+ * Registers all working-service HTTP routes.
  *
- * @param {Object} options - Configuration options object
- * @param {Object} options.express-app - The Express application instance
- * @param {Object} eventEmitter - Event emitter for logging and notifications
- * @param {Object} worker - The worker provider instance with start/stop methods
- * @param {Object} analytics - The analytics module instance for task analytics
+ * @param {!Object} options Service options. Must include `'express-app'`.
+ * @param {!EventEmitter} eventEmitter Event emitter for service lifecycle.
+ * @param {!Object} worker The worker provider instance.
+ * @param {!Object=} analytics The analytics module instance.
  * @return {void}
  */
 module.exports = (options, eventEmitter, worker, analytics) => {
-  if (options['express-app'] && worker) {
-    const app = options['express-app'];
+  if (!options || !options['express-app'] || !worker) return;
 
-    /**
-     * POST /services/working/api/run
-     * Starts a background worker task with completion callback.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.scriptPath - The path to the script to execute in the worker
-     * @param {*} req.body.data - Optional data for the task execution
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/working/api/run', async (req, res) => {
-      const { scriptPath, data } = req.body;
-      if (scriptPath) {
-        try {
-          const taskId = await worker.start(scriptPath, data, (status, result) => {
-            eventEmitter.emit('worker-complete', { status, result });
-          });
-          res.status(200).json({ taskId, message: 'Task queued successfully' });
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing scriptPath');
+  const app = options['express-app'];
+  const logger = worker.logger || null;
+
+  /**
+   * Wraps an async route handler so any thrown error becomes a 500 response
+   * with structured logging instead of a stack trace leaking to the client.
+   * @param {Function} handler
+   */
+  const wrap = (handler) => async (req, res) => {
+    try {
+      await handler(req, res);
+    } catch (err) {
+      logger?.error?.('[WorkingRoutes] Unhandled error', {
+        path: req.path,
+        method: req.method,
+        error: err?.message
+      });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal Server Error', message: err?.message });
       }
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Status
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/working/api/status', wrap(async (req, res) => {
+    const status = await worker.getStatus();
+    eventEmitter?.emit('api-working-status', status);
+    res.status(200).json(status);
+  }));
+
+  // ---------------------------------------------------------------------------
+  // Task submission
+  // ---------------------------------------------------------------------------
+
+  app.post('/services/working/api/run', wrap(async (req, res) => {
+    const { scriptPath, data } = req.body || {};
+
+    if (!scriptPath || typeof scriptPath !== 'string') {
+      return res.status(400).json({ error: 'Bad Request: Missing scriptPath' });
+    }
+
+    try {
+      const taskId = await worker.start(scriptPath, data, (status, result) => {
+        eventEmitter?.emit('worker-complete', { status, result });
+      });
+      res.status(201).json({ status: 'OK', taskId, message: 'Task queued successfully' });
+    } catch (err) {
+      const message = err?.message || String(err);
+      if (/queue at capacity/i.test(message)) {
+        return res.status(429).json({ error: message });
+      }
+      if (/not found/i.test(message)) {
+        return res.status(404).json({ error: message });
+      }
+      if (/stopped|not available|non-empty/i.test(message)) {
+        return res.status(400).json({ error: message });
+      }
+      throw err;
+    }
+  }));
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/working/api/stop', wrap(async (req, res) => {
+    await worker.stop();
+    res.status(200).json({ status: 'OK', message: 'Worker manager stopped' });
+  }));
+
+  // ---------------------------------------------------------------------------
+  // History & individual tasks
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/working/api/history', wrap(async (req, res) => {
+    const limit = parsePositiveInt(req.query.limit, 100);
+    const history = await worker.getTaskHistory(limit);
+    res.status(200).json(history);
+  }));
+
+  app.get('/services/working/api/task/:taskId', wrap(async (req, res) => {
+    const { taskId } = req.params;
+    if (!taskId) {
+      return res.status(400).json({ error: 'Bad Request: Missing taskId' });
+    }
+    const task = await worker.getTask(taskId);
+    if (!task) {
+      return res.status(404).json({ error: `Task "${taskId}" not found` });
+    }
+    res.status(200).json(task);
+  }));
+
+  // ---------------------------------------------------------------------------
+  // Analytics endpoints
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/working/api/stats', wrap(async (req, res) => {
+    if (!analytics) {
+      return res.status(503).json({ error: 'Analytics module not available' });
+    }
+    res.status(200).json(analytics.getStats());
+  }));
+
+  app.get('/services/working/api/analytics', wrap(async (req, res) => {
+    if (!analytics) {
+      return res.status(503).json({ error: 'Analytics module not available' });
+    }
+    const taskAnalytics = analytics.getTaskAnalytics();
+    res.status(200).json({
+      count: taskAnalytics.length,
+      tasks: taskAnalytics
     });
+  }));
 
-    /**
-     * GET /services/working/api/stop
-     * Stops the currently running background worker.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/stop', async (req, res) => {
-      try {
-        const result = await worker.stop();
-        res.status(200).json(result);
-      } catch (err) {
-        res.status(500).send(err.message);
-      }
-    });
+  app.get('/services/working/api/analytics/:scriptPath(*)', wrap(async (req, res) => {
+    if (!analytics) {
+      return res.status(503).json({ error: 'Analytics module not available' });
+    }
+    const { scriptPath } = req.params;
+    const taskAnalytics = analytics.getTaskAnalyticsByPath(scriptPath);
+    if (!taskAnalytics) {
+      return res.status(404).json({ error: 'Task not found', scriptPath });
+    }
+    res.status(200).json(taskAnalytics);
+  }));
 
-    /**
-     * GET /services/working/api/status
-     * Returns the operational status of the working service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/status', async (req, res) => {
-      try {
-        const status = await worker.getStatus();
-        eventEmitter.emit('api-working-status', status);
-        res.status(200).json(status);
-      } catch (err) {
-        res.status(500).send(err.message);
-      }
-    });
+  // ---------------------------------------------------------------------------
+  // Settings
+  // ---------------------------------------------------------------------------
 
-    /**
-     * GET /services/working/api/history
-     * Returns the task history.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/history', async (req, res) => {
-      const limit = parseInt(req.query.limit) || 100;
-      try {
-        const history = await worker.getTaskHistory(limit);
-        res.status(200).json(history);
-      } catch (err) {
-        res.status(500).send(err.message);
-      }
-    });
+  app.get('/services/working/api/settings', wrap(async (req, res) => {
+    const settings = await worker.getSettings();
+    res.status(200).json(settings);
+  }));
 
-    /**
-     * GET /services/working/api/task/:taskId
-     * Returns information about a specific task.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/task/:taskId', async (req, res) => {
-      const { taskId } = req.params;
-      try {
-        const task = await worker.getTask(taskId);
-        if (task) {
-          res.status(200).json(task);
-        } else {
-          res.status(404).send('Task not found');
-        }
-      } catch (err) {
-        res.status(500).send(err.message);
-      }
-    });
+  app.post('/services/working/api/settings', wrap(async (req, res) => {
+    const body = req.body;
+    if (!body || typeof body !== 'object') {
+      return res.status(400).json({ error: 'Bad Request: Missing settings body' });
+    }
+    await worker.saveSettings(body);
+    res.status(200).json({ status: 'OK', message: 'Settings updated' });
+  }));
 
-    /**
-     * GET /services/working/api/stats
-     * Retrieves overall statistics about worker tasks including counts and percentages.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/stats', (req, res) => {
-      if (!analytics) {
-        return res.status(503).json({
-          error: 'Analytics module not available'
-        });
-      }
-
-      try {
-        const stats = analytics.getStats();
-        res.status(200).json(stats);
-      } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve statistics',
-          message: err.message
-        });
-      }
-    });
-
-    /**
-     * GET /services/working/api/analytics
-     * Retrieves detailed analytics for all tasks ordered by last run date.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/analytics', (req, res) => {
-      if (!analytics) {
-        return res.status(503).json({
-          error: 'Analytics module not available'
-        });
-      }
-
-      try {
-        const taskAnalytics = analytics.getTaskAnalytics();
-        res.status(200).json({
-          count: taskAnalytics.length,
-          tasks: taskAnalytics
-        });
-      } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve task analytics',
-          message: err.message
-        });
-      }
-    });
-
-    /**
-     * GET /services/working/api/analytics/:scriptPath
-     * Retrieves analytics for a specific task by script path.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/analytics/:scriptPath(*)', (req, res) => {
-      if (!analytics) {
-        return res.status(503).json({
-          error: 'Analytics module not available'
-        });
-      }
-
-      try {
-        const { scriptPath } = req.params;
-        const taskAnalytics = analytics.getTaskAnalyticsByPath(scriptPath);
-
-        if (taskAnalytics) {
-          res.status(200).json(taskAnalytics);
-        } else {
-          res.status(404).json({
-            error: 'Task not found',
-            scriptPath: scriptPath
-          });
-        }
-      } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve task analytics',
-          message: err.message
-        });
-      }
-    });
-
-    /**
-     * GET /services/working/api/settings
-     * Retrieves the settings for the working service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/working/api/settings', async (req, res) => {
-      try {
-        const settings = await worker.getSettings();
-        res.status(200).json(settings);
-      } catch (err) {
-        eventEmitter.emit('api-working-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
-      }
-    });
-
-    /**
-     * POST /services/working/api/settings
-     * Saves the settings for the working service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/working/api/settings', async (req, res) => {
-      const message = req.body;
-      if (message) {
-        try {
-          await worker.saveSettings(message);
-          res.status(200).send('OK');
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing settings');
-      }
-    });
-  }
+  // Serve static files from the swagger directory
+  app.use('/services/working/api/swagger', express.static(path.join(__dirname, 'swagger')));
 };

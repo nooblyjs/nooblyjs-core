@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Scheduling API Tests
+### Noobly JS Core - Scheduling API Tests
 ###
 ### These tests demonstrate the Scheduling service API endpoints with API key authentication.
 ### The Scheduling service provides cron-based task scheduling capabilities.

@@ -1,0 +1,860 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "File Service API",
+    "description": "RESTful API for file operations with support for multiple named instances. Provides endpoints for uploading, downloading, and managing files across local, FTP, S3, and Git storage backends, along with analytics and configuration management.",
+    "version": "1.0.15",
+    "contact": {
+      "name": "Digital Technologies Core Team",
+      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/services/filing/api",
+      "description": "Filing API - Production"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authentication"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer token authentication"
+      }
+    },
+    "schemas": {
+      "FileInstance": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Instance name",
+            "example": "default"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Provider type (local, ftp, s3, git, etc)",
+            "example": "local"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"],
+            "description": "Instance status",
+            "example": "active"
+          }
+        }
+      },
+      "AnalyticsEntry": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path",
+            "example": "documents/report.pdf"
+          },
+          "reads": {
+            "type": "integer",
+            "description": "Number of read operations",
+            "example": 12
+          },
+          "writes": {
+            "type": "integer",
+            "description": "Number of write operations",
+            "example": 3
+          },
+          "deletes": {
+            "type": "integer",
+            "description": "Number of delete operations",
+            "example": 1
+          },
+          "lastAccess": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last access timestamp",
+            "example": "2024-01-01T12:00:00Z"
+          }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "totalPaths": {
+            "type": "integer",
+            "description": "Total number of file paths",
+            "example": 250
+          },
+          "totalReads": {
+            "type": "integer",
+            "description": "Total read operations",
+            "example": 5000
+          },
+          "totalWrites": {
+            "type": "integer",
+            "description": "Total write operations",
+            "example": 1500
+          },
+          "totalDeletes": {
+            "type": "integer",
+            "description": "Total delete operations",
+            "example": 50
+          }
+        }
+      },
+      "AnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/Stats"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEntry"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T12:00:00Z"
+          }
+        }
+      },
+      "InstancesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileInstance"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 2
+          }
+        }
+      },
+      "FileItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "File or folder name",
+            "example": "document.pdf"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["file", "folder"],
+            "description": "Item type",
+            "example": "file"
+          },
+          "path": {
+            "type": "string",
+            "description": "Full item path",
+            "example": "documents/document.pdf"
+          }
+        }
+      },
+      "BrowseResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "root"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["file", "folder"],
+            "example": "folder"
+          },
+          "path": {
+            "type": "string",
+            "example": "/"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileItem"
+            }
+          }
+        }
+      },
+      "UploadResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "File uploaded successfully"
+          },
+          "key": {
+            "type": "string",
+            "example": "documents/report.pdf"
+          }
+        }
+      },
+      "RemoveResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "File removed successfully"
+          },
+          "key": {
+            "type": "string",
+            "example": "documents/report.pdf"
+          }
+        }
+      },
+      "SettingsResponse": {
+        "type": "object",
+        "description": "File service settings (provider-specific)"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "File not found"
+          },
+          "message": {
+            "type": "string",
+            "example": "The requested file does not exist"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/status": {
+      "get": {
+        "tags": ["Management"],
+        "summary": "Get service status",
+        "description": "Returns the operational status of the filing service",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "filing api running"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instances": {
+      "get": {
+        "tags": ["Management"],
+        "summary": "List all filing instances",
+        "description": "Returns a list of all available filing service instances",
+        "responses": {
+          "200": {
+            "description": "List of instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstancesResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/{key}": {
+      "post": {
+        "tags": ["File Operations"],
+        "summary": "Upload a file (default instance)",
+        "description": "Uploads a file to the default filing instance",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to upload to (e.g., 'documents/report.pdf')"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File to upload"
+                  }
+                }
+              }
+            },
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - no file data provided"
+          },
+          "500": {
+            "description": "Upload error"
+          }
+        }
+      }
+    },
+    "/{instanceName}/upload/{key}": {
+      "post": {
+        "tags": ["File Operations"],
+        "summary": "Upload a file to a named instance",
+        "description": "Uploads a file to a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to upload to"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upload error"
+          }
+        }
+      }
+    },
+    "/download/{key}": {
+      "get": {
+        "tags": ["File Operations"],
+        "summary": "Download a file (default instance)",
+        "description": "Downloads a file from the default filing instance",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to download"
+          },
+          {
+            "name": "encoding",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["utf8", "base64", "hex"]
+            },
+            "description": "Optional encoding for text files"
+          },
+          {
+            "name": "attachment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Whether to download as attachment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File downloaded successfully"
+          },
+          "404": {
+            "description": "File not found"
+          },
+          "500": {
+            "description": "Download error"
+          }
+        }
+      }
+    },
+    "/{instanceName}/download/{key}": {
+      "get": {
+        "tags": ["File Operations"],
+        "summary": "Download a file from a named instance",
+        "description": "Downloads a file from a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to download"
+          },
+          {
+            "name": "encoding",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachment",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File downloaded successfully"
+          },
+          "500": {
+            "description": "Download error"
+          }
+        }
+      }
+    },
+    "/remove/{key}": {
+      "delete": {
+        "tags": ["File Operations"],
+        "summary": "Delete a file (default instance)",
+        "description": "Removes a file from the default filing instance",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found"
+          },
+          "500": {
+            "description": "Delete error"
+          }
+        }
+      }
+    },
+    "/{instanceName}/remove/{key}": {
+      "delete": {
+        "tags": ["File Operations"],
+        "summary": "Delete a file from a named instance",
+        "description": "Removes a file from a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "File path/key to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Delete error"
+          }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get analytics (default instance)",
+        "description": "Returns file operation analytics for the default filing instance",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 250
+            },
+            "description": "Maximum number of analytics entries"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving analytics"
+          }
+        }
+      }
+    },
+    "/{instanceName}/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get analytics for a named instance",
+        "description": "Returns file operation analytics for a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 250
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving analytics"
+          }
+        }
+      }
+    },
+    "/browse/{path}": {
+      "get": {
+        "tags": ["File Operations"],
+        "summary": "Browse file structure (default instance)",
+        "description": "Browses the file structure at the given path in the default filing instance",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Path to browse (e.g., 'documents' or 'documents/subfolder')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File structure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path is a file, not a folder"
+          },
+          "500": {
+            "description": "Browse error"
+          }
+        }
+      }
+    },
+    "/{instanceName}/browse/{path}": {
+      "get": {
+        "tags": ["File Operations"],
+        "summary": "Browse file structure in a named instance",
+        "description": "Browses the file structure at the given path in a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Path to browse"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File structure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Browse error"
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Configuration"],
+        "summary": "Get settings (default instance)",
+        "description": "Retrieves settings for the default filing instance",
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving settings"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Configuration"],
+        "summary": "Update settings (default instance)",
+        "description": "Updates settings for the default filing instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsResponse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated successfully"
+          },
+          "400": {
+            "description": "Missing settings"
+          },
+          "500": {
+            "description": "Error updating settings"
+          }
+        }
+      }
+    },
+    "/{instanceName}/settings": {
+      "get": {
+        "tags": ["Configuration"],
+        "summary": "Get settings for a named instance",
+        "description": "Retrieves settings for a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving settings"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Configuration"],
+        "summary": "Update settings for a named instance",
+        "description": "Updates settings for a named filing instance",
+        "parameters": [
+          {
+            "name": "instanceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filing instance name"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsResponse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated successfully"
+          },
+          "500": {
+            "description": "Error updating settings"
+          }
+        }
+      }
+    }
+  }
+}

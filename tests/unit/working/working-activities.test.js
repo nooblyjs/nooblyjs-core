@@ -4,7 +4,7 @@
  * This test suite verifies that the working service properly resolves
  * activity script paths using the filing service and activities folder configuration.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -12,8 +12,8 @@
 'use strict';
 
 const EventEmitter = require('events');
-const path = require('path');
-const fs = require('fs').promises;
+const path = require('node:path');
+const fs = require('node:fs').promises;
 const createWorkingService = require('../../../src/working');
 const createQueueService = require('../../../src/queueing');
 const createFilingService = require('../../../src/filing');
@@ -158,7 +158,7 @@ module.exports = { run };
     await fs.rm(customDir, { recursive: true, force: true });
   });
 
-  it('should use noobly-core-activities option name', async () => {
+  it('should use nooblyjs-core-activities option name', async () => {
     // Stop current service
     await workingService.stop();
 
@@ -166,10 +166,10 @@ module.exports = { run };
       createWorkingService._reset();
     }
 
-    // Create service with noobly-core-activities option
+    // Create service with nooblyjs-core-activities option
     workingService = createWorkingService('default', {
       maxThreads: 2,
-      'noobly-core-activities': testActivitiesDir,
+      'nooblyjs-core-activities': testActivitiesDir,
       dependencies: {
         queueing: queueService,
         filing: filingService

@@ -1,9 +1,9 @@
 /**
- * @fileoverview AWS SQS (Simple Queue Service) provider for NooblyJS Core queueing service.
+ * @fileoverview AWS SQS (Simple Queue Service) provider for Noobly JS Core queueing service.
  * Leverages AWS SQS for distributed, managed queue operations with high availability and durability.
  * Supports both Standard and FIFO queue types with automatic detection.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -86,14 +86,47 @@ class QueueingAWS {
   }
 
   /**
-   * Get all our settings
+   * Retrieves all current configuration settings for the AWS SQS provider.
+   * Returns SQS-specific settings including region, account ID, and queue parameters.
+   *
+   * @return {Promise<Object>} A promise that resolves to the settings object containing:
+   *   - description: {string} Provider description
+   *   - list: {Array} Available settings definitions
+   *   - region: {string} AWS region
+   *   - accountId: {string} AWS account ID
+   *   - queueNamePrefix: {string} Prefix for queue names
+   *   - visibilityTimeout: {number} Message visibility timeout in seconds
+   *   - messageRetentionPeriod: {number} Message retention period in seconds
+   *   - receiveMessageWaitTimeSeconds: {number} Long polling timeout
+   *
+   * @example
+   * // Get SQS configuration
+   * const settings = await queueingAWS.getSettings();
+   * console.log(`Region: ${settings.region}, Account: ${settings.accountId}`);
    */
   async getSettings() {
     return this.settings;
   }
 
   /**
-   * Set all our settings
+   * Updates configuration settings for the AWS SQS provider.
+   * Only specified settings are updated; unspecified settings are left unchanged.
+   *
+   * @param {Object} settings The settings object containing new values
+   * @param {string} [settings.region] The new AWS region
+   * @param {string} [settings.accountId] The new AWS account ID
+   * @param {string} [settings.queueNamePrefix] The new queue name prefix
+   * @param {number} [settings.visibilityTimeout] New visibility timeout in seconds
+   * @param {number} [settings.messageRetentionPeriod] New retention period in seconds
+   * @param {number} [settings.receiveMessageWaitTimeSeconds] New long polling timeout
+   * @return {Promise<void>} A promise that resolves when settings are updated
+   *
+   * @example
+   * // Update SQS settings
+   * await queueingAWS.saveSettings({
+   *   visibilityTimeout: 60,
+   *   messageRetentionPeriod: 604800
+   * });
    */
   async saveSettings(settings) {
     for (let i = 0; i < this.settings.list.length; i++) {

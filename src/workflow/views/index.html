@@ -4,696 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workflow Management - Noobly JS Admin</title>
+    <title>Workflow Management - Noobly JS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
-    <link rel="stylesheet" href="/services/css/navigation.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <style>
-        /* Custom CSS for professional look */
-        :root {
-            --custom-primary: #006
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings"
-                        type="button" role="tab" aria-controls="settings" aria-selected="false">
-                        <i class="bi bi-gear"></i> Settings
-                    </button>
-                </li>6cc;
-            --custom-secondary: #6c757d;
-            --custom-success: #198754;
-            --custom-danger: #dc3545;
-        }
-
-        body {
-            background-color: #f8f9fa;
-        }
-
-        .sidebar {
-            background-color: white;
-            border-right: 1px solid #dee2e6;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            width: 280px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo {
-            color: var(--custom-primary);
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .logo .subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .nav-section-header {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            color: #212529;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid #f8f9fa;
-        }
-
-        .nav-item:hover {
-            background-color: #f8f9fa;
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            background-color: var(--custom-primary);
-            color: white;
-            border-left-color: #0052a3;
-        }
-
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: auto;
-        }
-
-        .status-dot.online {
-            background-color: var(--custom-success);
-        }
-
-        .status-dot.offline {
-            background-color: var(--custom-danger);
-        }
-
-        .main-content {
-            background-color: white;
-            min-height: 100vh;
-            flex: 1;
-            padding: 2rem;
-        }
-
-        .page-header {
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 1rem;
-        }
-
-        .page-title {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .page-subtitle {
-            margin: 0.5rem 0 0 0;
-            color: #6c757d;
-            font-size: 1.125rem;
-        }
-
-        .app-container {
-            display: flex;
-        }
-
-        /* Alert Styles */
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-success {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            border-color: #badbcc;
-        }
-
-        .alert-error {
-            color: #842029;
-            background-color: #f8d7da;
-            border-color: #f5c2c7;
-        }
-
-        /* Card Styles */
-        .card {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            overflow: visible;
-        }
-
-        .card-header {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 0.375rem 0.375rem 0 0;
-        }
-
-        .card-title {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .card-subtitle {
-            margin: 0.25rem 0 0 0;
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .card-content {
-            padding: 1.5rem;
-            max-height: none;
-            overflow: visible;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #212529;
-        }
-
-        .form-input {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #212529;
-            background-color: white;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .form-input:focus {
-            color: #212529;
-            background-color: white;
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .helper-text {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #212529;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-
-        .btn:hover {
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            color: white;
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        .btn-primary:hover {
-            color: white;
-            background-color: #0052a3;
-            border-color: #004785;
-        }
-
-        .btn-secondary {
-            color: white;
-            background-color: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-        }
-
-        .btn-secondary:hover {
-            color: white;
-            background-color: #565e64;
-            border-color: #4c5258;
-        }
-
-        .btn-error {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-error:hover {
-            color: white;
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* Response Styles */
-        .response-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        .response-title {
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 0.5rem;
-        }
-
-        .response-content {
-            background-color: white;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Validation Styles */
-        .validation-message {
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
-        }
-
-        .validation-success {
-            color: var(--custom-success);
-        }
-
-        .validation-error {
-            color: var(--custom-danger);
-        }
-
-        .json-valid {
-            border-color: var(--custom-success);
-        }
-
-        .json-invalid {
-            border-color: var(--custom-danger);
-        }
-
-        /* Loading States */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Analytics Table Styles (for caching service) */
-        .analytics-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .analytics-info {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh {
-            background-color: var(--custom-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .analytics-refresh:hover {
-            background-color: #0052a3;
-        }
-
-        .analytics-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .analytics-table th,
-        .analytics-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .analytics-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .sortable:hover {
-            background-color: #e9ecef;
-        }
-
-        .sort-asc::after {
-            content: " ↑";
-        }
-
-        .sort-desc::after {
-            content: " ↓";
-        }
-
-        .no-data {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-        }
-
-        .key-cell {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-        }
-
-        .hits-cell {
-            font-weight: 600;
-            color: var(--custom-primary);
-        }
-
-        .date-cell {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        /* Swagger UI Integration Styles */
-        #swagger-ui {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        #swagger-ui .swagger-ui {
-            max-width: none;
-        }
-
-        #swagger-ui .topbar {
-            display: none;
-        }
-
-        #swagger-ui .info {
-            margin: 20px 0;
-        }
-
-        #swagger-ui .info .title {
-            font-size: 1.5rem;
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .scheme-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        #swagger-ui .opblock-tag {
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        #swagger-ui .opblock {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        #swagger-ui .opblock.is-open .opblock-summary {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        #swagger-ui .opblock .opblock-summary-method {
-            border-radius: 0.375rem;
-            font-weight: 600;
-        }
-
-        #swagger-ui .opblock.opblock-post .opblock-summary-method {
-            background: var(--custom-success);
-        }
-
-        #swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: var(--custom-primary);
-        }
-
-        #swagger-ui .opblock.opblock-delete .opblock-summary-method {
-            background: var(--custom-danger);
-        }
-
-        #swagger-ui .opblock.opblock-put .opblock-summary-method {
-            background: #fd7e14;
-        }
-
-        #swagger-ui .btn {
-            border-radius: 0.375rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        #swagger-ui .btn.execute {
-            background: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        #swagger-ui .btn.execute:hover {
-            background: #0052a3;
-            border-color: #004785;
-        }
-
-        #swagger-ui .btn.btn-clear {
-            background: var(--custom-secondary);
-            border-color: var(--custom-secondary);
-            color: white;
-        }
-
-        #swagger-ui .btn.btn-clear:hover {
-            background: #565e64;
-            border-color: #4c5258;
-        }
-
-        #swagger-ui .parameters-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        #swagger-ui .parameter__name {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui input[type="text"],
-        #swagger-ui textarea,
-        #swagger-ui select {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        #swagger-ui input[type="text"]:focus,
-        #swagger-ui textarea:focus,
-        #swagger-ui select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: 0;
-        }
-
-        #swagger-ui .response-col_status {
-            font-weight: 600;
-        }
-
-        #swagger-ui .response-col_status.response-undocumented {
-            color: var(--custom-secondary);
-        }
-
-        #swagger-ui .response .response-col_status {
-            color: var(--custom-success);
-        }
-
-        #swagger-ui .responses-inner h4 {
-            color: var(--custom-primary);
-            font-weight: 600;
-        }
-
-        #swagger-ui .highlight-code {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-
-        #swagger-ui .model .property {
-            color: var(--custom-primary);
-        }
-
-        #swagger-ui .prop-type {
-            color: var(--custom-secondary);
-        }
-
-        /* Ensure proper responsiveness */
-        #swagger-ui .wrapper {
-            max-width: 100%;
-            overflow-x: auto;
-        }
-
-        #swagger-ui .swagger-ui table {
-            table-layout: auto;
-            width: 100%;
-        }
-
-        /* Fix potential z-index issues */
-        #swagger-ui .dialog-ux {
-            z-index: 1050;
-        }
-
-        #swagger-ui .model-box-control:focus {
-            outline: 2px solid var(--custom-primary);
-            outline-offset: 2px;
-        }
-
-        /* Dashboard specific styles */
-        .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: var(--custom-primary);
-            border-bottom-color: var(--custom-primary);
-            background-color: transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--custom-primary);
-            background-color: transparent;
-            border-bottom-color: var(--custom-primary);
-        }
-
-        .table-responsive {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .table thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            z-index: 10;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.35rem 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </nav>
-
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Workflow Management</h1>
-                <p class="page-subtitle">Define and start workflows</p>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Noobly JS Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
             </div>
+        </div>
+    </header>
+
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="core-navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </aside>
+
+        <main class="core-main-content">
+            <div class="core-page-header">
+                <h1 class="core-page-title">Workflow Management</h1>
+                <p class="core-page-subtitle">Define and start workflows</p>
+            </div>
+
+            <div class="core-page-content">
+
+            <div class="core-page-content">
 
             <div class="alert alert-success" id="successAlert">
                 <strong>Success!</strong> <span id="successMessage"></span>
@@ -715,9 +70,14 @@
                         <i class="bi bi-database"></i> Data
                     </button>
                 </li>
-                            <li class="nav-item" role="presentation">
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
                         <i class="bi bi-gear"></i> Settings
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">
+                        <i class="bi bi-window-desktop"></i> UI
                     </button>
                 </li>
             </ul>
@@ -727,23 +87,23 @@
                 <!-- Settings Tab -->
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
                     <!-- Settings Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Workflow Service Settings</h2>
-                            <p class="card-subtitle">Configure the workflow service parameters</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Workflow Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the workflow service parameters</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="response-container" style="display: none; margin-top: 1rem;">
-                                <div class="response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="response-content"></div>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -754,21 +114,21 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
 
                     <!-- Statistics Card with Pie Chart -->
-                    <div class="card mb-4">
-                        <div class="card-header">
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="flex-grow-1">
-                                    <h2 class="card-title">Workflow Status Distribution</h2>
-                                    <p class="card-subtitle">Visual breakdown of workflow execution status</p>
+                                    <h2 class="core-card-title">Workflow Status Distribution</h2>
+                                    <p class="core-card-subtitle">Visual breakdown of workflow execution status</p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="refreshDashboard()">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="refreshDashboard()">
                                         <i class="bi bi-arrow-clockwise"></i> Refresh All
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div style="position: relative; height: 300px;">
@@ -776,9 +136,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="stats-summary">
+                                    <div class="core-stats-summary">
                                         <h5 class="mb-3">Statistics Summary</h5>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-success">COMPLETED</span></span>
                                                 <strong id="statCompletedCount">0</strong>
@@ -789,7 +149,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-danger">ERRORS</span></span>
                                                 <strong id="statErrorsCount">0</strong>
@@ -800,13 +160,13 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span><span class="badge bg-primary">ACTIVE</span></span>
+                                                <span><span class="badge bg-secondary">ACTIVE</span></span>
                                                 <strong id="statActiveCount">0</strong>
                                             </div>
                                             <div class="progress" style="height: 20px;">
-                                                <div id="statActiveBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%">
+                                                <div id="statActiveBar" class="progress-bar bg-secondary" role="progressbar" style="width: 0%">
                                                     <span id="statActivePercent">0%</span>
                                                 </div>
                                             </div>
@@ -827,16 +187,16 @@
                     </div>
 
                     <!-- Workflow Analytics Table Card -->
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="core-card">
+                        <div class="core-card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h2 class="card-title">Workflow Analytics</h2>
-                                    <p class="card-subtitle">Detailed analytics for each workflow (ordered by last run)</p>
+                                    <h2 class="core-card-title">Workflow Analytics</h2>
+                                    <p class="core-card-subtitle">Detailed analytics for each workflow (ordered by last run)</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped">
                                     <thead>
@@ -875,93 +235,172 @@
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Define Workflow Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Define Workflow</h2>
-                    <p class="card-subtitle">Define a new workflow with a series of steps</p>
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Define Workflow</h2>
+                    <p class="core-card-subtitle">Define a new workflow with a series of steps</p>
                 </div>
-                <div class="card-content">
+                <div class="core-card-content">
                     <form id="defineForm">
-                        <div class="form-group">
-                            <label class="form-label" for="defineName">Workflow Name</label>
-                            <input type="text" id="defineName" class="form-input" placeholder="Enter workflow name" required>
-                            <div class="helper-text">A unique name for the workflow</div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="defineName">Workflow Name</label>
+                            <input type="text" id="defineName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">A unique name for the workflow</div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="defineSteps">Steps (JSON Array)</label>
-                            <textarea id="defineSteps" class="form-input form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
-                            <div id="defineValidation" class="validation-message" style="display: none;"></div>
-                            <div class="helper-text">Enter a valid JSON array of step names</div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="defineSteps">Steps (JSON Array)</label>
+                            <textarea id="defineSteps" class="core-form-input core-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="defineValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Enter a valid JSON array of step names</div>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Define Workflow</button>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Define Workflow</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('defineSteps')">Format JSON</button>
                             <button type="button" class="btn btn-secondary" onclick="loadExample('defineSteps')">Load Example</button>
                         </div>
                     </form>
-                    <div id="defineResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="defineResponseContent" class="response-content"></div>
+                    <div id="defineResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="defineResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Start Workflow Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Start Workflow</h2>
-                    <p class="card-subtitle">Start a defined workflow with initial data</p>
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Start Workflow</h2>
+                    <p class="core-card-subtitle">Start a defined workflow with initial data</p>
                 </div>
-                <div class="card-content">
+                <div class="core-card-content">
                     <form id="startForm">
-                        <div class="form-group">
-                            <label class="form-label" for="startName">Workflow Name</label>
-                            <input type="text" id="startName" class="form-input" placeholder="Enter workflow name" required>
-                            <div class="helper-text">The name of the workflow to start</div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="startName">Workflow Name</label>
+                            <input type="text" id="startName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to start</div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="startData">Initial Data (JSON)</label>
-                            <textarea id="startData" class="form-input form-textarea" placeholder='{"userId": 123, "orderId": 456}'></textarea>
-                            <div id="startValidation" class="validation-message" style="display: none;"></div>
-                            <div class="helper-text">Optional JSON data to pass to the workflow</div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="startData">Initial Data (JSON)</label>
+                            <textarea id="startData" class="core-form-input core-form-textarea" placeholder='{"userId": 123, "orderId": 456}'></textarea>
+                            <div id="startValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Optional JSON data to pass to the workflow</div>
                         </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Start Workflow</button>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Start Workflow</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('startData')">Format JSON</button>
                             <button type="button" class="btn btn-secondary" onclick="loadExample('startData')">Load Example</button>
                         </div>
                     </form>
-                    <div id="startResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Response:</div>
-                        <div id="startResponseContent" class="response-content"></div>
+                    <div id="startResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="startResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retrieve Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Retrieve Workflow</h2>
+                    <p class="core-card-subtitle">Get a workflow definition by name</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="retrieveForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="retrieveName">Workflow Name</label>
+                            <input type="text" id="retrieveName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to retrieve</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Retrieve Workflow</button>
+                        </div>
+                    </form>
+                    <div id="retrieveResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflow Definition:</div>
+                        <div id="retrieveResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Update Workflow</h2>
+                    <p class="core-card-subtitle">Update an existing workflow definition</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="updateForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateName">Workflow Name</label>
+                            <input type="text" id="updateName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to update</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateSteps">Steps (JSON Array)</label>
+                            <textarea id="updateSteps" class="core-form-input core-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="updateValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Enter a valid JSON array of step names</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateMetadata">Metadata (JSON)</label>
+                            <textarea id="updateMetadata" class="core-form-input core-form-textarea" placeholder='{"description": "Updated description", "tags": ["tag1"]}'></textarea>
+                            <div id="updateMetadataValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Optional JSON metadata (description and tags)</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Update Workflow</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('updateSteps')">Format Steps JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('updateMetadata')">Format Metadata JSON</button>
+                        </div>
+                    </form>
+                    <div id="updateResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Updated Workflow:</div>
+                        <div id="updateResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List All Workflows Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">List All Workflows</h2>
+                    <p class="core-card-subtitle">Get a list of all defined workflows</p>
+                </div>
+                <div class="core-card-content">
+                    <div class="core-btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="listWorkflows()">List Workflows</button>
+                    </div>
+                    <div id="listResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflows:</div>
+                        <div id="listResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Status Check -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Service Status</h2>
-                    <p class="card-subtitle">Check workflow service status</p>
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Service Status</h2>
+                    <p class="core-card-subtitle">Check workflow service status</p>
                 </div>
-                <div class="card-content">
-                    <div class="btn-group">
+                <div class="core-card-content">
+                    <div class="core-btn-group">
                         <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
                     </div>
-                    <div id="statusResponse" class="response-container" style="display: none;">
-                        <div class="response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="response-content"></div>
+                    <div id="statusResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- API Documentation -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">API Documentation</h2>
-                    <p class="card-subtitle">Interactive API documentation for Workflow service</p>
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">API Documentation</h2>
+                    <p class="core-card-subtitle">Interactive API documentation for Workflow service</p>
                 </div>
-                <div class="card-content">
+                <div class="core-card-content">
                     <div id="swagger-ui"></div>
                 </div>
             </div>
@@ -969,14 +408,187 @@
                 </div>
                 <!-- End Data Tab -->
 
-            </div>
-            <!-- End Tab Content -->
+                <!-- UI Tab -->
+                <div class="tab-pane fade" id="ui" role="tabpanel" aria-labelledby="ui-tab">
+                    <div class="workflow-ui-container">
+                        <!-- Left Navigation Panel -->
+                        <aside class="workflow-left-nav">
+                            <div class="nav-header">
+                                <h3 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Workflows</h3>
+                                <button class="btn btn-sm btn-outline-secondary" id="refreshWorkflowsBtn" title="Refresh workflows">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <div class="nav-search mb-3">
+                                <input type="text" id="contentSearch" class="form-control form-control-sm" placeholder="Search workflows...">
+                            </div>
+                            <div id="workflowsList" class="workflows-list">
+                                <div class="text-center text-muted py-3">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="small mt-2">Loading workflows...</p>
+                                </div>
+                            </div>
+                            <div class="nav-footer">
+                                <button type="button" class="btn btn-sm btn-secondary" id="newWorkflowBtn">
+                                    <i class="bi bi-plus-circle me-1"></i> New Workflow
+                                </button>
+                            </div>
+                        </aside>
 
+                        <!-- Main Content Area -->
+                        <main class="workflow-content-main">
+                            <div id="contentMain" class="content-empty-state">
+                                <i class="bi bi-folder-open display-4 text-muted"></i>
+                                <p class="mt-3 text-muted">Select a workflow to view details</p>
+                            </div>
+
+                            <!-- Workflow Editor (Hidden by default) -->
+                            <div id="workflowEditor" class="workflow-editor" style="display: none;">
+                                <div class="editor-header">
+                                    <h4 id="editorWorkflowName" class="mb-0"></h4>
+                                    <div class="editor-actions">
+                                        <button class="btn btn-sm btn-secondary" id="refreshEditorBtn" title="Refresh">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" id="deleteWorkflowBtn" title="Delete workflow">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Workflow Editor Tabs -->
+                                <ul class="nav nav-tabs mb-3" id="editorTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">
+                                            <i class="bi bi-info-circle"></i> Details
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="executions-tab" data-bs-toggle="tab" data-bs-target="#executions" type="button" role="tab" aria-controls="executions" aria-selected="false">
+                                            <i class="bi bi-play-circle"></i> Executions
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <!-- Editor Tab Content -->
+                                <div class="tab-content" id="editorTabContent">
+                                    <!-- Details Tab -->
+                                    <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                                        <div class="core-card">
+                                            <div class="core-card-header">
+                                                <h5 class="core-card-title mb-0">Workflow Definition</h5>
+                                            </div>
+                                            <div class="core-card-content">
+                                                <div class="mb-3">
+                                                    <label class="core-form-label">Workflow Steps</label>
+                                                    <div id="workflowStepsContainer" class="steps-container"></div>
+                                                    <button type="button" class="btn btn-sm btn-secondary mt-2" id="addStepBtn">
+                                                        <i class="bi bi-plus-circle me-1"></i>Add Step
+                                                    </button>
+                                                </div>
+                                                <hr>
+                                                <button type="button" class="btn btn-secondary" id="saveWorkflowBtn">
+                                                    <i class="bi bi-check-circle me-1"></i>Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Executions Tab -->
+                                    <div class="tab-pane fade" id="executions" role="tabpanel" aria-labelledby="executions-tab">
+                                        <div class="core-card">
+                                            <div class="core-card-header">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="core-card-title mb-0">Execution History (Top 50)</h5>
+                                                    <button type="button" class="btn btn-sm btn-secondary" id="refreshExecutionsBtn">
+                                                        <i class="bi bi-arrow-clockwise"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="core-card-content">
+                                                <div id="executionsFilterBar" class="mb-3">
+                                                    <div class="core-btn-group" role="group">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter active" data-filter="all">All</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="completed">Completed</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="running">Running</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="error">Error</button>
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Status</th>
+                                                                <th>Started</th>
+                                                                <th>Duration</th>
+                                                                <th>Details</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="executionsTableBody">
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-3">
+                                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                                        <span class="visually-hidden">Loading...</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Workflow Form (Hidden by default) -->
+                            <div id="newWorkflowForm" class="new-workflow-form" style="display: none;">
+                                <div class="core-card">
+                                    <div class="core-card-header">
+                                        <h4 class="core-card-title mb-0">Create New Workflow</h4>
+                                    </div>
+                                    <div class="core-card-content">
+                                        <form id="createWorkflowForm">
+                                            <div class="mb-3">
+                                                <label class="core-form-label" for="newWorkflowName">Workflow Name</label>
+                                                <input type="text" id="newWorkflowName" class="form-control" placeholder="e.g., order-processing" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="core-form-label">Initial Steps</label>
+                                                <div id="newWorkflowSteps" class="steps-container mb-3"></div>
+                                                <button type="button" class="btn btn-sm btn-secondary" id="addNewStepBtn">
+                                                    <i class="bi bi-plus-circle me-1"></i>Add Step
+                                                </button>
+                                            </div>
+
+                                            <div class="core-btn-group">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-check-circle me-1"></i>Create Workflow
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" id="cancelNewWorkflowBtn">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+                <!-- End UI Tab -->
+
+            </div>
+            <!-- End Page Content -->
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <script>
         // JSON validation
         function validateJSON(elementId) {
@@ -1002,7 +614,7 @@
                 element.classList.add('json-valid');
                 if(validation) {
                     validation.textContent = '✓ Valid JSON';
-                    validation.className = 'validation-message validation-success';
+                    validation.className = 'core-validation-message validation-success';
                     validation.style.display = 'block';
                 }
                 return true;
@@ -1011,7 +623,7 @@
                 element.classList.add('json-invalid');
                 if(validation) {
                     validation.textContent = '✗ Invalid JSON: ' + e.message;
-                    validation.className = 'validation-message validation-error';
+                    validation.className = 'core-validation-message validation-error';
                     validation.style.display = 'block';
                 }
                 return false;
@@ -1153,6 +765,88 @@
             }
         });
 
+        // Retrieve Workflow Form
+        document.getElementById('retrieveForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('retrieveName').value;
+
+            try {
+                setLoading('retrieveForm', true);
+                const result = await makeRequest(`/services/workflow/api/definitions/${encodeURIComponent(name)}`);
+                showResponse('retrieveResponse', 'retrieveResponseContent', result);
+                showAlert(`Workflow "${name}" retrieved successfully`);
+            } catch (error) {
+                showAlert('Error retrieving workflow: ' + error.message, 'error');
+                showResponse('retrieveResponse', 'retrieveResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('retrieveForm', false);
+            }
+        });
+
+        // Update Workflow Form
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('updateName').value;
+            const steps = document.getElementById('updateSteps').value;
+            const metadata = document.getElementById('updateMetadata').value;
+
+            if (!validateJSON('updateSteps')) {
+                showAlert('Please enter a valid JSON array for steps', 'error');
+                return;
+            }
+
+            if (metadata && !validateJSON('updateMetadata')) {
+                showAlert('Please enter valid JSON for metadata', 'error');
+                return;
+            }
+
+            try {
+                setLoading('updateForm', true);
+                const parsedSteps = JSON.parse(steps);
+                const parsedMetadata = metadata ? JSON.parse(metadata) : {};
+
+                const requestBody = { steps: parsedSteps };
+                if (metadata) {
+                    requestBody.metadata = parsedMetadata;
+                }
+
+                const result = await makeRequest(`/services/workflow/api/definitions/${encodeURIComponent(name)}`, 'PUT', requestBody);
+                showResponse('updateResponse', 'updateResponseContent', result);
+                showAlert(`Workflow "${name}" updated successfully`);
+            } catch (error) {
+                showAlert('Error updating workflow: ' + error.message, 'error');
+                showResponse('updateResponse', 'updateResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('updateForm', false);
+            }
+        });
+
+        // List All Workflows
+        async function listWorkflows() {
+            try {
+                const result = await makeRequest('/services/workflow/api/definitions');
+                if (result.definitions && Array.isArray(result.definitions)) {
+                    const formatted = {
+                        count: result.count,
+                        definitions: result.definitions.map(def => ({
+                            name: def.name,
+                            steps: def.steps,
+                            metadata: def.metadata
+                        }))
+                    };
+                    showResponse('listResponse', 'listResponseContent', formatted);
+                    showAlert(`Found ${result.count} workflow(s)`);
+                } else {
+                    showResponse('listResponse', 'listResponseContent', result);
+                }
+            } catch (error) {
+                showAlert('Error listing workflows: ' + error.message, 'error');
+                showResponse('listResponse', 'listResponseContent', 'Error: ' + error.message);
+            }
+        }
+
         async function checkStatus() {
             try {
                 const result = await makeRequest('/services/workflow/api/status');
@@ -1164,106 +858,27 @@
             }
         }
 
-        // Swagger UI setup
-        const spec = {
-            openapi: '3.0.0',
-            info: {
-                title: 'Workflow API',
-                description: 'REST API for workflow operations',
-                version: '1.0.0'
-            },
-            servers: [
-                { url: '/services/workflow/api', description: 'Workflow API' }
-            ],
-            paths: {
-                '/defineworkflow': {
-                    post: {
-                        summary: 'Define a workflow',
-                        description: 'Defines a new workflow with a name and steps',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            name: { type: 'string' },
-                                            steps: { type: 'array', items: { type: 'string' } }
-                                        }
-                                    },
-                                    example: { "name": "user-onboarding", "steps": ["create-user", "send-email"] }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Workflow defined successfully',
-                                content: {
-                                    'text/plain': { schema: { type: 'string', example: 'OK' } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/start': {
-                    post: {
-                        summary: 'Start a workflow',
-                        description: 'Starts a defined workflow with initial data',
-                        requestBody: {
-                            required: true,
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            name: { type: 'string' },
-                                            data: { type: 'object' }
-                                        }
-                                    },
-                                    example: { "name": "user-onboarding", "data": { "userId": 123 } }
-                                }
-                            }
-                        },
-                        responses: {
-                            '200': {
-                                description: 'Workflow started successfully',
-                                content: {
-                                    'application/json': { schema: { type: 'object', properties: { instanceId: { type: 'string' } } } }
-                                }
-                            },
-                            '500': {
-                                description: 'Server error',
-                                content: {
-                                    'text/plain': { schema: { type: 'string' } }
-                                }
-                            }
-                        }
-                    }
-                },
-                '/status': {
-                    get: {
-                        summary: 'Service status',
-                        description: 'Check if the workflow service is running',
-                        responses: {
-                            '200': {
-                                description: 'Service is running',
-                                content: {
-                                    'application/json': {
-                                        schema: { type: 'string', example: 'workflow api running' }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        // Swagger UI setup - Load from external docs.json file
+        async function initializeSwagger() {
+            try {
+                const response = await fetch('/services/workflow/api/swagger/docs.json');
+                const spec = await response.json();
+
+                SwaggerUIBundle({
+                    spec: spec,
+                    dom_id: '#swagger-ui',
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.SwaggerUIStandalonePreset
+                    ],
+                    layout: "BaseLayout",
+                    deepLinking: true
+                });
+            } catch (error) {
+                console.error('Error loading Swagger spec:', error);
+                document.getElementById('swagger-ui').innerHTML = '<div class="alert alert-error">Failed to load API documentation: ' + error.message + '</div>';
             }
-        };
+        }
 
         // Dashboard functionality
         let statsChart = null;
@@ -1438,7 +1053,7 @@
                             <span class="badge bg-danger">${workflow.errorCount}</span>
                         </td>
                         <td class="text-center">
-                            <span class="badge bg-primary">${workflow.activeCount}</span>
+                            <span class="badge bg-secondary">${workflow.activeCount}</span>
                         </td>
                         <td class="text-center">
                             ${avgDuration}
@@ -1503,7 +1118,7 @@
             refreshDashboard();
         });
 
-        // Initialize Swagger UI
+        // Initialize page
         window.onload = function() {
             checkStatus();
 
@@ -1512,46 +1127,14 @@
                 refreshDashboard();
             }
 
-            try {
-                const ui = SwaggerUIBundle({
-                    spec: spec,
-                    dom_id: '#swagger-ui',
-                    deepLinking: true,
-                    presets: [
-                        SwaggerUIBundle.presets.apis,
-                        SwaggerUIBundle.presets.standalone
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
-                    tryItOutEnabled: true,
-                    requestInterceptor: (request) => {
-                        // Add any headers or modify request if needed
-                        return request;
-                    },
-                    responseInterceptor: (response) => {
-                        // Handle response if needed
-                        return response;
-                    },
-                    onComplete: () => {
-                        console.log('Swagger UI loaded successfully');
-                    },
-                    onFailure: (error) => {
-                        console.error('Swagger UI failed to load:', error);
-                    }
-                });
-
-                window.ui = ui;
-            } catch (error) {
-                console.error('Error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<p style="color: red;">Error loading API documentation. Please refresh the page.</p>';
-            }
+            // Initialize Swagger UI from external docs
+            initializeSwagger();
         };
     </script>
     <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
     <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'workflow');
+        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'workflow');
     
         // Settings functionality
         let currentSettings = {};
@@ -1595,11 +1178,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'form-group mb-3';
+            formGroup.className = 'core-form-group mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'form-label';
+            label.className = 'core-form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -1754,6 +1337,401 @@
             loadSettings();
         });
 
+        // ==================== Workflow UI Management ==================== //
+        let currentWorkflow = null;
+        let allWorkflows = [];
+        let executionFilter = 'all';
+
+        // Initialize UI tab
+        document.getElementById('ui-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadWorkflows();
+        });
+
+        // Load workflows from API
+        async function loadWorkflows() {
+            try {
+                const response = await fetch('/services/workflow/api/definitions');
+                const data = await response.json();
+                allWorkflows = data.definitions || [];
+                renderWorkflowsList();
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+                showAlert('Error loading workflows: ' + error.message, 'error');
+            }
+        }
+
+        // Render workflows list in left nav
+        function renderWorkflowsList() {
+            const container = document.getElementById('workflowsList');
+
+            if (!allWorkflows || allWorkflows.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-inbox fs-5"></i>
+                        <p class="small mt-2">No workflows defined</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const searchTerm = document.getElementById('contentSearch')?.value || '';
+            const filtered = allWorkflows.filter(w =>
+                w.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const html = filtered.map(workflow => `
+                <div class="workflow-item ${currentWorkflow?.name === workflow.name ? 'active' : ''}"
+                     data-workflow="${workflow.name}">
+                    <div class="workflow-item-name" title="${workflow.name}">
+                        <i class="bi bi-diagram-2 me-2"></i>${workflow.name}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+            // Add event listeners
+            container.querySelectorAll('.workflow-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const workflowName = this.getAttribute('data-workflow');
+                    selectWorkflow(workflowName);
+                });
+            });
+        }
+
+        // Select workflow
+        function selectWorkflow(workflowName) {
+            currentWorkflow = allWorkflows.find(w => w.name === workflowName);
+            if (!currentWorkflow) return;
+
+            // Update UI
+            document.getElementById('contentMain').style.display = 'none';
+            document.getElementById('newWorkflowForm').style.display = 'none';
+            document.getElementById('workflowEditor').style.display = 'flex';
+
+            // Update editor with workflow name
+            document.getElementById('editorWorkflowName').textContent = currentWorkflow.name;
+            renderWorkflowSteps();
+            loadExecutions();
+
+            // Update active state
+            document.querySelectorAll('.workflow-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-workflow') === workflowName) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Render workflow steps
+        function renderWorkflowSteps() {
+            const container = document.getElementById('workflowStepsContainer');
+
+            if (!currentWorkflow || !currentWorkflow.steps || currentWorkflow.steps.length === 0) {
+                container.innerHTML = `
+                    <div class="text-muted small">
+                        <p><strong>No steps defined</strong></p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display each step as an editable item
+            const stepsHtml = currentWorkflow.steps.map((step, index) => `
+                <div class="step-item mb-2 p-2 border rounded bg-light">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">${index + 1}</span>
+                        <input type="text" class="form-control form-control-sm step-input"
+                               data-step-index="${index}" value="${escapeHtml(step)}"
+                               placeholder="Step path">
+                        <button type="button" class="btn btn-sm btn-danger remove-step-btn"
+                                data-step-index="${index}" title="Remove step">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = stepsHtml;
+
+            // Add event listeners for remove buttons
+            container.querySelectorAll('.remove-step-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-step-index'));
+                    currentWorkflow.steps.splice(index, 1);
+                    renderWorkflowSteps();
+                });
+            });
+        }
+
+        // Load executions
+        async function loadExecutions() {
+            const tbody = document.getElementById('executionsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const response = await fetch(`/services/workflow/api/executions/${encodeURIComponent(currentWorkflow.name)}`);
+                const data = await response.json();
+                renderExecutionsTable(data);
+            } catch (error) {
+                console.error('Error loading executions:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger py-3">
+                            <i class="bi bi-exclamation-triangle"></i> Error loading executions
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render executions table
+        function renderExecutionsTable(data) {
+            const tbody = document.getElementById('executionsTableBody');
+
+            if (!data || !data.executions || data.executions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">
+                            <i class="bi bi-inbox"></i> No executions
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Filter executions
+            const filtered = filterExecutions(data.executions);
+
+            // Limit to top 50
+            const limited = filtered.slice(0, 50);
+
+            const html = limited.map(exec => {
+                const status = exec.status || 'unknown';
+                const statusBadge = {
+                    'completed': '<span class="badge bg-success">Completed</span>',
+                    'running': '<span class="badge bg-info">Running</span>',
+                    'error': '<span class="badge bg-danger">Error</span>'
+                }[status] || '<span class="badge bg-secondary">Unknown</span>';
+
+                const started = exec.startedAt ? new Date(exec.startedAt).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }) : 'N/A';
+
+                const duration = exec.duration ? exec.duration + ' ms' : 'N/A';
+
+                return `
+                    <tr style="cursor: pointer;" onclick="showExecutionDetails(${JSON.stringify(exec).replace(/"/g, '&quot;')})">
+                        <td>${statusBadge}</td>
+                        <td>${started}</td>
+                        <td>${duration}</td>
+                        <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = html;
+        }
+
+        // Filter executions
+        function filterExecutions(executions) {
+            if (executionFilter === 'all') return executions;
+            return executions.filter(e => e.status === executionFilter);
+        }
+
+        // Show execution details
+        function showExecutionDetails(execution) {
+            const rightNav = document.querySelector('.workflow-right-nav');
+            const content = document.getElementById('executionDetails');
+            const pre = document.getElementById('executionDetailsPre');
+
+            rightNav.classList.add('expanded');
+            content.style.display = 'block';
+            pre.textContent = JSON.stringify(execution, null, 2);
+            document.getElementById('rightNavContent').style.display = 'block';
+        }
+
+        // Toggle right nav
+        document.getElementById('toggleRightNavBtn')?.addEventListener('click', function() {
+            const rightNav = document.querySelector('.workflow-right-nav');
+            rightNav.classList.toggle('expanded');
+            document.getElementById('rightNavContent').style.display =
+                document.getElementById('rightNavContent').style.display === 'none' ? 'block' : 'none';
+        });
+
+        // New Workflow Button
+        document.getElementById('newWorkflowBtn')?.addEventListener('click', function() {
+            document.getElementById('contentMain').style.display = 'none';
+            document.getElementById('workflowEditor').style.display = 'none';
+            document.getElementById('newWorkflowForm').style.display = 'flex';
+            document.querySelectorAll('.workflow-item').forEach(item => item.classList.remove('active'));
+        });
+
+        // Cancel New Workflow
+        document.getElementById('cancelNewWorkflowBtn')?.addEventListener('click', function() {
+            document.getElementById('newWorkflowForm').style.display = 'none';
+            document.getElementById('contentMain').style.display = 'flex';
+        });
+
+        // Create Workflow Form Handler
+        document.getElementById('createWorkflowForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('newWorkflowName').value;
+            const steps = Array.from(document.getElementById('newWorkflowSteps').querySelectorAll('input'))
+                .map(input => input.value)
+                .filter(s => s);
+
+            if (steps.length === 0) {
+                showAlert('Please add at least one step', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest('/services/workflow/api/defineworkflow', 'POST', {
+                    name,
+                    steps
+                });
+                showAlert(`Workflow "${name}" created successfully`);
+                document.getElementById('newWorkflowForm').style.display = 'none';
+                document.getElementById('newWorkflowName').value = '';
+                document.getElementById('newWorkflowSteps').innerHTML = '';
+                loadWorkflows();
+            } catch (error) {
+                showAlert('Error creating workflow: ' + error.message, 'error');
+            }
+        });
+
+        // Add Step Button (Existing Workflow)
+        document.getElementById('addStepBtn')?.addEventListener('click', function() {
+            if (!currentWorkflow) return;
+            currentWorkflow.steps.push('');
+            renderWorkflowSteps();
+        });
+
+        // Add Step Button (New Workflow)
+        document.getElementById('addNewStepBtn')?.addEventListener('click', function() {
+            const container = document.getElementById('newWorkflowSteps');
+            const stepCount = container.children.length + 1;
+            const html = `
+                <div class="step-item">
+                    <label class="core-form-label mb-0" style="width: 50px;">Step ${stepCount}:</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Step name" value="">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Search workflows
+        document.getElementById('contentSearch')?.addEventListener('input', function() {
+            renderWorkflowsList();
+        });
+
+        // Refresh workflows button
+        document.getElementById('refreshWorkflowsBtn')?.addEventListener('click', function() {
+            loadWorkflows();
+        });
+
+        // Save workflow button
+        document.getElementById('saveWorkflowBtn')?.addEventListener('click', async function() {
+            if (!currentWorkflow) return;
+
+            try {
+                // Collect steps from input fields
+                const stepInputs = document.querySelectorAll('.step-input');
+                const steps = Array.from(stepInputs).map(input => input.value.trim()).filter(s => s.length > 0);
+
+                if (steps.length === 0) {
+                    showAlert('Please add at least one step', 'error');
+                    return;
+                }
+
+                // Update workflow via API
+                const requestBody = { steps };
+                const response = await makeRequest(
+                    `/services/workflow/api/definitions/${encodeURIComponent(currentWorkflow.name)}`,
+                    'PUT',
+                    requestBody
+                );
+
+                // Update local cache
+                currentWorkflow.steps = steps;
+
+                showAlert(`Workflow "${currentWorkflow.name}" updated successfully`);
+                // Reload to get updated metadata
+                await loadWorkflows();
+                selectWorkflow(currentWorkflow.name);
+            } catch (error) {
+                showAlert('Error saving workflow: ' + error.message, 'error');
+                console.error('Save workflow error:', error);
+            }
+        });
+
+        // Refresh editor button
+        document.getElementById('refreshEditorBtn')?.addEventListener('click', function() {
+            if (currentWorkflow) {
+                selectWorkflow(currentWorkflow.name);
+            }
+        });
+
+        // Refresh executions button
+        document.getElementById('refreshExecutionsBtn')?.addEventListener('click', function() {
+            if (currentWorkflow) {
+                loadExecutions();
+            }
+        });
+
+        // Execution filter buttons
+        document.querySelectorAll('.execution-filter')?.forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.execution-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                executionFilter = this.getAttribute('data-filter');
+                if (currentWorkflow) {
+                    loadExecutions();
+                }
+            });
+        });
+
+        // Delete workflow button
+        document.getElementById('deleteWorkflowBtn')?.addEventListener('click', async function() {
+            if (!currentWorkflow) return;
+            if (confirm(`Are you sure you want to delete the workflow "${currentWorkflow.name}"?`)) {
+                try {
+                    const response = await makeRequest(
+                        `/services/workflow/api/definitions/${encodeURIComponent(currentWorkflow.name)}`,
+                        'DELETE'
+                    );
+                    showAlert(`Workflow "${currentWorkflow.name}" deleted successfully`);
+                    // Reload workflows and clear editor
+                    await loadWorkflows();
+                    document.getElementById('workflowEditor').style.display = 'none';
+                    document.getElementById('contentMain').style.display = 'flex';
+                    currentWorkflow = null;
+                } catch (error) {
+                    showAlert('Error deleting workflow: ' + error.message, 'error');
+                    console.error('Delete workflow error:', error);
+                }
+            }
+        });
+
         </script>
+
 </body>
 </html>

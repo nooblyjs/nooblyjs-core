@@ -6,43 +6,16 @@
  * Supports multiple named instances of logging service through optional
  * instance parameter in URL paths.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-
-/**
- * Gets the appropriate logger instance based on instance name
- * Falls back to the provided default logger if no instance name is specified
- *
- * @param {string} instanceName - Optional instance name
- * @param {Object} defaultLogger - Default logger instance
- * @param {Object} options - Options containing service registry reference
- * @param {string} providerType - Provider type for the logging service
- * @returns {Object} Logger instance to use
- */
-function getLoggerInstance(instanceName, defaultLogger, options, providerType = 'memory') {
-  if (!instanceName || instanceName === 'default') {
-    return defaultLogger;
-  }
-
-  // Try to get from service registry if available
-  const ServiceRegistry = options.ServiceRegistry;
-  if (ServiceRegistry) {
-    const instance = ServiceRegistry.getServiceInstance('logging', providerType, instanceName);
-    if (instance) {
-      return instance;
-    }
-  }
-
-  // If not found, return default
-  return defaultLogger;
-}
+const fs = require('node:fs');
+const path = require('node:path');
+const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
 /**
  * Configures and registers logging routes with the Express application.
@@ -98,17 +71,17 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     const createInfoHandler = (logger) => {
       return async (req, res) => {
-        const message = req.body;
+        const { message, meta } = req.body;
         if (message) {
           try {
-            await logger.info(message);
-            res.status(200).send('OK');
+            await logger.info(message, meta);
+            res.status(200).json({ success: true });
           } catch (err) {
             eventEmitter.emit('api-logging-info-error', err.message);
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing message');
+          res.status(400).json({ error: 'Bad Request: Missing message' });
         }
       };
     };
@@ -136,7 +109,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.post('/services/logging/api/:instanceName/info', (req, res) => {
       const instanceName = req.params.instanceName;
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       createInfoHandler(loggerInstance)(req, res);
     });
 
@@ -147,17 +120,17 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     const createWarnHandler = (logger) => {
       return async (req, res) => {
-        const message = req.body;
+        const { message, meta } = req.body;
         if (message) {
           try {
-            await logger.warn(message);
-            res.status(200).send('OK');
+            await logger.warn(message, meta);
+            res.status(200).json({ success: true });
           } catch (err) {
             eventEmitter.emit('api-logging-warn-error', err.message);
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing message');
+          res.status(400).json({ error: 'Bad Request: Missing message' });
         }
       };
     };
@@ -185,7 +158,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.post('/services/logging/api/:instanceName/warn', (req, res) => {
       const instanceName = req.params.instanceName;
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       createWarnHandler(loggerInstance)(req, res);
     });
 
@@ -196,17 +169,17 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     const createErrorHandler = (logger) => {
       return async (req, res) => {
-        const message = req.body;
+        const { message, meta } = req.body;
         if (message) {
           try {
-            await logger.error(message);
-            res.status(200).send('OK');
+            await logger.error(message, meta);
+            res.status(200).json({ success: true });
           } catch (err) {
             eventEmitter.emit('api-logging-error-error', err.message);
-            res.status(500).send(err.message);
+            res.status(500).json({ error: err.message });
           }
         } else {
-          res.status(400).send('Bad Request: Missing message');
+          res.status(400).json({ error: 'Bad Request: Missing message' });
         }
       };
     };
@@ -234,7 +207,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.post('/services/logging/api/:instanceName/error', (req, res) => {
       const instanceName = req.params.instanceName;
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       createErrorHandler(loggerInstance)(req, res);
     });
 
@@ -356,7 +329,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
       const instanceName = req.params.instanceName;
       // Note: In a real scenario, you'd get the analytics for that specific instance
       // For now, we retrieve the instance and its analytics property if it exists
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       const instanceAnalytics = loggerInstance.analytics || analytics;
       createLogsHandler(instanceAnalytics)(req, res);
     });
@@ -403,7 +376,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.get('/services/logging/api/:instanceName/stats', (req, res) => {
       const instanceName = req.params.instanceName;
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       const instanceAnalytics = loggerInstance.analytics || analytics;
       createStatsHandler(instanceAnalytics)(req, res);
     });
@@ -450,7 +423,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
      */
     app.get('/services/logging/api/:instanceName/timeline', (req, res) => {
       const instanceName = req.params.instanceName;
-      const loggerInstance = getLoggerInstance(instanceName, logger, options, providerType);
+      const loggerInstance = getServiceInstance('logging', instanceName, logger, options, providerType);
       const instanceAnalytics = loggerInstance.analytics || analytics;
       createTimelineHandler(instanceAnalytics)(req, res);
     });
@@ -490,13 +463,13 @@ module.exports = (options, eventEmitter, logger, analytics) => {
         try {
           await logger.saveSettings(message);
           eventEmitter.emit('api-logging-settings-saved', { timestamp: Date.now() });
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
           eventEmitter.emit('api-logging-settings-save-error', err.message);
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Bad Request: Missing settings' });
       }
     });
 

@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Authentication Service API Tests
+### Noobly JS Core - Authentication Service API Tests
 ###
 ### These tests demonstrate the Authentication service API endpoints with different providers.
 ### Make sure your server is running with API keys configured before testing.

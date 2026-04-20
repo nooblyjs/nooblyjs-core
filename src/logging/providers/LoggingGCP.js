@@ -1,7 +1,7 @@
 /**
- * @fileoverview GCP Cloud Logging provider for NooblyJS Core
+ * @fileoverview GCP Cloud Logging provider for Noobly JS Core
  * Sends log messages to Google Cloud Platform's Cloud Logging service.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -24,7 +24,7 @@ class LoggingGCP {
    * @param {Object} options Configuration options
    * @param {string} options.projectId GCP project ID (from env: GOOGLE_CLOUD_PROJECT)
    * @param {string} options.keyFilename Path to GCP service account key file
-   * @param {string} options.logName Name of the log in Cloud Logging (default: 'noobly-core-logs')
+   * @param {string} options.logName Name of the log in Cloud Logging (default: 'nooblyjs-core-logs')
    * @param {string} options.resource GCP resource type (default: 'global')
    * @param {number} options.batchSize Number of logs to batch before sending (default: 10)
    * @param {number} options.flushInterval Time in ms to auto-flush logs (default: 5000)
@@ -45,7 +45,7 @@ class LoggingGCP {
     this.instanceName_ = (options && options.instanceName) || 'default';
     this.projectId_ = options.projectId || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
     this.keyFilename_ = options.keyFilename || process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    this.logName_ = options.logName || 'noobly-core-logs';
+    this.logName_ = options.logName || 'nooblyjs-core-logs';
     this.resource_ = options.resource || 'global';
     this.batchSize_ = options.batchSize || 10;
     this.flushInterval_ = options.flushInterval || 5000;
@@ -384,9 +384,19 @@ class LoggingGCP {
     }
 
     if (this.eventEmitter_) {
-      const eventName = `log:debug:${this.instanceName_}`;
+      const eventName = `log:log:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });
     }
+  }
+
+  /**
+   * Logs a generic message to GCP (alias for debug).
+   * @param {string} message The message to log
+   * @param {*=} meta Optional metadata to include
+   * @return {Promise<void>} A promise that resolves when the message is logged
+   */
+  async log(message, meta) {
+    return this.debug(message, meta);
   }
 
   /**

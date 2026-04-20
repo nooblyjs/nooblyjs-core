@@ -4,7 +4,7 @@
  * This test suite verifies that the working service properly uses named queues
  * for task lifecycle management (incoming, complete, error).
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -12,7 +12,7 @@
 'use strict';
 
 const EventEmitter = require('events');
-const path = require('path');
+const path = require('node:path');
 const createWorkingService = require('../../../src/working');
 const createQueueService = require('../../../src/queueing');
 
@@ -72,7 +72,7 @@ describe('Working Service with Named Queues', () => {
     expect(typeof taskId).toBe('string');
 
     // Check that task was added to incoming queue
-    const incomingQueueSize = await queueService.size('noobly-core-working-incoming');
+    const incomingQueueSize = await queueService.size('nooblyjs-core-working-incoming');
 
     // Task might already be processing, so size could be 0 or 1
     expect(incomingQueueSize).toBeGreaterThanOrEqual(0);
@@ -105,21 +105,21 @@ describe('Working Service with Named Queues', () => {
   });
 
   it('should have correct queue names defined', () => {
-    const incomingQueueName = 'noobly-core-working-incoming';
-    const completeQueueName = 'noobly-core-working-complete';
-    const errorQueueName = 'noobly-core-working-error';
+    const incomingQueueName = 'nooblyjs-core-working-incoming';
+    const completeQueueName = 'nooblyjs-core-working-complete';
+    const errorQueueName = 'nooblyjs-core-working-error';
 
     // Verify queue names are accessible through queue service
-    expect(incomingQueueName).toBe('noobly-core-working-incoming');
-    expect(completeQueueName).toBe('noobly-core-working-complete');
-    expect(errorQueueName).toBe('noobly-core-working-error');
+    expect(incomingQueueName).toBe('nooblyjs-core-working-incoming');
+    expect(completeQueueName).toBe('nooblyjs-core-working-complete');
+    expect(errorQueueName).toBe('nooblyjs-core-working-error');
   });
 
   it('should maintain separate queue sizes', async () => {
     // Get initial sizes
-    const initialIncoming = await queueService.size('noobly-core-working-incoming');
-    const initialComplete = await queueService.size('noobly-core-working-complete');
-    const initialError = await queueService.size('noobly-core-working-error');
+    const initialIncoming = await queueService.size('nooblyjs-core-working-incoming');
+    const initialComplete = await queueService.size('nooblyjs-core-working-complete');
+    const initialError = await queueService.size('nooblyjs-core-working-error');
 
     expect(initialIncoming).toBe(0);
     expect(initialComplete).toBe(0);

@@ -2,7 +2,7 @@
  * @fileoverview AI API routes for Express.js application.
  * Provides RESTful endpoints for AI operations, prompt processing, and analytics retrieval.
  * 
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */

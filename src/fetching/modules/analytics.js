@@ -3,7 +3,7 @@
  * Captures and stores fetch activity metrics for analytics purposes.
  * Tracks request operations, cache hits, misses, and provides statistics.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */

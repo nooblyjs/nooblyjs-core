@@ -3,334 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noobly JS - Service Registry</title>
+    <title>Service Registry Dashboard - Noobly JS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        :root {
-            --custom-primary: #0066cc;
-            --custom-secondary: #6c757d;
-            --custom-success: #198754;
-            --custom-danger: #dc3545;
-        }
-
-        body {
-            background-color: #f8f9fa;
-            margin: 0;
-        }
-
-        .sidebar {
-            background-color: white;
-            border-right: 1px solid #dee2e6;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            width: 280px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo {
-            color: var(--custom-primary);
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .logo .subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .nav-section-header {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            margin-top: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            color: #212529;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            border-bottom: 1px solid #f8f9fa;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            background-color: #f8f9fa;
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            background-color: var(--custom-primary);
-            color: white;
-            border-left-color: #0052a3;
-        }
-
-        .nav-item.offline {
-            opacity: 0.6;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: auto;
-        }
-
-        .status-dot.online {
-            background-color: var(--custom-success);
-        }
-
-        .status-dot.offline {
-            background-color: var(--custom-danger);
-        }
-
-        .main-content {
-            background-color: white;
-            min-height: 100vh;
-            flex: 1;
-            padding: 2rem;
-        }
-
-        .page-header {
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 1rem;
-        }
-
-        .page-title {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .page-subtitle {
-            margin: 0.5rem 0 0 0;
-            color: #6c757d;
-            font-size: 1.125rem;
-        }
-
-        .app-container {
-            display: flex;
-        }
-
-        .service-section {
-            margin-bottom: 3rem;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #212529;
-            margin: 0;
-        }
-
-        .section-badge {
-            margin-left: 1rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .section-badge.online {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .section-badge.offline {
-            background-color: #f8d7da;
-            color: #842029;
-        }
-
-        .service-card {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-
-        .service-card.offline {
-            opacity: 0.6;
-        }
-
-        .service-card-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .service-icon {
-            font-size: 2rem;
-            margin-right: 1rem;
-            color: var(--custom-primary);
-        }
-
-        .service-title {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .service-title a {
-            color: #212529;
-            text-decoration: none;
-        }
-
-        .service-title a:hover {
-            color: var(--custom-primary);
-        }
-
-        .service-status {
-            display: flex;
-            align-items: center;
-            margin-top: 0.5rem;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 0.5rem;
-        }
-
-        .status-indicator.running {
-            background-color: var(--custom-success);
-        }
-
-        .status-indicator.stopped {
-            background-color: var(--custom-danger);
-        }
-
-        .status-text {
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        .status-text.running {
-            color: var(--custom-success);
-        }
-
-        .status-text.stopped {
-            color: var(--custom-danger);
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .logout-section {
-            padding: 1rem;
-            border-top: 1px solid #dee2e6;
-            margin-top: auto;
-        }
-
-        .user-info {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .user-info small {
-            display: block;
-            color: #6c757d;
-            font-size: 0.75rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .user-info strong {
-            font-size: 0.875rem;
-            color: #212529;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 400;
-            line-height: 1.5;
-            text-align: center;
-            text-decoration: none;
-            vertical-align: middle;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            transition: all 0.15s ease-in-out;
-            width: 100%;
-        }
-
-        .btn-danger {
-            color: white;
-            background-color: var(--custom-danger);
-            border-color: var(--custom-danger);
-        }
-
-        .btn-danger:hover {
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </nav>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="core-logo-image">
+            <span>Noobly JS Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
 
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Service Registry Dashboard</h1>
-                <p class="page-subtitle">Overview of all available services and their current status</p>
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </aside>
+
+        <main class="core-main-content">
+            <div class="core-page-header">
+                <h1 class="core-page-title">Service Registry Dashboard</h1>
+                <p class="core-page-subtitle">Overview of all available services and their current status</p>
             </div>
 
+            <div class="core-page-content">
+
             <!-- System Monitoring Section -->
-            <div class="service-section">
-                <div class="section-header">
-                    <h2 class="section-title">System Monitoring</h2>
+            <div class="core-service-section">
+                <div class="core-section-header">
+                    <h2 class="core-section-title">System Monitoring</h2>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="bi bi-memory"></i> RAM Usage</h5>
-                                <div style="height: 150px; position: relative;">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-memory"></i> RAM Usage</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
                                     <canvas id="ramChart"></canvas>
                                 </div>
                                 <div class="mt-2 text-center">
@@ -340,10 +69,12 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="bi bi-cpu"></i> CPU Usage</h5>
-                                <div style="height: 150px; position: relative;">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-cpu"></i> CPU Usage</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
                                     <canvas id="cpuChart"></canvas>
                                 </div>
                                 <div class="mt-2 text-center">
@@ -353,10 +84,12 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="bi bi-hdd-stack"></i> Active Handles</h5>
-                                <div style="height: 150px; position: relative;">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-hdd-stack"></i> Active Handles</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
                                     <canvas id="threadsChart"></canvas>
                                 </div>
                                 <div class="mt-2 text-center">
@@ -366,129 +99,177 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Event Loop & GC Metrics -->
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-lightning"></i> Event Loop Lag</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
+                                    <canvas id="eventLoopChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="eventLoopStats" class="text-muted">Detecting event loop delay...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-trash"></i> Garbage Collection</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
+                                    <canvas id="gcChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="gcStats" class="text-muted">Tracking GC metrics...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-hourglass-split"></i> Heap Memory</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="core-chart-wrapper">
+                                    <canvas id="heapChart"></canvas>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <small id="heapStats" class="text-muted">Memory breakdown...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Marks Summary -->
+                <div class="row mt-4">
+                    <div class="col-12 mb-3">
+                        <div class="core-card">
+                            <div class="core-card-header">
+                                <h5 class="core-card-title mb-0"><i class="bi bi-speedometer2"></i> Operation Performance Marks</h5>
+                            </div>
+                            <div class="core-card-content">
+                                <div id="performanceMarksContainer" style="max-height: 300px; overflow-y: auto;">
+                                    <small class="text-muted">No performance marks recorded yet...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Online Services Section -->
-            <div class="service-section" id="online-services-section" style="display: none;">
-                <div class="section-header">
-                    <h2 class="section-title">Online Services</h2>
-                    <span class="section-badge online" id="online-count">0</span>
-                </div>
-                <div class="services-grid" id="online-services-list"></div>
+            <!-- Services Grouped by Classification -->
+            <div id="services-by-classification-container"></div>
             </div>
-
-            <!-- Offline Services Section -->
-            <div class="service-section" id="offline-services-section" style="display: none;">
-                <div class="section-header" style="cursor: pointer;" onclick="toggleOfflineSection()">
-                    <h2 class="section-title">Offline Services</h2>
-                    <span class="section-badge offline" id="offline-count">0</span>
-                    <span id="offline-section-toggle" style="margin-left: auto; font-size: 1.5rem;">▼</span>
-                </div>
-                <div class="services-grid" id="offline-services-list" style="display: none;"></div>
-            </div>
+            <!-- End Page Content -->
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
     <script>
         // Initialize navigation
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'home');
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof DigitalTechnologiesNavigation !== 'undefined') {
+                DigitalTechnologiesNavigation.renderNavigation('navigation-sidebar', 'home');
+            }
+        });
 
-        // Render services separated by online/offline status
+        // Render services grouped by classification
         async function renderServices() {
-            await NooblyNavigation.checkAllStatuses();
+            await DigitalTechnologiesNavigation.checkAllStatuses();
 
-            const onlineServices = NooblyNavigation.getOnlineServices();
-            const offlineServices = NooblyNavigation.getOfflineServices();
+            const container = document.getElementById('services-by-classification-container');
+            if (!container) return;
 
-            // Show/hide sections based on content
-            const onlineSection = document.getElementById('online-services-section');
-            const offlineSection = document.getElementById('offline-services-section');
-            const onlineList = document.getElementById('online-services-list');
-            const offlineList = document.getElementById('offline-services-list');
-            const onlineCount = document.getElementById('online-count');
-            const offlineCount = document.getElementById('offline-count');
+            const classifications = DigitalTechnologiesNavigation.classifications;
+            const services = DigitalTechnologiesNavigation.services;
+            const classificationOrder = ['foundation', 'business', 'application', 'advanced'];
 
-            // Render online services
-            if (onlineServices.length > 0) {
-                onlineSection.style.display = 'block';
-                onlineCount.textContent = onlineServices.length;
-                onlineList.innerHTML = '';
+            let html = '';
 
-                onlineServices.forEach(service => {
-                    const card = createServiceCard(service, true);
-                    onlineList.appendChild(card);
-                });
-            }
+            classificationOrder.forEach(classification => {
+                const classServices = services.filter(s => s.classification === classification);
+                if (classServices.length === 0) return;
 
-            // Render offline services
-            if (offlineServices.length > 0) {
-                offlineSection.style.display = 'block';
-                offlineCount.textContent = offlineServices.length;
-                offlineList.innerHTML = '';
+                const classConfig = classifications[classification];
+                const onlineServices = classServices.filter(s => DigitalTechnologiesNavigation.serviceStatus[s.name] === true);
+                const offlineServices = classServices.filter(s => DigitalTechnologiesNavigation.serviceStatus[s.name] === false);
 
-                offlineServices.forEach(service => {
-                    const card = createServiceCard(service, false);
-                    offlineList.appendChild(card);
-                });
-            }
-        }
+                html += `
+                    <div class="core-service-section">
+                        <div class="core-section-header">
+                            <h2 class="core-section-title">
+                                <i class="bi ${classConfig.icon}"></i> ${classConfig.label} Services
+                            </h2>
+                        </div>
+                `;
 
-        function createServiceCard(service, isOnline) {
-            const card = document.createElement('div');
-            card.className = `service-card ${isOnline ? '' : 'offline'}`;
-            card.style.cursor = 'pointer';
+                // Render online services in this classification
+                if (onlineServices.length > 0) {
+                    html += `<div class="core-services-grid">`;
+                    onlineServices.forEach(service => {
+                        html += createServiceCardHTML(service, true);
+                    });
+                    html += `</div>`;
+                }
 
-            card.innerHTML = `
-                <div class="service-card-header">
-                    <div>
-                        <h3 class="service-title">${service.title}</h3>
-                    </div>
-                </div>
-                <div class="service-status">
-                    <span class="status-indicator ${isOnline ? 'running' : 'stopped'}"></span>
-                    <span class="status-text ${isOnline ? 'running' : 'stopped'}">
-                        ${isOnline ? 'Online' : 'Offline'}
-                    </span>
-                </div>
-            `;
+                // Render offline services in this classification
+                if (offlineServices.length > 0) {
+                    html += `
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+                            <p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-wifi-off"></i> Offline Services</p>
+                            <div class="core-services-grid">
+                    `;
+                    offlineServices.forEach(service => {
+                        html += createServiceCardHTML(service, false);
+                    });
+                    html += `</div></div>`;
+                }
 
-            // Make the entire card clickable
-            card.addEventListener('click', () => {
-                window.location.href = `/services/${service.path}/`;
+                html += `</div>`;
             });
 
-            return card;
+            container.innerHTML = html;
         }
 
-        // Toggle offline services section in dashboard
-        function toggleOfflineSection() {
-            const offlineList = document.getElementById('offline-services-list');
-            const toggleIcon = document.getElementById('offline-section-toggle');
-
-            if (offlineList && toggleIcon) {
-                if (offlineList.style.display === 'none') {
-                    offlineList.style.display = 'grid';
-                    toggleIcon.textContent = '▲';
-                } else {
-                    offlineList.style.display = 'none';
-                    toggleIcon.textContent = '▼';
-                }
-            }
+        function createServiceCardHTML(service, isOnline) {
+            return `
+                <div class="core-service-card ${isOnline ? '' : 'offline'}" style="cursor: pointer;" onclick="window.location.href='/services/${service.path}/'">
+                    <div class="core-service-card-header">
+                        <div>
+                            <h3 class="core-service-title">${service.title}</h3>
+                        </div>
+                    </div>
+                    <div class="core-service-status">
+                        <span class="core-status-text ${isOnline ? 'core-online' : 'core-offline'}">
+                            ${isOnline ? 'Online' : 'Offline'}
+                        </span>
+                        <span class="core-status-dot ${isOnline ? 'core-online' : 'core-offline'}"></span>
+                    </div>
+                </div>
+            `;
         }
 
         // Initialize services
         renderServices();
 
         // System Monitoring Charts
-        let ramChart, cpuChart, threadsChart;
+        let ramChart, cpuChart, threadsChart, eventLoopChart, gcChart, heapChart;
         const MAX_DATA_POINTS = 30; // Limit to 30 data points (2.5 minutes at 5s intervals)
 
         function initializeCharts() {
             const commonOptions = {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 animation: false, // Disable animations to reduce CPU usage
                 plugins: {
                     legend: {
@@ -600,6 +381,95 @@
                     }
                 }
             });
+
+            // Event Loop Lag Chart
+            const eventLoopCtx = document.getElementById('eventLoopChart').getContext('2d');
+            eventLoopChart = new Chart(eventLoopCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Event Loop Lag (ms)',
+                        data: [],
+                        borderColor: 'rgb(255, 193, 7)',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'ms'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // GC Chart
+            const gcCtx = document.getElementById('gcChart').getContext('2d');
+            gcChart = new Chart(gcCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'GC Duration (ms)',
+                        data: [],
+                        borderColor: 'rgb(244, 67, 54)',
+                        backgroundColor: 'rgba(244, 67, 54, 0.6)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'ms'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Heap Chart
+            const heapCtx = document.getElementById('heapChart').getContext('2d');
+            heapChart = new Chart(heapCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Heap Used (MB)',
+                        data: [],
+                        borderColor: 'rgb(76, 175, 80)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'MB'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         async function updateMonitoringData() {
@@ -672,6 +542,75 @@
                     document.getElementById('threadsStats').textContent =
                         `Handles: ${latestThreads.active} | Requests: ${latestThreads.requests}`;
                 }
+
+                // Update Event Loop Lag chart
+                if (data.eventLoop && data.eventLoop.length > 0) {
+                    const eventLoopSlice = data.eventLoop.slice(-MAX_DATA_POINTS);
+                    const eventLoopLabels = eventLoopSlice.map((_, i) => i);
+                    const eventLoopData = eventLoopSlice.map(d => d.delay || 0);
+
+                    eventLoopChart.data.labels = eventLoopLabels;
+                    eventLoopChart.data.datasets[0].data = eventLoopData;
+                    eventLoopChart.update('none');
+
+                    const latestEventLoop = data.eventLoop[data.eventLoop.length - 1];
+                    const lagStatus = latestEventLoop.delay > 50 ? '⚠️ High' : latestEventLoop.delay > 10 ? '⚡ Moderate' : '✅ Good';
+                    document.getElementById('eventLoopStats').textContent =
+                        `${lagStatus} - Current: ${latestEventLoop.delay.toFixed(2)}ms`;
+                }
+
+                // Update GC chart
+                if (data.gc && data.gc.length > 0) {
+                    const gcSlice = data.gc.slice(-MAX_DATA_POINTS);
+                    const gcLabels = gcSlice.map((_, i) => i);
+                    const gcData = gcSlice.map(d => d.duration || 0);
+
+                    gcChart.data.labels = gcLabels;
+                    gcChart.data.datasets[0].data = gcData;
+                    gcChart.update('none');
+
+                    document.getElementById('gcStats').textContent =
+                        `Events: ${data.gc.length} | Latest: ${(data.gc[data.gc.length - 1].duration || 0).toFixed(2)}ms`;
+                }
+
+                // Update Heap chart
+                if (data.memory && data.memory.length > 0) {
+                    const memorySlice = data.memory.slice(-MAX_DATA_POINTS);
+                    const memoryLabels = memorySlice.map((_, i) => i);
+                    const heapData = memorySlice.map(d => d.heapStats?.totalHeapSize || 0);
+
+                    heapChart.data.labels = memoryLabels;
+                    heapChart.data.datasets[0].data = heapData;
+                    heapChart.update('none');
+
+                    const latestMemory = data.memory[data.memory.length - 1];
+                    if (latestMemory.heapStats) {
+                        document.getElementById('heapStats').textContent =
+                            `Total: ${latestMemory.heapStats.totalHeapSize}MB | Executable: ${latestMemory.heapStats.executableSize}MB`;
+                    }
+                }
+
+                // Update Performance Marks table
+                if (data.markStatistics && data.markStatistics.length > 0) {
+                    let marksHTML = '<table class="table table-sm mb-0"><thead><tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead><tbody>';
+
+                    data.markStatistics.forEach(stat => {
+                        const statusClass = stat.avg > 100 ? 'text-danger' : stat.avg > 50 ? 'text-warning' : 'text-success';
+                        marksHTML += `<tr>
+                            <td><small>${stat.name}</small></td>
+                            <td><small>${stat.count}</small></td>
+                            <td><small class="${statusClass}"><strong>${stat.avg.toFixed(2)}</strong></small></td>
+                            <td><small>${stat.min.toFixed(2)}</small></td>
+                            <td><small>${stat.max.toFixed(2)}</small></td>
+                        </tr>`;
+                    });
+
+                    marksHTML += '</tbody></table>';
+                    document.getElementById('performanceMarksContainer').innerHTML = marksHTML;
+                } else {
+                    document.getElementById('performanceMarksContainer').innerHTML =
+                        '<small class="text-muted">No performance marks recorded yet. Services will populate this data as they track operations.</small>';
+                }
             } catch (error) {
                 console.error('Error fetching monitoring data:', error);
             }
@@ -691,6 +630,7 @@
         }
     </script>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

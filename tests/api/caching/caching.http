@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Caching API Tests
+### Noobly JS Core - Caching API Tests
 ### 
 ### These tests demonstrate the Caching service API endpoints with API key authentication.
 ### Make sure your server is running with API keys configured before testing.

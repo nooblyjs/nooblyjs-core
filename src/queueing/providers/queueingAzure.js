@@ -1,9 +1,9 @@
 /**
- * @fileoverview Azure Queue Storage provider for NooblyJS Core queueing service.
+ * @fileoverview Azure Queue Storage provider for Noobly JS Core queueing service.
  * Leverages Azure Queue Storage for distributed, serverless queue operations.
  * Provides FIFO queue behavior with automatic message expiration and retention.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -70,10 +70,50 @@ class QueueingAzure {
   }
 
   /**
-   * Get all our settings
+   * Retrieves all current configuration settings for the Azure Queue Storage provider.
+   * Returns Azure-specific settings including account name, queue prefix, and message parameters.
+   *
+   * @return {Promise<Object>} A promise that resolves to the settings object containing:
+   *   - description: {string} Provider description
+   *   - list: {Array} Available settings definitions
+   *   - accountName: {string} Azure Storage account name
+   *   - queueNamePrefix: {string} Prefix for queue names
+   *   - visibilityTimeout: {number} Message visibility timeout in seconds
+   *   - messageTimeToLive: {number} Message TTL in seconds
+   *
+   * @example
+   * // Get Azure Queue Storage configuration
+   * const settings = await queueingAzure.getSettings();
+   * console.log(`Account: ${settings.accountName}`);
    */
   async getSettings() {
     return this.settings;
+  }
+
+  /**
+   * Updates configuration settings for the Azure Queue Storage provider.
+   * Only specified settings are updated; unspecified settings are left unchanged.
+   *
+   * @param {Object} settings The settings object containing new values
+   * @param {string} [settings.accountName] The new Azure Storage account name
+   * @param {string} [settings.queueNamePrefix] The new queue name prefix
+   * @param {number} [settings.visibilityTimeout] New visibility timeout in seconds
+   * @param {number} [settings.messageTimeToLive] New message TTL in seconds
+   * @return {Promise<void>} A promise that resolves when settings are updated
+   *
+   * @example
+   * // Update Azure Queue Storage settings
+   * await queueingAzure.saveSettings({
+   *   visibilityTimeout: 60,
+   *   messageTimeToLive: 604800
+   * });
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+      }
+    }
   }
 
   /**

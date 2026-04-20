@@ -1,197 +1,183 @@
 /**
- * @fileoverview Task scheduling API routes for Express.js application.
- * Provides RESTful endpoints for cron-based task scheduling including
- * schedule creation, cancellation, and service status monitoring.
+ * @fileoverview HTTP routes for the scheduling service.
  *
- * @author NooblyJS Core Team
- * @version 1.0.14
+ * Mounts a REST API at `/services/scheduling/api/*` for creating, listing
+ * and managing schedules, plus dashboards for analytics and settings. All
+ * handlers convert validation failures into 4xx responses and unexpected
+ * failures into 5xx responses, and route through the optional logger.
+ *
+ * @author Noobly JS Core Team
+ * @version 2.0.0
  * @since 1.0.0
  */
 
 'use strict';
 
 const analytics = require('../modules/analytics');
+const { isValid: isValidCron } = require('../providers/cronExpression');
 
 /**
- * Configures and registers scheduling routes with the Express application.
- * Sets up endpoints for cron-based task scheduling operations.
+ * Returns true for plain integer-coercible positive numbers (used by query
+ * params like `?limit=20`).
+ * @param {*} value
+ * @return {boolean}
+ */
+function parsePositiveInt(value, fallback) {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+/**
+ * Registers all scheduling-service HTTP routes.
  *
- * @param {Object} options - Configuration options object
- * @param {Object} options.express-app - The Express application instance
- * @param {Object} eventEmitter - Event emitter for logging and notifications
- * @param {Object} scheduler - The scheduler provider instance with start/cancel methods
+ * @param {!Object} options Service options. Must include `'express-app'`.
+ * @param {!EventEmitter} eventEmitter Event emitter for service lifecycle.
+ * @param {!Object} scheduler The scheduler provider instance.
  * @return {void}
  */
 module.exports = (options, eventEmitter, scheduler) => {
-  if (options['express-app'] && scheduler) {
-    const app = options['express-app'];
+  if (!options || !options['express-app'] || !scheduler) return;
+  const app = options['express-app'];
+  const logger = scheduler.logger || null;
 
-    /**
-     * POST /services/scheduling/api/schedule
-     * Schedules a task to run based on a cron expression.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {*} req.body.task - The task to schedule for execution
-     * @param {string} req.body.cron - The cron expression defining the schedule
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/scheduling/api/schedule', async (req, res) => {
-      const {task, cron} = req.body;
-      if (task && cron) {
-        try {
-          await scheduler.start(task, cron);
-          res.status(200).send('OK');
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing task or cron expression');
+  /**
+   * Wraps an async route handler so any thrown error becomes a 500 response
+   * with structured logging instead of a stack trace leaking to the client.
+   * @param {Function} handler
+   */
+  const wrap = (handler) => async (req, res) => {
+    try {
+      await handler(req, res);
+    } catch (err) {
+      logger?.error?.('[SchedulingRoutes] Unhandled error', {
+        path: req.path,
+        method: req.method,
+        error: err?.message
+      });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal Server Error', message: err?.message });
       }
-    });
+    }
+  };
 
-    /**
-     * DELETE /services/scheduling/api/cancel/:taskId
-     * Cancels a scheduled task by its identifier.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.params.taskId - The ID of the scheduled task to cancel
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.delete('/services/scheduling/api/cancel/:taskId', async (req, res) => {
-      const taskId = req.params.taskId;
-      try {
-        await scheduler.cancel(taskId);
-        res.status(200).send('OK');
-      } catch (err) {
-        res.status(500).send(err.message);
+  // ---------------------------------------------------------------------------
+  // Status
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/scheduling/api/status', (req, res) => {
+    eventEmitter?.emit('api-scheduling-status', 'scheduling api running');
+    res.status(200).json('scheduling api running');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Schedule creation — CRON
+  // ---------------------------------------------------------------------------
+
+  app.post('/services/scheduling/api/schedule', wrap(async (req, res) => {
+    const { task, cron, taskName } = req.body || {};
+
+    if (task === undefined || task === null) {
+      return res.status(400).json({ error: 'Bad Request: Missing task' });
+    }
+    if (!cron || typeof cron !== 'string') {
+      return res.status(400).json({ error: 'Bad Request: Missing cron expression' });
+    }
+    if (!isValidCron(cron)) {
+      return res.status(400).json({ error: `Bad Request: Invalid cron expression "${cron}"` });
+    }
+
+    try {
+      const name = await scheduler.startCron(task, cron, taskName);
+      res.status(201).json({ status: 'OK', taskName: name, message: 'Schedule created successfully' });
+    } catch (err) {
+      // startCron throws on duplicate names — surface that as a 409.
+      if (/already scheduled/i.test(err.message)) {
+        return res.status(409).json({ error: err.message });
       }
-    });
+      throw err;
+    }
+  }));
 
-    /**
-     * GET /services/scheduling/api/status
-     * Returns the operational status of the scheduling service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/scheduling/api/status', (req, res) => {
-      eventEmitter.emit('api-scheduling-status', 'scheduling api running');
-      res.status(200).json('scheduling api running');
-    });
+  // ---------------------------------------------------------------------------
+  // Schedule cancellation
+  // ---------------------------------------------------------------------------
 
-    /**
-     * GET /services/scheduling/api/analytics
-     * Returns complete analytics data including totals and schedule statistics.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/scheduling/api/analytics', (req, res) => {
-      try {
-        const data = analytics.getAllAnalytics();
-        res.status(200).json(data);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    });
+  app.delete('/services/scheduling/api/cancel/:taskId', wrap(async (req, res) => {
+    const taskId = req.params.taskId;
+    if (!taskId) {
+      return res.status(400).json({ error: 'Bad Request: Missing taskId' });
+    }
+    const removed = await scheduler.cancel(taskId);
+    if (!removed) {
+      return res.status(404).json({ error: `Schedule "${taskId}" not found` });
+    }
+    res.status(200).json({ status: 'OK', message: `Schedule "${taskId}" cancelled` });
+  }));
 
-    /**
-     * GET /services/scheduling/api/analytics/totals
-     * Returns total statistics across all schedules.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/scheduling/api/analytics/totals', (req, res) => {
-      try {
-        const stats = analytics.getTotalStats();
-        res.status(200).json(stats);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    });
+  // ---------------------------------------------------------------------------
+  // Live schedule listing — directly from the provider, not analytics
+  // ---------------------------------------------------------------------------
 
-    /**
-     * GET /services/scheduling/api/analytics/schedules
-     * Returns analytics for individual schedules.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/scheduling/api/analytics/schedules', (req, res) => {
-      try {
-        const limit = parseInt(req.query.limit) || 100;
-        const schedules = analytics.getScheduleAnalytics(limit);
-        res.status(200).json(schedules);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    });
+  app.get('/services/scheduling/api/schedules/live', wrap(async (req, res) => {
+    const schedules = await scheduler.listSchedules();
+    res.status(200).json(schedules);
+  }));
 
-    /**
-     * DELETE /services/scheduling/api/analytics
-     * Clears all analytics data.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.delete('/services/scheduling/api/analytics', (req, res) => {
-      try {
-        analytics.clear();
-        res.status(200).json({ message: 'Analytics data cleared successfully' });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    });
+  app.get('/services/scheduling/api/schedules/:taskName', wrap(async (req, res) => {
+    const schedule = await scheduler.getSchedule(req.params.taskName);
+    if (!schedule) {
+      return res.status(404).json({ error: `Schedule "${req.params.taskName}" not found` });
+    }
+    res.status(200).json(schedule);
+  }));
 
-    /**
-     * GET /services/scheduling/api/settings
-     * Retrieves the settings for the scheduling service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/scheduling/api/settings', async (req, res) => {
-      try {
-        const settings = await scheduler.getSettings();
-        res.status(200).json(settings);
-      } catch (err) {
-        eventEmitter.emit('api-scheduling-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
-      }
-    });
+  // ---------------------------------------------------------------------------
+  // Analytics endpoints
+  // ---------------------------------------------------------------------------
 
-    /**
-     * POST /services/scheduling/api/settings
-     * Saves the settings for the scheduling service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/scheduling/api/settings', async (req, res) => {
-      const message = req.body;
-      if (message) {
-        try {
-          await scheduler.saveSettings(message);
-          res.status(200).send('OK');
-        } catch (err) {
-          res.status(500).send(err.message);
-        }
-      } else {
-        res.status(400).send('Bad Request: Missing settings');
-      }
-    });
-  }
+  app.get('/services/scheduling/api/analytics', wrap(async (req, res) => {
+    res.status(200).json(analytics.getAllAnalytics());
+  }));
+
+  app.get('/services/scheduling/api/analytics/totals', wrap(async (req, res) => {
+    res.status(200).json(analytics.getTotalStats());
+  }));
+
+  app.get('/services/scheduling/api/analytics/schedules', wrap(async (req, res) => {
+    const limit = parsePositiveInt(req.query.limit, 100);
+    res.status(200).json(analytics.getScheduleAnalytics(limit));
+  }));
+
+  app.get('/services/scheduling/api/schedules', wrap(async (req, res) => {
+    const limit = parsePositiveInt(req.query.limit, 1000);
+    res.status(200).json(analytics.getScheduleAnalytics(limit));
+  }));
+
+  app.get('/services/scheduling/api/executions/:scheduleId', wrap(async (req, res) => {
+    const limit = parsePositiveInt(req.query.limit, 20);
+    res.status(200).json(analytics.getExecutionHistory(req.params.scheduleId, limit));
+  }));
+
+  app.delete('/services/scheduling/api/analytics', wrap(async (req, res) => {
+    analytics.clear();
+    res.status(200).json({ message: 'Analytics data cleared successfully' });
+  }));
+
+  // ---------------------------------------------------------------------------
+  // Settings
+  // ---------------------------------------------------------------------------
+
+  app.get('/services/scheduling/api/settings', wrap(async (req, res) => {
+    const settings = await scheduler.getSettings();
+    res.status(200).json(settings);
+  }));
+
+  app.post('/services/scheduling/api/settings', wrap(async (req, res) => {
+    const body = req.body;
+    if (!body || typeof body !== 'object') {
+      return res.status(400).json({ error: 'Bad Request: Missing settings body' });
+    }
+    await scheduler.saveSettings(body);
+    res.status(200).json({ status: 'OK', message: 'Settings updated' });
+  }));
 };

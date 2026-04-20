@@ -3,7 +3,7 @@
  * Provides RESTful endpoints for metric collection, data aggregation,
  * and statistical analysis with time-based filtering capabilities.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -39,18 +39,18 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
       const { metric, value } = req.body || {};
 
       if (typeof metric !== 'string' || metric.trim() === '') {
-        return res.status(400).send('Bad Request: Missing metric');
+        return res.status(400).json({ error: 'Missing metric' });
       }
 
       if (value === undefined || value === null || Number.isNaN(Number(value))) {
-        return res.status(400).send('Bad Request: Missing or invalid value');
+        return res.status(400).json({ error: 'Missing or invalid value' });
       }
 
       try {
         await Promise.resolve(measuring.add(metric, Number(value)));
-        res.status(200).send('OK');
+        res.status(200).json({ success: true });
       } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
       }
     });
 
@@ -78,7 +78,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(measures);
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       }
     );
@@ -107,7 +107,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(total);
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       }
     );
@@ -136,7 +136,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(average);
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       }
     );
@@ -231,12 +231,91 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
       if (message) {
         try {
           await measuring.saveSettings(message);
-          res.status(200).send('OK');
+          res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).send(err.message);
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(400).send('Bad Request: Missing settings');
+        res.status(400).json({ error: 'Missing settings' });
+      }
+    });
+
+    /**
+     * GET /services/measuring/api/metrics
+     * Retrieves all available metrics and their values for UI display.
+     * Returns lists of unique metrics and all recorded values.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/measuring/api/metrics', async (req, res) => {
+      try {
+        const metrics = [];
+        const values = [];
+        const startDate = new Date(0);
+        const endDate = new Date();
+
+        // Get all metric names from the measuring service
+        if (measuring.metrics && measuring.metrics instanceof Map) {
+          // For Map-based providers (default MeasuringService)
+          for (const [metricName, measures] of measuring.metrics) {
+            metrics.push(metricName);
+            if (Array.isArray(measures)) {
+              measures.forEach(measure => {
+                values.push({
+                  metric: metricName,
+                  value: measure.value,
+                  timestamp: measure.timestamp || new Date()
+                });
+              });
+            }
+          }
+        } else {
+          // Fallback: try to get all metrics by calling list for each known metric
+          // This is less efficient but supports other provider types
+          const allMetrics = new Set();
+
+          // Try to infer metrics from values if available
+          if (measuring.allValues && Array.isArray(measuring.allValues)) {
+            measuring.allValues.forEach(val => {
+              if (val.metric) allMetrics.add(val.metric);
+            });
+          }
+
+          // For each metric, fetch its values
+          for (const metricName of allMetrics) {
+            const measures = await Promise.resolve(measuring.list(metricName, startDate, endDate));
+            if (Array.isArray(measures)) {
+              measures.forEach(measure => {
+                values.push({
+                  metric: metricName,
+                  value: measure.value,
+                  timestamp: measure.timestamp || measure.date || new Date()
+                });
+              });
+              metrics.push(metricName);
+            }
+          }
+        }
+
+        // Sort results
+        const uniqueMetrics = [...new Set(metrics)].sort();
+        const sortedValues = values.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        res.status(200).json({
+          success: true,
+          metrics: uniqueMetrics,
+          values: sortedValues
+        });
+      } catch (err) {
+        eventEmitter.emit('api-measuring-metrics-error', { error: err.message, endpoint: '/metrics' });
+        res.status(500).json({
+          success: false,
+          error: err.message,
+          metrics: [],
+          values: []
+        });
       }
     });
   }

@@ -1,10 +1,10 @@
 /**
- * @fileoverview Caching service views module for noobly-core framework.
+ * @fileoverview Caching service views module for nooblyjs-core framework.
  * This module provides Express.js view registration and static file serving 
  * capabilities for the caching service. It registers static routes to serve
  * caching-related view files and templates through the Express application.
  * 
- * @author NooblyJS
+ * @author Digital Technologies
  * @version 1.0.14
  * @since 1.0.0
  * @module CachingViews
@@ -12,7 +12,7 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
 
 /**
@@ -45,7 +45,7 @@ module.exports = (options, eventEmitter, cache) => {
     /**
      * GET /services/caching/scripts
      * Serves the client-side caching library as JavaScript
-     * This endpoint returns the nooblyjsCaching library for use in web applications.
+     * This endpoint returns the digitalTechnologiesCaching library for use in web applications.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -55,13 +55,13 @@ module.exports = (options, eventEmitter, cache) => {
      * <script src="/services/caching/scripts"></script>
      *
      * // Use in JavaScript:
-     * const cache = new nooblyjsCaching({ instanceName: 'default' });
+     * const cache = new digitalTechnologiesCaching({ instanceName: 'default' });
      * cache.put('key', { data: 'value' });
      * cache.get('key').then(data => console.log(data));
      */
     app.get('/services/caching/scripts', (req, res) => {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = require('node:fs');
+      const path = require('node:path');
 
       try {
         // Read the client library file
@@ -96,8 +96,8 @@ module.exports = (options, eventEmitter, cache) => {
      * // http://localhost:3001/services/caching/scripts/test
      */
     app.get('/services/caching/scripts/test', (req, res) => {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = require('node:fs');
+      const path = require('node:path');
 
       try {
         // Read the test HTML file

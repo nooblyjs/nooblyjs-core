@@ -1,9 +1,9 @@
 /**
- * @fileoverview Google Cloud Tasks provider for NooblyJS Core queueing service.
+ * @fileoverview Google Cloud Tasks provider for Noobly JS Core queueing service.
  * Leverages GCP Cloud Tasks for distributed, managed task scheduling and execution.
  * Supports HTTP and App Engine targets with configurable retry policies.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -78,6 +78,58 @@ class QueueingGCP {
     // For local storage fallback when no HTTP target
     /** @private @const {Map<string, Array>} */
     this.localQueues_ = new Map();
+  }
+
+  /**
+   * Retrieves all current configuration settings for the GCP Cloud Tasks provider.
+   * Returns Cloud Tasks-specific settings including project ID, region, and retry configuration.
+   *
+   * @return {Promise<Object>} A promise that resolves to the settings object containing:
+   *   - description: {string} Provider description
+   *   - list: {Array} Available settings definitions
+   *   - projectId: {string} GCP project ID
+   *   - region: {string} GCP region
+   *   - queue: {string} Queue name
+   *   - maxRetries: {number} Maximum retry attempts
+   *   - maxBackoffSeconds: {number} Maximum backoff in seconds
+   *   - httpTarget: {string} HTTP target URL for tasks
+   *
+   * @example
+   * // Get Cloud Tasks configuration
+   * const settings = await queueingGCP.getSettings();
+   * console.log(`Project: ${settings.projectId}, Region: ${settings.region}`);
+   */
+  async getSettings() {
+    return this.settings;
+  }
+
+  /**
+   * Updates configuration settings for the GCP Cloud Tasks provider.
+   * Only specified settings are updated; unspecified settings are left unchanged.
+   *
+   * @param {Object} settings The settings object containing new values
+   * @param {string} [settings.projectId] The new GCP project ID
+   * @param {string} [settings.region] The new GCP region
+   * @param {string} [settings.queue] The new queue name
+   * @param {number} [settings.maxRetries] New maximum retries
+   * @param {number} [settings.maxBackoffSeconds] New maximum backoff seconds
+   * @param {string} [settings.httpTarget] New HTTP target URL
+   * @return {Promise<void>} A promise that resolves when settings are updated
+   *
+   * @example
+   * // Update Cloud Tasks settings
+   * await queueingGCP.saveSettings({
+   *   maxRetries: 10,
+   *   maxBackoffSeconds: 7200
+   * });
+   */
+  async saveSettings(settings) {
+    for (let i = 0; i < this.settings.list.length; i++) {
+      if (settings[this.settings.list[i].setting] != null) {
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+      }
+    }
+  }
   }
 
   /**

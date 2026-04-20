@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Queueing API Tests
+### Noobly JS Core - Queueing API Tests
 ###
 ### These tests demonstrate the Queueing service API endpoints with API key authentication.
 ### The Queueing service provides message queue functionality for background processing

@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - AI Service API Tests
+### Noobly JS Core - AI Service API Tests
 ###
 ### These tests demonstrate the AI service API endpoints with different providers.
 ### Make sure your server is running with API keys configured before testing.
@@ -228,10 +228,10 @@ x-api-key: {{apiKey}}
     "provider": "chatgpt",
     "base_model": "gpt-3.5-turbo",
     "training_data": [
-        {"prompt": "What is NooblyJS?", "completion": "NooblyJS is a modular Node.js backend framework."},
-        {"prompt": "How does NooblyJS caching work?", "completion": "NooblyJS provides pluggable caching with memory, Redis, and Memcached providers."}
+        {"prompt": "What is Digital Technologies?", "completion": "Digital Technologies is a modular Node.js backend framework."},
+        {"prompt": "How does Digital Technologies caching work?", "completion": "Digital Technologies provides pluggable caching with memory, Redis, and Memcached providers."}
     ],
-    "name": "nooblyjs-assistant"
+    "name": "Digital Technologies Assistant"
 }
 
 ###

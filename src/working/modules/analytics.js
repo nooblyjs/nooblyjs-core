@@ -3,7 +3,7 @@
  * Captures and stores analytics about worker tasks including run counts, error counts,
  * completion counts, duration, and last run timestamps for each unique task.
  *
- * @author NooblyJS Core Team
+ * @author Noobly JS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -49,29 +49,51 @@ class WorkingAnalytics {
       return;
     }
 
-    // Listen for worker start events
-    this.eventEmitter_.on('worker:start', (data) => {
-      this.recordTaskStart(data.scriptPath, data.taskId);
-    });
-
-    // Listen for worker status events (completion or error)
-    this.eventEmitter_.on('worker:status', (data) => {
-      if (data.status === 'completed') {
-        this.recordTaskCompletion(data.taskId);
-      } else if (data.status === 'error') {
+    // Store named listener references for cleanup in destroy()
+    this.listeners_ = {
+      'worker:start': (data) => {
+        this.recordTaskStart(data.scriptPath, data.taskId);
+      },
+      'worker:status': (data) => {
+        if (data.status === 'completed') {
+          this.recordTaskCompletion(data.taskId);
+        } else if (data.status === 'error') {
+          this.recordTaskError(data.taskId);
+        }
+      },
+      'worker:error': (data) => {
+        this.recordTaskError(data.taskId);
+      },
+      'worker:exit:error': (data) => {
         this.recordTaskError(data.taskId);
       }
-    });
+    };
 
-    // Listen for worker error events
-    this.eventEmitter_.on('worker:error', (data) => {
-      this.recordTaskError(data.taskId);
-    });
+    // Register event listeners
+    for (const [eventName, listener] of Object.entries(this.listeners_)) {
+      this.eventEmitter_.on(eventName, listener);
+    }
+  }
 
-    // Listen for worker exit errors
-    this.eventEmitter_.on('worker:exit:error', (data) => {
-      this.recordTaskError(data.taskId);
-    });
+  /**
+   * Removes all event listeners and clears stored analytics data.
+   * Should be called when the analytics module is no longer needed to prevent memory leaks.
+   * @return {void}
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const [eventName, listener] of Object.entries(this.listeners_)) {
+        this.eventEmitter_.removeListener(eventName, listener);
+      }
+      this.listeners_ = null;
+    }
+    this.taskAnalytics_.clear();
+    this.totals_ = {
+      totalRuns: 0,
+      totalCompleted: 0,
+      totalErrors: 0,
+      lastRun: null
+    };
   }
 
   /**

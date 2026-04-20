@@ -3,349 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication Management - Noobly JS Admin</title>
+    <title>Authentication Management - Noobly JS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
-    <link rel="stylesheet" href="/services/css/navigation.css">
-    <style>
-        :root {
-            --custom-primary: #0066cc;
-            --custom-secondary: #6c757d;
-            --custom-success: #198754;
-            --custom-danger: #dc3545;
-        }
-
-        body {
-            background-color: #f8f9fa;
-        }
-
-        .app-container {
-            display: flex;
-        }
-
-        .sidebar {
-            background-color: #fff;
-            border-right: 1px solid #dee2e6;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            width: 280px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .main-content {
-            background-color: #fff;
-            min-height: 100vh;
-            flex: 1;
-            padding: 2rem;
-        }
-
-        .page-header {
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 1rem;
-        }
-
-        .page-title {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .page-subtitle {
-            margin: 0.5rem 0 0 0;
-            color: #6c757d;
-            font-size: 1.125rem;
-        }
-
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-success {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            border-color: #badbcc;
-        }
-
-        .alert-error {
-            color: #842029;
-            background-color: #f8d7da;
-            border-color: #f5c2c7;
-        }
-
-        .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: var(--custom-primary);
-            border-bottom-color: var(--custom-primary);
-            background-color: transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--custom-primary);
-            background-color: transparent;
-            border-bottom-color: var(--custom-primary);
-        }
-
-        .card {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        .card-header {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 0.375rem 0.375rem 0 0;
-        }
-
-        .card-title {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .card-subtitle {
-            margin: 0.25rem 0 0 0;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .card-content {
-            padding: 1.5rem;
-        }
-
-        .metrics-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-        }
-
-        .summary-item {
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            background-color: #fff;
-        }
-
-        .summary-item h5 {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            color: #6c757d;
-            margin-bottom: 0.5rem;
-        }
-
-        .summary-value {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--custom-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .summary-meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .list-group-item .badge {
-            font-size: 0.85rem;
-        }
-
-        .table-responsive {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .table thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            z-index: 10;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #212529;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            font-size: 1rem;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .response-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0.375rem;
-            border: 1px solid #dee2e6;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        .response-title {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .response-content {
-            white-space: pre-wrap;
-            word-break: break-word;
-            margin: 0;
-            font-size: 0.95rem;
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .user-operations-toolbar {
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 0.5rem;
-        }
-
-        .user-create-panel {
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-        }
-
-        .user-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .user-item {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            background-color: #fff;
-        }
-
-        .user-item-info {
-            flex: 1 1 240px;
-        }
-
-        .user-item-title {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .user-item-email {
-            color: #6c757d;
-            font-size: 0.95rem;
-        }
-
-        .user-item-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 0.3rem;
-            color: #6c757d;
-            font-size: 0.85rem;
-        }
-
-        .btn-icon {
-            width: 34px;
-            height: 34px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            border-radius: 50%;
-        }
-
-        .user-action-buttons {
-            display: flex;
-            gap: 0.4rem;
-            align-items: center;
-        }
-
-        .user-action-buttons .btn-icon {
-            border-color: #adb5bd;
-            color: #495057;
-        }
-
-        .user-action-buttons .btn-icon.btn-danger {
-            border-color: transparent;
-            color: #fff;
-        }
-
-        .user-item.loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .user-item.editing {
-            background-color: #fff3cd;
-        }
-
-        #userPasswordFeedback code,
-        #createPasswordHelper code {
-            font-size: 0.9rem;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar" id="navigation-sidebar"></nav>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Noobly JS Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
 
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Authentication Management</h1>
-                <p class="page-subtitle">Manage users, sessions, and view login analytics</p>
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="core-navigation-sidebar"></aside>
+
+        <main class="core-main-content">
+            <div class="core-page-header">
+                <h1 class="core-page-title">Authentication Management</h1>
+                <p class="core-page-subtitle">Manage users, sessions, and view login analytics</p>
             </div>
 
+            <div class="core-page-content">
             <div class="alert alert-success" id="successAlert">
                 <strong>Success!</strong> <span id="successMessage"></span>
             </div>
@@ -374,22 +73,22 @@
 
             <div class="tab-content" id="authTabContent">
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-                    <div class="card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="core-card mb-4">
+                        <div class="core-card-header d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="card-title">Authentication Overview</h2>
-                                <p class="card-subtitle">Snapshot of login success and failures</p>
+                                <h2 class="core-card-title">Authentication Overview</h2>
+                                <p class="core-card-subtitle">Snapshot of login success and failures</p>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="spinner-border spinner-border-sm text-secondary d-none" id="analyticsSpinner" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" id="analyticsRefreshButton">
+                                <button type="button" class="btn btn-secondary btn-sm" id="analyticsRefreshButton">
                                     <i class="bi bi-arrow-clockwise"></i> Refresh
                                 </button>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="metrics-summary">
                                 <div class="summary-item">
                                     <h5>Total Users Tracked</h5>
@@ -415,12 +114,12 @@
                         </div>
                     </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">Top Users by Activity</h2>
-                            <p class="card-subtitle">Most active users ranked by successful logins</p>
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title mb-0">Top Users by Activity</h2>
+                            <p class="core-card-subtitle">Most active users ranked by successful logins</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="list-group list-group-flush" id="topUsersList">
                                 <div class="list-group-item text-center text-muted py-3">
                                     <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -432,12 +131,12 @@
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">Recent User Activity</h2>
-                            <p class="card-subtitle">Top 100 users ordered by last login time</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title mb-0">Recent User Activity</h2>
+                            <p class="core-card-subtitle">Top 100 users ordered by last login time</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped">
                                     <thead>
@@ -478,12 +177,12 @@
                 </div>
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
-                    <div class="card" id="userOperationsCard">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">User Data</h2>
-                            <p class="card-subtitle">Create, edit, and remove users inline</p>
+                    <div class="core-card" id="userOperationsCard">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title mb-0">User Data</h2>
+                            <p class="core-card-subtitle">Create, edit, and remove users inline</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div class="user-operations-toolbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <div class="spinner-border spinner-border-sm text-secondary d-none" id="userTableSpinner" role="status">
@@ -493,7 +192,7 @@
                                         <i class="bi bi-arrow-clockwise"></i> Refresh
                                     </button>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" id="toggleCreateUserButton">
+                                <button type="button" class="btn btn-secondary btn-sm" id="toggleCreateUserButton">
                                     <i class="bi bi-person-plus"></i> Create User
                                 </button>
                             </div>
@@ -501,19 +200,19 @@
                                 <form id="createUserForm" class="user-create-form">
                                     <div class="row g-3">
                                     <div class="col-md-4">
-                                            <label for="createUserUsername" class="form-label mb-1">Username</label>
+                                            <label for="createUserUsername" class="core-form-label mb-1">Username</label>
                                             <input type="text" class="form-control form-control-sm" id="createUserUsername" placeholder="Username" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="createUserEmail" class="form-label mb-1">Email</label>
+                                            <label for="createUserEmail" class="core-form-label mb-1">Email</label>
                                             <input type="email" class="form-control form-control-sm" id="createUserEmail" placeholder="Email" required>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="createUserRole" class="form-label mb-1">Role</label>
+                                            <label for="createUserRole" class="core-form-label mb-1">Role</label>
                                             <select class="form-select form-select-sm" id="createUserRole"></select>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="createUserStatus" class="form-label mb-1">Status</label>
+                                            <label for="createUserStatus" class="core-form-label mb-1">Status</label>
                                             <select class="form-select form-select-sm" id="createUserStatus">
                                                 <option value="true" selected>Active</option>
                                                 <option value="false">Inactive</option>
@@ -522,7 +221,7 @@
                                     </div>
                                     <div class="row g-3 align-items-end mt-0">
                                         <div class="col-md-4">
-                                            <label for="createUserPassword" class="form-label mb-1">Password</label>
+                                            <label for="createUserPassword" class="core-form-label mb-1">Password</label>
                                             <div class="input-group input-group-sm">
                                                 <input type="text" class="form-control" id="createUserPassword" placeholder="Password">
                                                 <button type="button" class="btn btn-outline-secondary" id="generateCreatePasswordButton" title="Generate secure password">
@@ -531,7 +230,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-8 d-flex justify-content-end gap-2">
-                                            <button type="submit" class="btn btn-primary btn-sm" id="createUserSubmitButton">
+                                            <button type="submit" class="btn btn-secondary btn-sm" id="createUserSubmitButton">
                                                 <i class="bi bi-person-check"></i> Save User
                                             </button>
                                             <button type="button" class="btn btn-outline-secondary btn-sm" id="cancelCreateUserButton">
@@ -549,124 +248,124 @@
                                     No users found.
                                 </div>
                             </div>
-                            <div class="response-container mt-3" id="userTableResponse" style="display: none;">
-                                <div class="response-title">Operation Result:</div>
-                                <pre class="response-content" id="userTableResponseContent"></pre>
+                            <div class="core-response-container mt-3" id="userTableResponse" style="display: none;">
+                                <div class="core-response-title">Operation Result:</div>
+                                <pre class="core-response-content" id="userTableResponseContent"></pre>
                             </div>
                             <div class="small text-muted mt-3 d-none text-end" id="userPasswordFeedback"></div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">User Login</h2>
-                            <p class="card-subtitle">Authenticate user and create session</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">User Login</h2>
+                            <p class="core-card-subtitle">Authenticate user and create session</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <form id="loginForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="loginUsername">Username</label>
-                                    <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" required>
-                                    <div class="helper-text">Username to authenticate</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="loginUsername">Username</label>
+                                    <input type="text" id="loginUsername" class="core-form-input" placeholder="Enter username" required>
+                                    <div class="core-helper-text">Username to authenticate</div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="loginPassword">Password</label>
-                                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
-                                    <div class="helper-text">User password</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="loginPassword">Password</label>
+                                    <input type="password" id="loginPassword" class="core-form-input" placeholder="Enter password" required>
+                                    <div class="core-helper-text">User password</div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Login</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Login</button>
                                     <button type="button" class="btn btn-secondary" onclick="fillDefaultAdmin()">Use Admin</button>
                                     <button type="button" class="btn btn-secondary" onclick="fillDefaultUser()">Use User</button>
                                 </div>
                             </form>
-                            <div id="loginResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Authentication Result:</div>
-                                <div id="loginResponseContent" class="response-content"></div>
+                            <div id="loginResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Authentication Result:</div>
+                                <div id="loginResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Session Management</h2>
-                            <p class="card-subtitle">Validate or invalidate user sessions</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Session Management</h2>
+                            <p class="core-card-subtitle">Validate or invalidate user sessions</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <form id="sessionForm">
-                                <div class="form-group">
-                                    <label class="form-label" for="sessionToken">Session Token</label>
-                                    <input type="text" id="sessionToken" class="form-input" placeholder="Enter session token">
-                                    <div class="helper-text">Session token from login response</div>
+                                <div class="core-form-group">
+                                    <label class="core-form-label" for="sessionToken">Session Token</label>
+                                    <input type="text" id="sessionToken" class="core-form-input" placeholder="Enter session token">
+                                    <div class="core-helper-text">Session token from login response</div>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-primary" onclick="validateSession()">Validate Session</button>
+                                <div class="core-btn-group">
+                                    <button type="button" class="btn btn-secondary" onclick="validateSession()">Validate Session</button>
                                     <button type="button" class="btn btn-error" onclick="logoutSession()">Logout Session</button>
                                     <button type="button" class="btn btn-secondary" onclick="clearSessionToken()">Clear Token</button>
                                 </div>
                             </form>
-                            <div id="sessionResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Session Status:</div>
-                                <div id="sessionResponseContent" class="response-content"></div>
+                            <div id="sessionResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Session Status:</div>
+                                <div id="sessionResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Role Management</h2>
-                            <p class="card-subtitle">Assign roles and view role memberships</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Role Management</h2>
+                            <p class="core-card-subtitle">Assign roles and view role memberships</p>
                         </div>
-                        <div class="card-content">
-                            <div class="form-group">
-                                <label class="form-label" for="roleUsername">Username</label>
-                                <input type="text" id="roleUsername" class="form-input" placeholder="Enter username">
-                                <div class="helper-text">Username to assign role to</div>
+                        <div class="core-card-content">
+                            <div class="core-form-group">
+                                <label class="core-form-label" for="roleUsername">Username</label>
+                                <input type="text" id="roleUsername" class="core-form-input" placeholder="Enter username">
+                                <div class="core-helper-text">Username to assign role to</div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label" for="assignRole">Role</label>
-                                <select id="assignRole" class="form-input">
+                            <div class="core-form-group">
+                                <label class="core-form-label" for="assignRole">Role</label>
+                                <select id="assignRole" class="core-form-input">
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>
                                     <option value="guest">Guest</option>
                                 </select>
-                                <div class="helper-text">Role to assign to the user</div>
+                                <div class="core-helper-text">Role to assign to the user</div>
                             </div>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary" onclick="assignRole()">Assign Role</button>
+                            <div class="core-btn-group">
+                                <button type="button" class="btn btn-secondary" onclick="assignRole()">Assign Role</button>
                                 <button type="button" class="btn btn-secondary" onclick="listRoles()">List All Roles</button>
                                 <button type="button" class="btn btn-secondary" onclick="getUsersInRole()">Users in Role</button>
                             </div>
-                            <div id="roleResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Role Management:</div>
-                                <div id="roleResponseContent" class="response-content"></div>
+                            <div id="roleResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Role Management:</div>
+                                <div id="roleResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Service Status</h2>
-                            <p class="card-subtitle">Check authentication service status and statistics</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Service Status</h2>
+                            <p class="core-card-subtitle">Check authentication service status and statistics</p>
                         </div>
-                        <div class="card-content">
-                            <div class="btn-group">
+                        <div class="core-card-content">
+                            <div class="core-btn-group">
                                 <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
                                 <button type="button" class="btn btn-secondary" onclick="refreshAll()">Refresh All Data</button>
                             </div>
-                            <div id="statusResponse" class="response-container" style="display: none;">
-                                <div class="response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="response-content"></div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">API Documentation</h2>
-                            <p class="card-subtitle">Interactive API documentation for Authentication service</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">API Documentation</h2>
+                            <p class="core-card-subtitle">Interactive API documentation for Authentication service</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="swagger-ui"></div>
                         </div>
                     </div>
@@ -676,23 +375,23 @@
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
 
                     <!-- Settings Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Authentication Service Settings</h2>
-                            <p class="card-subtitle">Configure the authentication service parameters</p>
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Authentication Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the authentication service parameters</p>
                         </div>
-                        <div class="card-content">
+                        <div class="core-card-content">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="btn-group">
-                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="response-container" style="display: none; margin-top: 1rem;">
-                                <div class="response-title">Save Response:</div>
-                                <pre class="response-content" id="settingsSaveResponseContent"></pre>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <pre class="core-response-content" id="settingsSaveResponseContent"></pre>
                             </div>
                         </div>
                     </div>
@@ -707,8 +406,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
     <script>
-        NooblyNavigation.renderNavigation('navigation-sidebar', 'authservice');
+        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'authservice');
     </script>
     <script>
         const numberFormatter = new Intl.NumberFormat();
@@ -1456,7 +1156,7 @@
                 details.appendChild(meta);
 
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-primary rounded-pill';
+                badge.className = 'badge bg-secondary rounded-pill';
                 badge.textContent = formatNumber(user.loginCount || 0);
 
                 item.appendChild(details);
@@ -1807,11 +1507,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'form-group';
+            formGroup.className = 'core-form-group';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'form-label';
+            label.className = 'core-form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -1825,7 +1525,7 @@
                 case 'string':
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1837,7 +1537,7 @@
                 case 'integer':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1847,7 +1547,7 @@
                 case 'number':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1857,7 +1557,7 @@
                 case 'date':
                     input = document.createElement('input');
                     input.type = 'date';
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1866,7 +1566,7 @@
                 case 'list':
                 case 'options':
                     input = document.createElement('select');
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
 
@@ -1887,7 +1587,7 @@
                 default:
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'form-input';
+                    input.className = 'core-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1898,7 +1598,7 @@
             // Add description helper text if available
             if (setting.desciption) {
                 const helperText = document.createElement('div');
-                helperText.className = 'helper-text';
+                helperText.className = 'core-helper-text';
                 helperText.textContent = setting.desciption;
                 formGroup.appendChild(helperText);
             }
@@ -1979,5 +1679,10 @@
             window.swaggerUi = swaggerUi;
         }
     </script>
+
+            </div>
+            <!-- End Page Content -->
+        </main>
+    </div>
 </body>
 </html>

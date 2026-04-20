@@ -1,16 +1,9 @@
-#application specific
+#Noobly JS specfic exclusions
 .application/
-documents/
-documents-readonly/
-documents-shared/
-watch/
-.data/
-data/
-.noobly-core/
 .cache/
-.application/
+.data/
 
-#nodent goes here...
+#Node Modules and Other Files
 node_modules/
 
 #electron
@@ -18,6 +11,13 @@ dist/
 .DS_Store
 *.log
 
-#env
+#Environment variables
 .env
 *.env.*
+
+#tests
+.test/
+.test-files/
+
+#screenshots
+screenshots/

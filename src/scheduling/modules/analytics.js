@@ -2,7 +2,7 @@
  * @fileoverview Analytics module for scheduling service
  * Tracks schedule execution statistics including pending, running, completed, and errored states.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -15,7 +15,16 @@
  */
 class SchedulingAnalytics {
   constructor() {
-    // Map of schedule name -> { schedule, pending, running, completed, error, lastRun }
+    this.reset();
+  }
+
+  /**
+   * Resets all tracked analytics state. Used by tests and by long-running
+   * processes that need to clear historical data.
+   */
+  reset() {
+    // Map of schedule name -> { schedule, pending, running, completed, error,
+    // skipped, lastRun, cron, activity, createdAt }
     this.schedules = new Map();
 
     // Total counts across all schedules
@@ -24,25 +33,39 @@ class SchedulingAnalytics {
       pending: 0,
       running: 0,
       completed: 0,
-      error: 0
+      error: 0,
+      skipped: 0
     };
+
+    // Track execution history per schedule
+    this.executionHistory = new Map();
   }
 
   /**
    * Track when a schedule is started (created)
    * @param {string} scheduleName - Name of the schedule
+   * @param {string} cron - CRON expression for the schedule
+   * @param {*} activity - Activity/task definition to execute
    */
-  trackScheduleStarted(scheduleName) {
+  trackScheduleStarted(scheduleName, cron, activity) {
     if (!this.schedules.has(scheduleName)) {
       this.schedules.set(scheduleName, {
         schedule: scheduleName,
+        scheduleId: scheduleName,
+        name: scheduleName,
         pending: 0,
         running: 0,
         completed: 0,
         error: 0,
-        lastRun: new Date().toISOString()
+        lastRun: new Date().toISOString(),
+        cron: cron || 'N/A',
+        activity: activity || null,
+        createdAt: new Date().toISOString()
       });
       this.totals.schedules++;
+
+      // Initialize execution history for this schedule
+      this.executionHistory.set(scheduleName, []);
     }
 
     // Mark as pending initially
@@ -142,6 +165,28 @@ class SchedulingAnalytics {
   }
 
   /**
+   * Track when a schedule execution was skipped due to concurrency limits.
+   * @param {string} scheduleName - Name of the schedule
+   */
+  trackScheduleSkipped(scheduleName) {
+    if (!this.schedules.has(scheduleName)) {
+      this.schedules.set(scheduleName, {
+        schedule: scheduleName,
+        pending: 0,
+        running: 0,
+        completed: 0,
+        error: 0,
+        skipped: 0,
+        lastRun: new Date().toISOString()
+      });
+      this.totals.schedules++;
+    }
+    const schedule = this.schedules.get(scheduleName);
+    schedule.skipped = (schedule.skipped || 0) + 1;
+    this.totals.skipped++;
+  }
+
+  /**
    * Track when a schedule is stopped
    * @param {string} scheduleName - Name of the schedule
    */
@@ -177,7 +222,10 @@ class SchedulingAnalytics {
       runCount: item.completed + item.error, // Total runs (completed + error)
       completeCount: item.completed, // Successfully completed count
       errorCount: item.error,        // Error count
-      lastRun: item.lastRun          // Last run timestamp
+      lastRun: item.lastRun,         // Last run timestamp
+      cron: item.cron,               // CRON expression
+      activity: item.activity,       // Activity definition
+      createdAt: item.createdAt      // Creation timestamp
     }));
 
     // Sort by lastRun descending (most recent first)
@@ -208,22 +256,55 @@ class SchedulingAnalytics {
       totalRunning: totals.running,
       totalCompleted: totals.completed,
       totalErrors: totals.error,
+      totalSkipped: totals.skipped || 0,
       schedules: this.getScheduleAnalytics()
     };
   }
 
   /**
-   * Clear all analytics data
+   * Track execution of a schedule
+   * @param {string} scheduleId - The schedule ID
+   * @param {string} status - Execution status (pending, running, completed, error)
+   * @param {*} data - Execution data/result
+   */
+  trackExecution(scheduleId, status, data = null) {
+    if (!this.executionHistory.has(scheduleId)) {
+      this.executionHistory.set(scheduleId, []);
+    }
+
+    const execution = {
+      executionId: `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      scheduleId,
+      status,
+      startTime: new Date().toISOString(),
+      data
+    };
+
+    const history = this.executionHistory.get(scheduleId);
+    history.unshift(execution); // Add to front (most recent first)
+
+    // Keep only last 50 executions per schedule
+    if (history.length > 50) {
+      history.pop();
+    }
+  }
+
+  /**
+   * Get execution history for a specific schedule
+   * @param {string} scheduleId - The schedule ID
+   * @param {number} limit - Maximum number of executions to return
+   * @return {Array} Array of execution records
+   */
+  getExecutionHistory(scheduleId, limit = 20) {
+    const history = this.executionHistory.get(scheduleId) || [];
+    return history.slice(0, limit);
+  }
+
+  /**
+   * Clear all analytics data. Alias for {@link reset}.
    */
   clear() {
-    this.schedules.clear();
-    this.totals = {
-      schedules: 0,
-      pending: 0,
-      running: 0,
-      completed: 0,
-      error: 0
-    };
+    this.reset();
   }
 }
 

@@ -1,16 +1,16 @@
 /**
- * @fileoverview Application demonstrating NooblyJS Core services.
+ * @fileoverview Application demonstrating Noobly JS Core services.
  * This file serves as a comprehensive example of how to use all available
- * services in the NooblyJS Core framework.
+ * services in the Noobly JS Core framework.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');

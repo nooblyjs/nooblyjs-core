@@ -1,16 +1,16 @@
 /**
  * @fileoverview Local file system filing provider for file operations
  * on the local file system with event emission support.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-const fs = require('fs').promises;
+const fs = require('node:fs').promises;
 const fsSync = require('fs');
-const path = require('path');
+const path = require('node:path');
 
 /**
  * A class that implements a local file system-based file storage provider.
@@ -31,13 +31,44 @@ class LocalFilingProvider {
     this.settings = {};
     this.settings.description = "Configuration settings for the Filing Service";
     this.settings.list = [
-      {setting: "uploadDir", type: "string", values: ['./.noobly-core/uploads']},
+      {setting: "baseDir", type: "string", values: ['./']},
       {setting: "maxFileSize", type: "number", values: [10485760]},
       {setting: "allowedTypes", type: "string", values: ['*']}
     ];
-    this.settings.uploadDir = options.uploadDir || this.settings.uploadDir || './.noobly-core/uploads';
+    this.settings.baseDir = options.baseDir || this.settings.baseDir || './';
     this.settings.maxFileSize = options.maxFileSize || this.settings.maxFileSize || 10485760;
     this.settings.allowedTypes = options.allowedTypes || this.settings.allowedTypes || '*';
+  }
+
+  /**
+   * Resolves a file path and verifies it stays within the base directory.
+   * @param {string} filePath The file path to resolve.
+   * @return {string} The resolved absolute file path.
+   * @throws {Error} When the path is outside the base directory or invalid.
+   * @private
+   */
+  _resolveAndVerifyPath(filePath) {
+    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+      throw new Error('Invalid filePath: must be a non-empty string');
+    }
+
+    const baseDir = path.resolve(this.settings.baseDir);
+    const resolvedPath = path.resolve(baseDir, filePath);
+    
+    if (!resolvedPath.startsWith(baseDir)) {
+      const error = new Error('Path traversal detected: Path is outside the base directory');
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('filing:security-error', {
+          error: error.message,
+          filePath,
+          resolvedPath,
+          baseDir
+        });
+      }
+      throw error;
+    }
+    
+    return resolvedPath;
   }
 
   /**
@@ -48,9 +79,9 @@ class LocalFilingProvider {
    * @throws {Error} When filePath or content is invalid, or file creation fails.
    */
   async create(filePath, content) {
-    // Validate filePath parameter
-    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
-      const error = new Error('Invalid filePath: must be a non-empty string');
+    try {
+      filePath = this._resolveAndVerifyPath(filePath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:validation-error', {
           method: 'create',
@@ -99,9 +130,9 @@ class LocalFilingProvider {
    * @throws {Error} When filePath is invalid or file reading fails.
    */
   async read(filePath, encoding) {
-    // Validate filePath parameter
-    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
-      const error = new Error('Invalid filePath: must be a non-empty string');
+    try {
+      filePath = this._resolveAndVerifyPath(filePath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:validation-error', {
           method: 'read',
@@ -145,9 +176,9 @@ class LocalFilingProvider {
    * @throws {Error} When filePath is invalid or file deletion fails.
    */
   async delete(filePath) {
-    // Validate filePath parameter
-    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
-      const error = new Error('Invalid filePath: must be a non-empty string');
+    try {
+      filePath = this._resolveAndVerifyPath(filePath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:validation-error', {
           method: 'delete',
@@ -170,9 +201,9 @@ class LocalFilingProvider {
    * @throws {Error} When dirPath is invalid or directory listing fails.
    */
   async list(dirPath) {
-    // Validate dirPath parameter
-    if (!dirPath || typeof dirPath !== 'string' || dirPath.trim() === '') {
-      const error = new Error('Invalid dirPath: must be a non-empty string');
+    try {
+      dirPath = this._resolveAndVerifyPath(dirPath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:validation-error', {
           method: 'list',
@@ -183,10 +214,33 @@ class LocalFilingProvider {
       throw error;
     }
 
-    const files = await fs.readdir(dirPath);
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    // Transform entries to include type information and metadata
+    const items = await Promise.all(entries.map(async entry => {
+      const item = {
+        name: entry.name,
+        type: entry.isDirectory() ? 'folder' : 'file',
+        isDirectory: entry.isDirectory(),
+        isFile: entry.isFile()
+      };
+
+      try {
+        const fullPath = path.join(dirPath, entry.name);
+        const stats = await fs.stat(fullPath);
+        item.size = stats.size;
+        item.created = stats.birthtime.toISOString();
+        item.modified = stats.mtime.toISOString();
+      } catch {
+        // If stat fails, leave metadata undefined
+      }
+
+      return item;
+    }));
+
     if (this.eventEmitter_)
-      this.eventEmitter_.emit('filing:list', { dirPath, files });
-    return files;
+      this.eventEmitter_.emit('filing:list', { dirPath, items });
+    return items;
   }
 
   /**
@@ -197,9 +251,9 @@ class LocalFilingProvider {
    * @throws {Error} When filePath or content is invalid, or file update fails.
    */
   async update(filePath, content) {
-    // Validate filePath parameter
-    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
-      const error = new Error('Invalid filePath: must be a non-empty string');
+    try {
+      filePath = this._resolveAndVerifyPath(filePath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:validation-error', {
           method: 'update',
@@ -285,7 +339,11 @@ class LocalFilingProvider {
     for (let i = 0; i < this.settings.list.length; i++){
       if (settings[this.settings.list[i].setting] != null){
         this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        console.log(this.settings.list[i].setting + ' changed to: ' + settings[this.settings.list[i].setting]);
+        this.logger?.info(`[${this.constructor.name}] Setting changed`, {
+          setting: this.settings.list[i].setting,
+          newValue: settings[this.settings.list[i].setting],
+          operation: 'saveSettings'
+        });
       }
     }
   }

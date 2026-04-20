@@ -1,0 +1,533 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Measuring Service API",
+    "description": "RESTful API for metric collection, data aggregation, and statistical analysis with time-based filtering capabilities",
+    "version": "1.0.14",
+    "contact": {
+      "name": "Digital Technologies Core Team",
+      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+    },
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/services/measuring/api",
+      "description": "Measuring Service API"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Measurements",
+      "description": "Operations for recording and listing metric measurements"
+    },
+    {
+      "name": "Analytics",
+      "description": "Retrieve analytics and aggregated statistics about metrics"
+    },
+    {
+      "name": "UI Data",
+      "description": "Endpoints for UI metrics viewer and analysis"
+    },
+    {
+      "name": "Settings",
+      "description": "Manage service settings and configuration"
+    },
+    {
+      "name": "Service",
+      "description": "Service health and status endpoints"
+    }
+  ],
+  "paths": {
+    "/add": {
+      "post": {
+        "tags": ["Measurements"],
+        "summary": "Record a new measurement",
+        "description": "Adds a new metric data point to the measurement system",
+        "operationId": "addMeasurement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["metric", "value"],
+                "properties": {
+                  "metric": {
+                    "type": "string",
+                    "description": "The metric name/identifier (e.g., response_time, cpu_usage)",
+                    "example": "response_time"
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "The numeric value of the measurement",
+                    "example": 123.45
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Measurement recorded successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing or invalid metric/value",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/list/{metric}/{datestart}/{dateend}": {
+      "get": {
+        "tags": ["Measurements"],
+        "summary": "List measurements for a metric in date range",
+        "description": "Retrieves a list of metric values within a specified date range",
+        "operationId": "listMeasurements",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The metric name to query",
+            "example": "response_time"
+          },
+          {
+            "name": "datestart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start date (ISO format)",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          {
+            "name": "dateend",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End date (ISO format)",
+            "example": "2024-01-31T23:59:59Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of measurements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/total/{metric}/{datestart}/{dateend}": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get total sum of metric values",
+        "description": "Calculates the total sum of metric values within a specified date range",
+        "operationId": "getTotalMetric",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The metric name to aggregate"
+          },
+          {
+            "name": "datestart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start date (ISO format)"
+          },
+          {
+            "name": "dateend",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End date (ISO format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Total sum",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/average/{metric}/{datestart}/{dateend}": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get average of metric values",
+        "description": "Calculates the average value of a metric within a specified date range",
+        "operationId": "getAverageMetric",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The metric name to analyze"
+          },
+          {
+            "name": "datestart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start date (ISO format)"
+          },
+          {
+            "name": "dateend",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End date (ISO format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Average value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string"
+                    },
+                    "average": {
+                      "type": "number"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/max/{metric}/{datestart}/{dateend}": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get maximum metric value",
+        "description": "Retrieves the maximum value of a metric within a specified date range",
+        "operationId": "getMaxMetric",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The metric name to analyze"
+          },
+          {
+            "name": "datestart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start date (ISO format)"
+          },
+          {
+            "name": "dateend",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End date (ISO format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Maximum value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get service analytics summary",
+        "description": "Generates a comprehensive analytics summary of all metrics in the system",
+        "operationId": "getAnalytics",
+        "responses": {
+          "200": {
+            "description": "Analytics summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalMeasurements": {
+                      "type": "integer"
+                    },
+                    "uniqueMetrics": {
+                      "type": "integer"
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["UI Data"],
+        "summary": "Get all metrics and values for UI",
+        "description": "Retrieves all available metrics and their recorded values for the metrics viewer UI. Returns unique metric names and complete value history with timestamps.",
+        "operationId": "getMetricsForUI",
+        "responses": {
+          "200": {
+            "description": "Metrics data for UI display",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "description": "List of unique metric names",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["response_time", "cpu_usage", "memory_usage"]
+                    },
+                    "values": {
+                      "type": "array",
+                      "description": "All metric values sorted by timestamp (newest first)",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "metric": {
+                            "type": "string",
+                            "example": "response_time"
+                          },
+                          "value": {
+                            "type": "number",
+                            "example": 123.45
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-01-15T10:30:00Z"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get service settings",
+        "description": "Retrieves the current settings for the measuring service",
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "description": "Service settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Settings"],
+        "summary": "Update service settings",
+        "description": "Saves new settings for the measuring service",
+        "operationId": "updateSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings saved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "OK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing settings"
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": ["Service"],
+        "summary": "Check service status",
+        "description": "Returns the current health status of the measuring service",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Service status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

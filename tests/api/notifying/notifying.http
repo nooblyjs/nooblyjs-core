@@ -1,5 +1,5 @@
 ###
-### NooblyJS Core - Notifying API Tests
+### Noobly JS Core - Notifying API Tests
 ###
 ### These tests demonstrate the Notifying service API endpoints with API key authentication.
 ### The Notifying service provides pub/sub messaging and notification capabilities.

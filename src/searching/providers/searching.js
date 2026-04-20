@@ -1,7 +1,7 @@
 /**
  * @fileoverview Search service for loading and searching JSON objects
  * with recursive string matching, multiple named indexes, and event emission support.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -26,13 +26,21 @@ class SearchService {
    * @param {Object=} dependencies Injected service dependencies.
    */
   constructor(options = {}, eventEmitter, dependencies = {}) {
+
+    this.settings = {};
+    this.settings.description = "The following settings are needed for this provider"
+    this.settings.list = [
+      {setting: "QUEUE_INDEXING", type: "string", values : ['nooblyjs-core-searching']}
+    ];
+    this.settings.QUEUE_INDEXING = options.QUEUE_INDEXING || this.settings.QUEUE_INDEXING || 'nooblyjs-core-searching';
+
     this.indexes = new Map();
     this.defaultIndex_ = this.normalizeIndexName_(options.defaultIndex);
     this.eventEmitter_ = eventEmitter;
     this.queueService_ = dependencies.queueing;
     this.workingService_ = dependencies.working;
     this.schedulingService_ = dependencies.scheduling;
-    this.QUEUE_INDEXING_ = 'noobly-core-searching';
+    this.QUEUE_INDEXING_ = this.settings.QUEUE_INDEXING ;
 
     // Create default index
     this.indexes.set(this.defaultIndex_, new Map());
@@ -40,6 +48,28 @@ class SearchService {
     // Initialize the queue if queueing service is available
     if (this.queueService_) {
       this.initializeQueue_();
+    }
+  }
+
+  /**
+   * Get all our settings
+   */
+  async getSettings(){
+    return this.settings;
+  }
+
+  /**
+   * Set all our settings
+   */
+  async saveSettings(settings){
+    for (let i=0; i < this.settings.list.length; i++){
+      if (settings[this.settings.list[i].setting] != null){
+        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
+        this.logger?.info(`[${this.constructor.name}] Setting changed: ${this.settings.list[i].setting}`, {
+          setting: this.settings.list[i].setting,
+          newValue: settings[this.settings.list[i].setting]
+        });
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 /**
- * @fileoverview Azure Monitor logging provider for NooblyJS Core
+ * @fileoverview Azure Monitor logging provider for Noobly JS Core
  * Sends log messages to Azure Monitor for centralized logging and diagnostics.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -26,7 +26,7 @@ class LoggingAzure {
    * @param {Object} options Configuration options
    * @param {string} options.workspaceId Azure Log Analytics workspace ID
    * @param {string} options.sharedKey Shared key for workspace authentication
-   * @param {string} options.logType Custom log type name (default: 'NooblyCoreLogs')
+   * @param {string} options.logType Custom log type name (default: 'DigitalTechnologiesCoreLogs')
    * @param {string} options.environment Azure environment (default: 'public')
    * @param {number} options.batchSize Number of logs to batch before sending (default: 10)
    * @param {number} options.flushInterval Time in ms to auto-flush logs (default: 5000)
@@ -47,7 +47,7 @@ class LoggingAzure {
     this.instanceName_ = (options && options.instanceName) || 'default';
     this.workspaceId_ = options.workspaceId || process.env.AZURE_WORKSPACE_ID;
     this.sharedKey_ = options.sharedKey || process.env.AZURE_SHARED_KEY;
-    this.logType_ = options.logType || 'NooblyCoreLogs';
+    this.logType_ = options.logType || 'DigitalTechnologiesCoreLogs';
     this.environment_ = options.environment || 'public';
     this.batchSize_ = options.batchSize || 10;
     this.flushInterval_ = options.flushInterval || 5000;
@@ -400,9 +400,19 @@ class LoggingAzure {
     }
 
     if (this.eventEmitter_) {
-      const eventName = `log:debug:${this.instanceName_}`;
+      const eventName = `log:log:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: formattedMessage });
     }
+  }
+
+  /**
+   * Logs a generic message to Azure (alias for debug).
+   * @param {string} message The message to log
+   * @param {*=} meta Optional metadata to include
+   * @return {Promise<void>} A promise that resolves when the message is logged
+   */
+  async log(message, meta) {
+    return this.debug(message, meta);
   }
 
   /**

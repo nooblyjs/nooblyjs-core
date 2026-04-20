@@ -1,136 +1,238 @@
 /**
- * @fileoverview Provides a worker manager with queue support and thread pooling
- * for executing tasks with lifecycle management, status tracking, and event emission support.
- * @author NooblyJS Team
- * @version 1.0.14
+ * @fileoverview Production worker manager.
+ *
+ * Owns a pool of `worker_threads` Workers and dispatches queued tasks to
+ * them. Tasks are persisted in three named queues from the injected queueing
+ * service so the lifecycle is observable from outside the process:
+ *
+ *   - `nooblyjs-core-working-incoming` — tasks waiting to start
+ *   - `nooblyjs-core-working-complete` — finished successfully
+ *   - `nooblyjs-core-working-error`    — finished in error
+ *
+ * Behaviour is governed by three settings, each enforced at runtime:
+ *
+ *   - `workerTimeout` — wall-clock budget per task in ms; an exceeded task is
+ *     terminated, recorded as an error, and the worker slot freed.
+ *   - `maxQueueSize`  — refuses new `start()` calls when the incoming queue
+ *     is at the cap, returning a structured error rather than silently
+ *     growing memory.
+ *   - `enableLogging` — gates the structured logger calls so high-volume
+ *     deployments can opt out of per-task log lines.
+ *
+ * The queue processor is a 1-second interval that is `unref()`'d so it does
+ * not keep the Node event loop alive on its own — long-running services
+ * still tick, but unit tests and short-lived scripts exit cleanly.
+ *
+ * @author Noobly JS Core Team
+ * @version 2.0.0
  * @since 1.0.0
  */
 
 'use strict';
 
 const { Worker } = require('worker_threads');
-const path = require('path');
-const crypto = require('crypto');
+const path = require('node:path');
+const fs = require('node:fs');
+const crypto = require('node:crypto');
+
+/** @const {number} Queue processor poll interval in ms. */
+const QUEUE_TICK_MS = 1000;
+
+/** @const {number} Max task history entries kept in memory. */
+const TASK_HISTORY_LIMIT = 1000;
 
 /**
- * A class that manages multiple worker threads with queue support.
- * Provides methods for starting, stopping, and monitoring worker status.
- * Uses named queues for task lifecycle management:
- * - noobly-core-working-incoming: Tasks waiting to be processed
- * - noobly-core-working-complete: Successfully completed tasks
- * - noobly-core-working-error: Failed tasks
+ * Production-grade worker manager.
+ *
  * @class
  */
 class WorkerManager {
   /**
-   * Initializes the WorkerManager with worker thread management.
-   * @param {Object=} options Configuration options for the worker manager.
-   * @param {number=} options.maxThreads Maximum number of concurrent worker threads (default: 4).
-   * @param {string=} options.activitiesFolder Path to the activities folder (default: 'activities').
+   * @param {Object=} options Configuration options.
+   * @param {number=} options.maxThreads Max concurrent worker threads (default 4).
+   * @param {number=} options.workerTimeout Per-task timeout in ms (default 300000).
+   * @param {number=} options.maxQueueSize Max incoming queue depth (default 1000).
+   * @param {boolean=} options.enableLogging Whether to emit per-task logs (default true).
+   * @param {string=} options.activitiesFolder Folder for relative script paths.
    * @param {Object=} options.dependencies Injected service dependencies.
-   * @param {Object=} options.dependencies.queueing Queueing service instance.
-   * @param {Object=} options.dependencies.filing Filing service instance for activity resolution.
-   * @param {EventEmitter=} eventEmitter Optional event emitter for worker events.
+   * @param {Object=} options.dependencies.queueing Queueing service (required).
+   * @param {Object=} options.dependencies.filing Filing service (optional).
+   * @param {EventEmitter=} eventEmitter Optional event emitter.
    */
   constructor(options = {}, eventEmitter) {
+    /** @private @const {?EventEmitter} */
+    this.eventEmitter_ = eventEmitter || null;
 
-    // Settings configuration
-    this.settings = {};
-    this.settings.description = "Configuration settings for the working service";
-    this.settings.list = [
-      { setting: 'workerTimeout', type: 'number', values: null },
-      { setting: 'maxQueueSize', type: 'number', values: null },
-      { setting: 'enableLogging', type: 'boolean', values: null }
-    ];
-    this.settings.workerTimeout = options.workerTimeout || 300000;
-    this.settings.maxQueueSize = options.maxQueueSize || 1000;
-    this.settings.enableLogging = options.enableLogging !== undefined ? options.enableLogging : true;
+    /** @private {?Object} Logger injected by the factory. */
+    this.logger = null;
 
-    /** @private {number} Maximum number of concurrent threads */
-    this.maxThreads_ = options.maxThreads || 4;
-    /** @private {Map} Active workers by task ID */
+    // Settings configuration. Field metadata is exposed via getSettings()
+    // for use by the settings UI; the actual values live alongside it.
+    this.settings = {
+      description: 'Configuration settings for the working service',
+      list: [
+        { setting: 'workerTimeout', type: 'number',  values: null },
+        { setting: 'maxQueueSize',  type: 'number',  values: null },
+        { setting: 'enableLogging', type: 'boolean', values: null }
+      ],
+      workerTimeout: this.coerceNumber_(options.workerTimeout, 300000, 1000),
+      maxQueueSize:  this.coerceNumber_(options.maxQueueSize,  1000,   1),
+      enableLogging: options.enableLogging !== undefined ? !!options.enableLogging : true
+    };
+
+    /** @private @const {number} Maximum concurrent worker threads. */
+    this.maxThreads_ = this.coerceNumber_(options.maxThreads, 4, 1);
+
+    /** @private @const {!Map<string, !Object>} */
     this.activeWorkers_ = new Map();
-    /** @private {Map} Task history with results */
-    this.taskHistory_ = new Map();
-    /** @private @const {EventEmitter} */
-    this.eventEmitter_ = eventEmitter;
-    /** @private {boolean} Manager running state */
-    this.isRunning_ = true;
-    /** @private {Object} Queueing service instance */
-    this.queueService_ = options.dependencies?.queueing;
-    /** @private {Object} Filing service instance */
-    this.filingService_ = options.dependencies?.filing;
-    /** @private {string} Activities folder path */
-    this.activitiesFolder_ = options.activitiesFolder || options['noobly-core-activities'] || 'activities';
-    /** @private {number} Queue processing interval ID */
-    this.queueProcessorInterval_ = null;
-    /** @private @const {string} Queue name for incoming tasks */
-    this.QUEUE_INCOMING_ = 'noobly-core-working-incoming';
-    /** @private @const {string} Queue name for completed tasks */
-    this.QUEUE_COMPLETE_ = 'noobly-core-working-complete';
-    /** @private @const {string} Queue name for error tasks */
-    this.QUEUE_ERROR_ = 'noobly-core-working-error';
 
-    // Start queue processor that checks every 1 second
+    /** @private @const {!Map<string, !Object>} */
+    this.taskHistory_ = new Map();
+
+    /** @private {boolean} Manager running state. */
+    this.isRunning_ = true;
+
+    /** @private {?Object} Queueing service instance. */
+    this.queueService_ = options.dependencies?.queueing || null;
+
+    /** @private {?Object} Filing service instance. */
+    this.filingService_ = options.dependencies?.filing || null;
+
+    /** @private @const {string} Activities folder path. */
+    this.activitiesFolder_ =
+      options.activitiesFolder ||
+      options['nooblyjs-core-activities'] ||
+      'activities';
+
+    /** @private {?NodeJS.Timeout} Queue processing interval. */
+    this.queueProcessorInterval_ = null;
+
+    /** @private @const {string} Queue name for incoming tasks. */
+    this.QUEUE_INCOMING_ = 'nooblyjs-core-working-incoming';
+    /** @private @const {string} Queue name for completed tasks. */
+    this.QUEUE_COMPLETE_ = 'nooblyjs-core-working-complete';
+    /** @private @const {string} Queue name for error tasks. */
+    this.QUEUE_ERROR_ = 'nooblyjs-core-working-error';
+
+    if (!this.queueService_) {
+      // Don't throw — the factory may attach the dependency after construction
+      // in some legacy code paths. Log instead and let start() raise the error
+      // when actually invoked.
+      this.logger?.warn?.(`[${this.constructor.name}] Queueing service not provided; start() will fail until one is supplied`);
+    }
+
     this.startQueueProcessor_();
   }
 
+  // ---------------------------------------------------------------------------
+  // Settings
+  // ---------------------------------------------------------------------------
+
   /**
-   * Get all settings for the working service.
-   * @return {Promise<Object>} A promise that resolves to the settings object.
+   * Coerces a value to a positive number with a fallback. Used so that
+   * settings posted as strings still produce valid numeric configuration.
+   *
+   * @private
+   * @param {*} value
+   * @param {number} fallback
+   * @param {number=} min Minimum acceptable value (defaults to 0).
+   * @return {number}
+   */
+  coerceNumber_(value, fallback, min = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) && n >= min ? n : fallback;
+  }
+
+  /**
+   * Returns the current settings object (with metadata).
+   * @return {Promise<!Object>}
    */
   async getSettings() {
     return this.settings;
   }
 
   /**
-   * Save settings for the working service.
-   * @param {Object} settings The settings to save.
-   * @return {Promise<void>} A promise that resolves when settings are saved.
+   * Applies a partial settings update. Unknown keys are ignored. Each
+   * accepted setting emits a `worker:setting-changed` event so observers
+   * (e.g. the analytics module or external dashboards) can react.
+   *
+   * @param {!Object} updates
+   * @return {Promise<void>}
    */
-  async saveSettings(settings) {
-    for (const { setting } of this.settings.list) {
-      if (settings[setting] != null) {
-        this.settings[setting] = settings[setting];
+  async saveSettings(updates) {
+    if (!updates || typeof updates !== 'object') return;
+
+    for (const { setting, type } of this.settings.list) {
+      if (updates[setting] == null) continue;
+
+      let value = updates[setting];
+      if (type === 'number') {
+        value = this.coerceNumber_(value, this.settings[setting], 0);
+      } else if (type === 'boolean') {
+        value = !!value;
       }
+
+      this.settings[setting] = value;
+      this.logIf_('info', 'Setting changed', { setting, value });
+      this.eventEmitter_?.emit('worker:setting-changed', { setting, value });
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Logging
+  // ---------------------------------------------------------------------------
+
   /**
-   * Generates a unique task ID.
+   * Routes a log line through the injected logger if logging is enabled.
+   * Falls silent if either condition is false.
+   *
    * @private
-   * @return {string} A unique task ID.
+   * @param {string} level
+   * @param {string} message
+   * @param {Object=} meta
+   */
+  logIf_(level, message, meta = {}) {
+    if (!this.settings.enableLogging) return;
+    this.logger?.[level]?.(`[${this.constructor.name}] ${message}`, meta);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Task lifecycle
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Generates a unique task ID. Hex is used so the ID is URL-safe and easy
+   * to log.
+   * @private
+   * @return {string}
    */
   generateTaskId_() {
     return crypto.randomBytes(16).toString('hex');
   }
 
   /**
-   * Resolves an activity script path.
-   * If the path is relative (not absolute), it will be resolved from the activities folder.
-   * If filing service is available, it will verify relative paths exist.
+   * Resolves an activity script path to an absolute filesystem path.
+   * Absolute inputs are trusted as-is; relative inputs are resolved against
+   * the configured activities folder and verified to exist.
+   *
    * @private
-   * @param {string} scriptPath The script path (can be relative or absolute).
-   * @return {Promise<string>} A promise that resolves to the absolute script path.
-   * @throws {Error} When script is not found.
+   * @param {string} scriptPath
+   * @return {Promise<string>}
+   * @throws {Error} If the resolved path does not exist.
    */
   async resolveActivityPath_(scriptPath) {
-    // If it's already an absolute path, use it as-is (trust it exists)
     if (path.isAbsolute(scriptPath)) {
       return scriptPath;
     }
 
-    // Build path from activities folder
     const resolvedPath = path.resolve(process.cwd(), this.activitiesFolder_, scriptPath);
 
-    // If filing service is available, verify the relative path exists
+    // Verify existence so we fail fast at queue time, not later inside a
+    // worker. Only enforced when filing service is wired in (legacy).
     if (this.filingService_) {
       try {
-        // Try to read the file metadata to verify it exists
-        const fs = require('fs').promises;
-        await fs.access(resolvedPath);
-        return resolvedPath;
-      } catch (error) {
+        await fs.promises.access(resolvedPath);
+      } catch (err) {
         throw new Error(`Activity script not found: ${scriptPath} (resolved to: ${resolvedPath})`);
       }
     }
@@ -139,25 +241,50 @@ class WorkerManager {
   }
 
   /**
-   * Starts a worker task. Adds task to the incoming queue for processing.
-   * @param {string} scriptPath The script path (can be relative to activities folder or absolute).
-   * @param {Object} data The data to be passed to the worker thread.
-   * @param {Function=} completionCallback Optional callback function to be called on completion.
-   * @return {Promise<string>} A promise that resolves with the task ID.
+   * Queues a task for execution. Returns the new task ID immediately; the
+   * actual worker thread is created when the queue processor next picks up
+   * the task and a worker slot is free.
+   *
+   * @param {string} scriptPath Absolute or activities-relative script path.
+   * @param {*=} data Payload passed to the worker script's `run` function.
+   * @param {Function=} completionCallback Optional `(status, data) => void` callback.
+   * @return {Promise<string>} The newly assigned task ID.
+   * @throws {Error} If the manager is stopped, the queue is full, or the
+   *   activity path cannot be resolved.
    */
   async start(scriptPath, data, completionCallback) {
     if (!this.isRunning_) {
       const error = 'Worker manager is stopped';
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('worker:start:error', { scriptPath, error });
+      this.eventEmitter_?.emit('worker:start:error', { scriptPath, error });
       throw new Error(error);
     }
 
     if (!this.queueService_) {
-      throw new Error('Queueing service is not available');
+      const error = 'Queueing service is not available';
+      this.eventEmitter_?.emit('worker:start:error', { scriptPath, error });
+      throw new Error(error);
     }
 
-    // Resolve the activity script path
+    if (typeof scriptPath !== 'string' || scriptPath.length === 0) {
+      const error = 'scriptPath must be a non-empty string';
+      this.eventEmitter_?.emit('worker:start:error', { scriptPath, error });
+      throw new Error(error);
+    }
+
+    // Enforce queue cap before resolving paths so a flood of bad calls cannot
+    // pin the event loop on filesystem checks.
+    const currentSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+    if (currentSize >= this.settings.maxQueueSize) {
+      const error = `Incoming queue at capacity (${this.settings.maxQueueSize})`;
+      this.eventEmitter_?.emit('worker:start:error', { scriptPath, error });
+      this.logIf_('warn', 'Rejected task — queue full', {
+        scriptPath,
+        queueSize: currentSize,
+        cap: this.settings.maxQueueSize
+      });
+      throw new Error(error);
+    }
+
     const resolvedScriptPath = await this.resolveActivityPath_(scriptPath);
 
     const taskId = this.generateTaskId_();
@@ -167,44 +294,56 @@ class WorkerManager {
       originalScriptPath: scriptPath,
       data,
       completionCallback,
-      queuedAt: new Date(),
+      queuedAt: new Date()
     };
 
-    // Add to incoming queue
     await this.queueService_.enqueue(this.QUEUE_INCOMING_, task);
-
     const queueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
 
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('worker:queued', {
-        taskId,
-        scriptPath: resolvedScriptPath,
-        originalScriptPath: scriptPath,
-        queueName: this.QUEUE_INCOMING_,
-        queueLength: queueSize
-      });
+    this.eventEmitter_?.emit('worker:queued', {
+      taskId,
+      scriptPath: resolvedScriptPath,
+      originalScriptPath: scriptPath,
+      queueName: this.QUEUE_INCOMING_,
+      queueLength: queueSize
+    });
+
+    this.logIf_('info', 'Task queued', {
+      taskId,
+      scriptPath: resolvedScriptPath,
+      queueLength: queueSize
+    });
 
     return taskId;
   }
 
+  // ---------------------------------------------------------------------------
+  // Queue processor
+  // ---------------------------------------------------------------------------
+
   /**
-   * Starts the queue processor that checks for available threads every 1 second.
+   * Starts the polling queue processor. The interval is `unref()`'d so it
+   * does not keep the Node event loop alive on its own — useful for tests.
    * @private
    */
   startQueueProcessor_() {
-    if (this.queueProcessorInterval_) {
-      return; // Already running
-    }
+    if (this.queueProcessorInterval_) return;
 
-    this.queueProcessorInterval_ = setInterval(async () => {
-      if (this.isRunning_ && this.queueService_) {
-        await this.processQueue_();
-      }
-    }, 1000); // Check every 1 second
+    this.queueProcessorInterval_ = setInterval(() => {
+      if (!this.isRunning_ || !this.queueService_) return;
+      this.processQueue_().catch((err) => {
+        this.logIf_('error', 'Queue processor tick failed', { error: err?.message });
+      });
+    }, QUEUE_TICK_MS);
+
+    // Don't keep the event loop alive just for the poller.
+    if (typeof this.queueProcessorInterval_.unref === 'function') {
+      this.queueProcessorInterval_.unref();
+    }
   }
 
   /**
-   * Stops the queue processor.
+   * Stops the polling queue processor.
    * @private
    */
   stopQueueProcessor_() {
@@ -215,282 +354,358 @@ class WorkerManager {
   }
 
   /**
-   * Processes the incoming task queue, starting tasks when slots are available.
-   * @private
+   * Drains as many tasks from the incoming queue as there are free worker
+   * slots, dispatching each into a fresh worker thread.
+   * @return {Promise<void>}
    */
   async processQueue_() {
-    if (!this.queueService_) {
-      return;
-    }
+    if (!this.queueService_ || !this.isRunning_) return;
 
-    // Process as many tasks as we have slots for
     while (this.activeWorkers_.size < this.maxThreads_) {
       const queueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
-      if (queueSize === 0) {
-        break; // No more tasks to process
-      }
+      if (queueSize === 0) break;
 
       const task = await this.queueService_.dequeue(this.QUEUE_INCOMING_);
-      if (!task) {
-        break; // Queue is empty
-      }
+      if (!task) break;
 
+      // Fire and forget — executeTask_ owns its own error handling.
       this.executeTask_(task);
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Worker execution
+  // ---------------------------------------------------------------------------
+
   /**
-   * Executes a single task in a worker thread.
+   * Executes a single task in a fresh worker thread. Wires up message,
+   * error, exit, and timeout handlers, and persists the result to either
+   * the complete or error queue.
+   *
    * @private
-   * @param {Object} task The task to execute.
+   * @param {!Object} task
    */
   async executeTask_(task) {
-    const worker = new Worker(path.resolve(__dirname, './workerScript.js'));
+    let worker;
+    try {
+      worker = new Worker(path.resolve(__dirname, './workerScript.js'));
+    } catch (err) {
+      // Failure to even spawn a worker — record as error and bail.
+      await this.recordError_(task, null, err.message, 'spawn');
+      return;
+    }
 
     const workerInfo = {
       worker,
       task,
       startedAt: new Date(),
+      timeoutHandle: null,
+      finalised: false
     };
 
     this.activeWorkers_.set(task.id, workerInfo);
 
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('worker:start', {
-        taskId: task.id,
-        scriptPath: task.scriptPath,
-        data: task.data,
-        activeWorkers: this.activeWorkers_.size,
-        incomingQueueSize: await this.queueService_?.size(this.QUEUE_INCOMING_) || 0,
-      });
+    // Wall-clock timeout. Treats the task as errored and tears down the
+    // worker even if the user code never returns. retryAttempts are not
+    // honoured here because timeouts are typically unrecoverable.
+    workerInfo.timeoutHandle = setTimeout(() => {
+      if (workerInfo.finalised) return;
+      this.handleTimeout_(workerInfo);
+    }, this.settings.workerTimeout);
+    if (typeof workerInfo.timeoutHandle.unref === 'function') {
+      workerInfo.timeoutHandle.unref();
+    }
+
+    let incomingQueueSize = 0;
+    try {
+      incomingQueueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+    } catch (_) { /* size is best-effort metadata */ }
+
+    this.eventEmitter_?.emit('worker:start', {
+      taskId: task.id,
+      scriptPath: task.scriptPath,
+      data: task.data,
+      activeWorkers: this.activeWorkers_.size,
+      incomingQueueSize
+    });
+
+    this.logIf_('info', 'Worker started', {
+      taskId: task.id,
+      scriptPath: task.scriptPath,
+      activeWorkers: this.activeWorkers_.size
+    });
 
     worker.on('message', async (message) => {
-      if (message.type === 'status') {
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('worker:status', {
-            taskId: task.id,
-            status: message.status,
-            data: message.data,
-          });
+      if (!message || message.type !== 'status') return;
 
-        if (message.status === 'completed' || message.status === 'error') {
-          const taskResult = {
-            taskId: task.id,
-            scriptPath: task.scriptPath,
-            status: message.status,
-            result: message.data,
-            queuedAt: task.queuedAt,
-            startedAt: workerInfo.startedAt,
-            completedAt: new Date(),
-          };
+      this.eventEmitter_?.emit('worker:status', {
+        taskId: task.id,
+        status: message.status,
+        data: message.data
+      });
 
-          // Store in task history
-          this.taskHistory_.set(task.id, taskResult);
-
-          // Add to appropriate queue based on status
-          if (this.queueService_) {
-            try {
-              if (message.status === 'completed') {
-                await this.queueService_.enqueue(this.QUEUE_COMPLETE_, taskResult);
-              } else if (message.status === 'error') {
-                await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
-              }
-            } catch (err) {
-              if (this.eventEmitter_)
-                this.eventEmitter_.emit('worker:queue:error', {
-                  taskId: task.id,
-                  error: err.message
-                });
-            }
-          }
-
-          // Call completion callback
-          if (task.completionCallback) {
-            try {
-              task.completionCallback(message.status, message.data);
-            } catch (err) {
-              if (this.eventEmitter_)
-                this.eventEmitter_.emit('worker:callback:error', {
-                  taskId: task.id,
-                  error: err.message
-                });
-            }
-          }
-
-          // Clean up this worker
-          this.cleanupWorker_(task.id);
-        }
+      if (message.status === 'completed' || message.status === 'error') {
+        await this.finaliseTask_(workerInfo, message.status, message.data);
       }
     });
 
     worker.on('error', async (err) => {
-      const taskResult = {
-        taskId: task.id,
-        scriptPath: task.scriptPath,
-        status: 'error',
-        error: err.message,
-        queuedAt: task.queuedAt,
-        startedAt: workerInfo.startedAt,
-        completedAt: new Date(),
-      };
-
-      // Store error in task history
-      this.taskHistory_.set(task.id, taskResult);
-
-      // Add to error queue
-      if (this.queueService_) {
-        try {
-          await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
-        } catch (queueErr) {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('worker:queue:error', {
-              taskId: task.id,
-              error: queueErr.message
-            });
-        }
-      }
-
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('worker:error', {
-          taskId: task.id,
-          error: err.message
-        });
-
-      // Call completion callback with error
-      if (task.completionCallback) {
-        try {
-          task.completionCallback('error', err.message);
-        } catch (callbackErr) {
-          if (this.eventEmitter_)
-            this.eventEmitter_.emit('worker:callback:error', {
-              taskId: task.id,
-              error: callbackErr.message
-            });
-        }
-      }
-
-      this.cleanupWorker_(task.id);
+      await this.recordError_(task, workerInfo, err.message, 'worker:error');
     });
 
     worker.on('exit', async (code) => {
-      // Only treat non-zero exit codes as errors if the task wasn't already marked as completed
       const taskInHistory = this.taskHistory_.get(task.id);
       if (code !== 0 && (!taskInHistory || taskInHistory.status !== 'completed')) {
         const errorMsg = `Worker exited with code ${code}`;
-
-        // Only store if not already in history (error handler may have already stored it)
         if (!taskInHistory) {
-          const taskResult = {
-            taskId: task.id,
-            scriptPath: task.scriptPath,
-            status: 'error',
-            error: errorMsg,
-            queuedAt: task.queuedAt,
-            startedAt: workerInfo.startedAt,
-            completedAt: new Date(),
-          };
-
-          this.taskHistory_.set(task.id, taskResult);
-
-          // Add to error queue
-          if (this.queueService_) {
-            try {
-              await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
-            } catch (queueErr) {
-              if (this.eventEmitter_)
-                this.eventEmitter_.emit('worker:queue:error', {
-                  taskId: task.id,
-                  error: queueErr.message
-                });
-            }
-          }
-
-          if (task.completionCallback) {
-            try {
-              task.completionCallback('error', errorMsg);
-            } catch (err) {
-              if (this.eventEmitter_)
-                this.eventEmitter_.emit('worker:callback:error', {
-                  taskId: task.id,
-                  error: err.message
-                });
-            }
-          }
+          await this.recordError_(task, workerInfo, errorMsg, 'worker:exit');
         }
-
-        if (this.eventEmitter_)
-          this.eventEmitter_.emit('worker:exit:error', {
-            taskId: task.id,
-            code
-          });
+        this.eventEmitter_?.emit('worker:exit:error', { taskId: task.id, code });
       }
-
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('worker:exit', {
-          taskId: task.id,
-          code
-        });
-
+      this.eventEmitter_?.emit('worker:exit', { taskId: task.id, code });
       this.cleanupWorker_(task.id);
     });
 
-    // Send the task to the worker
-    // Note: Cannot pass functions directly, worker will use parentPort for logging
     worker.postMessage({
       type: 'start',
       scriptPath: task.scriptPath,
-      data: task.data,
+      data: task.data
     });
   }
 
   /**
-   * Cleans up a worker. Queue processing is handled by the interval.
+   * Marks a task as complete or errored, enqueues the result, fires the
+   * user callback, and tears down the worker. Idempotent: subsequent calls
+   * for the same workerInfo are no-ops so timeout + completion races don't
+   * double-emit.
+   *
    * @private
-   * @param {string} taskId The task ID to clean up.
+   * @param {!Object} workerInfo
+   * @param {string} status `'completed'` or `'error'`.
+   * @param {*} data Result payload (or error message for errors).
    */
-  cleanupWorker_(taskId) {
-    const workerInfo = this.activeWorkers_.get(taskId);
-    if (workerInfo) {
-      try {
-        workerInfo.worker.terminate();
-      } catch (err) {
-        // Worker may already be terminated
-      }
-      this.activeWorkers_.delete(taskId);
+  async finaliseTask_(workerInfo, status, data) {
+    if (workerInfo.finalised) return;
+    workerInfo.finalised = true;
+
+    if (workerInfo.timeoutHandle) {
+      clearTimeout(workerInfo.timeoutHandle);
+      workerInfo.timeoutHandle = null;
     }
 
-    // Queue processing is now handled by the 1-second interval in startQueueProcessor_
+    const { task } = workerInfo;
+    const taskResult = {
+      taskId: task.id,
+      scriptPath: task.scriptPath,
+      status,
+      result: status === 'completed' ? data : undefined,
+      error: status === 'error' ? data : undefined,
+      queuedAt: task.queuedAt,
+      startedAt: workerInfo.startedAt,
+      completedAt: new Date()
+    };
+
+    this.recordHistory_(taskResult);
+
+    if (this.queueService_) {
+      try {
+        const queue = status === 'completed' ? this.QUEUE_COMPLETE_ : this.QUEUE_ERROR_;
+        await this.queueService_.enqueue(queue, taskResult);
+      } catch (err) {
+        this.eventEmitter_?.emit('worker:queue:error', {
+          taskId: task.id,
+          error: err.message
+        });
+        this.logIf_('error', 'Failed to enqueue task result', {
+          taskId: task.id,
+          error: err.message
+        });
+      }
+    }
+
+    if (task.completionCallback) {
+      try {
+        task.completionCallback(status, data);
+      } catch (err) {
+        this.eventEmitter_?.emit('worker:callback:error', {
+          taskId: task.id,
+          error: err.message
+        });
+      }
+    }
+
+    this.cleanupWorker_(task.id);
   }
 
   /**
-   * Stops the worker manager and terminates all active workers.
-   * @return {Promise<void>} A promise that resolves when all workers are stopped.
+   * Convenience for the various error code paths (worker error event,
+   * non-zero exit, spawn failure). Routes through {@link finaliseTask_} so
+   * the bookkeeping stays in one place.
+   *
+   * @private
+   * @param {!Object} task
+   * @param {?Object} workerInfo Active worker info, or null if spawning failed.
+   * @param {string} message Error message.
+   * @param {string} source Tag identifying which handler triggered the error.
+   */
+  async recordError_(task, workerInfo, message, source) {
+    this.eventEmitter_?.emit('worker:error', {
+      taskId: task.id,
+      error: message,
+      source
+    });
+    this.logIf_('error', 'Worker errored', {
+      taskId: task.id,
+      error: message,
+      source
+    });
+
+    if (workerInfo) {
+      await this.finaliseTask_(workerInfo, 'error', message);
+      return;
+    }
+
+    // No active worker (spawn failed) — write history + queue directly.
+    const taskResult = {
+      taskId: task.id,
+      scriptPath: task.scriptPath,
+      status: 'error',
+      error: message,
+      queuedAt: task.queuedAt,
+      startedAt: new Date(),
+      completedAt: new Date()
+    };
+    this.recordHistory_(taskResult);
+
+    if (this.queueService_) {
+      try {
+        await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
+      } catch (_) { /* best effort */ }
+    }
+
+    if (task.completionCallback) {
+      try {
+        task.completionCallback('error', message);
+      } catch (_) { /* swallow callback errors */ }
+    }
+  }
+
+  /**
+   * Handles a worker timeout: terminates the worker and records the task
+   * as errored with a timeout-specific message.
+   *
+   * @private
+   * @param {!Object} workerInfo
+   */
+  handleTimeout_(workerInfo) {
+    const { task, worker } = workerInfo;
+    const message = `Worker timed out after ${this.settings.workerTimeout}ms`;
+
+    this.eventEmitter_?.emit('worker:timeout', {
+      taskId: task.id,
+      timeoutMs: this.settings.workerTimeout
+    });
+    this.logIf_('warn', 'Worker timed out', {
+      taskId: task.id,
+      timeoutMs: this.settings.workerTimeout
+    });
+
+    // Terminate but don't await — finaliseTask_ runs synchronously below
+    // and the exit handler will be a no-op once finalised is true.
+    try {
+      worker.terminate();
+    } catch (_) { /* worker may already be gone */ }
+
+    // Record before cleanupWorker_ removes the entry.
+    this.finaliseTask_(workerInfo, 'error', message).catch(() => {});
+  }
+
+  /**
+   * Persists a task result to the in-memory history map, evicting the
+   * oldest entry if the history limit is exceeded.
+   *
+   * @private
+   * @param {!Object} taskResult
+   */
+  recordHistory_(taskResult) {
+    this.taskHistory_.set(taskResult.taskId, taskResult);
+    if (this.taskHistory_.size > TASK_HISTORY_LIMIT) {
+      const oldestKey = this.taskHistory_.keys().next().value;
+      this.taskHistory_.delete(oldestKey);
+    }
+  }
+
+  /**
+   * Removes the worker entry and best-effort terminates the underlying
+   * thread. Safe to call repeatedly.
+   *
+   * @private
+   * @param {string} taskId
+   */
+  cleanupWorker_(taskId) {
+    const workerInfo = this.activeWorkers_.get(taskId);
+    if (!workerInfo) return;
+
+    if (workerInfo.timeoutHandle) {
+      clearTimeout(workerInfo.timeoutHandle);
+      workerInfo.timeoutHandle = null;
+    }
+
+    try {
+      workerInfo.worker.terminate();
+    } catch (_) { /* worker may already be terminated */ }
+
+    this.activeWorkers_.delete(taskId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Stops the worker manager: marks it as not running, halts the queue
+   * processor, and terminates all active workers in parallel. Tasks still
+   * sitting in the incoming queue are left in place — when the service is
+   * restarted with the same queueing backend they will be picked up again.
+   *
+   * @return {Promise<void>}
    */
   async stop() {
     this.isRunning_ = false;
-
-    // Stop the queue processor
     this.stopQueueProcessor_();
 
-    // Get queue sizes before stopping
-    const incomingQueueSize = this.queueService_
-      ? await this.queueService_.size(this.QUEUE_INCOMING_)
-      : 0;
+    let incomingQueueSize = 0;
+    if (this.queueService_) {
+      try {
+        incomingQueueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+      } catch (_) { /* best effort */ }
+    }
 
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('worker:manager:stopping', {
-        incomingQueueSize,
-        activeWorkers: this.activeWorkers_.size
-      });
+    this.eventEmitter_?.emit('worker:manager:stopping', {
+      incomingQueueSize,
+      activeWorkers: this.activeWorkers_.size
+    });
+    this.logIf_('info', 'Worker manager stopping', {
+      incomingQueueSize,
+      activeWorkers: this.activeWorkers_.size
+    });
 
-    // Terminate all active workers
     const terminationPromises = [];
-    for (const [taskId, workerInfo] of this.activeWorkers_.entries()) {
+    for (const [, workerInfo] of this.activeWorkers_.entries()) {
+      if (workerInfo.timeoutHandle) {
+        clearTimeout(workerInfo.timeoutHandle);
+        workerInfo.timeoutHandle = null;
+      }
       terminationPromises.push(
         new Promise((resolve) => {
           try {
-            workerInfo.worker.terminate().then(resolve).catch(resolve);
-          } catch (err) {
+            const result = workerInfo.worker.terminate();
+            if (result && typeof result.then === 'function') {
+              result.then(() => resolve()).catch(() => resolve());
+            } else {
+              resolve();
+            }
+          } catch (_) {
             resolve();
           }
         })
@@ -500,13 +715,20 @@ class WorkerManager {
     await Promise.all(terminationPromises);
     this.activeWorkers_.clear();
 
-    if (this.eventEmitter_)
-      this.eventEmitter_.emit('worker:manager:stopped');
+    this.eventEmitter_?.emit('worker:manager:stopped');
+    this.logIf_('info', 'Worker manager stopped');
   }
 
+  // ---------------------------------------------------------------------------
+  // Inspection
+  // ---------------------------------------------------------------------------
+
   /**
-   * Gets the current status of the worker manager including all queue sizes.
-   * @return {Promise<Object>} A promise that resolves to the current status.
+   * Returns a snapshot of manager state suitable for dashboards and tests.
+   * Queue sizes are read from the queueing service so they reflect what
+   * external observers would also see.
+   *
+   * @return {Promise<!Object>}
    */
   async getStatus() {
     let incomingQueueSize = 0;
@@ -514,9 +736,11 @@ class WorkerManager {
     let errorQueueSize = 0;
 
     if (this.queueService_) {
-      incomingQueueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
-      completeQueueSize = await this.queueService_.size(this.QUEUE_COMPLETE_);
-      errorQueueSize = await this.queueService_.size(this.QUEUE_ERROR_);
+      try {
+        incomingQueueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
+        completeQueueSize = await this.queueService_.size(this.QUEUE_COMPLETE_);
+        errorQueueSize    = await this.queueService_.size(this.QUEUE_ERROR_);
+      } catch (_) { /* best effort */ }
     }
 
     return {
@@ -526,33 +750,33 @@ class WorkerManager {
       queues: {
         incoming: incomingQueueSize,
         complete: completeQueueSize,
-        error: errorQueueSize,
+        error: errorQueueSize
       },
-      completedTasks: this.taskHistory_.size,
+      completedTasks: this.taskHistory_.size
     };
   }
 
   /**
-   * Gets the task history.
-   * @param {number=} limit Maximum number of recent tasks to return.
-   * @return {Promise<Array>} A promise that resolves to an array of task history entries.
+   * Returns recent task history, newest first.
+   *
+   * @param {number=} limit Maximum number of entries to return (default 100).
+   * @return {Promise<!Array<!Object>>}
    */
   async getTaskHistory(limit = 100) {
-    const history = Array.from(this.taskHistory_.values())
+    return Array.from(this.taskHistory_.values())
       .sort((a, b) => b.completedAt - a.completedAt)
       .slice(0, limit);
-    return history;
   }
 
   /**
-   * Gets a specific task's information from history.
-   * @param {string} taskId The task ID.
-   * @return {Promise<?Object>} A promise that resolves to the task info or null.
+   * Returns a single task by ID, or null if not found.
+   *
+   * @param {string} taskId
+   * @return {Promise<?Object>}
    */
   async getTask(taskId) {
     return this.taskHistory_.get(taskId) || null;
   }
-
 }
 
 module.exports = WorkerManager;

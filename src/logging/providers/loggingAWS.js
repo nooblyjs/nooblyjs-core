@@ -1,7 +1,7 @@
 /**
- * @fileoverview AWS CloudWatch logging provider for NooblyJS Core
+ * @fileoverview AWS CloudWatch logging provider for Noobly JS Core
  * Sends log messages to AWS CloudWatch for centralized logging and monitoring.
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -46,7 +46,7 @@ class LoggingAWS {
     this.eventEmitter_ = eventEmitter;
     this.instanceName_ = (options && options.instanceName) || 'default';
     this.region_ = options.region || process.env.AWS_REGION || 'us-east-1';
-    this.logGroup_ = options.logGroup || process.env.AWS_LOG_GROUP || 'noobly-core-logs';
+    this.logGroup_ = options.logGroup || process.env.AWS_LOG_GROUP || 'nooblyjs-core-logs';
     this.logStream_ = options.logStream || process.env.AWS_LOG_STREAM || `app-${this.instanceName_}-${new Date().toISOString().split('T')[0]}`;
     this.batchSize_ = options.batchSize || 10;
     this.flushInterval_ = options.flushInterval || 5000;
@@ -386,9 +386,19 @@ class LoggingAWS {
     }
 
     if (this.eventEmitter_) {
-      const eventName = `log:debug:${this.instanceName_}`;
+      const eventName = `log:log:${this.instanceName_}`;
       this.eventEmitter_.emit(eventName, { message: logMessage });
     }
+  }
+
+  /**
+   * Logs a generic message to AWS CloudWatch (alias for debug).
+   * @param {string} message The message to log
+   * @param {*=} meta Optional metadata to include
+   * @return {Promise<void>} A promise that resolves when the message is logged
+   */
+  async log(message, meta) {
+    return this.debug(message, meta);
   }
 
   /**

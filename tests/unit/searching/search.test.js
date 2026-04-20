@@ -6,7 +6,7 @@
  * Tests verify proper data storage, search functionality across nested objects,
  * multi-index support, and event emission.
  *
- * @author NooblyJS Team
+ * @author Digital Technologies Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -226,16 +226,15 @@ describe('SearchService', () => {
    * Verifies that empty search terms return no results and are
    * handled gracefully without errors.
    */
-  it('should handle empty search term', async () => {
+  it('should throw on empty search term', async () => {
     const obj1 = { id: 1, name: 'Test Object 1' };
     await searchService.add('obj1', obj1);
     mockEventEmitter.emit.mockClear();
-    const results = await searchService.search('');
-    expect(results).toEqual([]);
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:search', {
-      searchTerm: '',
-      searchContainer: 'default',
-      results: [],
+    await expect(searchService.search('')).rejects.toThrow('Invalid searchTerm: must be a non-empty string');
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('search:validation-error', {
+      method: 'search',
+      error: 'Invalid searchTerm: must be a non-empty string',
+      searchTerm: ''
     });
   });
 
@@ -544,7 +543,7 @@ describe('SearchService', () => {
       expect(stats).toEqual({
         searchContainer: 'testIndex',
         indexedItems: 2,
-        queueName: 'noobly-core-searching',
+        queueName: 'nooblyjs-core-searching',
         queueSize: 0
       });
     });
@@ -569,7 +568,7 @@ describe('SearchService', () => {
           index1: 2,
           index2: 1
         },
-        queueName: 'noobly-core-searching',
+        queueName: 'nooblyjs-core-searching',
         queueSize: 0
       });
     });

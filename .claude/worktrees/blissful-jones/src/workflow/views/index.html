@@ -1,0 +1,1737 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Management - Digital Technologies Core</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    
+    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+</head>
+<body>
+    <!-- APP HEADER -->
+    <header class="core-app-header">
+        <a class="navbar-brand" href="/">
+            <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" class="logo-image">
+            <span>Digital Technologies Core</span>
+        </a>
+        <div class="navbar-nav">
+            <div class="dropdown core-user-dropdown">
+                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
+                    <div class="core-user-info d-none d-md-block">
+                        <div class="core-user-label" id="headerUserLabel">User</div>
+                        <div class="core-user-name" id="headerUserName">Username</div>
+                    </div>
+                    <span class="core-user-dropdown-arrow">▼</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <div class="core-app-container">
+        <aside class="core-sidebar" id="core-navigation-sidebar">
+            <!-- Navigation will be loaded here by navigation.js -->
+        </aside>
+
+        <main class="core-main-content">
+            <div class="core-page-header">
+                <h1 class="core-page-title">Workflow Management</h1>
+                <p class="core-page-subtitle">Define and start workflows</p>
+            </div>
+
+            <div class="core-page-content">
+
+            <div class="core-page-content">
+
+            <div class="alert alert-success" id="successAlert">
+                <strong>Success!</strong> <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <strong>Error!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Bootstrap 5 Tabs -->
+            <ul class="nav nav-tabs mb-4" id="workflowTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                        <i class="bi bi-database"></i> Data
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+                        <i class="bi bi-gear"></i> Settings
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">
+                        <i class="bi bi-window-desktop"></i> UI
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="workflowTabContent">
+                <!-- Settings Tab -->
+                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                    <!-- Settings Card -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <h2 class="core-card-title">Workflow Service Settings</h2>
+                            <p class="core-card-subtitle">Configure the workflow service parameters</p>
+                        </div>
+                        <div class="core-card-content">
+                            <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
+                            <form id="settingsForm">
+                                <div id="settingsFormFields"></div>
+                                <div class="core-btn-group">
+                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
+                                </div>
+                            </form>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+
+                    <!-- Statistics Card with Pie Chart -->
+                    <div class="core-card mb-4">
+                        <div class="core-card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h2 class="core-card-title">Workflow Status Distribution</h2>
+                                    <p class="core-card-subtitle">Visual breakdown of workflow execution status</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="refreshDashboard()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="statsChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="core-stats-summary">
+                                        <h5 class="mb-3">Statistics Summary</h5>
+                                        <div class="core-stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-success">COMPLETED</span></span>
+                                                <strong id="statCompletedCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statCompletedBar" class="progress-bar bg-success" role="progressbar" style="width: 0%">
+                                                    <span id="statCompletedPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="core-stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-danger">ERRORS</span></span>
+                                                <strong id="statErrorsCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statErrorsBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%">
+                                                    <span id="statErrorsPercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="core-stat-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><span class="badge bg-secondary">ACTIVE</span></span>
+                                                <strong id="statActiveCount">0</strong>
+                                            </div>
+                                            <div class="progress" style="height: 20px;">
+                                                <div id="statActiveBar" class="progress-bar bg-secondary" role="progressbar" style="width: 0%">
+                                                    <span id="statActivePercent">0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total Runs:</strong>
+                                            <strong id="statTotalCount" class="fs-4 text-primary">0</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                            <strong>Last Run:</strong>
+                                            <span id="statLastRun" class="text-muted">Never</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Analytics Table Card -->
+                    <div class="core-card">
+                        <div class="core-card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h2 class="core-card-title">Workflow Analytics</h2>
+                                    <p class="core-card-subtitle">Detailed analytics for each workflow (ordered by last run)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="core-card-content">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Workflow Name</th>
+                                            <th class="text-center">Total Runs</th>
+                                            <th class="text-center">Completed</th>
+                                            <th class="text-center">Errors</th>
+                                            <th class="text-center">Active</th>
+                                            <th class="text-center">Avg Duration (ms)</th>
+                                            <th>Last Run</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="analyticsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading analytics...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    <span id="analyticsCount">0</span> workflows tracked
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tab -->
+                <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+
+            <!-- Define Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Define Workflow</h2>
+                    <p class="core-card-subtitle">Define a new workflow with a series of steps</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="defineForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="defineName">Workflow Name</label>
+                            <input type="text" id="defineName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">A unique name for the workflow</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="defineSteps">Steps (JSON Array)</label>
+                            <textarea id="defineSteps" class="core-form-input core-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="defineValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Enter a valid JSON array of step names</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Define Workflow</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('defineSteps')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('defineSteps')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="defineResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="defineResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Start Workflow</h2>
+                    <p class="core-card-subtitle">Start a defined workflow with initial data</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="startForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="startName">Workflow Name</label>
+                            <input type="text" id="startName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to start</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="startData">Initial Data (JSON)</label>
+                            <textarea id="startData" class="core-form-input core-form-textarea" placeholder='{"userId": 123, "orderId": 456}'></textarea>
+                            <div id="startValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Optional JSON data to pass to the workflow</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Start Workflow</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('startData')">Format JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadExample('startData')">Load Example</button>
+                        </div>
+                    </form>
+                    <div id="startResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="startResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retrieve Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Retrieve Workflow</h2>
+                    <p class="core-card-subtitle">Get a workflow definition by name</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="retrieveForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="retrieveName">Workflow Name</label>
+                            <input type="text" id="retrieveName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to retrieve</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Retrieve Workflow</button>
+                        </div>
+                    </form>
+                    <div id="retrieveResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflow Definition:</div>
+                        <div id="retrieveResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Workflow Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Update Workflow</h2>
+                    <p class="core-card-subtitle">Update an existing workflow definition</p>
+                </div>
+                <div class="core-card-content">
+                    <form id="updateForm">
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateName">Workflow Name</label>
+                            <input type="text" id="updateName" class="core-form-input" placeholder="Enter workflow name" required>
+                            <div class="core-helper-text">The name of the workflow to update</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateSteps">Steps (JSON Array)</label>
+                            <textarea id="updateSteps" class="core-form-input core-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="updateValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Enter a valid JSON array of step names</div>
+                        </div>
+                        <div class="core-form-group">
+                            <label class="core-form-label" for="updateMetadata">Metadata (JSON)</label>
+                            <textarea id="updateMetadata" class="core-form-input core-form-textarea" placeholder='{"description": "Updated description", "tags": ["tag1"]}'></textarea>
+                            <div id="updateMetadataValidation" class="core-validation-message" style="display: none;"></div>
+                            <div class="core-helper-text">Optional JSON metadata (description and tags)</div>
+                        </div>
+                        <div class="core-btn-group">
+                            <button type="submit" class="btn btn-secondary">Update Workflow</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('updateSteps')">Format Steps JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="formatJSON('updateMetadata')">Format Metadata JSON</button>
+                        </div>
+                    </form>
+                    <div id="updateResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Updated Workflow:</div>
+                        <div id="updateResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List All Workflows Form -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">List All Workflows</h2>
+                    <p class="core-card-subtitle">Get a list of all defined workflows</p>
+                </div>
+                <div class="core-card-content">
+                    <div class="core-btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="listWorkflows()">List Workflows</button>
+                    </div>
+                    <div id="listResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflows:</div>
+                        <div id="listResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Check -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">Service Status</h2>
+                    <p class="core-card-subtitle">Check workflow service status</p>
+                </div>
+                <div class="core-card-content">
+                    <div class="core-btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                    </div>
+                    <div id="statusResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="core-response-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="core-card">
+                <div class="core-card-header">
+                    <h2 class="core-card-title">API Documentation</h2>
+                    <p class="core-card-subtitle">Interactive API documentation for Workflow service</p>
+                </div>
+                <div class="core-card-content">
+                    <div id="swagger-ui"></div>
+                </div>
+            </div>
+
+                </div>
+                <!-- End Data Tab -->
+
+                <!-- UI Tab -->
+                <div class="tab-pane fade" id="ui" role="tabpanel" aria-labelledby="ui-tab">
+                    <div class="workflow-ui-container">
+                        <!-- Left Navigation Panel -->
+                        <aside class="workflow-left-nav">
+                            <div class="nav-header">
+                                <h3 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Workflows</h3>
+                                <button class="btn btn-sm btn-outline-secondary" id="refreshWorkflowsBtn" title="Refresh workflows">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <div class="nav-search mb-3">
+                                <input type="text" id="contentSearch" class="form-control form-control-sm" placeholder="Search workflows...">
+                            </div>
+                            <div id="workflowsList" class="workflows-list">
+                                <div class="text-center text-muted py-3">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="small mt-2">Loading workflows...</p>
+                                </div>
+                            </div>
+                            <div class="nav-footer">
+                                <button type="button" class="btn btn-sm btn-secondary" id="newWorkflowBtn">
+                                    <i class="bi bi-plus-circle me-1"></i> New Workflow
+                                </button>
+                            </div>
+                        </aside>
+
+                        <!-- Main Content Area -->
+                        <main class="workflow-content-main">
+                            <div id="contentMain" class="content-empty-state">
+                                <i class="bi bi-folder-open display-4 text-muted"></i>
+                                <p class="mt-3 text-muted">Select a workflow to view details</p>
+                            </div>
+
+                            <!-- Workflow Editor (Hidden by default) -->
+                            <div id="workflowEditor" class="workflow-editor" style="display: none;">
+                                <div class="editor-header">
+                                    <h4 id="editorWorkflowName" class="mb-0"></h4>
+                                    <div class="editor-actions">
+                                        <button class="btn btn-sm btn-secondary" id="refreshEditorBtn" title="Refresh">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" id="deleteWorkflowBtn" title="Delete workflow">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Workflow Editor Tabs -->
+                                <ul class="nav nav-tabs mb-3" id="editorTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">
+                                            <i class="bi bi-info-circle"></i> Details
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="executions-tab" data-bs-toggle="tab" data-bs-target="#executions" type="button" role="tab" aria-controls="executions" aria-selected="false">
+                                            <i class="bi bi-play-circle"></i> Executions
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <!-- Editor Tab Content -->
+                                <div class="tab-content" id="editorTabContent">
+                                    <!-- Details Tab -->
+                                    <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                                        <div class="core-card">
+                                            <div class="core-card-header">
+                                                <h5 class="core-card-title mb-0">Workflow Definition</h5>
+                                            </div>
+                                            <div class="core-card-content">
+                                                <div class="mb-3">
+                                                    <label class="core-form-label">Workflow Steps</label>
+                                                    <div id="workflowStepsContainer" class="steps-container"></div>
+                                                    <button type="button" class="btn btn-sm btn-secondary mt-2" id="addStepBtn">
+                                                        <i class="bi bi-plus-circle me-1"></i>Add Step
+                                                    </button>
+                                                </div>
+                                                <hr>
+                                                <button type="button" class="btn btn-secondary" id="saveWorkflowBtn">
+                                                    <i class="bi bi-check-circle me-1"></i>Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Executions Tab -->
+                                    <div class="tab-pane fade" id="executions" role="tabpanel" aria-labelledby="executions-tab">
+                                        <div class="core-card">
+                                            <div class="core-card-header">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="core-card-title mb-0">Execution History (Top 50)</h5>
+                                                    <button type="button" class="btn btn-sm btn-secondary" id="refreshExecutionsBtn">
+                                                        <i class="bi bi-arrow-clockwise"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="core-card-content">
+                                                <div id="executionsFilterBar" class="mb-3">
+                                                    <div class="core-btn-group" role="group">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter active" data-filter="all">All</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="completed">Completed</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="running">Running</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm execution-filter" data-filter="error">Error</button>
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Status</th>
+                                                                <th>Started</th>
+                                                                <th>Duration</th>
+                                                                <th>Details</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="executionsTableBody">
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-3">
+                                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                                        <span class="visually-hidden">Loading...</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Workflow Form (Hidden by default) -->
+                            <div id="newWorkflowForm" class="new-workflow-form" style="display: none;">
+                                <div class="core-card">
+                                    <div class="core-card-header">
+                                        <h4 class="core-card-title mb-0">Create New Workflow</h4>
+                                    </div>
+                                    <div class="core-card-content">
+                                        <form id="createWorkflowForm">
+                                            <div class="mb-3">
+                                                <label class="core-form-label" for="newWorkflowName">Workflow Name</label>
+                                                <input type="text" id="newWorkflowName" class="form-control" placeholder="e.g., order-processing" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="core-form-label">Initial Steps</label>
+                                                <div id="newWorkflowSteps" class="steps-container mb-3"></div>
+                                                <button type="button" class="btn btn-sm btn-secondary" id="addNewStepBtn">
+                                                    <i class="bi bi-plus-circle me-1"></i>Add Step
+                                                </button>
+                                            </div>
+
+                                            <div class="core-btn-group">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-check-circle me-1"></i>Create Workflow
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" id="cancelNewWorkflowBtn">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+                <!-- End UI Tab -->
+
+            </div>
+            <!-- End Page Content -->
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script>
+        // JSON validation
+        function validateJSON(elementId) {
+            const element = document.getElementById(elementId);
+            const validation = document.getElementById(elementId.replace(/Steps|Data/, 'Validation'));
+            const value = element.value.trim();
+
+            if (!value && elementId === 'startData') { // Optional field
+                element.classList.remove('json-valid', 'json-invalid');
+                if(validation) validation.style.display = 'none';
+                return true;
+            }
+
+            if (!value) {
+                element.classList.remove('json-valid', 'json-invalid');
+                if(validation) validation.style.display = 'none';
+                return true;
+            }
+
+            try {
+                JSON.parse(value);
+                element.classList.remove('json-invalid');
+                element.classList.add('json-valid');
+                if(validation) {
+                    validation.textContent = '✓ Valid JSON';
+                    validation.className = 'core-validation-message validation-success';
+                    validation.style.display = 'block';
+                }
+                return true;
+            } catch (e) {
+                element.classList.remove('json-valid');
+                element.classList.add('json-invalid');
+                if(validation) {
+                    validation.textContent = '✗ Invalid JSON: ' + e.message;
+                    validation.className = 'core-validation-message validation-error';
+                    validation.style.display = 'block';
+                }
+                return false;
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('defineSteps').addEventListener('input', () => validateJSON('defineSteps'));
+        document.getElementById('startData').addEventListener('input', () => validateJSON('startData'));
+
+        // Format JSON
+        function formatJSON(elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const parsed = JSON.parse(element.value);
+                element.value = JSON.stringify(parsed, null, 2);
+                validateJSON(elementId);
+            } catch (e) {
+                showAlert('Invalid JSON cannot be formatted', 'error');
+            }
+        }
+
+        // Load example
+        function loadExample(elementId) {
+            const examples = {
+                defineSteps: ["validate-order", "process-payment", "ship-order"],
+                startData: {
+                    "orderId": "xyz-789",
+                    "amount": 99.99,
+                    "customer": {
+                        "id": "cust-456",
+                        "email": "customer@example.com"
+                    }
+                }
+            };
+
+            if (examples[elementId]) {
+                document.getElementById(elementId).value = JSON.stringify(examples[elementId], null, 2);
+                validateJSON(elementId);
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertElement = document.getElementById(type + 'Alert');
+            const messageElement = document.getElementById(type + 'Message');
+            messageElement.textContent = message;
+            alertElement.classList.add('show');
+            setTimeout(() => alertElement.classList.remove('show'), 5000);
+        }
+
+        function showResponse(containerId, contentId, data) {
+            const container = document.getElementById(containerId);
+            const content = document.getElementById(contentId);
+            content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            container.style.display = 'block';
+        }
+
+        function setLoading(formId, isLoading) {
+            const form = document.getElementById(formId);
+            if (isLoading) {
+                form.classList.add('loading');
+            } else {
+                form.classList.remove('loading');
+            }
+        }
+
+        // API functions
+        async function makeRequest(url, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        }
+
+        // Form handlers
+        document.getElementById('defineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('defineName').value;
+            const steps = document.getElementById('defineSteps').value;
+
+            if (!validateJSON('defineSteps')) {
+                showAlert('Please enter a valid JSON array of steps', 'error');
+                return;
+            }
+
+            try {
+                setLoading('defineForm', true);
+                const parsedSteps = JSON.parse(steps);
+                const result = await makeRequest(`/services/workflow/api/defineworkflow`, 'POST', { name, steps: parsedSteps });
+                showResponse('defineResponse', 'defineResponseContent', result);
+                showAlert(`Workflow "${name}" defined successfully`);
+            } catch (error) {
+                showAlert('Error defining workflow: ' + error.message, 'error');
+                showResponse('defineResponse', 'defineResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('defineForm', false);
+            }
+        });
+
+        document.getElementById('startForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('startName').value;
+            const data = document.getElementById('startData').value;
+
+            if (data && !validateJSON('startData')) {
+                showAlert('Please enter valid JSON for the initial data', 'error');
+                return;
+            }
+
+            try {
+                setLoading('startForm', true);
+                const initialData = data ? JSON.parse(data) : {};
+                const result = await makeRequest(`/services/workflow/api/start`, 'POST', { name, data: initialData });
+                showResponse('startResponse', 'startResponseContent', result);
+                showAlert(`Workflow "${name}" started successfully`);
+            } catch (error) {
+                showAlert('Error starting workflow: ' + error.message, 'error');
+                showResponse('startResponse', 'startResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('startForm', false);
+            }
+        });
+
+        // Retrieve Workflow Form
+        document.getElementById('retrieveForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('retrieveName').value;
+
+            try {
+                setLoading('retrieveForm', true);
+                const result = await makeRequest(`/services/workflow/api/definitions/${encodeURIComponent(name)}`);
+                showResponse('retrieveResponse', 'retrieveResponseContent', result);
+                showAlert(`Workflow "${name}" retrieved successfully`);
+            } catch (error) {
+                showAlert('Error retrieving workflow: ' + error.message, 'error');
+                showResponse('retrieveResponse', 'retrieveResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('retrieveForm', false);
+            }
+        });
+
+        // Update Workflow Form
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('updateName').value;
+            const steps = document.getElementById('updateSteps').value;
+            const metadata = document.getElementById('updateMetadata').value;
+
+            if (!validateJSON('updateSteps')) {
+                showAlert('Please enter a valid JSON array for steps', 'error');
+                return;
+            }
+
+            if (metadata && !validateJSON('updateMetadata')) {
+                showAlert('Please enter valid JSON for metadata', 'error');
+                return;
+            }
+
+            try {
+                setLoading('updateForm', true);
+                const parsedSteps = JSON.parse(steps);
+                const parsedMetadata = metadata ? JSON.parse(metadata) : {};
+
+                const requestBody = { steps: parsedSteps };
+                if (metadata) {
+                    requestBody.metadata = parsedMetadata;
+                }
+
+                const result = await makeRequest(`/services/workflow/api/definitions/${encodeURIComponent(name)}`, 'PUT', requestBody);
+                showResponse('updateResponse', 'updateResponseContent', result);
+                showAlert(`Workflow "${name}" updated successfully`);
+            } catch (error) {
+                showAlert('Error updating workflow: ' + error.message, 'error');
+                showResponse('updateResponse', 'updateResponseContent', 'Error: ' + error.message);
+            } finally {
+                setLoading('updateForm', false);
+            }
+        });
+
+        // List All Workflows
+        async function listWorkflows() {
+            try {
+                const result = await makeRequest('/services/workflow/api/definitions');
+                if (result.definitions && Array.isArray(result.definitions)) {
+                    const formatted = {
+                        count: result.count,
+                        definitions: result.definitions.map(def => ({
+                            name: def.name,
+                            steps: def.steps,
+                            metadata: def.metadata
+                        }))
+                    };
+                    showResponse('listResponse', 'listResponseContent', formatted);
+                    showAlert(`Found ${result.count} workflow(s)`);
+                } else {
+                    showResponse('listResponse', 'listResponseContent', result);
+                }
+            } catch (error) {
+                showAlert('Error listing workflows: ' + error.message, 'error');
+                showResponse('listResponse', 'listResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const result = await makeRequest('/services/workflow/api/status');
+                showResponse('statusResponse', 'statusResponseContent', result);
+                showAlert('Status checked successfully');
+            } catch (error) {
+                showAlert('Error checking status: ' + error.message, 'error');
+                showResponse('statusResponse', 'statusResponseContent', 'Error: ' + error.message);
+            }
+        }
+
+        // Swagger UI setup - Load from external docs.json file
+        async function initializeSwagger() {
+            try {
+                const response = await fetch('/services/workflow/api/swagger/docs.json');
+                const spec = await response.json();
+
+                SwaggerUIBundle({
+                    spec: spec,
+                    dom_id: '#swagger-ui',
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.SwaggerUIStandalonePreset
+                    ],
+                    layout: "BaseLayout",
+                    deepLinking: true
+                });
+            } catch (error) {
+                console.error('Error loading Swagger spec:', error);
+                document.getElementById('swagger-ui').innerHTML = '<div class="alert alert-error">Failed to load API documentation: ' + error.message + '</div>';
+            }
+        }
+
+        // Dashboard functionality
+        let statsChart = null;
+
+        // Fetch statistics from analytics API
+        async function fetchStats() {
+            try {
+                const response = await fetch('/services/workflow/api/stats');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                return null;
+            }
+        }
+
+        // Fetch workflow analytics from API
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/services/workflow/api/analytics');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                return null;
+            }
+        }
+
+        // Update statistics display
+        function updateStatsDisplay(stats) {
+            if (!stats) return;
+
+            // Update total count
+            document.getElementById('statTotalCount').textContent = stats.total;
+
+            // Update COMPLETED stats
+            document.getElementById('statCompletedCount').textContent = stats.counts.completed;
+            document.getElementById('statCompletedPercent').textContent = stats.percentages.completed + '%';
+            document.getElementById('statCompletedBar').style.width = stats.percentages.completed + '%';
+
+            // Update ERRORS stats
+            document.getElementById('statErrorsCount').textContent = stats.counts.errors;
+            document.getElementById('statErrorsPercent').textContent = stats.percentages.errors + '%';
+            document.getElementById('statErrorsBar').style.width = stats.percentages.errors + '%';
+
+            // Update ACTIVE stats
+            document.getElementById('statActiveCount').textContent = stats.counts.active;
+            document.getElementById('statActivePercent').textContent = stats.percentages.active + '%';
+            document.getElementById('statActiveBar').style.width = stats.percentages.active + '%';
+
+            // Update last run
+            if (stats.lastRun) {
+                const lastRunDate = new Date(stats.lastRun);
+                document.getElementById('statLastRun').textContent = lastRunDate.toLocaleString();
+            } else {
+                document.getElementById('statLastRun').textContent = 'Never';
+            }
+        }
+
+        // Initialize or update pie chart
+        function updateChart(stats) {
+            if (!stats) return;
+
+            const ctx = document.getElementById('statsChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (statsChart) {
+                statsChart.destroy();
+            }
+
+            // Create new chart
+            statsChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Completed', 'Errors', 'Active'],
+                    datasets: [{
+                        label: 'Workflow Status',
+                        data: [
+                            stats.counts.completed,
+                            stats.counts.errors,
+                            stats.counts.active
+                        ],
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.8)',    // Bootstrap success (green)
+                            'rgba(220, 53, 69, 0.8)',    // Bootstrap danger (red)
+                            'rgba(13, 110, 253, 0.8)'    // Bootstrap primary (blue)
+                        ],
+                        borderColor: [
+                            'rgba(25, 135, 84, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(13, 110, 253, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = stats.percentages[label.toLowerCase()] || 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render analytics table
+        function renderAnalyticsTable(analyticsData) {
+            const tbody = document.getElementById('analyticsTableBody');
+            const countElement = document.getElementById('analyticsCount');
+
+            if (!analyticsData || !analyticsData.workflows || analyticsData.workflows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle fs-4"></i>
+                            <p class="mb-0 mt-2">No workflows tracked yet</p>
+                        </td>
+                    </tr>
+                `;
+                countElement.textContent = '0';
+                return;
+            }
+
+            // Build table rows
+            const rows = analyticsData.workflows.map(workflow => {
+                // Format timestamp
+                const lastRunDate = workflow.lastRun ? new Date(workflow.lastRun) : null;
+                const formattedDate = lastRunDate ? lastRunDate.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }) : 'N/A';
+
+                // Format average duration or show N/A
+                const avgDuration = workflow.averageDuration != null ? workflow.averageDuration.toLocaleString() : 'N/A';
+
+                return `
+                    <tr>
+                        <td>
+                            <code class="small">${escapeHtml(workflow.workflowName)}</code>
+                        </td>
+                        <td class="text-center">
+                            <strong>${workflow.runCount}</strong>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success">${workflow.completedCount}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-danger">${workflow.errorCount}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">${workflow.activeCount}</span>
+                        </td>
+                        <td class="text-center">
+                            ${avgDuration}
+                        </td>
+                        <td>
+                            <small class="text-muted">${formattedDate}</small>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+            countElement.textContent = analyticsData.workflows.length;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Refresh dashboard
+        async function refreshDashboard() {
+            const tbody = document.getElementById('analyticsTableBody');
+
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading analytics...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch stats and analytics in parallel
+            const [stats, analyticsData] = await Promise.all([
+                fetchStats(),
+                fetchAnalytics()
+            ]);
+
+            // Update statistics and chart
+            if (stats) {
+                updateStatsDisplay(stats);
+                updateChart(stats);
+            }
+
+            // Update analytics table
+            renderAnalyticsTable(analyticsData);
+        }
+
+        // Load dashboard on tab activation
+        document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', function (e) {
+            refreshDashboard();
+        });
+
+        // Initialize page
+        window.onload = function() {
+            checkStatus();
+
+            // Load dashboard if it's the active tab
+            if (document.getElementById('dashboard').classList.contains('show')) {
+                refreshDashboard();
+            }
+
+            // Initialize Swagger UI from external docs
+            initializeSwagger();
+        };
+    </script>
+    <script src="/services/js/navigation.js"></script>
+    <script src="/services/js/header-init.js"></script>
+    <script>
+        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'workflow');
+    
+        // Settings functionality
+        let currentSettings = {};
+
+        // Fetch settings from API
+        async function loadSettings() {
+            try {
+                const response = await fetch('/services/workflow/api/settings');
+                const data = await response.json();
+                currentSettings = data;
+                renderSettingsForm(data);
+            } catch (error) {
+                showAlert('Error loading settings: ' + error.message, 'error');
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Render settings form based on settings structure
+        function renderSettingsForm(data) {
+            const formFieldsContainer = document.getElementById('settingsFormFields');
+            const infoContainer = document.getElementById('settingsInfo');
+
+            // Clear existing form fields
+            formFieldsContainer.innerHTML = '';
+
+            // Display description if available
+            if (data.description) {
+                infoContainer.textContent = data.description;
+                infoContainer.style.display = 'block';
+            }
+
+            // Render form fields from settings list
+            if (data.list && Array.isArray(data.list)) {
+                data.list.forEach((setting) => {
+                    const formGroup = createFormField(setting, data);
+                    formFieldsContainer.appendChild(formGroup);
+                });
+            }
+        }
+
+        // Create form field based on setting type
+        function createFormField(setting, settingsData) {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'core-form-group mb-3';
+
+            // Create label
+            const label = document.createElement('label');
+            label.className = 'core-form-label';
+            label.htmlFor = 'setting_' + setting.setting;
+            label.textContent = setting.setting;
+            formGroup.appendChild(label);
+
+            // Get current value from settings
+            const currentValue = settingsData[setting.setting] || '';
+
+            // Create input based on type
+            let input;
+            switch (setting.type) {
+                case 'string':
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    if (setting.values && setting.values.length > 0) {
+                        input.placeholder = setting.values[0];
+                    }
+                    break;
+
+                case 'integer':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    input.step = '1';
+                    break;
+
+                case 'number':
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    input.step = 'any';
+                    break;
+
+                case 'boolean':
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.className = 'form-check-input';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.checked = currentValue === true || currentValue === 'true';
+                    break;
+
+                case 'date':
+                    input = document.createElement('input');
+                    input.type = 'date';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+                    break;
+
+                case 'list':
+                case 'options':
+                    input = document.createElement('select');
+                    input.className = 'form-select';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+
+                    // Add options
+                    if (setting.values && Array.isArray(setting.values)) {
+                        setting.values.forEach((value) => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = value;
+                            if (value === currentValue) {
+                                option.selected = true;
+                            }
+                            input.appendChild(option);
+                        });
+                    }
+                    break;
+
+                default:
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.id = 'setting_' + setting.setting;
+                    input.name = setting.setting;
+                    input.value = currentValue;
+            }
+
+            formGroup.appendChild(input);
+
+            // Add description helper text if available
+            if (setting.description) {
+                const helperText = document.createElement('div');
+                helperText.className = 'form-text';
+                helperText.textContent = setting.description;
+                formGroup.appendChild(helperText);
+            }
+
+            return formGroup;
+        }
+
+        // Handle settings form submission
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                // Collect form data
+                const formData = new FormData(document.getElementById('settingsForm'));
+                const payload = {};
+
+                // Build payload from form fields
+                for (let [key, value] of formData.entries()) {
+                    // Handle checkboxes
+                    if (document.getElementById('setting_' + key)?.type === 'checkbox') {
+                        payload[key] = document.getElementById('setting_' + key).checked;
+                    } else {
+                        payload[key] = value;
+                    }
+                }
+
+                // Send to API
+                const response = await fetch('/services/workflow/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseText = await response.text();
+
+                // Show response
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', responseText);
+
+                if (response.ok) {
+                    showAlert('Settings saved successfully', 'success');
+                    // Reload settings to reflect changes
+                    setTimeout(() => loadSettings(), 1000);
+                } else {
+                    showAlert('Error saving settings: ' + responseText, 'error');
+                }
+            } catch (error) {
+                showAlert('Error saving settings: ' + error.message, 'error');
+                showResponse('settingsSaveResponse', 'settingsSaveResponseContent', 'Error: ' + error.message);
+            }
+        });
+
+        // Load settings when settings tab is shown
+        document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadSettings();
+        });
+
+        // ==================== Workflow UI Management ==================== //
+        let currentWorkflow = null;
+        let allWorkflows = [];
+        let executionFilter = 'all';
+
+        // Initialize UI tab
+        document.getElementById('ui-tab')?.addEventListener('shown.bs.tab', function (e) {
+            loadWorkflows();
+        });
+
+        // Load workflows from API
+        async function loadWorkflows() {
+            try {
+                const response = await fetch('/services/workflow/api/definitions');
+                const data = await response.json();
+                allWorkflows = data.definitions || [];
+                renderWorkflowsList();
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+                showAlert('Error loading workflows: ' + error.message, 'error');
+            }
+        }
+
+        // Render workflows list in left nav
+        function renderWorkflowsList() {
+            const container = document.getElementById('workflowsList');
+
+            if (!allWorkflows || allWorkflows.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-inbox fs-5"></i>
+                        <p class="small mt-2">No workflows defined</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const searchTerm = document.getElementById('contentSearch')?.value || '';
+            const filtered = allWorkflows.filter(w =>
+                w.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const html = filtered.map(workflow => `
+                <div class="workflow-item ${currentWorkflow?.name === workflow.name ? 'active' : ''}"
+                     data-workflow="${workflow.name}">
+                    <div class="workflow-item-name" title="${workflow.name}">
+                        <i class="bi bi-diagram-2 me-2"></i>${workflow.name}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+
+            // Add event listeners
+            container.querySelectorAll('.workflow-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const workflowName = this.getAttribute('data-workflow');
+                    selectWorkflow(workflowName);
+                });
+            });
+        }
+
+        // Select workflow
+        function selectWorkflow(workflowName) {
+            currentWorkflow = allWorkflows.find(w => w.name === workflowName);
+            if (!currentWorkflow) return;
+
+            // Update UI
+            document.getElementById('contentMain').style.display = 'none';
+            document.getElementById('newWorkflowForm').style.display = 'none';
+            document.getElementById('workflowEditor').style.display = 'flex';
+
+            // Update editor with workflow name
+            document.getElementById('editorWorkflowName').textContent = currentWorkflow.name;
+            renderWorkflowSteps();
+            loadExecutions();
+
+            // Update active state
+            document.querySelectorAll('.workflow-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-workflow') === workflowName) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Render workflow steps
+        function renderWorkflowSteps() {
+            const container = document.getElementById('workflowStepsContainer');
+
+            if (!currentWorkflow || !currentWorkflow.steps || currentWorkflow.steps.length === 0) {
+                container.innerHTML = `
+                    <div class="text-muted small">
+                        <p><strong>No steps defined</strong></p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display each step as an editable item
+            const stepsHtml = currentWorkflow.steps.map((step, index) => `
+                <div class="step-item mb-2 p-2 border rounded bg-light">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">${index + 1}</span>
+                        <input type="text" class="form-control form-control-sm step-input"
+                               data-step-index="${index}" value="${escapeHtml(step)}"
+                               placeholder="Step path">
+                        <button type="button" class="btn btn-sm btn-danger remove-step-btn"
+                                data-step-index="${index}" title="Remove step">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = stepsHtml;
+
+            // Add event listeners for remove buttons
+            container.querySelectorAll('.remove-step-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-step-index'));
+                    currentWorkflow.steps.splice(index, 1);
+                    renderWorkflowSteps();
+                });
+            });
+        }
+
+        // Load executions
+        async function loadExecutions() {
+            const tbody = document.getElementById('executionsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const response = await fetch(`/services/workflow/api/executions/${encodeURIComponent(currentWorkflow.name)}`);
+                const data = await response.json();
+                renderExecutionsTable(data);
+            } catch (error) {
+                console.error('Error loading executions:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger py-3">
+                            <i class="bi bi-exclamation-triangle"></i> Error loading executions
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render executions table
+        function renderExecutionsTable(data) {
+            const tbody = document.getElementById('executionsTableBody');
+
+            if (!data || !data.executions || data.executions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">
+                            <i class="bi bi-inbox"></i> No executions
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Filter executions
+            const filtered = filterExecutions(data.executions);
+
+            // Limit to top 50
+            const limited = filtered.slice(0, 50);
+
+            const html = limited.map(exec => {
+                const status = exec.status || 'unknown';
+                const statusBadge = {
+                    'completed': '<span class="badge bg-success">Completed</span>',
+                    'running': '<span class="badge bg-info">Running</span>',
+                    'error': '<span class="badge bg-danger">Error</span>'
+                }[status] || '<span class="badge bg-secondary">Unknown</span>';
+
+                const started = exec.startedAt ? new Date(exec.startedAt).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }) : 'N/A';
+
+                const duration = exec.duration ? exec.duration + ' ms' : 'N/A';
+
+                return `
+                    <tr style="cursor: pointer;" onclick="showExecutionDetails(${JSON.stringify(exec).replace(/"/g, '&quot;')})">
+                        <td>${statusBadge}</td>
+                        <td>${started}</td>
+                        <td>${duration}</td>
+                        <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = html;
+        }
+
+        // Filter executions
+        function filterExecutions(executions) {
+            if (executionFilter === 'all') return executions;
+            return executions.filter(e => e.status === executionFilter);
+        }
+
+        // Show execution details
+        function showExecutionDetails(execution) {
+            const rightNav = document.querySelector('.workflow-right-nav');
+            const content = document.getElementById('executionDetails');
+            const pre = document.getElementById('executionDetailsPre');
+
+            rightNav.classList.add('expanded');
+            content.style.display = 'block';
+            pre.textContent = JSON.stringify(execution, null, 2);
+            document.getElementById('rightNavContent').style.display = 'block';
+        }
+
+        // Toggle right nav
+        document.getElementById('toggleRightNavBtn')?.addEventListener('click', function() {
+            const rightNav = document.querySelector('.workflow-right-nav');
+            rightNav.classList.toggle('expanded');
+            document.getElementById('rightNavContent').style.display =
+                document.getElementById('rightNavContent').style.display === 'none' ? 'block' : 'none';
+        });
+
+        // New Workflow Button
+        document.getElementById('newWorkflowBtn')?.addEventListener('click', function() {
+            document.getElementById('contentMain').style.display = 'none';
+            document.getElementById('workflowEditor').style.display = 'none';
+            document.getElementById('newWorkflowForm').style.display = 'flex';
+            document.querySelectorAll('.workflow-item').forEach(item => item.classList.remove('active'));
+        });
+
+        // Cancel New Workflow
+        document.getElementById('cancelNewWorkflowBtn')?.addEventListener('click', function() {
+            document.getElementById('newWorkflowForm').style.display = 'none';
+            document.getElementById('contentMain').style.display = 'flex';
+        });
+
+        // Create Workflow Form Handler
+        document.getElementById('createWorkflowForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('newWorkflowName').value;
+            const steps = Array.from(document.getElementById('newWorkflowSteps').querySelectorAll('input'))
+                .map(input => input.value)
+                .filter(s => s);
+
+            if (steps.length === 0) {
+                showAlert('Please add at least one step', 'error');
+                return;
+            }
+
+            try {
+                const result = await makeRequest('/services/workflow/api/defineworkflow', 'POST', {
+                    name,
+                    steps
+                });
+                showAlert(`Workflow "${name}" created successfully`);
+                document.getElementById('newWorkflowForm').style.display = 'none';
+                document.getElementById('newWorkflowName').value = '';
+                document.getElementById('newWorkflowSteps').innerHTML = '';
+                loadWorkflows();
+            } catch (error) {
+                showAlert('Error creating workflow: ' + error.message, 'error');
+            }
+        });
+
+        // Add Step Button (Existing Workflow)
+        document.getElementById('addStepBtn')?.addEventListener('click', function() {
+            if (!currentWorkflow) return;
+            currentWorkflow.steps.push('');
+            renderWorkflowSteps();
+        });
+
+        // Add Step Button (New Workflow)
+        document.getElementById('addNewStepBtn')?.addEventListener('click', function() {
+            const container = document.getElementById('newWorkflowSteps');
+            const stepCount = container.children.length + 1;
+            const html = `
+                <div class="step-item">
+                    <label class="core-form-label mb-0" style="width: 50px;">Step ${stepCount}:</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Step name" value="">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Search workflows
+        document.getElementById('contentSearch')?.addEventListener('input', function() {
+            renderWorkflowsList();
+        });
+
+        // Refresh workflows button
+        document.getElementById('refreshWorkflowsBtn')?.addEventListener('click', function() {
+            loadWorkflows();
+        });
+
+        // Save workflow button
+        document.getElementById('saveWorkflowBtn')?.addEventListener('click', async function() {
+            if (!currentWorkflow) return;
+
+            try {
+                // Collect steps from input fields
+                const stepInputs = document.querySelectorAll('.step-input');
+                const steps = Array.from(stepInputs).map(input => input.value.trim()).filter(s => s.length > 0);
+
+                if (steps.length === 0) {
+                    showAlert('Please add at least one step', 'error');
+                    return;
+                }
+
+                // Update workflow via API
+                const requestBody = { steps };
+                const response = await makeRequest(
+                    `/services/workflow/api/definitions/${encodeURIComponent(currentWorkflow.name)}`,
+                    'PUT',
+                    requestBody
+                );
+
+                // Update local cache
+                currentWorkflow.steps = steps;
+
+                showAlert(`Workflow "${currentWorkflow.name}" updated successfully`);
+                // Reload to get updated metadata
+                await loadWorkflows();
+                selectWorkflow(currentWorkflow.name);
+            } catch (error) {
+                showAlert('Error saving workflow: ' + error.message, 'error');
+                console.error('Save workflow error:', error);
+            }
+        });
+
+        // Refresh editor button
+        document.getElementById('refreshEditorBtn')?.addEventListener('click', function() {
+            if (currentWorkflow) {
+                selectWorkflow(currentWorkflow.name);
+            }
+        });
+
+        // Refresh executions button
+        document.getElementById('refreshExecutionsBtn')?.addEventListener('click', function() {
+            if (currentWorkflow) {
+                loadExecutions();
+            }
+        });
+
+        // Execution filter buttons
+        document.querySelectorAll('.execution-filter')?.forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.execution-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                executionFilter = this.getAttribute('data-filter');
+                if (currentWorkflow) {
+                    loadExecutions();
+                }
+            });
+        });
+
+        // Delete workflow button
+        document.getElementById('deleteWorkflowBtn')?.addEventListener('click', async function() {
+            if (!currentWorkflow) return;
+            if (confirm(`Are you sure you want to delete the workflow "${currentWorkflow.name}"?`)) {
+                try {
+                    const response = await makeRequest(
+                        `/services/workflow/api/definitions/${encodeURIComponent(currentWorkflow.name)}`,
+                        'DELETE'
+                    );
+                    showAlert(`Workflow "${currentWorkflow.name}" deleted successfully`);
+                    // Reload workflows and clear editor
+                    await loadWorkflows();
+                    document.getElementById('workflowEditor').style.display = 'none';
+                    document.getElementById('contentMain').style.display = 'flex';
+                    currentWorkflow = null;
+                } catch (error) {
+                    showAlert('Error deleting workflow: ' + error.message, 'error');
+                    console.error('Delete workflow error:', error);
+                }
+            }
+        });
+
+        </script>
+
+</body>
+</html>
