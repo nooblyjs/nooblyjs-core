@@ -16,6 +16,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 const { sendSuccess, sendError, sendStatus, sendList, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -38,6 +40,10 @@ module.exports = (options, eventEmitter, logger, analytics) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
+    const authMiddleware = options.authMiddleware;
+
+    // Initialize audit logging for logging service
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
 
     /**
      * GET /services/logging/scripts
@@ -497,6 +503,64 @@ module.exports = (options, eventEmitter, logger, analytics) => {
           error: 'Failed to load Swagger documentation',
           message: error.message
         });
+      }
+    });
+
+    /**
+     * GET /services/logging/api/audit
+     * Retrieves audit log entries for logging service operations
+     */
+    app.get('/services/logging/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = {
+          service: 'logging',
+          limit: parseInt(req.query.limit) || 100,
+          operation: req.query.operation,
+          status: req.query.status
+        };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved successfully');
+      } catch (error) {
+        handleError(res, error, { operation: 'logging-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/logging/api/audit/export
+     * Exports audit logs in specified format
+     */
+    app.post('/services/logging/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'logging', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'logging-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/logging/api/export
+     * Exports logging data in specified format
+     */
+    app.get('/services/logging/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = analytics ? analytics.getAllLogs() : { note: 'Logs not available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('logs-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'logging-export' });
       }
     });
   }
