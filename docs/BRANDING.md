@@ -2,13 +2,13 @@
 
 ## Color Palette
 
-The Noobly JS Core uses a sophisticated teal blue color scheme with complementary rust orange accents, creating a modern and professional appearance.
+The Noobly JS Core uses a sophisticated blue color scheme with complementary rust orange accents, creating a modern and professional appearance.
 
 ### Primary Colors
 - **Primary (Teal Blue)**: `#68A8C4` - Main brand color used for headers, buttons, and key UI elements
 - **Complementary (Rust Orange)**: `#C49668` - Secondary accent color for highlights and interactive elements
-- **Accent (Teal Green)**: `#68C4B8` - Analogous accent for secondary actions
-- **Success (Green)**: `#52B788` - For success states and positive feedback
+- **Accent (Sky Blue)**: `#6AAAC6` - Secondary blue accent for secondary actions
+- **Success (Blue)**: `#3B82F6` - For success states and positive feedback
 - **Warning (Amber)**: `#FFB703` - For warnings and alerts
 - **Light (Light Teal)**: `#E8F4F8` - Light backgrounds and tints
 - **Dark**: `#1F2937` - Dark text and backgrounds
@@ -19,12 +19,12 @@ All colors are defined as CSS variables in the root selector:
 
 ```css
 :root {
-  /* Noobly JS branding colors - Teal Blue Palette */
+  /* Noobly JS branding colors - Blue & Rust Palette */
   --bs-primary: #68A8C4;
   --bs-primary-rgb: 104, 168, 196;
   --noobly-complement: #C49668;
-  --noobly-accent: #68C4B8;
-  --noobly-success: #52B788;
+  --noobly-accent: #6AAAC6;
+  --noobly-success: #3B82F6;
   --noobly-warning: #FFB703;
   --noobly-dark: #1F2937;
   --noobly-light: #E8F4F8;
@@ -55,7 +55,7 @@ All original branding assets are stored in `/docs/branding/` including:
 
 ### Button Styles
 - `.btn-noobly` - Primary Noobly button with teal blue (hover: #5691B0)
-- `.btn-noobly-accent` - Secondary button with teal green (hover: #5AA09E)
+- `.btn-noobly-accent` - Secondary button with sky blue (hover: #5A9AB6)
 - `.btn-noobly-complement` - Complementary button with rust orange (hover: #B08454)
 
 ### Text Colors

@@ -15,7 +15,7 @@ body {
 header,
 #header-container,
 #header-container .navbar {
-    background-color: #059da2 !important;
+    background-color: #68A8C4 !important;
     color: white !important;
 }
 
@@ -41,7 +41,7 @@ header a:hover,
 footer,
 #footer-container,
 #footer-container .footer {
-    background-color: #059da2 !important;
+    background-color: #68A8C4 !important;
     color: white !important;
 }
 
@@ -150,7 +150,7 @@ footer a:hover,
 #dynamic-sections a {
     color: #000;
     text-decoration: none;
-    border-bottom: 1px dotted #059da2;
+    border-bottom: 1px dotted #68A8C4;
     transition: all 0.3s ease;
 }
 
@@ -177,7 +177,7 @@ footer a:hover,
     padding: 1rem;
     overflow-x: auto;
     margin: 1.5rem 0;
-    border-left: 4px solid #059da2;
+    border-left: 4px solid #68A8C4;
 }
 
 #dynamic-sections pre code {
@@ -189,7 +189,7 @@ footer a:hover,
 
 /* Blockquote styles */
 #dynamic-sections blockquote {
-    border-left: 4px solid #059da2;
+    border-left: 4px solid #68A8C4;
     padding-left: 1.5rem;
     margin: 1.5rem 0;
     color: #666;
@@ -221,7 +221,7 @@ footer a:hover,
 #dynamic-sections table th {
     background-color: #f8f9fa;
     font-weight: 600;
-    color: #059da2;
+    color: #68A8C4;
 }
 
 #dynamic-sections table tr:nth-child(even) {
@@ -279,12 +279,12 @@ footer a:hover,
 
 .cards-section .card-header {
     background-color: #f8f9fa;
-    border-bottom: 2px solid #059da2;
+    border-bottom: 2px solid #68A8C4;
     padding: 1.25rem 1.5rem;
 }
 
 .cards-section .card-header h5 {
-    color: #059da2;
+    color: #68A8C4;
     font-weight: 600;
     font-size: 1.1rem;
     margin: 0;
@@ -330,7 +330,7 @@ footer a:hover,
 #dynamic-sections strong,
 #dynamic-sections b {
     font-weight: 600;
-    color: #059da2;
+    color: #68A8C4;
 }
 
 #dynamic-sections em,
@@ -394,7 +394,7 @@ footer a:hover,
     }
 
     #dynamic-sections a {
-        color: #059da2;
+        color: #68A8C4;
     }
 
     .hero-banner-section {

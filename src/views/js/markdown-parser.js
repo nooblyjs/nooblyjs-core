@@ -889,7 +889,7 @@ html += '<div class="row align-items-center g-4">\n';
 // Left side content
 html += '<div class="col-lg-6">\n';
 if (title) {
-html += `<h2 class="display-5 fw-bold mb-3" style="color: #059da2;">${this.escapeHtml(title)}</h2>\n`;
+html += `<h2 class="display-5 fw-bold mb-3" style="color: #68A8C4;">${this.escapeHtml(title)}</h2>\n`;
 }
 if (subtitle) {
 html += `<p class="lead text-muted mb-4">${this.escapeHtml(subtitle)}</p>\n`;

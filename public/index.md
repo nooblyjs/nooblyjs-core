@@ -2,7 +2,7 @@ header
 
   icon: /images/nooblyjs-logo.png
   title: Noobly JS Core
-  links: [Services](/services/) [Bitbucket](https://bitbucket.org/shopritelabs/nooblyjs-core/src)
+  links: [Services](/services/) [Github](https://github.com/nooblyjs/nooblyjs-core)
 
 ---
 
