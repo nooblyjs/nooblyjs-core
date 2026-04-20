@@ -3,7 +3,7 @@
  * Manages user authentication display in the page header.
  * Hides/shows the user dropdown based on login status and handles logout functionality.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

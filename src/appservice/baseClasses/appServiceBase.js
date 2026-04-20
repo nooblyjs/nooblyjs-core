@@ -3,7 +3,7 @@
  * Base class for implementing custom application services in Noobly JS Core.
  * Extends appBase with URL path normalization for route registration.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

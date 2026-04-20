@@ -10,7 +10,7 @@
  * - appWorkerBase (background workers)
  * - appDataBase (data layer implementations)
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

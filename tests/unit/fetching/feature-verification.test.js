@@ -4,7 +4,7 @@
  * Tests cover factory function, providers, fetch operations, caching, deduplication,
  * analytics, REST API endpoints, settings, events, and integration patterns.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @since 1.0.0
  */
 

@@ -5,7 +5,7 @@
  * different logging providers (console, file). Tests help evaluate logging
  * throughput and identify performance bottlenecks in high-volume scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

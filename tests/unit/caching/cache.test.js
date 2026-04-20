@@ -5,7 +5,7 @@
  * operations for the in-memory cache provider. Tests verify proper event emission
  * and cache behavior under various scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

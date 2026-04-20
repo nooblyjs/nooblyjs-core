@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google Cloud Storage filing provider for file operations
  * in Google Cloud Storage with event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

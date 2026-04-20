@@ -58,7 +58,7 @@ app.use('/README', express.static('README.md'));
 app.use('/', express.static(__dirname + '/public'));
 
 // Load images
-app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 'nooblyjs-core.png')));
 
 // Test endpoint to view current fetching analytics
 app.get('/api/fetch-stats', (req, res) => {

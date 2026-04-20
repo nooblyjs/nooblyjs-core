@@ -5,7 +5,7 @@
  * operations. Tests help evaluate scheduler throughput and task execution
  * performance under high-volume scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

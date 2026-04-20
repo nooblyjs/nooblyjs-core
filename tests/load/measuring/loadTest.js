@@ -5,7 +5,7 @@
  * operations. Tests help evaluate the measuring service's ability to handle
  * high-volume metric data collection and calculation performance.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

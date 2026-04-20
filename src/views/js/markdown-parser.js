@@ -4,7 +4,7 @@
 * - container (left/right sections)
 * - hero-banner (title, subtitle, hero-image, hero-image-align properties)
 *
-* @author Digital Technologies Team
+* @author Noobly JS Team
 * @version 1.0.0
 */
 
@@ -511,7 +511,7 @@ renderFooter(content) {
 const properties = this.parseBlockProperties(content);
 
 const icon = properties.icon || '';
-const title = properties.title || 'Digital Technologies Knowledge Platform';
+const title = properties.title || 'NooblyJS Knowledge Platform';
 const subtitle = properties.subtitle || '';
 const linksStr = properties.links || '';
 

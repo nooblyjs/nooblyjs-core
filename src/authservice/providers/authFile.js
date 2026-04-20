@@ -1,7 +1,7 @@
 /**
  * @fileoverview File-based Authentication Provider
  * File-based authentication provider with persistent storage and secure password handling.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -30,7 +30,7 @@ class AuthFile extends AuthBase {
     super(options, eventEmitter);
 
     this.settings = {};
-    this.settings.desciption = "This provider exposes the Digital Technologies file implementation settings"
+    this.settings.desciption = "This provider exposes the NooblyJS file implementation settings"
     this.settings.list = [
       {setting: "datadir", type: "string", values : ['/.data/']}
     ]

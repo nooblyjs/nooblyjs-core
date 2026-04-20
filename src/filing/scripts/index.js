@@ -3,7 +3,7 @@
  * This module provides Express.js view for file serving capabilities for the filing service. 
  * It registers static routes to serve filing-related view through the Express application.
  * 
- * @author Digital Technologies
+ * @author NooblyJS
  * @version 1.0.14
  * @since 1.0.0
  * @module FilingViews

@@ -3,7 +3,7 @@
  * Factory module for creating search service instances.
  * Provides full-text search, indexing, and query capabilities.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

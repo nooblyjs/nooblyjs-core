@@ -5,7 +5,7 @@
  * workflow definition, step execution, and data flow management. Tests help
  * evaluate workflow throughput and step execution performance.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

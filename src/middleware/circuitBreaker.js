@@ -7,7 +7,7 @@
  * - OPEN: Service failing, requests fail immediately
  * - HALF_OPEN: Limited requests allowed to test recovery
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  */
 

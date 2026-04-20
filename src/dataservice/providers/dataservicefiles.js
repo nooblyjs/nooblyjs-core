@@ -1,7 +1,7 @@
 /**
  * @fileoverview File-based DataService provider for persistent storage of JSON objects
  * using the file system with container-based organization.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

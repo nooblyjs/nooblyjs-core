@@ -2,7 +2,7 @@
  * @fileoverview Secure Email Authentication Provider
  * Authentication provider for Teams/Edge extensions using email + secure key.
  * Extends AuthPassport to authenticate users with email and a pre-shared secure key.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

@@ -4,7 +4,7 @@
  * This test suite covers end-to-end API key authentication testing across
  * different services and their API endpoints.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  */

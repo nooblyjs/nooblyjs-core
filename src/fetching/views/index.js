@@ -4,7 +4,7 @@
  * capabilities for the fetching service. It registers static routes to serve
  * fetching-related view files and templates through the Express application.
  *
- * @author Digital Technologies
+ * @author NooblyJS
  * @version 1.0.0
  * @since 1.0.0
  * @module FetchingViews

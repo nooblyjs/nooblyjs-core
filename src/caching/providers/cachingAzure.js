@@ -3,7 +3,7 @@
  * Leverages Redis-based Azure Cache for distributed caching with managed authentication.
  * Uses the existing CacheRedis provider under the hood with Azure-specific configuration.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

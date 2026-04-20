@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview API Key Authentication Middleware
- * Provides secure API key validation for all Digital Technologies service endpoints.
+ * Provides secure API key validation for all NooblyJS service endpoints.
  *
  * @module authservice/middleware/apiKey
  */

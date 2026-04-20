@@ -3,7 +3,7 @@
  * Leverages AWS SQS for distributed, managed queue operations with high availability and durability.
  * Supports both Standard and FIFO queue types with automatic detection.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

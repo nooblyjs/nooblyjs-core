@@ -1706,4 +1706,4 @@ Use the service to monitor performance, track business metrics, ensure SLA compl
 
 ---
 
-**For more information, visit the FetchingService section or contact the Digital Technologies team.**
+**For more information, visit the FetchingService section or contact the Noobly JS Team.**

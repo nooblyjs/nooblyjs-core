@@ -2,7 +2,7 @@
  * @fileoverview DocumentDB DataService provider for storing and searching JSON objects
  * with container-based organization using DocumentDB collections and event emission support.
  * Compatible with MongoDB-compatible DocumentDB implementations.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  * @since 1.0.0
  */

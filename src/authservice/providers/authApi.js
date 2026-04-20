@@ -1,7 +1,7 @@
 /**
  * @fileoverview API-based authentication implementation that proxies requests to a remote auth service.
  * Allows client applications to consume backend authentication API endpoints for enterprise systems.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -27,7 +27,7 @@ class AuthApi {
   constructor(options = {}, eventEmitter) {
 
     this.settings = {};
-    this.settings.desciption = "This provider exposes the Digital Technologies distributed implementation settings"
+    this.settings.desciption = "This provider exposes the NooblyJS distributed implementation settings"
     this.settings.list = [
       {setting: "apiroot", type: "string", values : ['http://localhost:3000']} ,
       {setting: "apikey", type: "string", values : ['The api key retrieved fron from your adminstrator']} ,

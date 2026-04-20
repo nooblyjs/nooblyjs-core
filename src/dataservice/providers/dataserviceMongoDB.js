@@ -1,7 +1,7 @@
 /**
  * @fileoverview MongoDB DataService provider for storing and searching JSON objects
  * with container-based organization using MongoDB collections and event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  * @since 1.0.0
  */

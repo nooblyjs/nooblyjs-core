@@ -1,7 +1,7 @@
 /**
  * @fileoverview Memory Authentication Provider
  * In-memory authentication provider for development and testing.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

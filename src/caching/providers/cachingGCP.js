@@ -3,7 +3,7 @@
  * Supports both Redis and Memcached engines in Cloud Memorystore with IAM authentication.
  * Uses the existing CacheRedis provider under the hood with GCP-specific configuration.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

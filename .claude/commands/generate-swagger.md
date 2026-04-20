@@ -33,7 +33,7 @@ Each service gets an `src/{serviceName}/routes/swagger/docs.json`:
     "description": "Service description",
     "version": "1.0.0",
     "contact": {
-      "name": "Digital Technologies Team",
+      "name": "Noobly JS Team",
       "email": "tech@example.com"
     },
     "license": {
@@ -712,7 +712,7 @@ src/{serviceName}/routes/
     "description": "[Service description]",
     "version": "1.0.0",
     "contact": {
-      "name": "Digital Technologies Team"
+      "name": "Noobly JS Team"
     },
     "license": {
       "name": "ISC"

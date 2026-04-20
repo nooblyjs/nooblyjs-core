@@ -4,7 +4,7 @@
  * capabilities for the measuring service. It registers static routes to serve
  * measuring-related view files and templates through the Express application.
  * 
- * @author Digital Technologies
+ * @author NooblyJS
  * @version 1.0.14
  * @since 1.0.0
  * @module MeasuringViews

@@ -4,7 +4,7 @@
  * capabilities for the caching service. It registers static routes to serve
  * caching-related view files and templates through the Express application.
  * 
- * @author Digital Technologies
+ * @author NooblyJS
  * @version 1.0.14
  * @since 1.0.0
  * @module CachingViews

@@ -150,7 +150,7 @@ Creates a footer section with branding, information, and links.
 ```markdown
 ```footer
   icon: /images/logo.png
-  title: Digital Technologies
+  title: NooblyJS
   subtitle: © 2026. All rights reserved.
   links: [Privacy](/) [Terms](/) [Contact](/contact)
 ```
@@ -595,7 +595,7 @@ Embedded API documentation using Swagger UI.
 ```markdown
 ```swagger
   url: /docs/api-spec.json
-  title: Digital Technologies API
+  title: NooblyJS API
 ```
 ```
 

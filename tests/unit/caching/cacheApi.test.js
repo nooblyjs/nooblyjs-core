@@ -4,7 +4,7 @@
  * This test suite covers the API cache provider that connects to remote backend services.
  * Tests verify HTTP requests, API key authentication, and proper error handling.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.14
  */

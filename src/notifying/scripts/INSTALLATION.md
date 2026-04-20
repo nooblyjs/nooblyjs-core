@@ -1,8 +1,8 @@
-# Installation and Setup Guide - Digital Technologies Notifying Client Library
+# Installation and Setup Guide - NooblyJS Notifying Client Library
 
 ## Overview
 
-The Digital Technologies Notifying Service Client Library is a lightweight JavaScript library that enables web applications to use the notifying service's pub/sub messaging capabilities without building custom API integrations.
+The NooblyJS Notifying Service Client Library is a lightweight JavaScript library that enables web applications to use the notifying service's pub/sub messaging capabilities without building custom API integrations.
 
 ## Quick Start
 

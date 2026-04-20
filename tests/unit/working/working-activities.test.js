@@ -4,7 +4,7 @@
  * This test suite verifies that the working service properly resolves
  * activity script paths using the filing service and activities folder configuration.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.14
  */

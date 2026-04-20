@@ -4,7 +4,7 @@
  * This test suite covers the working service functionality including task
  * execution, worker management, and event handling.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  *

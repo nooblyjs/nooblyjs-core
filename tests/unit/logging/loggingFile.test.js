@@ -4,7 +4,7 @@
  * This test suite covers the file logger provider, testing async file writing,
  * log rotation by size and period, and file retention policies.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.1.0
  * @since 1.0.0
  */

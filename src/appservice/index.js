@@ -4,7 +4,7 @@
  * Automatically discovers and mounts routes, views, services, data, and activities
  * from standard directory structure (src/routes, src/views, src/services, src/data, src/activities).
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

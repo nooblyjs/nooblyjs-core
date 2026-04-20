@@ -6,7 +6,7 @@
  * Tests verify proper data storage, search functionality across nested objects,
  * multi-index support, and event emission.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  * @since 1.0.0
  */

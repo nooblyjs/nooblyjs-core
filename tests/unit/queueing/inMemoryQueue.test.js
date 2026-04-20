@@ -6,7 +6,7 @@
  * for multiple named queues. Tests verify proper FIFO behavior and event
  * emission for queue operations.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

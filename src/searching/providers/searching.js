@@ -1,7 +1,7 @@
 /**
  * @fileoverview Search service for loading and searching JSON objects
  * with recursive string matching, multiple named indexes, and event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  * @since 1.0.0
  */

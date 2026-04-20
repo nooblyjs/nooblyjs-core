@@ -3,7 +3,7 @@
  * Leverages Azure Queue Storage for distributed, serverless queue operations.
  * Provides FIFO queue behavior with automatic message expiration and retention.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

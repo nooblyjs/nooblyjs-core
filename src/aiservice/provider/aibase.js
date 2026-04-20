@@ -1,7 +1,7 @@
 /**
  * @fileoverview Base AI Service Provider
  * Base class for AI service providers with token tracking and cost estimation.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

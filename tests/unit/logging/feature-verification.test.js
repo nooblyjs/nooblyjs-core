@@ -1,7 +1,7 @@
 /**
  * @fileoverview Comprehensive feature verification tests for Logging Service
  * Tests all documented features from LOGGING-SERVICE-USAGE.md
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  */
 

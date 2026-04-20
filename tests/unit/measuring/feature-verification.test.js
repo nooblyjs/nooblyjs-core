@@ -4,7 +4,7 @@
  * Tests cover factory function, providers, metrics operations, analytics, REST API,
  * settings, events, and integration patterns.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @since 1.0.0
  */
 

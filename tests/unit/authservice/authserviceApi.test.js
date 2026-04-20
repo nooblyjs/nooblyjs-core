@@ -1,7 +1,7 @@
 /**
  * @fileoverview Unit tests for the API-based auth service functionality.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.14
  */

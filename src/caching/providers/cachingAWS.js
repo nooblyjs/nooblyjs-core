@@ -3,7 +3,7 @@
  * Leverages Redis and Memcached ElastiCache clusters for distributed caching.
  * Uses the existing CacheRedis provider under the hood with AWS-specific configuration.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

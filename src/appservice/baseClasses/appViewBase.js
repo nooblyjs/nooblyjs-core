@@ -3,7 +3,7 @@
  * Base class for implementing view rendering and static file serving in Noobly JS Core.
  * Provides integration with Express view engines and static file middleware.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

@@ -1,7 +1,7 @@
 /**
  * @fileoverview AWS CloudWatch logging provider for Noobly JS Core
  * Sends log messages to AWS CloudWatch for centralized logging and monitoring.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

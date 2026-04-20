@@ -1,7 +1,7 @@
 /**
  * @fileoverview FTP filing provider for remote file operations over FTP protocol
  * with automatic connection management and event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

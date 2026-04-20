@@ -1,7 +1,7 @@
 /**
  * @fileoverview AWS S3 filing provider for cloud-based file operations
  * using Amazon S3 with bucket-based organization and event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

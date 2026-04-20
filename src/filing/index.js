@@ -3,7 +3,7 @@
  * Factory module for creating file service instances with multiple provider support.
  * Supports local filesystem, FTP, and S3 backends with routing and views.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

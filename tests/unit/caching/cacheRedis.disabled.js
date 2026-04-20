@@ -5,7 +5,7 @@
  * operations using the Redis cache provider. Tests use ioredis-mock to simulate
  * Redis behavior without requiring an actual Redis instance.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

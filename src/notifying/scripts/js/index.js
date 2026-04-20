@@ -1,5 +1,5 @@
 /**
- * Digital Technologies Notifying Service - Client-side JavaScript Library
+ * NooblyJS Notifying Service - Client-side JavaScript Library
  *
  * A lightweight library for integrating pub/sub messaging capabilities into web applications.
  * Provides both local client-side pub/sub (when no instanceName is provided) and remote
@@ -189,7 +189,7 @@
   }
 
   /**
-   * Digital Technologies Notifying Service Client
+   * NooblyJS Notifying Service Client
    * Intelligently switches between local and remote implementations
    *
    * @constructor

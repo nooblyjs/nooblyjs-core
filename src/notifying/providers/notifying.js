@@ -1,7 +1,7 @@
 /**
  * @fileoverview Notification service for managing topics and subscribers
  * with publish-subscribe pattern implementation and error handling.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

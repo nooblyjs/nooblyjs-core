@@ -1,7 +1,7 @@
 /**
  * @fileoverview Azure Monitor logging provider for Noobly JS Core
  * Sends log messages to Azure Monitor for centralized logging and diagnostics.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

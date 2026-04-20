@@ -5,7 +5,7 @@
  * put, get, delete, and clear operations. Tests help identify performance
  * bottlenecks, I/O characteristics, and scalability limits of the file-based cache.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

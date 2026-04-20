@@ -4,7 +4,7 @@
  * capabilities for the authentication service. It registers static routes to serve
  * auth-related view files and templates through the Express application.
  *
- * @author Digital Technologies
+ * @author NooblyJS
  * @version 1.0.0
  * @since 1.0.0
  * @module AuthViews

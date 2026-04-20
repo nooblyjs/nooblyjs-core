@@ -1,7 +1,7 @@
 /**
  * @fileoverview Local Working Store for draft file management
  * Handles local file operations for the sync filing provider
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  */
 

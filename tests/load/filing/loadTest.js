@@ -5,7 +5,7 @@
  * file creation, reading, and deletion across different filing providers
  * (local, FTP, S3). Tests help evaluate file I/O performance and scalability.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

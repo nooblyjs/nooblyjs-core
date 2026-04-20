@@ -1,4 +1,4 @@
-# Digital Technologies Load Testing Suite
+# NooblyJS Load Testing Suite
 
 Comprehensive load testing framework for all Noobly JS Core services. Tests both direct service providers and HTTP API endpoints with API key authentication support.
 
@@ -135,7 +135,7 @@ Direct testing of service providers with configurable backends:
 
 ## Authentication Methods
 
-The HTTP load tests support all Digital Technologies API key authentication methods:
+The HTTP load tests support all NooblyJS API key authentication methods:
 
 1. **x-api-key Header** (recommended)
    ```
@@ -251,7 +251,7 @@ Example GitHub Actions workflow:
 ## Troubleshooting
 
 ### Connection Errors
-- Ensure the Digital Technologies server is running on the configured URL
+- Ensure the NooblyJS server is running on the configured URL
 - Check API key configuration and permissions
 - Verify network connectivity and firewall settings
 

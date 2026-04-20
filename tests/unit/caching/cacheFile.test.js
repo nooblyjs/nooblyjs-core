@@ -5,7 +5,7 @@
  * clear, and stats operations for the file-based cache provider. Tests verify 
  * proper file persistence, event emission, and cache behavior under various scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

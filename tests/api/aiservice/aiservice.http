@@ -228,10 +228,10 @@ x-api-key: {{apiKey}}
     "provider": "chatgpt",
     "base_model": "gpt-3.5-turbo",
     "training_data": [
-        {"prompt": "What is Digital Technologies?", "completion": "Digital Technologies is a modular Node.js backend framework."},
-        {"prompt": "How does Digital Technologies caching work?", "completion": "Digital Technologies provides pluggable caching with memory, Redis, and Memcached providers."}
+        {"prompt": "What is NooblyJS?", "completion": "NooblyJS is a modular Node.js backend framework."},
+        {"prompt": "How does NooblyJS caching work?", "completion": "NooblyJS provides pluggable caching with memory, Redis, and Memcached providers."}
     ],
-    "name": "Digital Technologies Assistant"
+    "name": "NooblyJS Assistant"
 }
 
 ###

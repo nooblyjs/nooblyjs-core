@@ -1,11 +1,11 @@
 /**
  * @fileoverview HTTP Load Testing Framework for Noobly JS Core APIs
  * 
- * This module provides comprehensive HTTP-based load testing for all Digital Technologies
+ * This module provides comprehensive HTTP-based load testing for all NooblyJS
  * service endpoints with API key authentication support. Tests simulate real-world
  * usage patterns and measure API performance under various load scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  */
@@ -19,7 +19,7 @@ const { URL } = require('url');
 /**
  * HTTP Load Test Runner
  * 
- * Executes concurrent HTTP requests against Digital Technologies service endpoints
+ * Executes concurrent HTTP requests against NooblyJS service endpoints
  * with configurable concurrency, iterations, and authentication.
  * 
  * @param {Object} config - Load test configuration

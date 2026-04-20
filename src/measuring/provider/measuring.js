@@ -1,7 +1,7 @@
 /**
  * @fileoverview Measuring service for capturing and aggregating metrics
  * with time-based filtering and statistical calculations.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

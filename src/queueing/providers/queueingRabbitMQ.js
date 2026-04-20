@@ -1,7 +1,7 @@
 /**
  * @fileoverview A RabbitMQ-backed queue implementation providing distributed queue
  * functionality with FIFO (First-In-First-Out) behavior and analytics tracking.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

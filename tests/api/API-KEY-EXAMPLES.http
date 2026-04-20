@@ -2,12 +2,12 @@
 ### Noobly JS Core - API Key Authentication Examples
 ### 
 ### This file demonstrates all supported API key authentication methods
-### across Digital Technologies Services. Use this as a reference for implementing
+### across NooblyJS Services. Use this as a reference for implementing
 ### API key authentication in your applications.
 ###
 ### SETUP INSTRUCTIONS:
 ### 1. Replace 'your-api-key-here' with your actual API key
-### 2. Make sure your Digital Technologies server is running with API key authentication enabled
+### 2. Make sure your NooblyJS server is running with API key authentication enabled
 ### 3. Example server setup:
 ###    const apiKey = serviceRegistry.generateApiKey();
 ###    serviceRegistry.initialize(app, { apiKeys: [apiKey], requireApiKey: true });

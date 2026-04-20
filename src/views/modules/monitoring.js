@@ -3,7 +3,7 @@
  * Tracks system metrics (RAM, CPU, threads, event loop lag, GC metrics) for the Service Registry dashboard.
  * Keeps metrics in memory with a rolling window of data points using perf_hooks for detailed performance insights.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 2.0.0
  */
 

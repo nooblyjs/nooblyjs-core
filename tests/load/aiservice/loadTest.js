@@ -6,7 +6,7 @@
  * (Claude, ChatGPT, Ollama). Tests help identify performance bottlenecks and
  * scalability limits.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

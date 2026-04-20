@@ -1,7 +1,7 @@
 /**
  * @fileoverview Base Authentication Provider
  * Base class for authentication providers with user management and role-based access.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

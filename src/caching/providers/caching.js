@@ -1,7 +1,7 @@
 /**
  * @fileoverview A simple in-memory cache implementation providing basic caching
  * functionality with analytics tracking for cache operations.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

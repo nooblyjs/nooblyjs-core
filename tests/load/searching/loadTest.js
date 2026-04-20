@@ -5,7 +5,7 @@
  * data indexing and search query execution. Tests help evaluate search
  * performance and scalability under high-volume query scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

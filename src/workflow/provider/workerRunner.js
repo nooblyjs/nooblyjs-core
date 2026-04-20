@@ -1,7 +1,7 @@
 /**
  * @fileoverview Worker runner for executing individual workflow steps
  * in separate worker threads with error handling and result communication.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

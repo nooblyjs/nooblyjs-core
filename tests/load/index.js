@@ -1,12 +1,12 @@
 /**
- * @fileoverview Load test runner for all Digital Technologies Services.
+ * @fileoverview Load test runner for all NooblyJS Services.
  * 
- * This script orchestrates load testing across all Digital Technologies service providers,
+ * This script orchestrates load testing across all NooblyJS service providers,
  * running performance tests on caching, data serving, filing, logging, measuring,
  * notifications, queueing, scheduling, searching, workflow, and worker services.
  * Supports both direct provider tests and HTTP API endpoint tests with API key authentication.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.0.0
  */
@@ -58,7 +58,7 @@ const LOAD_TEST_CONFIG = {
 };
 
 /**
- * Runs comprehensive load tests across all Digital Technologies Services.
+ * Runs comprehensive load tests across all NooblyJS Services.
  * 
  * Executes performance tests for each service provider with configurable
  * iteration counts. Tests multiple provider types where applicable and

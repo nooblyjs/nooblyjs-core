@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google OAuth Authentication Provider
  * Google OAuth authentication provider using passport-google-oauth20.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -30,7 +30,7 @@ class AuthGoogle extends AuthBase {
     super(options, eventEmitter);
 
     this.settings = {};
-    this.settings.desciption = "This provider exposes the Digital Technologies google auth implementation settings"
+    this.settings.desciption = "This provider exposes the NooblyJS google auth implementation settings"
     this.settings.list = []
 
     this.passport_ = null;

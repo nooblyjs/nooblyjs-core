@@ -3,7 +3,7 @@
  * Factory module for creating performance measuring service instances.
  * Provides metrics collection, timing, and analytics capabilities.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

@@ -5,7 +5,7 @@
  * @deprecated AWS SimpleDB is deprecated and not available in AWS SDK v3.
  * This provider will not work with AWS SDK v3. Consider using AWS DynamoDB instead.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

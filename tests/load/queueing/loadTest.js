@@ -5,7 +5,7 @@
  * enqueue and dequeue operations. Tests help evaluate queue throughput
  * and identify performance characteristics under high-volume scenarios.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

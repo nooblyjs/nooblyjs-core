@@ -71,7 +71,7 @@ app.get('/', (req, res) => {
 app.use('/styles.css', express.static(path.join(__dirname, 'styles.css')));
 
 // Load styles
-app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 'nooblyjs-core.png')));
 
 
 app.listen(3101, async () => {

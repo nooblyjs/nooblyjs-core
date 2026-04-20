@@ -1,7 +1,7 @@
 /**
  * @fileoverview GCP Cloud Logging provider for Noobly JS Core
  * Sends log messages to Google Cloud Platform's Cloud Logging service.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

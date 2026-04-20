@@ -16,7 +16,7 @@ class UIService {
    */
   createHeader(config = {}) {
     const {
-      brandText = 'Digital Technologies',
+      brandText = 'NooblyJS',
       brandIcon = '/images/nooblyjs-logo.png',
       showSearch = true,
       showCreateBtn = true,

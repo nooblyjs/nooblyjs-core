@@ -9,7 +9,7 @@
  * - GET /health/startup - Kubernetes startup probe
  * - GET /health/detailed - Full status report (protected)
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  */
 

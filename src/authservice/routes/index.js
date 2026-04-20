@@ -361,7 +361,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get('/services/authservice/api/branding', asyncHandler(async (req, res) => {
       const brandingConfig = {
-        appName: options.brandingConfig?.appName || 'Digital Technologies',
+        appName: options.brandingConfig?.appName || 'NooblyJS',
         logoUrl: options.brandingConfig?.logoUrl || null,
         stylesheetUrl: options.brandingConfig?.stylesheetUrl || null,
         primaryColor: options.brandingConfig?.primaryColor || '#0066cc',

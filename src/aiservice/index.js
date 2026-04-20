@@ -2,7 +2,7 @@
  * @fileoverview AI Service Factory
  * Factory module for creating AI service instances with multiple provider support.
  * Supports claude, chatgpt, ollama.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

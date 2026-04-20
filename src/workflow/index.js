@@ -3,7 +3,7 @@
  * Service for defining and executing multi-step workflows with worker thread support.
  * Provides sequential step execution with error handling and event emission.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

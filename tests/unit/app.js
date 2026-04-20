@@ -3,7 +3,7 @@
  * This file serves as a comprehensive example of how to use all available
  * services in the Noobly JS Core framework.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

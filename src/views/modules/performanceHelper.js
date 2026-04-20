@@ -3,7 +3,7 @@
  * Provides utilities for services to mark performance checkpoints and track operation timing.
  * Integrates with the system monitoring module for centralized metrics collection.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  */
 

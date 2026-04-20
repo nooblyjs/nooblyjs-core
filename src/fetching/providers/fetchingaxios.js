@@ -3,7 +3,7 @@
  * Implements HTTP fetching using axios library with advanced caching
  * and request deduplication support.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

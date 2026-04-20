@@ -1,10 +1,10 @@
 /**
- * @fileoverview Centralized Navigation System for Digital Technologies Services
+ * @fileoverview Centralized Navigation System for NooblyJS Services
  * Dynamically generates navigation sidebar with online/offline status indicators.
  * Manages service discovery, status monitoring, and user-driven classification grouping
  * for all core, business, application, and advanced services.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -32,7 +32,7 @@
  */
 
 /**
- * Digital Technologies Navigation System
+ * NooblyJS Navigation System
  * Provides service discovery, status monitoring, and interactive navigation UI generation.
  * Manages grouped service navigation with dynamic online/offline status indicators.
  *

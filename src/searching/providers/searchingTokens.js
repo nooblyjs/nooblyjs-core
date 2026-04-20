@@ -3,7 +3,7 @@
  * Provides full-text search with tokenization, relevance scoring, disk persistence,
  * suggestions, and memory safety guards — extracted from digital-technologies-knowledge.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.16
  */

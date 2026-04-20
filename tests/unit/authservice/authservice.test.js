@@ -5,7 +5,7 @@
  * initialization, provider selection, and user management for multiple auth
  * providers (Passport, Google OAuth, Memory).
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

@@ -5,7 +5,7 @@
  * object storage, retrieval, searching, and removal operations. Tests verify proper
  * MongoDB integration and data persistence.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

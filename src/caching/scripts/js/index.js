@@ -136,7 +136,7 @@
   };
 
   /**
-   * Digital Technologies Caching Client Library
+   * NooblyJS Caching Client Library
    * Provides client-side access to both local and remote caching service APIs
    *
    * @class digitalTechnologiesCaching

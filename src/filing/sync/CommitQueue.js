@@ -1,7 +1,7 @@
 /**
  * @fileoverview Commit Queue for Git Filing Provider
  * Manages pending commits that require user-provided commit messages
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.15
  */
 

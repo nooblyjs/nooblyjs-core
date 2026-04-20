@@ -3,7 +3,7 @@
  * Factory module for creating notification service instances.
  * Provides topic-based messaging, subscriber management, and event broadcasting.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

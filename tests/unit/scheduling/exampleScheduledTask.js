@@ -3,12 +3,12 @@
  *
  * This example task demonstrates the structure and interface expected by
  * the scheduler service. It provides a simple implementation that uses
- * the service registry to access the logger and other Digital Technologies Services.
+ * the service registry to access the logger and other NooblyJS Services.
  *
  * Note: This activity uses the global serviceRegistry to access services
  * because service instances cannot be passed through worker threads.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

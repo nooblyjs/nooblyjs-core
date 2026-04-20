@@ -4,7 +4,7 @@
  * This test suite covers the filing service functionality including local
  * file operations, event emission, and basic CRUD operations.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  */

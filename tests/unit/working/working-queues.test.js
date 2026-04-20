@@ -4,7 +4,7 @@
  * This test suite verifies that the working service properly uses named queues
  * for task lifecycle management (incoming, complete, error).
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.14
  */

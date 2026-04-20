@@ -3,7 +3,7 @@
  * Base class for implementing custom route handlers in Noobly JS Core.
  * Provides integration with Express routing and URL path normalization.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

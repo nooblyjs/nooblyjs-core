@@ -2,7 +2,7 @@
  * @fileoverview DataService Factory
  * Factory module for creating data service instances with multiple provider support.
  * Supports in-memory, file-based, and SimpleDB backends with routing and views.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

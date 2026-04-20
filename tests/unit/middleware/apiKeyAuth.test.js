@@ -5,7 +5,7 @@
  * including validation, various authentication methods, path exclusions, and
  * proper error handling.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  */

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Local file system filing provider for file operations
  * on the local file system with event emission support.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Git Filing Provider with automated fetch and manual commit
  * Provides Git-backed file storage with commit message requirements and conflict resolution
- * @author Digital Technologies Team  
+ * @author Noobly JS Team  
  * @version 1.0.15
  */
 
@@ -43,7 +43,7 @@ class GitFilingProvider {
     this.branch = options.branch || 'main';
     this.userId = options.userId || 'default-user';
     this.userEmail = options.userEmail || 'user@example.com';
-    this.userName = options.userName || 'Digital Technologies User';
+    this.userName = options.userName || 'NooblyJS User';
     this.auth = options.auth || {};
     this.fetchInterval = options.fetchInterval || 30000; // 30 seconds
     this.autoFetch = options.autoFetch !== false;

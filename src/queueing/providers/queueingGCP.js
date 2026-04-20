@@ -3,7 +3,7 @@
  * Leverages GCP Cloud Tasks for distributed, managed task scheduling and execution.
  * Supports HTTP and App Engine targets with configurable retry policies.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.15
  */

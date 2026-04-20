@@ -3,7 +3,7 @@
  * Implements HTTP fetching using Node.js native fetch API (or node-fetch polyfill)
  * Follows NextJS fetch specification with caching and deduplication support.
  *
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.0
  * @since 1.0.0
  */

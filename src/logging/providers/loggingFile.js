@@ -2,7 +2,7 @@
  * @fileoverview A production-grade file logger with async I/O, rolling logs, and thread safety.
  * Features: size-based rotation, period-based rotation (daily/hourly), automatic file pruning,
  * and serial write queue to prevent async race conditions.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.1.0
  * @since 1.0.0
  */

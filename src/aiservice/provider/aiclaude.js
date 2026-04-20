@@ -1,7 +1,7 @@
 /**
  * @fileoverview Claude AI Provider
  * Claude AI implementation providing LLM services with token tracking.
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.0.14
  * @since 1.0.0
  */

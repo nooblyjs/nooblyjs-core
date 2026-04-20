@@ -4,7 +4,7 @@
  * This test suite covers the ServiceRegistry functionality including service
  * creation, API key configuration, and middleware integration.
  * 
- * @author Digital Technologies Team
+ * @author Noobly JS Team
  * @version 1.2.1
  * @since 1.2.1
  */
