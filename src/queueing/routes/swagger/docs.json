@@ -5,8 +5,8 @@
     "description": "RESTful API for FIFO task queue operations. Provides endpoints for managing named task queues with support for multiple named instances. All endpoints support both default and instance-specific operations.",
     "version": "1.0.15",
     "contact": {
-      "name": "Digital Technologies Core Team",
-      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
     },
     "license": {
       "name": "ISC"

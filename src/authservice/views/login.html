@@ -121,7 +121,7 @@
         }
         .form-control:focus {
             border-color: #02797d;
-            box-shadow: 0 0 0 0.2rem rgba(5, 157, 162, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(104, 168, 196, 0.25);
         }
         .auth-link {
             color: #02797d;
@@ -142,7 +142,7 @@
                         <div class="card-body p-5">
                             <div class="text-center mb-4">
                                 <div id="logo-container" class="mb-3">
-                                    <img src="/images/s-tech-logo-colour.png" alt="S-Tech Logo" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
+                                    <img src="/images/nooblyjs-logo.png" alt="Noobly JS Logo" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
                                     <div class="auth-logo" id="app-name">Digital Technologies</div>
                                 </div>
                                 <p class="text-muted">Welcome back! Please sign in to your account.</p>
@@ -226,7 +226,7 @@
 
             // Add logo if provided (use default S-Tech logo if not)
             const logoContainer = document.getElementById('logo-container');
-            const logoUrl = brandingConfig.logoUrl || '/images/s-tech-logo-colour.png';
+            const logoUrl = brandingConfig.logoUrl || '/images/nooblyjs-logo.png';
             logoContainer.innerHTML = `<img src="${logoUrl}" alt="${brandingConfig.appName || 'Logo'}" style="max-height: 80px; width: auto; margin-bottom: 1rem;"><div class="auth-logo" id="app-name">${brandingConfig.appName || 'Digital Technologies'}</div>`;
 
             // Apply custom colors to CSS variables

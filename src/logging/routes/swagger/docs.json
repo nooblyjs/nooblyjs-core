@@ -5,8 +5,8 @@
     "description": "Enterprise-grade logging service API for structured logging operations. Supports multiple named instances, real-time log retrieval, analytics, and timeline tracking.",
     "version": "1.0.14",
     "contact": {
-      "name": "Digital Technologies Core Team",
-      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
     },
     "license": {
       "name": "ISC"

@@ -5,8 +5,8 @@
     "description": "RESTful API for cache operations with support for multiple named instances. Provides endpoints for storing, retrieving, and deleting cache entries, along with analytics and configuration management.",
     "version": "1.0.15",
     "contact": {
-      "name": "Digital Technologies Core Team",
-      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
     },
     "license": {
       "name": "ISC"

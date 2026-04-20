@@ -9,9 +9,15 @@
 
 /* Custom CSS Variables to maintain consistent theming */
 :root {
-  /* Primary theme colors */
-  --bs-primary: #02797d;
-  --bs-primary-rgb: 5, 157, 162;
+  /* Noobly JS branding colors - Teal Blue Palette */
+  --bs-primary: #68A8C4;
+  --bs-primary-rgb: 104, 168, 196;
+  --noobly-complement: #C49668;
+  --noobly-accent: #68C4B8;
+  --noobly-success: #52B788;
+  --noobly-warning: #FFB703;
+  --noobly-dark: #1F2937;
+  --noobly-light: #E8F4F8;
 
   /* Custom theme variables for consistency */
   --app-header-height: 56px;
@@ -253,7 +259,7 @@ body {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.2rem rgba(5, 157, 162, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(104, 168, 196, 0.25);
 }
 
 /* Modal customizations */
@@ -351,7 +357,7 @@ body {
   color: var(--bs-dark);
   border-color: var(--bs-border-color);
   outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(5, 157, 162, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(104, 168, 196, 0.25);
 }
 
 /* Navigation styles */
@@ -4272,7 +4278,7 @@ body {
 
         .provider-option.selected {
             border-color: var(--custom-primary);
-            background-color: rgba(5, 157, 162, 0.1);
+            background-color: rgba(104, 168, 196, 0.1);
         }
 
         .provider-status .status-indicator {
@@ -4328,7 +4334,7 @@ body {
 
         .provider-option.selected {
             border-color: var(--custom-primary);
-            background-color: rgba(5, 157, 162, 0.08);
+            background-color: rgba(104, 168, 196, 0.08);
         }
 
         .provider-option input {
@@ -9061,4 +9067,97 @@ body {
 
 .sidebar::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
+}
+
+/* Noobly JS branded button styles */
+.btn-noobly {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-noobly:hover {
+  background-color: #5691B0;
+  border-color: #5691B0;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(104, 168, 196, 0.4);
+}
+
+.btn-noobly-accent {
+  background-color: var(--noobly-accent);
+  border-color: var(--noobly-accent);
+  color: white;
+}
+
+.btn-noobly-accent:hover {
+  background-color: #5AA09E;
+  border-color: #5AA09E;
+  color: white;
+}
+
+.btn-noobly-complement {
+  background-color: var(--noobly-complement);
+  border-color: var(--noobly-complement);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-noobly-complement:hover {
+  background-color: #B08454;
+  border-color: #B08454;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 150, 104, 0.4);
+}
+
+/* Noobly logo styling */
+.core-logo-image {
+  height: 32px;
+  width: auto;
+  margin-right: 8px;
+  object-fit: contain;
+}
+
+/* Noobly accent color accents */
+.text-noobly {
+  color: var(--bs-primary) !important;
+}
+
+.text-noobly-accent {
+  color: var(--noobly-accent) !important;
+}
+
+.bg-noobly-light {
+  background-color: var(--noobly-light);
+}
+
+.text-noobly-complement {
+  color: var(--noobly-complement) !important;
+}
+
+.border-noobly {
+  border-color: var(--bs-primary) !important;
+}
+
+.border-noobly-complement {
+  border-color: var(--noobly-complement) !important;
+}
+
+/* Service cards with Noobly styling */
+.noobly-card {
+  border: 1px solid rgba(104, 168, 196, 0.2);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.noobly-card:hover {
+  border-color: var(--bs-primary);
+  box-shadow: 0 8px 24px rgba(104, 168, 196, 0.15);
+}
+
+.noobly-card-header {
+  background: linear-gradient(135deg, rgba(104, 168, 196, 0.05) 0%, rgba(196, 150, 104, 0.05) 100%);
+  border-bottom: 1px solid rgba(104, 168, 196, 0.1);
 }

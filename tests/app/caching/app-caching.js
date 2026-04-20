@@ -191,7 +191,7 @@ app.use('/README', express.static('README.md'));
 app.use('/', express.static(__dirname + '/public'));
 
 // Load images
-app.use('/images/s-tech-logo-colour.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
 
 // Start continuous caching operations
 continuousCacheOperations();

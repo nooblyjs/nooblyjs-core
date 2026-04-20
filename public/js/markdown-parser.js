@@ -897,7 +897,7 @@ class MarkdownParser {
     // Right side image
     if (heroImage) {
       html += '<div class="col-lg-6 text-center">\n';
-      html += `<img src="${this.escapeHtml(heroImage)}" alt="Hero Image" class="img-fluid robot-hero-img" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(5, 157, 162, 0.2));">\n`;
+      html += `<img src="${this.escapeHtml(heroImage)}" alt="Hero Image" class="img-fluid robot-hero-img" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(104, 168, 196, 0.2));">\n`;
       html += '</div>\n';
     }
 

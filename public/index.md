@@ -1,6 +1,6 @@
 header
 
-  icon: /images/s-tech-logo-colour.png
+  icon: /images/nooblyjs-logo.png
   title: Noobly JS Core
   links: [Services](/services/) [Bitbucket](https://bitbucket.org/shopritelabs/nooblyjs-core/src)
 
@@ -568,9 +568,9 @@ npm run docker:publish   # Build and push Docker image
 
 footer
 
-  icon: /images/s-tech-logo-colour.png
-  title: Digital Technologies Knowledge Platform
-  subtitle: © 2026 Digital Technologies. All rights reserved. This information is proprietary to Shoprite Checkers (Pty) Ltd and is confidential.
+  icon: /images/nooblyjs-logo.png
+  title: Noobly JS Core
+  subtitle: © 2026 Noobly JS. All rights reserved. Production-ready Node.js backend framework.
   links: [Bitbucket](https://bitbucket.org/shopritelabs/nooblyjs-core/src) [Documentation](/) [Contact](mailto:srbooysen@shoprite.co.za)
 
 ---

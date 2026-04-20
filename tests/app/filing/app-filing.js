@@ -66,7 +66,7 @@ const filingFolder2 = serviceRegistry.filing('local', {
 app.use('/styles.css', express.static(path.join(__dirname, 'styles.css')));
 
 // Load images
-app.use('/images/s-tech-logo-colour.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 's-tech-logo-colour.png')));
 
 // Serve client files
 app.use('/', express.static(path.join(__dirname, 'client')));

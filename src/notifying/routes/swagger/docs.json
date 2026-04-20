@@ -5,8 +5,8 @@
     "description": "RESTful API for pub/sub messaging system with topic management, subscription handling, and message broadcasting capabilities.",
     "version": "1.0.15",
     "contact": {
-      "name": "Digital Technologies Core Team",
-      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
     },
     "license": {
       "name": "ISC"

@@ -62,7 +62,7 @@ app.get('/', (req, res) => {
 app.use('/styles.css', express.static(path.join(__dirname, 'styles.css')));
 
 // Load styles
-app.use('/images/s-tech-logo-colour.png', express.static(path.join(__dirname, '/images/s-tech-logo-colour.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, '/images/nooblyjs-logo.png')));
 
 app.listen(3101, async () => {
   logger.info('Server running on port 3101');

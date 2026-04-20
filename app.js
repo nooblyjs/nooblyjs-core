@@ -177,8 +177,8 @@ app.use('/', express.static(__dirname + '/public'));
 const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
 
-app.listen(process.env.PORT || 11000, () => {
-  log.info(`Server is running on port ${process.env.PORT || 11000}`);
+app.listen(process.env.PORT || 9000, () => {
+  log.info(`Server is running on port ${process.env.PORT || 9000}`);
 });
 
 // Handle graceful shutdown

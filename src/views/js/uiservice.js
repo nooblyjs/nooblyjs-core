@@ -17,7 +17,7 @@ class UIService {
   createHeader(config = {}) {
     const {
       brandText = 'Digital Technologies',
-      brandIcon = '/images/s-tech-logo-colour.png',
+      brandIcon = '/images/nooblyjs-logo.png',
       showSearch = true,
       showCreateBtn = true,
       showAIChat = true,

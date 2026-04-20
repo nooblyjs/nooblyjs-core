@@ -274,7 +274,7 @@ footer a:hover,
 
 .cards-section .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(5, 157, 162, 0.15) !important;
+    box-shadow: 0 8px 16px rgba(104, 168, 196, 0.15) !important;
 }
 
 .cards-section .card-header {

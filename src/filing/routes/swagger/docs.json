@@ -5,8 +5,8 @@
     "description": "RESTful API for file operations with support for multiple named instances. Provides endpoints for uploading, downloading, and managing files across local, FTP, S3, and Git storage backends, along with analytics and configuration management.",
     "version": "1.0.15",
     "contact": {
-      "name": "Digital Technologies Core Team",
-      "url": "https://bitbucket.org/shopritelabs/digital-technologies-core"
+      "name": "Noobly JS Team",
+      "url": "https://bitbucket.org/shopritelabs/nooblyjs-core"
     },
     "license": {
       "name": "ISC"
