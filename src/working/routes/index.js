@@ -46,6 +46,7 @@ module.exports = (options, eventEmitter, worker, analytics) => {
 
   const app = options['express-app'];
   const logger = worker.logger || null;
+  const authMiddleware = options.authMiddleware;
 
   /**
    * Wraps an async route handler so any thrown error becomes a 500 response

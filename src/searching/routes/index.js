@@ -31,6 +31,7 @@ const DataExporter = require('../../appservice/utils/exportUtils');
 module.exports = (options, eventEmitter, search) => {
   if (options['express-app'] && search) {
     const app = options['express-app'];
+    const authMiddleware = options.authMiddleware;
 
     /**
      * POST /services/searching/api/add/

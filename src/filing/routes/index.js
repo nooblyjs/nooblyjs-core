@@ -38,6 +38,7 @@ module.exports = (options, eventEmitter, filing) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || filing.providerType || 'local';
+    const authMiddleware = options.authMiddleware;
 
     /**
      * POST /services/filing/api/upload/:key

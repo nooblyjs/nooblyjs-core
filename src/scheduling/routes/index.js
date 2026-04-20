@@ -43,6 +43,7 @@ module.exports = (options, eventEmitter, scheduler) => {
   if (!options || !options['express-app'] || !scheduler) return;
   const app = options['express-app'];
   const logger = scheduler.logger || null;
+  const authMiddleware = options.authMiddleware;
 
   /**
    * Wraps an async route handler so any thrown error becomes a 500 response

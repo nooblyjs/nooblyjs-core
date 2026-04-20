@@ -28,6 +28,7 @@ const DataExporter = require('../../appservice/utils/exportUtils');
 module.exports = (options, eventEmitter, measuring, analytics) => {
   if (options['express-app'] && measuring) {
     const app = options['express-app'];
+    const authMiddleware = options.authMiddleware;
 
     /**
      * POST /services/measuring/api/add

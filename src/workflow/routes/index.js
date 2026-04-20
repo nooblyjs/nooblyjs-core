@@ -30,6 +30,7 @@ const DataExporter = require('../../appservice/utils/exportUtils');
 module.exports = (options, eventEmitter, workflow, analytics) => {
   if (options['express-app'] && workflow) {
     const app = options['express-app'];
+    const authMiddleware = options.authMiddleware;
 
     /**
      * POST /services/workflow/api/defineworkflow
