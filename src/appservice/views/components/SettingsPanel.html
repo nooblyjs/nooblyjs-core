@@ -1,0 +1,297 @@
+<!-- Standardized Settings Panel Component -->
+<!-- Usage: Include this HTML in service dashboard views -->
+<div id="settings-panel" class="settings-panel">
+  <div class="settings-container">
+    <h2>Service Settings</h2>
+
+    <div class="settings-form-wrapper">
+      <form id="settings-form" class="settings-form">
+        <div id="settings-fields" class="settings-fields">
+          <!-- Fields dynamically generated from API schema -->
+        </div>
+
+        <div class="settings-actions">
+          <button type="submit" class="btn-primary">Save Settings</button>
+          <button type="button" class="btn-secondary" onclick="resetSettings()">Reset</button>
+          <button type="button" class="btn-secondary" onclick="reloadSettings()">Reload</button>
+        </div>
+      </form>
+
+      <div id="settings-message" class="settings-message" style="display: none;"></div>
+      <div id="settings-error" class="settings-error" style="display: none;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.settings-panel {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.settings-panel h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+}
+
+.settings-form-wrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.settings-fields {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-primary, .btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.settings-message {
+  margin-top: 15px;
+  padding: 12px;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}
+
+.settings-error {
+  margin-top: 15px;
+  padding: 12px;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+</style>
+
+<script>
+// Settings Panel Controller
+class SettingsPanelController {
+  constructor(serviceName, apiBaseUrl = '') {
+    this.serviceName = serviceName;
+    this.apiBaseUrl = apiBaseUrl || `/services/${serviceName}/api`;
+    this.settings = {};
+    this.originalSettings = {};
+    this.init();
+  }
+
+  async init() {
+    await this.loadSettings();
+    this.setupFormListeners();
+  }
+
+  async loadSettings() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/settings`);
+      const data = await response.json();
+
+      if (data.success) {
+        this.settings = data.data || data;
+        this.originalSettings = JSON.parse(JSON.stringify(this.settings));
+        this.renderSettings();
+      }
+    } catch (error) {
+      this.showError(`Failed to load settings: ${error.message}`);
+    }
+  }
+
+  renderSettings() {
+    const fieldsContainer = document.getElementById('settings-fields');
+    fieldsContainer.innerHTML = '';
+
+    Object.entries(this.settings).forEach(([key, value]) => {
+      const fieldType = this.getFieldType(value);
+      const fieldHTML = this.createField(key, value, fieldType);
+      fieldsContainer.innerHTML += fieldHTML;
+    });
+  }
+
+  getFieldType(value) {
+    if (typeof value === 'boolean') return 'checkbox';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'string' && value.includes('\n')) return 'textarea';
+    return 'text';
+  }
+
+  createField(name, value, type) {
+    const label = name.replace(/([A-Z])/g, ' $1').trim();
+    const id = `field-${name}`;
+
+    if (type === 'checkbox') {
+      return `
+        <div class="form-group">
+          <label for="${id}">
+            <input type="checkbox" id="${id}" name="${name}" ${value ? 'checked' : ''} />
+            ${label}
+          </label>
+        </div>
+      `;
+    }
+
+    if (type === 'textarea') {
+      return `
+        <div class="form-group">
+          <label for="${id}">${label}</label>
+          <textarea id="${id}" name="${name}">${value || ''}</textarea>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="form-group">
+        <label for="${id}">${label}</label>
+        <input type="${type}" id="${id}" name="${name}" value="${value || ''}" />
+      </div>
+    `;
+  }
+
+  setupFormListeners() {
+    const form = document.getElementById('settings-form');
+    if (form) {
+      form.addEventListener('submit', (e) => this.handleSubmit(e));
+    }
+  }
+
+  async handleSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(document.getElementById('settings-form'));
+    const settings = Object.fromEntries(formData);
+
+    // Convert checkbox values
+    Object.keys(settings).forEach(key => {
+      if (this.originalSettings[key] === true || this.originalSettings[key] === false) {
+        settings[key] = settings[key] === 'on';
+      }
+    });
+
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        this.showMessage('Settings saved successfully!');
+        this.originalSettings = JSON.parse(JSON.stringify(settings));
+      } else {
+        this.showError(data.error?.message || 'Failed to save settings');
+      }
+    } catch (error) {
+      this.showError(`Save failed: ${error.message}`);
+    }
+  }
+
+  showMessage(message) {
+    const msgEl = document.getElementById('settings-message');
+    const errEl = document.getElementById('settings-error');
+    msgEl.textContent = message;
+    msgEl.style.display = 'block';
+    errEl.style.display = 'none';
+    setTimeout(() => msgEl.style.display = 'none', 3000);
+  }
+
+  showError(error) {
+    const errEl = document.getElementById('settings-error');
+    const msgEl = document.getElementById('settings-message');
+    errEl.textContent = error;
+    errEl.style.display = 'block';
+    msgEl.style.display = 'none';
+  }
+}
+
+// Global functions for buttons
+function resetSettings() {
+  if (window.settingsPanelController) {
+    window.settingsPanelController.renderSettings();
+  }
+}
+
+function reloadSettings() {
+  if (window.settingsPanelController) {
+    window.settingsPanelController.loadSettings();
+  }
+}
+</script>

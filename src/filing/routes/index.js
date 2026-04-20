@@ -17,6 +17,8 @@ const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
 const upload = multer();
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
@@ -1540,6 +1542,60 @@ module.exports = (options, eventEmitter, filing) => {
     // Advise that we have loaded routes
     eventEmitter.emit('filing:loading routes', {
       folder: path.join(__dirname),
+    });
+
+
+    /**
+     * GET /services/filing/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/filing/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'filing', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'filing-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/filing/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/filing/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'filing', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'filing-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/filing/api/export
+     * Exports service data
+     */
+    app.get('/services/filing/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = { note: 'Data export available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('filing-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'filing-export' });
+      }
     });
   }
 };

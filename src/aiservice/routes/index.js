@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
  * 
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} aiService - The AI provider instance
  * @param {Object=} analytics - Prompt analytics module instance
@@ -231,5 +233,59 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       }
     });
 
+
+
+    /**
+     * GET /services/aiservice/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/aiservice/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'aiservice', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'aiservice-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/aiservice/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/aiservice/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'aiservice', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'aiservice-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/aiservice/api/export
+     * Exports service data
+     */
+    app.get('/services/aiservice/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = { note: 'Data export available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('aiservice-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'aiservice-export' });
+      }
+    });
   }
 };

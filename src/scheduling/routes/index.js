@@ -180,6 +180,60 @@ module.exports = (options, eventEmitter, scheduler) => {
     const body = req.body;
     if (!body || typeof body !== 'object') {
       return res.status(400).json({ error: 'Bad Request: Missing settings body' });
+
+
+    /**
+     * GET /services/scheduling/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/scheduling/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'scheduling', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'scheduling-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/scheduling/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/scheduling/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'scheduling', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'scheduling-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/scheduling/api/export
+     * Exports service data
+     */
+    app.get('/services/scheduling/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = { note: 'Data export available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('scheduling-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'scheduling-export' });
+      }
+    });
     }
     await scheduler.saveSettings(body);
     res.status(200).json({ status: 'OK', message: 'Settings updated' });

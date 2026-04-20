@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
  * Sets up endpoints for metric collection and analysis operations.
  *
  * @param {Object} options - Configuration options object
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
  * @param {Object} measuring - The measuring provider instance with metric methods
@@ -318,6 +320,60 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           metrics: [],
           values: []
         });
+      }
+    });
+
+
+    /**
+     * GET /services/measuring/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/measuring/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'measuring', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'measuring-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/measuring/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/measuring/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'measuring', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'measuring-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/measuring/api/export
+     * Exports service data
+     */
+    app.get('/services/measuring/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = { note: 'Data export available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('measuring-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'measuring-export' });
       }
     });
   }

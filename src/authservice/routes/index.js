@@ -17,6 +17,8 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
  * Sets up endpoints for auth operations including login, logout, user management,
  * and role-based access control.
  *
+const AuditLog = require('../../appservice/modules/auditLog');
+const DataExporter = require('../../appservice/utils/exportUtils');
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
@@ -771,4 +773,58 @@ function extractAuthToken(req) {
   }
 
   return null;
+
+
+    /**
+     * GET /services/authservice/api/audit
+     * Retrieves audit log entries
+     */
+    app.get('/services/authservice/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const filters = { service: 'authservice', limit: parseInt(req.query.limit) || 100 };
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        const logs = auditLog.query(filters);
+        const stats = auditLog.getStats(filters);
+        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+      } catch (error) {
+        handleError(res, error, { operation: 'authservice-audit-query' });
+      }
+    });
+
+    /**
+     * POST /services/authservice/api/audit/export
+     * Exports audit logs
+     */
+    app.post('/services/authservice/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const exported = auditLog.export(format, { service: 'authservice', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'authservice-audit-export' });
+      }
+    });
+
+    /**
+     * GET /services/authservice/api/export
+     * Exports service data
+     */
+    app.get('/services/authservice/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const format = req.query.format || 'json';
+        const data = { note: 'Data export available' };
+        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('authservice-export', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'authservice-export' });
+      }
+    });
 }

@@ -1,0 +1,366 @@
+<!-- Standardized Data Table Component -->
+<!-- Usage: Include this HTML in service dashboard views -->
+<div id="data-table-panel" class="data-table-panel">
+  <div class="data-table-header">
+    <h2>Data Management</h2>
+    <div class="data-table-controls">
+      <input type="text" id="search-input" class="search-input" placeholder="Search data...">
+      <button onclick="exportTableData()" class="btn-export">Export</button>
+      <select id="export-format" class="export-format">
+        <option value="json">JSON</option>
+        <option value="csv">CSV</option>
+        <option value="xml">XML</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table id="data-table" class="data-table">
+      <thead>
+        <tr id="table-header">
+          <!-- Headers dynamically generated -->
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <!-- Rows dynamically generated -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="data-table-footer">
+    <div class="pagination">
+      <button onclick="previousPage()" class="btn-nav">← Previous</button>
+      <span id="page-info" class="page-info">Page 1</span>
+      <button onclick="nextPage()" class="btn-nav">Next →</button>
+    </div>
+    <div class="row-count">
+      <label>Rows per page:</label>
+      <select id="rows-per-page" onchange="updateRowsPerPage()">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="table-message" class="table-message" style="display: none;"></div>
+</div>
+
+<style>
+.data-table-panel {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.data-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #007bff;
+}
+
+.data-table-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.data-table-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 200px;
+}
+
+.btn-export, .export-format {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  background: white;
+}
+
+.btn-export:hover {
+  background: #f0f0f0;
+}
+
+.data-table-wrapper {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.data-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.data-table th:hover {
+  background: #e9ecef;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.data-table tbody tr.selected {
+  background: #e7f3ff;
+}
+
+.table-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.data-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-top: 1px solid #dee2e6;
+}
+
+.pagination {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-nav {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.btn-nav:hover {
+  background: #f0f0f0;
+}
+
+.btn-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  min-width: 80px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.row-count {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.row-count select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.table-message {
+  margin-top: 15px;
+  padding: 12px;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}
+
+.data-empty {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+</style>
+
+<script>
+class DataTableController {
+  constructor(serviceName, apiBaseUrl = '') {
+    this.serviceName = serviceName;
+    this.apiBaseUrl = apiBaseUrl || `/services/${serviceName}/api`;
+    this.data = [];
+    this.filteredData = [];
+    this.currentPage = 1;
+    this.rowsPerPage = 10;
+    this.selectedRows = new Set();
+    this.init();
+  }
+
+  async init() {
+    await this.loadData();
+    this.setupListeners();
+    this.render();
+  }
+
+  async loadData() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/export?format=json`);
+      const data = await response.json();
+      this.data = data.data || data || [];
+      this.filteredData = [...this.data];
+      this.currentPage = 1;
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      this.data = [];
+      this.filteredData = [];
+    }
+  }
+
+  setupListeners() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => this.filterData(e.target.value));
+    }
+  }
+
+  filterData(searchTerm) {
+    if (!searchTerm) {
+      this.filteredData = [...this.data];
+    } else {
+      const term = searchTerm.toLowerCase();
+      this.filteredData = this.data.filter(item => {
+        return JSON.stringify(item).toLowerCase().includes(term);
+      });
+    }
+    this.currentPage = 1;
+    this.render();
+  }
+
+  render() {
+    const start = (this.currentPage - 1) * this.rowsPerPage;
+    const end = start + this.rowsPerPage;
+    const pageData = this.filteredData.slice(start, end);
+
+    this.renderHeader();
+    this.renderRows(pageData);
+    this.renderPagination();
+  }
+
+  renderHeader() {
+    if (this.data.length === 0) return;
+
+    const headerRow = document.getElementById('table-header');
+    headerRow.innerHTML = '';
+
+    const firstRow = this.data[0];
+    const headers = Object.keys(firstRow);
+
+    headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header.replace(/([A-Z])/g, ' $1').trim();
+      th.onclick = () => this.sortBy(header);
+      headerRow.appendChild(th);
+    });
+  }
+
+  renderRows(pageData) {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+
+    if (pageData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="100%" class="data-empty">No data available</td></tr>';
+      return;
+    }
+
+    pageData.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      Object.values(row).forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = typeof value === 'object' ? JSON.stringify(value) : value;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  renderPagination() {
+    const totalPages = Math.ceil(this.filteredData.length / this.rowsPerPage);
+    const pageInfo = document.getElementById('page-info');
+    pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+  }
+
+  sortBy(header) {
+    this.data.sort((a, b) => {
+      const aVal = a[header];
+      const bVal = b[header];
+      return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+    });
+    this.filteredData = [...this.data];
+    this.render();
+  }
+}
+
+// Global functions for controls
+function nextPage() {
+  if (window.dataTableController) {
+    const maxPage = Math.ceil(window.dataTableController.filteredData.length / window.dataTableController.rowsPerPage);
+    if (window.dataTableController.currentPage < maxPage) {
+      window.dataTableController.currentPage++;
+      window.dataTableController.render();
+    }
+  }
+}
+
+function previousPage() {
+  if (window.dataTableController) {
+    if (window.dataTableController.currentPage > 1) {
+      window.dataTableController.currentPage--;
+      window.dataTableController.render();
+    }
+  }
+}
+
+function updateRowsPerPage() {
+  if (window.dataTableController) {
+    window.dataTableController.rowsPerPage = parseInt(document.getElementById('rows-per-page').value);
+    window.dataTableController.currentPage = 1;
+    window.dataTableController.render();
+  }
+}
+
+async function exportTableData() {
+  if (!window.dataTableController) return;
+  const format = document.getElementById('export-format').value;
+  const url = `${window.dataTableController.apiBaseUrl}/export?format=${format}`;
+  window.location.href = url;
+}
+</script>
