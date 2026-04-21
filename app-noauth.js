@@ -19,6 +19,10 @@ const config = require('dotenv').config();
 
 const serviceRegistry = require('.');
 
+// Load rate limiting configuration
+const rateLimitConfig = require('./src/config/rateLimitConfig');
+const { setupRateLimiter } = require('./src/middleware/setupRateLimiter');
+
 const app = express();
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,6 +43,10 @@ serviceRegistry.initialize(app, eventEmitter, {
 });
 
 const log = serviceRegistry.logger('memory');
+
+// Setup rate limiter middleware
+const rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
+
 const defaultCache = serviceRegistry.cache('memory');
 const cacheSessions = serviceRegistry.getService('caching', 'memory', { instanceName: 'sessions' });
 const cacheMetrics = serviceRegistry.getService('caching', 'memory', { instanceName: 'metrics' });

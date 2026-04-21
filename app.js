@@ -68,6 +68,10 @@ app.use(passport.session());
 // Load the service registry library
 const serviceRegistry = require('./index');
 
+// Load rate limiting configuration
+const rateLimitConfig = require('./src/config/rateLimitConfig');
+const { setupRateLimiter } = require('./src/middleware/setupRateLimiter');
+
 /**
  * Configure API keys for authentication
  *
@@ -95,6 +99,9 @@ if (configuredApiKeys.length === 0 && isProduction) {
   console.error('Example: export API_KEYS="key1,key2,key3"');
   process.exit(1);
 }
+
+// Initialize rate limiter (will be enhanced once logger is available)
+let rateLimiter = null;
 
 // Generate a development API key only if not in production
 let generatedDevApiKey = null;
@@ -135,6 +142,9 @@ serviceRegistry.initialize(app, eventEmitter, options);
 // Initialize all services
 const log = serviceRegistry.logger('file');
 app.set('logger', log); // Make logger available to app
+
+// Setup rate limiter middleware
+rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
 const cache = serviceRegistry.cache('inmemory');
 const dataService = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
