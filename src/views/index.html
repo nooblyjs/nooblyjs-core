@@ -57,46 +57,6 @@
                 </div>
             </div>
 
-            <!-- Health Summary Card -->
-            <div id="healthSummaryCard" class="health-summary-card healthy" style="display: none; margin-bottom: 2rem; padding: 2rem; border-radius: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: nowrap; gap: 2rem;">
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 700; color: #1F2937;">
-                        <span class="health-dot healthy" style="width: 12px; height: 12px;"></span>
-                        System Health Status
-                    </div>
-                    <div id="systemOverallStatus" style="font-size: 1rem; font-weight: 600; color: #28a745; white-space: nowrap;">
-                        ✓ All Systems Operational
-                    </div>
-                </div>
-                <div style="display: flex; gap: 1.5rem; justify-content: space-between; width: 100%; flex-wrap: nowrap;">
-                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #28a745; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
-                        <i class="bi bi-check-circle-fill" style="font-size: 1.5rem; color: #28a745; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="healthyServicesCount">0</div>
-                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Healthy</div>
-                    </div>
-                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #ffc107; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
-                        <i class="bi bi-exclamation-circle-fill" style="font-size: 1.5rem; color: #ffc107; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="degradedServicesCount">0</div>
-                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Degraded</div>
-                    </div>
-                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #dc3545; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
-                        <i class="bi bi-x-circle-fill" style="font-size: 1.5rem; color: #dc3545; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="unhealthyServicesCount">0</div>
-                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Unhealthy</div>
-                    </div>
-                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #68A8C4; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
-                        <i class="bi bi-diagram-3-fill" style="font-size: 1.5rem; color: #68A8C4; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="totalServicesCount">0</div>
-                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Total Services</div>
-                    </div>
-                </div>
-                <!-- Unhealthy/Degraded Services Details -->
-                <div id="unhealthyServicesDetails" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.1); display: none;">
-                    <div style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 1rem;">Services Requiring Attention:</div>
-                    <div id="unhealthyServicesList" style="display: flex; flex-wrap: wrap; gap: 0.75rem;"></div>
-                </div>
-            </div>
-
             <div class="core-page-content">
 
             <!-- System Monitoring Section -->
@@ -211,6 +171,64 @@
                             <div class="core-card-content">
                                 <div id="performanceMarksContainer" style="max-height: 300px; overflow-y: auto;">
                                     <small class="text-muted">No performance marks recorded yet...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Health Status -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="core-card" id="healthSummaryCard" style="display: none;">
+                            <div class="core-card-header">
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 2rem; flex-wrap: nowrap;">
+                                    <h5 class="core-card-title mb-0" style="display: flex; align-items: center; gap: 12px;">
+                                        <span class="health-dot healthy" style="width: 12px; height: 12px;"></span>
+                                        <i class="bi bi-heart-pulse"></i> System Health Status
+                                    </h5>
+                                    <div id="systemOverallStatus" style="font-size: 0.95rem; font-weight: 600; color: #28a745; white-space: nowrap;">
+                                        ✓ All Systems Operational
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="core-card-content">
+                                <div class="row">
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #28a745 !important; background: #f8fff9;">
+                                            <i class="bi bi-check-circle-fill" style="font-size: 2rem; color: #28a745; display: block; margin-bottom: 0.75rem;"></i>
+                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="healthyServicesCount">0</h4>
+                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Healthy</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #ffc107 !important; background: #fffef5;">
+                                            <i class="bi bi-exclamation-circle-fill" style="font-size: 2rem; color: #ffc107; display: block; margin-bottom: 0.75rem;"></i>
+                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="degradedServicesCount">0</h4>
+                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Degraded</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #dc3545 !important; background: #fff9f9;">
+                                            <i class="bi bi-x-circle-fill" style="font-size: 2rem; color: #dc3545; display: block; margin-bottom: 0.75rem;"></i>
+                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="unhealthyServicesCount">0</h4>
+                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Unhealthy</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6 mb-3">
+                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #68A8C4 !important; background: #f5fafc;">
+                                            <i class="bi bi-diagram-3-fill" style="font-size: 2rem; color: #68A8C4; display: block; margin-bottom: 0.75rem;"></i>
+                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="totalServicesCount">0</h4>
+                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Total Services</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Unhealthy/Degraded Services Details -->
+                                <div id="unhealthyServicesDetails" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; display: none;">
+                                    <div style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 1rem;">
+                                        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #ffc107;"></i>Services Requiring Attention:
+                                    </div>
+                                    <div id="unhealthyServicesList" style="display: flex; flex-wrap: wrap; gap: 0.75rem;"></div>
                                 </div>
                             </div>
                         </div>
