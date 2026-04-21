@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Monitoring Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      overflow-y: auto;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #34495e;
+    }
+
+    .sidebar-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .sidebar-stats {
+      font-size: 12px;
+      color: #bdc3c7;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav li {
+      border-bottom: 1px solid #34495e;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 12px 20px;
+      color: #ecf0f1;
+      text-decoration: none;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .sidebar-nav a:hover {
+      background: #34495e;
+    }
+
+    .sidebar-nav a.active {
+      background: #3498db;
+      border-left: 4px solid #2980b9;
+      padding-left: 16px;
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: white;
+      padding: 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    button.secondary {
+      background: #95a5a6;
+    }
+
+    button.secondary:hover {
+      background: #7f8c8d;
+    }
+
+    button.danger {
+      background: #e74c3c;
+    }
+
+    button.danger:hover {
+      background: #c0392b;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+      background: white;
+      margin: -20px -20px 20px -20px;
+      padding: 0 20px;
+    }
+
+    .tab-button {
+      padding: 15px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #7f8c8d;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-button.active {
+      color: #3498db;
+      border-bottom-color: #3498db;
+      background: none;
+    }
+
+    .tab-button:hover {
+      background: none;
+      color: #2c3e50;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-healthy {
+      background: #d5f4e6;
+      color: #27ae60;
+    }
+
+    .status-degraded {
+      background: #fef5e7;
+      color: #f39c12;
+    }
+
+    .status-unhealthy {
+      background: #fadbd8;
+      color: #e74c3c;
+    }
+
+    .status-unknown {
+      background: #eaeaea;
+      color: #7f8c8d;
+    }
+
+    /* Health overview cards */
+    .health-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .health-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .health-card h3 {
+      font-size: 12px;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .health-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .health-card .detail {
+      font-size: 12px;
+      color: #95a5a6;
+    }
+
+    /* Graph visualization */
+    #graph-container {
+      width: 100%;
+      height: 500px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .data-table thead {
+      background: #f8f9fa;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .data-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: #2c3e50;
+      text-transform: uppercase;
+    }
+
+    .data-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Charts */
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .chart-container h3 {
+      margin-bottom: 15px;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    /* Service detail view */
+    .service-detail {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .service-detail h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+    }
+
+    .detail-item label {
+      font-size: 12px;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .detail-item .value {
+      font-size: 18px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    /* Loading and empty states */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+      color: #7f8c8d;
+    }
+
+    .empty-state p {
+      margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        max-height: 200px;
+      }
+
+      .health-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      #graph-container {
+        height: 300px;
+      }
+
+      .tabs {
+        margin-left: -15px;
+        margin-right: -15px;
+        padding: 0 15px;
+      }
+
+      .content {
+        padding: 15px;
+      }
+    }
+
+    /* Utility classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-20 {
+      margin-top: 20px;
+    }
+
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>Monitoring</h2>
+        <div class="sidebar-stats">
+          <div id="sidebar-total-services">Services: --</div>
+          <div id="sidebar-healthy">Healthy: --</div>
+        </div>
+      </div>
+      <ul class="sidebar-nav">
+        <li><a class="tab-button active" onclick="switchTab('overview')">Dashboard</a></li>
+        <li><a class="tab-button" onclick="switchTab('graph')">Dependency Graph</a></li>
+        <li><a class="tab-button" onclick="switchTab('critical-paths')">Critical Paths</a></li>
+        <li><a class="tab-button" onclick="switchTab('services')">Services</a></li>
+        <li><a class="tab-button" onclick="switchTab('matrix')">Relationship Matrix</a></li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>Service Monitoring Dashboard</h1>
+        <div class="header-controls">
+          <button class="secondary" onclick="refreshData()">Refresh</button>
+          <button class="danger" onclick="resetData()">Reset Stats</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- Dashboard Overview Tab -->
+        <div id="overview" class="tab-content active">
+          <div class="health-overview" id="health-overview">
+            <div class="health-card">
+              <h3>Total Services</h3>
+              <div class="value" id="total-services">0</div>
+            </div>
+            <div class="health-card">
+              <h3>Healthy</h3>
+              <div class="value" id="healthy-count">0</div>
+              <div class="detail" id="healthy-percentage">0%</div>
+            </div>
+            <div class="health-card">
+              <h3>Degraded</h3>
+              <div class="value" id="degraded-count">0</div>
+            </div>
+            <div class="health-card">
+              <h3>Unhealthy</h3>
+              <div class="value" id="unhealthy-count">0</div>
+            </div>
+            <div class="health-card">
+              <h3>Error Rate</h3>
+              <div class="value" id="error-rate">0%</div>
+              <div class="detail" id="error-detail">0 errors</div>
+            </div>
+            <div class="health-card">
+              <h3>Avg Latency</h3>
+              <div class="value" id="avg-latency">0ms</div>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <h3>Critical Service Paths</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Calls</th>
+                  <th>Errors</th>
+                  <th>Success Rate</th>
+                  <th>Latency</th>
+                </tr>
+              </thead>
+              <tbody id="critical-paths-body">
+                <tr>
+                  <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Dependency Graph Tab -->
+        <div id="graph" class="tab-content">
+          <div id="graph-container"></div>
+          <div id="graph-stats" class="chart-container">
+            <h3>Graph Statistics</h3>
+            <p id="graph-detail-text">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Critical Paths Tab -->
+        <div id="critical-paths" class="tab-content">
+          <div class="chart-container">
+            <h3>Top Service Paths by Call Volume</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Priority</th>
+                  <th>From Service</th>
+                  <th>To Service</th>
+                  <th>Total Calls</th>
+                  <th>Errors</th>
+                  <th>Success Rate</th>
+                </tr>
+              </thead>
+              <tbody id="critical-paths-table">
+                <tr>
+                  <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="services" class="tab-content">
+          <div class="chart-container">
+            <h3>Service Details</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Service Name</th>
+                  <th>Status</th>
+                  <th>Total Calls</th>
+                  <th>Errors</th>
+                  <th>Error Rate</th>
+                  <th>Avg Latency</th>
+                  <th>Dependencies</th>
+                </tr>
+              </thead>
+              <tbody id="services-table">
+                <tr>
+                  <td colspan="7" class="text-center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="chart-container mt-20">
+            <h3>Service Metrics</h3>
+            <div id="service-metrics-detail">
+              <p class="text-center">Select a service from the table above to view detailed metrics</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relationship Matrix Tab -->
+        <div id="matrix" class="tab-content">
+          <div class="chart-container">
+            <h3>Service Relationship Matrix</h3>
+            <p>Calls and latency between all service pairs</p>
+            <div id="matrix-container" style="overflow-x: auto; margin-top: 15px;">
+              <table class="data-table" style="min-width: 600px;">
+                <thead>
+                  <tr id="matrix-header">
+                    <th>Service</th>
+                  </tr>
+                </thead>
+                <tbody id="matrix-body">
+                  <tr>
+                    <td colspan="10" class="text-center">Loading...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API base URL
+    const API_BASE = '/services/monitoring/api';
+    let currentData = null;
+    let autoRefreshInterval = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshData();
+      // Auto-refresh every 5 seconds
+      autoRefreshInterval = setInterval(refreshData, 5000);
+    });
+
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected tab
+      const tab = document.getElementById(tabName);
+      if (tab) {
+        tab.classList.add('active');
+      }
+
+      // Mark clicked button as active
+      event.target.classList.add('active');
+
+      // Render tab-specific content
+      if (tabName === 'graph' && currentData) {
+        renderGraph();
+      } else if (tabName === 'critical-paths' && currentData) {
+        renderCriticalPaths();
+      } else if (tabName === 'services' && currentData) {
+        renderServices();
+      } else if (tabName === 'matrix' && currentData) {
+        renderMatrix();
+      }
+    }
+
+    async function refreshData() {
+      try {
+        const [graphRes, healthRes, pathsRes] = await Promise.all([
+          fetch(`${API_BASE}/graph`),
+          fetch(`${API_BASE}/health-overview`),
+          fetch(`${API_BASE}/critical-paths?limit=20`)
+        ]);
+
+        const graphData = await graphRes.json();
+        const healthData = await healthRes.json();
+        const pathsData = await pathsRes.json();
+
+        currentData = {
+          graph: graphData.data,
+          health: healthData.data,
+          paths: pathsData.data
+        };
+
+        renderDashboard();
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+      }
+    }
+
+    function renderDashboard() {
+      if (!currentData) return;
+
+      const health = currentData.health;
+
+      // Update header stats
+      document.getElementById('total-services').textContent = health.totalServices;
+      document.getElementById('healthy-count').textContent = health.healthy;
+      document.getElementById('healthy-percentage').textContent = health.healthyPercentage + '%';
+      document.getElementById('degraded-count').textContent = health.degraded;
+      document.getElementById('unhealthy-count').textContent = health.unhealthy;
+      document.getElementById('error-rate').textContent = health.errorRate + '%';
+      document.getElementById('error-detail').textContent = `${health.totalErrors} errors`;
+      document.getElementById('avg-latency').textContent = health.avgLatency + 'ms';
+
+      // Update sidebar
+      document.getElementById('sidebar-total-services').textContent = `Services: ${health.totalServices}`;
+      document.getElementById('sidebar-healthy').textContent = `Healthy: ${health.healthy}`;
+
+      // Render critical paths in overview
+      renderCriticalPathsTable();
+    }
+
+    function renderCriticalPathsTable() {
+      if (!currentData || !currentData.paths) return;
+
+      const tbody = document.getElementById('critical-paths-body');
+      tbody.innerHTML = currentData.paths.map(path => `
+        <tr>
+          <td><strong>${path.from}</strong></td>
+          <td><strong>${path.to}</strong></td>
+          <td>${path.calls}</td>
+          <td>${path.errors}</td>
+          <td><span class="status-badge ${path.successRate >= 95 ? 'status-healthy' : path.successRate >= 80 ? 'status-degraded' : 'status-unhealthy'}">${path.successRate}%</span></td>
+          <td>--ms</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderGraph() {
+      if (!currentData || !currentData.graph) return;
+
+      const container = document.getElementById('graph-container');
+      const graph = currentData.graph;
+
+      // Simple SVG-based visualization
+      const width = container.offsetWidth;
+      const height = 500;
+
+      // Calculate positions using force-directed algorithm (simplified)
+      const nodeCount = graph.nodes.length;
+      const radius = Math.min(width, height) / 3;
+
+      let svg = `<svg width="${width}" height="${height}" style="background: #f8f9fa; border-radius: 8px;">`;
+
+      // Draw edges
+      for (const edge of graph.edges) {
+        const fromNode = graph.nodes.find(n => n.id === edge.from);
+        const toNode = graph.nodes.find(n => n.id === edge.to);
+
+        if (fromNode && toNode) {
+          const fromIdx = graph.nodes.indexOf(fromNode);
+          const toIdx = graph.nodes.indexOf(toNode);
+
+          const fromX = width / 2 + radius * Math.cos(2 * Math.PI * fromIdx / nodeCount);
+          const fromY = height / 2 + radius * Math.sin(2 * Math.PI * fromIdx / nodeCount);
+          const toX = width / 2 + radius * Math.cos(2 * Math.PI * toIdx / nodeCount);
+          const toY = height / 2 + radius * Math.sin(2 * Math.PI * toIdx / nodeCount);
+
+          const opacity = 0.2 + (edge.successRate / 100) * 0.6;
+          svg += `<line x1="${fromX}" y1="${fromY}" x2="${toX}" y2="${toY}" stroke="rgba(52, 152, 219, ${opacity})" stroke-width="2" />`;
+        }
+      }
+
+      // Draw nodes
+      for (let i = 0; i < graph.nodes.length; i++) {
+        const node = graph.nodes[i];
+        const x = width / 2 + radius * Math.cos(2 * Math.PI * i / nodeCount);
+        const y = height / 2 + radius * Math.sin(2 * Math.PI * i / nodeCount);
+
+        const statusColor = {
+          healthy: '#27ae60',
+          degraded: '#f39c12',
+          unhealthy: '#e74c3c',
+          unknown: '#95a5a6'
+        }[node.status] || '#95a5a6';
+
+        svg += `<circle cx="${x}" cy="${y}" r="25" fill="${statusColor}" opacity="0.8" />`;
+        svg += `<text x="${x}" y="${y}" text-anchor="middle" dy=".3em" fill="white" font-size="12" font-weight="600">${node.id.substring(0, 3)}</text>`;
+      }
+
+      svg += '</svg>';
+      container.innerHTML = svg;
+
+      // Update stats
+      const statsText = `
+        <p><strong>Nodes (Services):</strong> ${graph.nodes.length}</p>
+        <p><strong>Edges (Dependencies):</strong> ${graph.edges.length}</p>
+        <p><strong>Total Calls:</strong> ${graph.nodes.reduce((sum, n) => sum + n.calls, 0)}</p>
+        <p><strong>Total Errors:</strong> ${graph.nodes.reduce((sum, n) => sum + n.errors, 0)}</p>
+      `;
+      document.getElementById('graph-detail-text').innerHTML = statsText;
+    }
+
+    function renderCriticalPaths() {
+      if (!currentData || !currentData.paths) return;
+
+      const tbody = document.getElementById('critical-paths-table');
+      tbody.innerHTML = currentData.paths.map((path, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>${path.from}</strong></td>
+          <td><strong>${path.to}</strong></td>
+          <td>${path.calls}</td>
+          <td>${path.errors}</td>
+          <td><span class="status-badge ${path.successRate >= 95 ? 'status-healthy' : path.successRate >= 80 ? 'status-degraded' : 'status-unhealthy'}">${path.successRate}%</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderServices() {
+      if (!currentData || !currentData.graph) return;
+
+      const tbody = document.getElementById('services-table');
+      const nodes = currentData.graph.nodes;
+
+      tbody.innerHTML = nodes.map(node => {
+        const deps = currentData.graph.edges.filter(e => e.from === node.id).map(e => e.to).join(', ') || 'None';
+
+        return `
+          <tr onclick="showServiceMetrics('${node.id}')">
+            <td><strong>${node.id}</strong></td>
+            <td><span class="status-badge status-${node.status}">${node.status}</span></td>
+            <td>${node.calls}</td>
+            <td>${node.errors}</td>
+            <td>${node.calls > 0 ? Math.round(((node.calls - node.errors) / node.calls) * 100) : 100}%</td>
+            <td>${node.latency}ms</td>
+            <td style="font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${deps}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function showServiceMetrics(serviceName) {
+      // This would call the service metrics endpoint
+      const metricDiv = document.getElementById('service-metrics-detail');
+      metricDiv.innerHTML = `<p>Metrics for <strong>${serviceName}</strong> would be displayed here</p>`;
+    }
+
+    function renderMatrix() {
+      if (!currentData || !currentData.graph) return;
+
+      const graph = currentData.graph;
+      const nodes = graph.nodes;
+
+      // Build header
+      let headerHtml = '<th>Service</th>';
+      for (const node of nodes) {
+        headerHtml += `<th title="${node.id}">${node.id.substring(0, 4)}</th>`;
+      }
+      document.getElementById('matrix-header').innerHTML = headerHtml;
+
+      // Build matrix rows
+      let bodyHtml = '';
+      for (const fromNode of nodes) {
+        let row = `<td><strong>${fromNode.id}</strong></td>`;
+
+        for (const toNode of nodes) {
+          const edge = graph.edges.find(e => e.from === fromNode.id && e.to === toNode.id);
+          const calls = edge ? edge.calls : 0;
+          const latency = edge ? edge.calls : 0; // Would need to get actual latency
+
+          if (calls > 0) {
+            row += `<td title="${calls} calls, ${edge.successRate}% success">${calls}</td>`;
+          } else {
+            row += '<td style="color: #ccc;">--</td>';
+          }
+        }
+
+        bodyHtml += `<tr>${row}</tr>`;
+      }
+      document.getElementById('matrix-body').innerHTML = bodyHtml;
+    }
+
+    async function resetData() {
+      if (!confirm('Are you sure you want to reset all statistics?')) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/reset`, { method: 'POST' });
+        if (response.ok) {
+          alert('Statistics have been reset');
+          refreshData();
+        }
+      } catch (error) {
+        console.error('Failed to reset:', error);
+        alert('Failed to reset statistics');
+      }
+    }
+
+    // Cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+    });
+  </script>
+</body>
+</html>

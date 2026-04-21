@@ -3,7 +3,7 @@
 const { exec } = require('child_process');
 const os = require('os');
 
-const PORT = 11000;
+const PORT = 9000;
 
 function killPort() {
   let command;

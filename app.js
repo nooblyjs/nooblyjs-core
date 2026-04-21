@@ -19,7 +19,6 @@ const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
-console.log(process.env.port)''
 
 const parseCommaSeparated = (value = '') =>
   value
@@ -145,6 +144,8 @@ app.set('logger', log); // Make logger available to app
 
 // Setup rate limiter middleware
 rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
+
+// Initialize services
 const cache = serviceRegistry.cache('inmemory');
 const dataService = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
@@ -157,6 +158,7 @@ const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 const fetching = serviceRegistry.fetching('node');
 const authservice = serviceRegistry.authservice('file');
+const monitoring = serviceRegistry.monitoring('memory');
 
 /**
  * Setup production health checks for load balancers and orchestration

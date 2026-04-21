@@ -67,7 +67,7 @@ Sophisticated services that leverage most underlying services and are almost ful
 
 ```bash
 # Clone the repository
-git clone https://srbooysen@bitbucket.org/shopritelabs/nooblyjs-core.git
+git clone https://github.com/nooblyjs/nooblyjs-core
 cd nooblyjs-core
 
 # Install dependencies

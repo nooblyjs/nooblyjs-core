@@ -17,7 +17,7 @@ hero-banner
 
 A powerful, production-ready backend framework providing a complete suite of services with singleton pattern implementation, managed through a central ServiceRegistry. Build sophisticated applications with minimal boilerplate.
 
-**Version**: 2.0.1 | **Status**: Production Ready | **License**: Shoprite Owned
+**Version**: 2.0.1 | **Status**: Production Ready | **License**: nooblyjs Owned
 
 ---
 
@@ -571,6 +571,6 @@ footer
   icon: /images/nooblyjs-logo.png
   title: Noobly JS Core
   subtitle: © 2026 Noobly JS. All rights reserved. Production-ready Node.js backend framework.
-  links: [Bitbucket](https://bitbucket.org/shopritelabs/nooblyjs-core/src) [Documentation](/) [Contact](mailto:srbooysen@shoprite.co.za)
+  links: [Bitbucket](https://github.com/nooblyjs/nooblyjs-core/src) [Documentation](/) [Contact](mailto:srbooysen@nooblyjs.co.za)
 
 ---

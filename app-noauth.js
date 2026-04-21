@@ -66,6 +66,8 @@ const authservice = serviceRegistry.authservice('file', {
   'express-app': app
 });
 
+const monitoring = serviceRegistry.monitoring('memory');
+
 // Launch the application docs folder to show the docs on the public site
 // /docs retrieves the document
 // /docs/list retrieves the list of documents

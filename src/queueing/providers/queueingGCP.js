@@ -130,25 +130,6 @@ class QueueingGCP {
       }
     }
   }
-  }
-
-  /**
-   * Get all our settings
-   */
-  async getSettings() {
-    return this.settings;
-  }
-
-  /**
-   * Set all our settings
-   */
-  async saveSettings(settings) {
-    for (let i = 0; i < this.settings.list.length; i++) {
-      if (settings[this.settings.list[i].setting] != null) {
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-      }
-    }
-  }
 
   /**
    * Get the full queue path in Cloud Tasks

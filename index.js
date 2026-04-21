@@ -256,6 +256,7 @@ class ServiceRegistry {
     this.serviceDependencies.set('notifying', ['logging']);
     this.serviceDependencies.set('appservice', ['logging']);
     this.serviceDependencies.set('fetching', ['logging']);
+    this.serviceDependencies.set('monitoring', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
     this.serviceDependencies.set('dataservice', ['logging', 'queueing']);
@@ -373,6 +374,7 @@ class ServiceRegistry {
       'searching': 'memory',
       'workflow': 'memory',
       'notifying': 'memory',
+      'monitoring': 'memory',
       'authservice': 'file',
       'aiservice': 'claude',
       'fetching': 'node'
@@ -643,6 +645,16 @@ class ServiceRegistry {
    */
   appservice(providerType, options = {}) {
     return this.getService('appservice', providerType, options);
+  }
+
+  /**
+   * Get the monitoring service
+   * @param {string} providerType - 'memory'
+   * @param {Object} options - Provider-specific options
+   * @returns {Object} Monitoring service instance
+   */
+  monitoring(providerType = 'memory', options = {}) {
+    return this.getService('monitoring', providerType, options);
   }
 
   /**
