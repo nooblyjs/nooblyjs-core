@@ -58,36 +58,36 @@
             </div>
 
             <!-- Health Summary Card -->
-            <div id="healthSummaryCard" class="health-summary-card healthy" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <div class="health-summary-title">
-                        <span class="health-dot healthy"></span>
+            <div id="healthSummaryCard" class="health-summary-card healthy" style="display: none; margin-bottom: 2rem; padding: 2rem; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: nowrap; gap: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 700; color: #1F2937;">
+                        <span class="health-dot healthy" style="width: 12px; height: 12px;"></span>
                         System Health Status
                     </div>
-                    <div id="systemOverallStatus" style="font-size: 1rem; font-weight: 600; color: #28a745;">
+                    <div id="systemOverallStatus" style="font-size: 1rem; font-weight: 600; color: #28a745; white-space: nowrap;">
                         ✓ All Systems Operational
                     </div>
                 </div>
-                <div class="health-summary-stats">
-                    <div class="health-stat health-stat-healthy">
+                <div style="display: flex; gap: 1.5rem; justify-content: space-between; width: 100%; flex-wrap: nowrap;">
+                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #28a745; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
                         <i class="bi bi-check-circle-fill" style="font-size: 1.5rem; color: #28a745; margin-bottom: 0.5rem;"></i>
-                        <div class="health-stat-value" id="healthyServicesCount">0</div>
-                        <div class="health-stat-label">Healthy</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="healthyServicesCount">0</div>
+                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Healthy</div>
                     </div>
-                    <div class="health-stat health-stat-degraded">
+                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #ffc107; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
                         <i class="bi bi-exclamation-circle-fill" style="font-size: 1.5rem; color: #ffc107; margin-bottom: 0.5rem;"></i>
-                        <div class="health-stat-value" id="degradedServicesCount">0</div>
-                        <div class="health-stat-label">Degraded</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="degradedServicesCount">0</div>
+                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Degraded</div>
                     </div>
-                    <div class="health-stat health-stat-unhealthy">
+                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #dc3545; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
                         <i class="bi bi-x-circle-fill" style="font-size: 1.5rem; color: #dc3545; margin-bottom: 0.5rem;"></i>
-                        <div class="health-stat-value" id="unhealthyServicesCount">0</div>
-                        <div class="health-stat-label">Unhealthy</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="unhealthyServicesCount">0</div>
+                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Unhealthy</div>
                     </div>
-                    <div class="health-stat health-stat-total">
+                    <div style="flex: 1; text-align: center; padding: 1.25rem; background: white; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 4px solid #68A8C4; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;">
                         <i class="bi bi-diagram-3-fill" style="font-size: 1.5rem; color: #68A8C4; margin-bottom: 0.5rem;"></i>
-                        <div class="health-stat-value" id="totalServicesCount">0</div>
-                        <div class="health-stat-label">Total Services</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #1F2937; margin: 0.5rem 0; line-height: 1;" id="totalServicesCount">0</div>
+                        <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Total Services</div>
                     </div>
                 </div>
             </div>
