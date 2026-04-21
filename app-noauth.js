@@ -152,8 +152,9 @@ function extractDocumentMetadata(content) {
 // Launch the application readme file to be shown on the docs readme area
 app.use('/readme', express.static(path.join(__dirname, 'README.md')));
 
-const PORT = process.env.PORT || 11000;
 app.use('/', express.static(__dirname + '/public'));
+
+const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
   log.info(`Server is running on port ${PORT}`);
   log.info(cacheMetrics.get('Startup Time'));

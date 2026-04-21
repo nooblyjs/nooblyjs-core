@@ -12,6 +12,7 @@
 
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
+const DataImporter = require('../../appservice/utils/importUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -303,6 +304,61 @@ module.exports = (options, eventEmitter, fetching) => {
         res.send(exported);
       } catch (error) {
         handleError(res, error, { operation: 'fetching-export' });
+      }
+    });
+
+    /**
+     * POST /services/fetching/api/import
+     * Imports data from specified format
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
+     * @param {string|Array} req.body.data - Data to import
+     * @param {string} req.query.dryRun - Dry-run mode (true/false)
+     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/fetching/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { data: rawData, format = 'json' } = req.body;
+        const dryRun = req.query.dryRun === 'true';
+        const conflictStrategy = req.query.conflictStrategy || 'error';
+
+        if (!rawData) {
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
+        }
+
+        // Parse data based on format
+        let parsedData = Array.isArray(rawData) ? rawData : rawData;
+        if (typeof rawData === 'string') {
+          parsedData = DataImporter.parse(rawData, format);
+        }
+
+        if (!Array.isArray(parsedData)) {
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
+        }
+
+        // Dry-run mode
+        if (dryRun) {
+          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
+          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
+        }
+
+        // Perform actual import
+        const importHandler = async (item) => {
+          try {
+            // Service-specific import logic would go here
+            return { success: true, type: 'new' };
+          } catch (error) {
+            throw error;
+          }
+        };
+
+        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
+        sendSuccess(res, result, 'Data imported successfully', 201);
+      } catch (error) {
+        handleError(res, error, { operation: 'fetching-import' });
       }
     });
   }

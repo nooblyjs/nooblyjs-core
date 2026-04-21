@@ -19,6 +19,7 @@ const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
+console.log(process.env.port)''
 
 const parseCommaSeparated = (value = '') =>
   value
@@ -177,8 +178,9 @@ app.use('/', express.static(__dirname + '/public'));
 const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
 
-app.listen(process.env.PORT || 9000, () => {
-  log.info(`Server is running on port ${process.env.PORT || 9000}`);
+const PORT = process.env.PORT || 9000;
+app.listen(process.env.PORT, () => {
+  log.info(`Server is running on port ${process.env.PORT}`);
 });
 
 // Handle graceful shutdown

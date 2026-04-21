@@ -13,6 +13,7 @@
 const analytics = require('../modules/analytics');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
+const DataImporter = require('../../appservice/utils/importUtils');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -482,6 +483,94 @@ module.exports = (options, eventEmitter, dataservice) => {
         res.send(exported);
       } catch (error) {
         handleError(res, error, { operation: 'dataservice-export' });
+      }
+    });
+
+    /**
+     * POST /services/dataservice/api/import
+     * Imports data from specified format into containers
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
+     * @param {string|Array} req.body.data - Data to import (string or array)
+     * @param {string} req.body.container - Target container name
+     * @param {string} req.query.dryRun - Dry-run mode (true/false)
+     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/dataservice/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { data: rawData, format = 'json', container = 'default' } = req.body;
+        const dryRun = req.query.dryRun === 'true';
+        const conflictStrategy = req.query.conflictStrategy || 'error';
+
+        if (!rawData) {
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
+        }
+
+        // Parse data based on format
+        let parsedData = Array.isArray(rawData) ? rawData : rawData;
+        if (typeof rawData === 'string') {
+          parsedData = DataImporter.parse(rawData, format);
+        }
+
+        // Validate format
+        if (!Array.isArray(parsedData)) {
+          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
+        }
+
+        // Ensure container exists
+        try {
+          await dataservice.createContainer(container);
+        } catch (err) {
+          // Container may already exist, ignore error
+        }
+
+        // Dry-run mode
+        if (dryRun) {
+          const existingData = await dataservice.find(container, {});
+          const dryRunResult = DataImporter.dryRun(parsedData, {
+            existingData,
+            conflictStrategy,
+            uniqueFields: ['id']
+          });
+
+          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
+        }
+
+        // Perform actual import
+        let imported = 0;
+        let failed = 0;
+        const importHandler = async (item) => {
+          try {
+            // Check for conflict
+            if (item.id) {
+              const existing = await dataservice.find(container, item.id);
+              if (existing && existing.length > 0) {
+                if (conflictStrategy === 'error') {
+                  return { success: false, conflict: true, reason: 'Item with this ID already exists' };
+                } else if (conflictStrategy === 'skip') {
+                  return { success: true, type: 'skipped' };
+                } else if (conflictStrategy === 'update') {
+                  await dataservice.update(container, existing[0]._id || item.id, item);
+                  return { success: true, type: 'updated' };
+                }
+              }
+            }
+
+            // Add new item
+            await dataservice.add(container, item);
+            return { success: true, type: 'new' };
+          } catch (error) {
+            throw error;
+          }
+        };
+
+        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy, dryRun: false });
+        sendSuccess(res, result, 'Data imported successfully', 201);
+      } catch (error) {
+        handleError(res, error, { operation: 'dataservice-import' });
       }
     });
 
