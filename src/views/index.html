@@ -46,9 +46,41 @@
         </aside>
 
         <main class="core-main-content">
-            <div class="core-page-header">
-                <h1 class="core-page-title">Service Registry Dashboard</h1>
-                <p class="core-page-subtitle">Overview of all available services and their current status</p>
+            <div class="core-page-header page-header-health">
+                <div>
+                    <h1 class="core-page-title">Service Registry Dashboard</h1>
+                    <p class="core-page-subtitle">Overview of all available services and their current status</p>
+                </div>
+                <div id="systemHealthBadge" class="health-badge unknown">
+                    <span class="health-dot unknown"></span>
+                    <span>Checking Health...</span>
+                </div>
+            </div>
+
+            <!-- Health Summary Card -->
+            <div id="healthSummaryCard" class="health-summary-card healthy" style="display: none;">
+                <div class="health-summary-title">
+                    <span class="health-dot healthy"></span>
+                    System Health Status
+                </div>
+                <div class="health-summary-stats">
+                    <div class="health-stat">
+                        <div class="health-stat-value" id="healthyServicesCount">0</div>
+                        <div class="health-stat-label">Healthy Services</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="health-stat-value" id="degradedServicesCount">0</div>
+                        <div class="health-stat-label">Degraded Services</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="health-stat-value" id="unhealthyServicesCount">0</div>
+                        <div class="health-stat-label">Unhealthy Services</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="health-stat-value" id="totalServicesCount">0</div>
+                        <div class="health-stat-label">Total Services</div>
+                    </div>
+                </div>
             </div>
 
             <div class="core-page-content">
@@ -250,6 +282,9 @@
         function createServiceCardHTML(service, isOnline) {
             return `
                 <div class="core-service-card ${isOnline ? '' : 'offline'}" style="cursor: pointer;" onclick="window.location.href='/services/${service.path}/'">
+                    <div class="service-card-health" id="health-${service.name}">
+                        <span class="health-dot unknown" title="Loading health status..."></span>
+                    </div>
                     <div class="core-service-card-header">
                         <div>
                             <h3 class="core-service-title">${service.title}</h3>
@@ -267,6 +302,73 @@
 
         // Initialize services
         renderServices();
+
+        // Fetch health status for all services
+        async function updateHealthStatus() {
+            const authToken = localStorage.getItem('authToken');
+            const services = DigitalTechnologiesNavigation.services || [];
+
+            let healthyCount = 0, degradedCount = 0, unhealthyCount = 0;
+
+            for (const service of services) {
+                try {
+                    const healthUrl = `/services/${service.path}/api/health?authToken=${authToken}`;
+                    const response = await fetch(healthUrl);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const status = data.status || 'unknown';
+
+                        // Update health dot
+                        const healthDot = document.getElementById(`health-${service.name}`);
+                        if (healthDot) {
+                            const dot = healthDot.querySelector('.health-dot');
+                            if (dot) {
+                                dot.className = `health-dot ${status}`;
+                                dot.title = `${service.title}: ${status}`;
+                            }
+                        }
+
+                        // Count health status
+                        if (status === 'healthy') healthyCount++;
+                        else if (status === 'degraded') degradedCount++;
+                        else if (status === 'unhealthy') unhealthyCount++;
+                    }
+                } catch (error) {
+                    console.log(`Could not fetch health for ${service.name}:`, error.message);
+                }
+            }
+
+            // Update system health badge
+            const totalServices = services.length;
+            let overallStatus = 'healthy';
+            if (unhealthyCount > 0) overallStatus = 'unhealthy';
+            else if (degradedCount > 0) overallStatus = 'degraded';
+
+            const systemBadge = document.getElementById('systemHealthBadge');
+            if (systemBadge) {
+                systemBadge.className = `health-badge ${overallStatus}`;
+                const statusText = overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1);
+                systemBadge.innerHTML = `<span class="health-dot ${overallStatus}"></span><span>${statusText}</span>`;
+            }
+
+            // Show health summary card
+            const healthSummaryCard = document.getElementById('healthSummaryCard');
+            if (healthSummaryCard) {
+                healthSummaryCard.className = `health-summary-card ${overallStatus}`;
+                healthSummaryCard.style.display = 'block';
+                document.getElementById('healthyServicesCount').textContent = healthyCount;
+                document.getElementById('degradedServicesCount').textContent = degradedCount;
+                document.getElementById('unhealthyServicesCount').textContent = unhealthyCount;
+                document.getElementById('totalServicesCount').textContent = totalServices;
+            }
+        }
+
+        // Update health status on page load
+        setTimeout(updateHealthStatus, 500);
+
+        // Update health status every 30 seconds
+        setInterval(updateHealthStatus, 30000);
 
         // System Monitoring Charts
         let ramChart, cpuChart, threadsChart, eventLoopChart, gcChart, heapChart;

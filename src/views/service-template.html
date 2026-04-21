@@ -50,9 +50,15 @@
         <!-- MAIN CONTENT AREA -->
         <main class="main-content">
             <!-- PAGE HEADER -->
-            <div class="page-header">
-                <h1 class="page-title">[[SERVICE_TITLE]]</h1>
-                <p class="page-subtitle">[[SERVICE_SUBTITLE]]</p>
+            <div class="page-header page-header-health">
+                <div>
+                    <h1 class="page-title">[[SERVICE_TITLE]]</h1>
+                    <p class="page-subtitle">[[SERVICE_SUBTITLE]]</p>
+                </div>
+                <div id="serviceHealthBadge" class="health-badge unknown">
+                    <span class="health-dot unknown"></span>
+                    <span>Checking Health...</span>
+                </div>
             </div>
 
             <!-- CONTENT WRAPPER -->
@@ -350,6 +356,53 @@
         // Load settings when settings tab is shown
         document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', function (e) {
             loadSettings();
+        });
+
+        // ===== HEALTH STATUS =====
+        // Fetch and display service health status
+        async function updateServiceHealth() {
+            const authToken = localStorage.getItem('authToken');
+            const servicePath = window.location.pathname.split('/')[2]; // Extract service name from URL
+
+            try {
+                const healthUrl = `/services/${servicePath}/api/health?authToken=${authToken}`;
+                const response = await fetch(healthUrl);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const status = data.status || 'unknown';
+
+                    // Update health badge
+                    const healthBadge = document.getElementById('serviceHealthBadge');
+                    if (healthBadge) {
+                        healthBadge.className = `health-badge ${status}`;
+                        const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+                        healthBadge.innerHTML = `<span class="health-dot ${status}"></span><span>${statusText}</span>`;
+                    }
+                } else {
+                    updateHealthBadgeStatus('unknown', 'Unable to fetch health status');
+                }
+            } catch (error) {
+                console.error('Error fetching service health:', error);
+                updateHealthBadgeStatus('unknown', 'Error checking health');
+            }
+        }
+
+        function updateHealthBadgeStatus(status, title) {
+            const healthBadge = document.getElementById('serviceHealthBadge');
+            if (healthBadge) {
+                healthBadge.className = `health-badge ${status}`;
+                healthBadge.title = title;
+                const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+                healthBadge.innerHTML = `<span class="health-dot ${status}"></span><span>${statusText}</span>`;
+            }
+        }
+
+        // Update health status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateServiceHealth();
+            // Update every 30 seconds
+            setInterval(updateServiceHealth, 30000);
         });
     </script>
 </body>
