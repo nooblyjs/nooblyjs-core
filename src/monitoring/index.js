@@ -12,6 +12,7 @@
 const ServiceDependencyGraph = require('./serviceDependencyGraph');
 const MetricsAggregator = require('./utils/metricsAggregator');
 const RequestTracer = require('./utils/requestTracer');
+const MonitoringSearchEngine = require('./utils/searchUtils');
 const setupRoutes = require('./routes');
 const Views = require('./views');
 
@@ -43,7 +44,7 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   const { dependencies = {}, enableAutoTracking = true } = options;
   const logger = dependencies.logging;
 
-  // Initialize the dependency graph, metrics aggregator, and request tracer
+  // Initialize the dependency graph, metrics aggregator, request tracer, and search engine
   const graph = new ServiceDependencyGraph(options);
   const metricsAggregator = new MetricsAggregator({
     historySize: 1000,
@@ -53,6 +54,9 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     maxTraces: 10000,
     maxSpans: 100000,
     traceTTL: 3600000 // 1 hour
+  });
+  const searchEngine = new MonitoringSearchEngine({
+    maxResults: 100
   });
 
   logger?.info('[Monitoring] Initializing monitoring service', {
@@ -456,6 +460,80 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   }
 
   /**
+   * Search traces with full-text and faceted filtering.
+   * @param {Object} criteria - Search criteria
+   * @param {string} [criteria.query] - Full-text search query
+   * @param {Object} [criteria.filters={}] - Faceted filters
+   * @param {string} [criteria.sortBy='timestamp'] - Sort field
+   * @param {string} [criteria.sortOrder='desc'] - Sort order
+   * @param {number} [criteria.limit=10] - Result limit
+   * @return {Array<Object>} Matching traces with relevance scores
+   */
+  function searchTraces(criteria = {}) {
+    const traces = Array.from(requestTracer.traces.values());
+    return searchEngine.searchTraces(traces, criteria);
+  }
+
+  /**
+   * Search metrics with full-text and faceted filtering.
+   * @param {Object} criteria - Search criteria
+   * @param {string} [criteria.query] - Full-text search query
+   * @param {Object} [criteria.filters={}] - Faceted filters
+   * @param {string} [criteria.sortBy='timestamp'] - Sort field
+   * @param {string} [criteria.sortOrder='desc'] - Sort order
+   * @param {number} [criteria.limit=10] - Result limit
+   * @return {Array<Object>} Matching metrics
+   */
+  function searchMetrics(criteria = {}) {
+    const metrics = metricsAggregator.getAllSnapshots();
+    return searchEngine.searchMetrics(metrics, criteria);
+  }
+
+  /**
+   * Get available facets for filtering.
+   * @return {Object} Available facet values
+   */
+  function getSearchFacets() {
+    const traces = Array.from(requestTracer.traces.values());
+    return searchEngine.getFacets(traces);
+  }
+
+  /**
+   * Save a search query for later use.
+   * @param {string} name - Search name
+   * @param {Object} criteria - Search criteria
+   */
+  function saveSearch(name, criteria) {
+    searchEngine.saveSearch(name, criteria);
+  }
+
+  /**
+   * Retrieve a saved search.
+   * @param {string} name - Search name
+   * @return {Object|null} Saved search criteria or null
+   */
+  function getSearch(name) {
+    return searchEngine.getSearch(name);
+  }
+
+  /**
+   * List all saved searches.
+   * @return {Array<Object>} List of saved searches
+   */
+  function listSearches() {
+    return searchEngine.listSearches();
+  }
+
+  /**
+   * Delete a saved search.
+   * @param {string} name - Search name
+   * @return {boolean} True if deleted, false if not found
+   */
+  function deleteSearch(name) {
+    return searchEngine.deleteSearch(name);
+  }
+
+  /**
    * Export complete monitoring snapshot and metrics.
    * @param {string} [format='json'] - Export format (json or csv)
    * @return {Object|string} Exported data
@@ -464,7 +542,8 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     return {
       graph: graph.export(),
       metrics: metricsAggregator.export(format),
-      traces: requestTracer.export()
+      traces: requestTracer.export(),
+      searches: searchEngine.export()
     };
   }
 
@@ -498,10 +577,18 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     getCallChainVisualization,
     getSlowestSpans,
     getErrorSpans,
+    searchTraces,
+    searchMetrics,
+    getSearchFacets,
+    saveSearch,
+    getSearch,
+    listSearches,
+    deleteSearch,
     logger,
     graph,
     metricsAggregator,
-    requestTracer
+    requestTracer,
+    searchEngine
   };
 
   // Setup routes and views for the monitoring service

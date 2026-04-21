@@ -949,6 +949,252 @@ function setupMonitoringRoutes(app, service, authMiddleware) {
     }
   });
 
+  /**
+   * POST /services/monitoring/api/search/traces
+   * Search traces with full-text and faceted filtering
+   *
+   * Body Parameters:
+   * - query: full-text search query
+   * - filters: faceted filters object
+   * - sortBy: sort field (timestamp, duration, errorSpans)
+   * - sortOrder: sort order (asc|desc)
+   * - limit: result limit
+   */
+  app.post('/services/monitoring/api/search/traces', authMiddleware, (req, res) => {
+    try {
+      const { query, filters, sortBy = 'startTime', sortOrder = 'desc', limit = 10 } = req.body;
+
+      const results = service.searchTraces({
+        query,
+        filters,
+        sortBy,
+        sortOrder,
+        limit
+      });
+
+      res.status(200).json({
+        success: true,
+        data: results,
+        count: results.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to search traces', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/search/metrics
+   * Search metrics with full-text and faceted filtering
+   *
+   * Body Parameters:
+   * - query: full-text search query
+   * - filters: faceted filters object
+   * - sortBy: sort field (timestamp, totalCalls, avgLatency)
+   * - sortOrder: sort order (asc|desc)
+   * - limit: result limit
+   */
+  app.post('/services/monitoring/api/search/metrics', authMiddleware, (req, res) => {
+    try {
+      const { query, filters, sortBy = 'timestamp', sortOrder = 'desc', limit = 10 } = req.body;
+
+      const results = service.searchMetrics({
+        query,
+        filters,
+        sortBy,
+        sortOrder,
+        limit
+      });
+
+      res.status(200).json({
+        success: true,
+        data: results,
+        count: results.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to search metrics', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/search/facets
+   * Get available facets for search filtering
+   */
+  app.get('/services/monitoring/api/search/facets', authMiddleware, (req, res) => {
+    try {
+      const facets = service.getSearchFacets();
+
+      res.status(200).json({
+        success: true,
+        data: facets,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get search facets', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/search/save
+   * Save a search query
+   *
+   * Body Parameters:
+   * - name: search name
+   * - query: search query
+   * - filters: faceted filters
+   */
+  app.post('/services/monitoring/api/search/save', authMiddleware, (req, res) => {
+    try {
+      const { name, query, filters } = req.body;
+
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required field: name'
+        });
+      }
+
+      service.saveSearch(name, { query, filters });
+
+      res.status(200).json({
+        success: true,
+        message: `Search "${name}" saved`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to save search', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/search/saved
+   * List all saved searches
+   */
+  app.get('/services/monitoring/api/search/saved', authMiddleware, (req, res) => {
+    try {
+      const searches = service.listSearches();
+
+      res.status(200).json({
+        success: true,
+        data: searches,
+        count: searches.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to list saved searches', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/search/saved/:name
+   * Get a specific saved search
+   *
+   * Path Parameters:
+   * - name: search name
+   */
+  app.get('/services/monitoring/api/search/saved/:name', authMiddleware, (req, res) => {
+    try {
+      const { name } = req.params;
+      const search = service.getSearch(name);
+
+      if (!search) {
+        return res.status(404).json({
+          success: false,
+          error: `Search "${name}" not found`
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: search,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get saved search', {
+        error: error.message,
+        name: req.params.name
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * DELETE /services/monitoring/api/search/saved/:name
+   * Delete a saved search
+   *
+   * Path Parameters:
+   * - name: search name
+   */
+  app.delete('/services/monitoring/api/search/saved/:name', authMiddleware, (req, res) => {
+    try {
+      const { name } = req.params;
+      const deleted = service.deleteSearch(name);
+
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          error: `Search "${name}" not found`
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Search "${name}" deleted`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to delete saved search', {
+        error: error.message,
+        name: req.params.name
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   return {
     getDependencyGraph: () => service.getDependencyGraph(),
     getHealthOverview: () => service.getHealthOverview(),
