@@ -90,6 +90,11 @@
                         <div style="font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.75rem;">Total Services</div>
                     </div>
                 </div>
+                <!-- Unhealthy/Degraded Services Details -->
+                <div id="unhealthyServicesDetails" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.1); display: none;">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 1rem;">Services Requiring Attention:</div>
+                    <div id="unhealthyServicesList" style="display: flex; flex-wrap: wrap; gap: 0.75rem;"></div>
+                </div>
             </div>
 
             <div class="core-page-content">
@@ -318,6 +323,8 @@
             const services = DigitalTechnologiesNavigation.services || [];
 
             let healthyCount = 0, degradedCount = 0, unhealthyCount = 0;
+            const unhealthyServices = [];
+            const degradedServices = [];
 
             for (const service of services) {
                 try {
@@ -338,13 +345,33 @@
                             }
                         }
 
-                        // Count health status
+                        // Count health status and track unhealthy services
                         if (status === 'healthy') healthyCount++;
-                        else if (status === 'degraded') degradedCount++;
-                        else if (status === 'unhealthy') unhealthyCount++;
+                        else if (status === 'degraded') {
+                            degradedCount++;
+                            degradedServices.push(service);
+                        }
+                        else if (status === 'unhealthy') {
+                            unhealthyCount++;
+                            unhealthyServices.push(service);
+                        }
+                    } else {
+                        // Failed response = unhealthy
+                        unhealthyCount++;
+                        unhealthyServices.push(service);
+                        const healthDot = document.getElementById(`health-${service.name}`);
+                        if (healthDot) {
+                            const dot = healthDot.querySelector('.health-dot');
+                            if (dot) {
+                                dot.className = 'health-dot unhealthy';
+                                dot.title = `${service.title}: unhealthy (unreachable)`;
+                            }
+                        }
                     }
                 } catch (error) {
                     console.log(`Could not fetch health for ${service.name}:`, error.message);
+                    unhealthyCount++;
+                    unhealthyServices.push(service);
                 }
             }
 
@@ -386,6 +413,43 @@
                 document.getElementById('degradedServicesCount').textContent = degradedCount;
                 document.getElementById('unhealthyServicesCount').textContent = unhealthyCount;
                 document.getElementById('totalServicesCount').textContent = totalServices;
+            }
+
+            // Show unhealthy/degraded services details
+            const unhealthyDetails = document.getElementById('unhealthyServicesDetails');
+            const unhealthyList = document.getElementById('unhealthyServicesList');
+            if (unhealthyDetails && unhealthyList) {
+                const problematicServices = [...unhealthyServices, ...degradedServices];
+                if (problematicServices.length > 0) {
+                    unhealthyDetails.style.display = 'block';
+                    unhealthyList.innerHTML = problematicServices.map(service => {
+                        const isUnhealthy = unhealthyServices.includes(service);
+                        const badgeClass = isUnhealthy ? 'unhealthy' : 'degraded';
+                        const badgeColor = isUnhealthy ? '#dc3545' : '#ffc107';
+                        const badgeIcon = isUnhealthy ? '✕' : '⚡';
+                        return `
+                            <a href="/services/${service.path}/" style="
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                padding: 6px 12px;
+                                background-color: ${badgeColor}20;
+                                border: 1px solid ${badgeColor}40;
+                                border-radius: 6px;
+                                color: ${badgeColor};
+                                text-decoration: none;
+                                font-weight: 600;
+                                font-size: 0.85rem;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            " onmouseover="this.style.background='${badgeColor}30'; this.style.borderColor='${badgeColor}60';" onmouseout="this.style.background='${badgeColor}20'; this.style.borderColor='${badgeColor}40';">
+                                ${badgeIcon} ${service.title}
+                            </a>
+                        `;
+                    }).join('');
+                } else {
+                    unhealthyDetails.style.display = 'none';
+                }
             }
         }
 
