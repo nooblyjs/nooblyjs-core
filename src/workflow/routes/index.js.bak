@@ -33,7 +33,6 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('workflow', { dependencies: [] });
 
     /**
      * POST /services/workflow/api/defineworkflow
@@ -503,19 +502,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
     // Serve static files from the views directory for caching service
     app.use('/services/workflow/api/swagger', express.static(path.join(__dirname,'swagger')));
 
-    /**
-     * GET /services/workflow/api/health
-     * Returns the health status of the workflow service.
-     */
-    app.get('/services/workflow/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: workflow });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
+
 
     /**
      * GET /services/workflow/api/audit

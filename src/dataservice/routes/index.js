@@ -14,6 +14,8 @@ const analytics = require('../modules/analytics');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const BulkOperations = require('../../appservice/utils/bulkOperations');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -33,6 +35,7 @@ module.exports = (options, eventEmitter, dataservice) => {
 
     // Initialize audit logging for dataservice
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+    const healthCheck = new HealthCheck('dataservice', { dependencies: [] });
 
     /**
      * POST /services/dataservice/api/:container
@@ -375,6 +378,66 @@ module.exports = (options, eventEmitter, dataservice) => {
         }
       } else {
         sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+      }
+    });
+
+    /**
+     * POST /services/dataservice/api/bulk/delete
+     * Deletes multiple items from a container in bulk.
+     */
+    app.post('/services/dataservice/api/bulk/delete', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { ids, container, dryRun } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'ids must be a non-empty array');
+        }
+        if (!container) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'container is required');
+        }
+        const result = await BulkOperations.execute(ids, async (id) => {
+          await dataService.remove(container, id);
+          return { id, deleted: true };
+        }, { dryRun: dryRun === true });
+        sendSuccess(res, result, 'Bulk delete completed');
+      } catch (err) {
+        handleError(res, err, { operation: 'bulk-delete' });
+      }
+    });
+
+    /**
+     * POST /services/dataservice/api/bulk/update
+     * Updates multiple items in bulk.
+     */
+    app.post('/services/dataservice/api/bulk/update', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { items, container, dryRun } = req.body;
+        if (!Array.isArray(items) || items.length === 0) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'items must be a non-empty array');
+        }
+        if (!container) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'container is required');
+        }
+        const result = await BulkOperations.execute(items, async (item) => {
+          await dataService.put(container, item.id, item);
+          return { id: item.id, updated: true };
+        }, { dryRun: dryRun === true });
+        sendSuccess(res, result, 'Bulk update completed');
+      } catch (err) {
+        handleError(res, err, { operation: 'bulk-update' });
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/health
+     * Returns health status of the dataservice.
+     */
+    app.get('/services/dataservice/api/health', async (req, res) => {
+      try {
+        const result = await healthCheck.check({ service: dataService });
+        const statusCode = result.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json(result);
+      } catch (err) {
+        handleError(res, err, { operation: 'health-check' });
       }
     });
 

@@ -19,6 +19,7 @@ const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 const { sendSuccess, sendError, sendStatus, sendList, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -45,6 +46,7 @@ module.exports = (options, eventEmitter, logger, analytics) => {
 
     // Initialize audit logging for logging service
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+    const healthCheck = new HealthCheck('logging', { dependencies: [] });
 
     /**
      * GET /services/logging/scripts
@@ -504,6 +506,20 @@ module.exports = (options, eventEmitter, logger, analytics) => {
           error: 'Failed to load Swagger documentation',
           message: error.message
         });
+      }
+    });
+
+    /**
+     * GET /services/logging/api/health
+     * Returns health status of the logging service.
+     */
+    app.get('/services/logging/api/health', async (req, res) => {
+      try {
+        const result = await healthCheck.check({ service: logger });
+        const statusCode = result.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json(result);
+      } catch (err) {
+        handleError(res, err, { operation: 'health-check' });
       }
     });
 

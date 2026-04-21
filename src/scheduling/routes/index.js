@@ -20,6 +20,7 @@ const { isValid: isValidCron } = require('../providers/cronExpression');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 
 /**
  * Returns true for plain integer-coercible positive numbers (used by query
@@ -65,6 +66,9 @@ module.exports = (options, eventEmitter, scheduler) => {
       }
     }
   };
+
+  const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+  const healthCheck = new HealthCheck('scheduling', { dependencies: [] });
 
   // ---------------------------------------------------------------------------
   // Status
@@ -182,7 +186,15 @@ module.exports = (options, eventEmitter, scheduler) => {
     const body = req.body;
     if (!body || typeof body !== 'object') {
       return res.status(400).json({ error: 'Bad Request: Missing settings body' });
-
+    app.get('/services/scheduling/api/health', async (req, res) => {
+      try {
+        const result = await healthCheck.check({ service: scheduler });
+        const statusCode = result.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json(result);
+      } catch (err) {
+        handleError(res, err, { operation: 'health-check' });
+      }
+    });
 
     /**
      * GET /services/scheduling/api/audit

@@ -36,7 +36,6 @@ module.exports = (options, eventEmitter, search) => {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('searching', { dependencies: [] });
 
     /**
      * POST /services/searching/api/add/
@@ -452,16 +451,6 @@ module.exports = (options, eventEmitter, search) => {
      * GET /services/searching/api/audit
      * Retrieves audit log entries
      */
-    app.get('/services/searching/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: search });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
     app.get('/services/searching/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
       try {
         const filters = { service: 'searching', limit: parseInt(req.query.limit) || 100 };

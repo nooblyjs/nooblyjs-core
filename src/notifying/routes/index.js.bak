@@ -41,7 +41,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('notifying', { dependencies: [] });
 
     /**
      * Helper function to create topic handler
@@ -461,15 +460,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         handleError(res, error, 'getSwaggerDocs');
       }
     });
-    app.get('/services/notifying/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: notifier });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
+
 
     /**
      * GET /services/notifying/api/audit

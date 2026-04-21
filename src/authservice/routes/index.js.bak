@@ -32,7 +32,6 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('authservice', { dependencies: [] });
     const requireAuthenticatedSession = createSessionAwareAuthGuard(auth, authMiddleware);
 
     // Helper function to handle async route errors
@@ -452,20 +451,6 @@ module.exports = (options, eventEmitter, auth, analytics) => {
       );
     }
 
-    /**
-     * GET /services/authservice/api/health
-     * Returns the health status of the authentication service.
-     */
-    app.get('/services/authservice/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: auth });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
     // Error handling middleware
     app.use('/services/authservice/api', (error, req, res, next) => {
       eventEmitter.emit('auth:api-error', {
@@ -790,12 +775,8 @@ function extractAuthToken(req) {
   }
 
   return null;
-}
 
-// Audit endpoints are improperly placed outside the module.exports.
-// They should be moved inside the main function before line 692.
-// For now, adding a note about the structural issue.
-/*
+
     /**
      * GET /services/authservice/api/audit
      * Retrieves audit log entries

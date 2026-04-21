@@ -20,6 +20,7 @@ const express = require('express');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 
 /**
  * Returns true for plain integer-coercible positive numbers (used by query
@@ -68,6 +69,9 @@ module.exports = (options, eventEmitter, worker, analytics) => {
       }
     }
   };
+
+  const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+  const healthCheck = new HealthCheck('working', { dependencies: [] });
 
   // ---------------------------------------------------------------------------
   // Status
@@ -188,10 +192,21 @@ module.exports = (options, eventEmitter, worker, analytics) => {
     const body = req.body;
     if (!body || typeof body !== 'object') {
       return res.status(400).json({ error: 'Bad Request: Missing settings body' });
+    }
+  });
 
+  app.get('/services/working/api/health', wrap(async (req, res) => {
+    try {
+      const result = await healthCheck.check({ service: worker });
+      const statusCode = result.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json(result);
+    } catch (err) {
+      handleError(res, err, { operation: 'health-check' });
+    }
+  }));
 
-    /**
-     * GET /services/working/api/audit
+  /**
+   * GET /services/working/api/audit
      * Retrieves audit log entries
      */
     app.get('/services/working/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {

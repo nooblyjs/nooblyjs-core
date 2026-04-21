@@ -549,20 +549,6 @@ module.exports = (options, eventEmitter, queue) => {
     });
 
     /**
-     * GET /services/queueing/api/health
-     * Returns health status of the queueing service.
-     */
-    app.get('/services/queueing/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: queue });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
      * GET /services/queueing/api/audit
      * Retrieves audit log entries
      */

@@ -30,7 +30,6 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('aiservice', { dependencies: [] });
 
     /**
      * GET /services/ai/api/status

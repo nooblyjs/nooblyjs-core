@@ -19,6 +19,8 @@ const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const BulkOperations = require('../../appservice/utils/bulkOperations');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
@@ -44,6 +46,7 @@ module.exports = (options, eventEmitter, cache) => {
 
     // Initialize audit logging for caching service
     const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+    const healthCheck = new HealthCheck('caching', { dependencies: [] });
 
     /**
      * Helper function to create put handler
@@ -397,6 +400,62 @@ module.exports = (options, eventEmitter, cache) => {
         }
       } else {
         sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+      }
+    });
+
+    /**
+     * POST /services/caching/api/bulk/delete
+     * Deletes multiple cache keys in bulk.
+     */
+    app.post('/services/caching/api/bulk/delete', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { keys, instanceName, dryRun } = req.body;
+        if (!Array.isArray(keys) || keys.length === 0) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'keys must be a non-empty array');
+        }
+        const cacheInstance = instanceName ? getServiceInstance('caching', providerType, cache, { instanceName }, providerType) : cache;
+        const result = await BulkOperations.execute(keys, async (key) => {
+          await cacheInstance.remove(key);
+          return { key, deleted: true };
+        }, { dryRun: dryRun === true });
+        sendSuccess(res, result, 'Bulk delete completed');
+      } catch (err) {
+        handleError(res, err, { operation: 'bulk-delete' });
+      }
+    });
+
+    /**
+     * POST /services/caching/api/bulk/update
+     * Updates cache entries in bulk.
+     */
+    app.post('/services/caching/api/bulk/update', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const { items, instanceName, dryRun } = req.body;
+        if (!Array.isArray(items) || items.length === 0) {
+          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'items must be a non-empty array');
+        }
+        const cacheInstance = instanceName ? getServiceInstance('caching', providerType, cache, { instanceName }, providerType) : cache;
+        const result = await BulkOperations.execute(items, async (item) => {
+          await cacheInstance.set(item.key, item.value, item.ttl);
+          return { key: item.key, updated: true };
+        }, { dryRun: dryRun === true });
+        sendSuccess(res, result, 'Bulk update completed');
+      } catch (err) {
+        handleError(res, err, { operation: 'bulk-update' });
+      }
+    });
+
+    /**
+     * GET /services/caching/api/health
+     * Returns health status of the caching service.
+     */
+    app.get('/services/caching/api/health', async (req, res) => {
+      try {
+        const result = await healthCheck.check({ service: cache });
+        const statusCode = result.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json(result);
+      } catch (err) {
+        handleError(res, err, { operation: 'health-check' });
       }
     });
 

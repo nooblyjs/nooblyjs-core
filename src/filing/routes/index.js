@@ -20,6 +20,8 @@ const upload = multer();
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const BulkOperations = require('../../appservice/utils/bulkOperations');
+const HealthCheck = require('../../appservice/utils/healthCheck');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
@@ -40,6 +42,8 @@ module.exports = (options, eventEmitter, filing) => {
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || filing.providerType || 'local';
     const authMiddleware = options.authMiddleware;
+    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
+    const healthCheck = new HealthCheck('filing', { dependencies: [] });
 
     /**
      * POST /services/filing/api/upload/:key
@@ -1546,6 +1550,19 @@ module.exports = (options, eventEmitter, filing) => {
       folder: path.join(__dirname),
     });
 
+    /**
+     * GET /services/filing/api/health
+     * Returns the health status of the filing service.
+     */
+    app.get('/services/filing/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+      try {
+        const result = await healthCheck.check({ service: filing });
+        const statusCode = result.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json(result);
+      } catch (err) {
+        handleError(res, err, { operation: 'health-check' });
+      }
+    });
 
     /**
      * GET /services/filing/api/audit
