@@ -10,6 +10,8 @@
 'use strict';
 
 const ServiceDependencyGraph = require('./serviceDependencyGraph');
+const MetricsAggregator = require('./utils/metricsAggregator');
+const RequestTracer = require('./utils/requestTracer');
 const setupRoutes = require('./routes');
 const Views = require('./views');
 
@@ -41,8 +43,17 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   const { dependencies = {}, enableAutoTracking = true } = options;
   const logger = dependencies.logging;
 
-  // Initialize the dependency graph
+  // Initialize the dependency graph, metrics aggregator, and request tracer
   const graph = new ServiceDependencyGraph(options);
+  const metricsAggregator = new MetricsAggregator({
+    historySize: 1000,
+    snapshotInterval: 60000 // 1 minute
+  });
+  const requestTracer = new RequestTracer({
+    maxTraces: 10000,
+    maxSpans: 100000,
+    traceTTL: 3600000 // 1 hour
+  });
 
   logger?.info('[Monitoring] Initializing monitoring service', {
     provider: providerType,
@@ -268,11 +279,193 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   }
 
   /**
-   * Export complete monitoring snapshot.
-   * @return {Object} Complete monitoring state
+   * Record a metrics snapshot for historical tracking.
+   * Should be called periodically (e.g., every minute).
+   * @return {Object} Current aggregated metrics snapshot
    */
-  function export_() {
-    return graph.export();
+  function recordMetricsSnapshot() {
+    return metricsAggregator.recordSnapshot(graph);
+  }
+
+  /**
+   * Get current aggregated metrics across all services.
+   * @return {Object|null} Current aggregated metrics
+   */
+  function getAggregatedMetrics() {
+    return metricsAggregator.getCurrentMetrics();
+  }
+
+  /**
+   * Get metrics for a specific service.
+   * @param {string} serviceName - Service name
+   * @return {Object|null} Service metrics or null
+   */
+  function getServiceMetrics(serviceName) {
+    return metricsAggregator.getServiceMetrics(serviceName);
+  }
+
+  /**
+   * Get historical metrics within time range.
+   * @param {number} [hoursBack=24] - Hours of history
+   * @return {Array<Object>} Historical snapshots
+   */
+  function getHistoricalMetrics(hoursBack = 24) {
+    return metricsAggregator.getHistoricalMetrics(hoursBack);
+  }
+
+  /**
+   * Get top metrics by category.
+   * @param {string} category - Category (slowest, mostErrors, highest-volume, worst-error-rate)
+   * @param {number} [limit=10] - Number of results
+   * @return {Array<Object>} Top metrics
+   */
+  function getTopMetrics(category, limit = 10) {
+    return metricsAggregator.getTopMetrics(category, limit);
+  }
+
+  /**
+   * Get metrics comparison between time points.
+   * @param {number} [hoursBack=1] - Hours back to compare
+   * @return {Object|null} Comparison metrics
+   */
+  function getMetricsComparison(hoursBack = 1) {
+    return metricsAggregator.getMetricsComparison(hoursBack);
+  }
+
+  /**
+   * Start a new trace for a request.
+   * @param {Object} [options={}] - Trace options
+   * @param {string} [options.traceId] - Use specific trace ID
+   * @param {string} [options.service] - Service initiating trace
+   * @param {string} [options.endpoint] - API endpoint being called
+   * @param {Object} [options.metadata={}] - Custom metadata
+   * @return {string} Generated or provided trace ID
+   */
+  function startTrace(options = {}) {
+    return requestTracer.startTrace(options);
+  }
+
+  /**
+   * Start a new span within a trace.
+   * @param {string} traceId - Trace ID
+   * @param {Object} [options={}] - Span options
+   * @param {string} [options.spanId] - Use specific span ID
+   * @param {string} [options.parentSpanId] - Parent span ID
+   * @param {string} [options.operation] - Operation name
+   * @param {string} [options.service] - Service name
+   * @param {string} [options.endpoint] - Endpoint being called
+   * @param {Object} [options.tags={}] - Custom tags
+   * @return {string} Generated or provided span ID
+   */
+  function startSpan(traceId, options = {}) {
+    return requestTracer.startSpan(traceId, options);
+  }
+
+  /**
+   * End a span with status and optional error.
+   * @param {string} spanId - Span ID to end
+   * @param {Object} [options={}] - End options
+   * @param {string} [options.status='success'] - Span status
+   * @param {Error|string} [options.error] - Error if span failed
+   * @param {number} [options.latency] - Call latency in ms
+   * @return {Object} Ended span object
+   */
+  function endSpan(spanId, options = {}) {
+    return requestTracer.endSpan(spanId, options);
+  }
+
+  /**
+   * Add a log entry to a span.
+   * @param {string} spanId - Span ID
+   * @param {Object} logEntry - Log entry with level, message, fields
+   */
+  function addSpanLog(spanId, logEntry) {
+    return requestTracer.addLog(spanId, logEntry);
+  }
+
+  /**
+   * End a trace with overall status.
+   * @param {string} traceId - Trace ID
+   * @param {Object} [options={}] - End options
+   * @param {string} [options.status='success'] - Overall status
+   * @param {Error} [options.error] - Error if trace failed
+   * @return {Object} Completed trace object
+   */
+  function endTrace(traceId, options = {}) {
+    return requestTracer.endTrace(traceId, options);
+  }
+
+  /**
+   * Get complete trace with all spans.
+   * @param {string} traceId - Trace ID
+   * @return {Object|null} Complete trace with expanded spans
+   */
+  function getTrace(traceId) {
+    return requestTracer.getTrace(traceId);
+  }
+
+  /**
+   * Get trace summary without full span details.
+   * @param {string} traceId - Trace ID
+   * @return {Object|null} Trace summary
+   */
+  function getTraceSummary(traceId) {
+    return requestTracer.getTraceSummary(traceId);
+  }
+
+  /**
+   * Get all traces matching criteria.
+   * @param {Object} [filter={}] - Filter criteria
+   * @param {string} [filter.service] - Filter by service
+   * @param {string} [filter.status] - Filter by status
+   * @param {number} [filter.minDuration] - Minimum duration (ms)
+   * @param {number} [filter.maxDuration] - Maximum duration (ms)
+   * @param {number} [filter.limit=100] - Max results
+   * @return {Array<Object>} Matching trace summaries
+   */
+  function findTraces(filter = {}) {
+    return requestTracer.findTraces(filter);
+  }
+
+  /**
+   * Get call chain visualization for a trace.
+   * @param {string} traceId - Trace ID
+   * @return {Object|null} Call chain visualization data
+   */
+  function getCallChainVisualization(traceId) {
+    return requestTracer.getCallChainVisualization(traceId);
+  }
+
+  /**
+   * Get slowest spans in a trace.
+   * @param {string} traceId - Trace ID
+   * @param {number} [limit=10] - Number of results
+   * @return {Array<Object>} Slowest spans
+   */
+  function getSlowestSpans(traceId, limit = 10) {
+    return requestTracer.getSlowestSpans(traceId, limit);
+  }
+
+  /**
+   * Get error spans in a trace.
+   * @param {string} traceId - Trace ID
+   * @return {Array<Object>} Spans with errors
+   */
+  function getErrorSpans(traceId) {
+    return requestTracer.getErrorSpans(traceId);
+  }
+
+  /**
+   * Export complete monitoring snapshot and metrics.
+   * @param {string} [format='json'] - Export format (json or csv)
+   * @return {Object|string} Exported data
+   */
+  function export_(format = 'json') {
+    return {
+      graph: graph.export(),
+      metrics: metricsAggregator.export(format),
+      traces: requestTracer.export()
+    };
   }
 
   // Initialize the service instance
@@ -287,15 +480,52 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     getHealthOverview,
     analyzeDependencyImpact,
     getServiceMetrics,
+    recordMetricsSnapshot,
+    getAggregatedMetrics,
+    getHistoricalMetrics,
+    getTopMetrics,
+    getMetricsComparison,
     reset,
     export: export_,
+    startTrace,
+    startSpan,
+    endSpan,
+    addSpanLog,
+    endTrace,
+    getTrace,
+    getTraceSummary,
+    findTraces,
+    getCallChainVisualization,
+    getSlowestSpans,
+    getErrorSpans,
     logger,
-    graph  // Expose for direct access if needed
+    graph,
+    metricsAggregator,
+    requestTracer
   };
 
   // Setup routes and views for the monitoring service
   setupRoutes(options['express-app'], service, options.authMiddleware);
   Views(options, eventEmitter, logger);
+
+  // Start periodic metrics snapshot recording (every minute)
+  let snapshotInterval = null;
+  if (enableAutoTracking) {
+    snapshotInterval = setInterval(() => {
+      try {
+        service.recordMetricsSnapshot();
+      } catch (err) {
+        logger?.error('[Monitoring] Failed to record metrics snapshot', {
+          error: err.message
+        });
+      }
+    }, 60000); // Every 60 seconds
+
+    // Allow process to exit even if interval is running
+    if (snapshotInterval.unref) {
+      snapshotInterval.unref();
+    }
+  }
 
   // Emit service created event
   eventEmitter?.emit('service:created', {
