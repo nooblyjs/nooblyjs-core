@@ -59,24 +59,33 @@
 
             <!-- Health Summary Card -->
             <div id="healthSummaryCard" class="health-summary-card healthy" style="display: none;">
-                <div class="health-summary-title">
-                    <span class="health-dot healthy"></span>
-                    System Health Status
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="health-summary-title">
+                        <span class="health-dot healthy"></span>
+                        System Health Status
+                    </div>
+                    <div id="systemOverallStatus" style="font-size: 1rem; font-weight: 600; color: #28a745;">
+                        ✓ All Systems Operational
+                    </div>
                 </div>
                 <div class="health-summary-stats">
-                    <div class="health-stat">
+                    <div class="health-stat health-stat-healthy">
+                        <i class="bi bi-check-circle-fill" style="font-size: 1.5rem; color: #28a745; margin-bottom: 0.5rem;"></i>
                         <div class="health-stat-value" id="healthyServicesCount">0</div>
-                        <div class="health-stat-label">Healthy Services</div>
+                        <div class="health-stat-label">Healthy</div>
                     </div>
-                    <div class="health-stat">
+                    <div class="health-stat health-stat-degraded">
+                        <i class="bi bi-exclamation-circle-fill" style="font-size: 1.5rem; color: #ffc107; margin-bottom: 0.5rem;"></i>
                         <div class="health-stat-value" id="degradedServicesCount">0</div>
-                        <div class="health-stat-label">Degraded Services</div>
+                        <div class="health-stat-label">Degraded</div>
                     </div>
-                    <div class="health-stat">
+                    <div class="health-stat health-stat-unhealthy">
+                        <i class="bi bi-x-circle-fill" style="font-size: 1.5rem; color: #dc3545; margin-bottom: 0.5rem;"></i>
                         <div class="health-stat-value" id="unhealthyServicesCount">0</div>
-                        <div class="health-stat-label">Unhealthy Services</div>
+                        <div class="health-stat-label">Unhealthy</div>
                     </div>
-                    <div class="health-stat">
+                    <div class="health-stat health-stat-total">
+                        <i class="bi bi-diagram-3-fill" style="font-size: 1.5rem; color: #68A8C4; margin-bottom: 0.5rem;"></i>
                         <div class="health-stat-value" id="totalServicesCount">0</div>
                         <div class="health-stat-label">Total Services</div>
                     </div>
@@ -350,6 +359,22 @@
                 systemBadge.className = `health-badge ${overallStatus}`;
                 const statusText = overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1);
                 systemBadge.innerHTML = `<span class="health-dot ${overallStatus}"></span><span>${statusText}</span>`;
+            }
+
+            // Update overall status message
+            const statusMessage = document.getElementById('systemOverallStatus');
+            if (statusMessage) {
+                let message = '✓ All Systems Operational';
+                let color = '#28a745';
+                if (unhealthyCount > 0) {
+                    message = `⚠ ${unhealthyCount} Service${unhealthyCount > 1 ? 's' : ''} Unhealthy`;
+                    color = '#dc3545';
+                } else if (degradedCount > 0) {
+                    message = `⚡ ${degradedCount} Service${degradedCount > 1 ? 's' : ''} Degraded`;
+                    color = '#ffc107';
+                }
+                statusMessage.textContent = message;
+                statusMessage.style.color = color;
             }
 
             // Show health summary card
