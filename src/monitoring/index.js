@@ -13,6 +13,8 @@ const ServiceDependencyGraph = require('./serviceDependencyGraph');
 const MetricsAggregator = require('./utils/metricsAggregator');
 const RequestTracer = require('./utils/requestTracer');
 const MonitoringSearchEngine = require('./utils/searchUtils');
+const ThemeManager = require('./utils/darkModeUtils');
+const AdminManager = require('./utils/adminUtils');
 const setupRoutes = require('./routes');
 const Views = require('./views');
 
@@ -44,7 +46,7 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   const { dependencies = {}, enableAutoTracking = true } = options;
   const logger = dependencies.logging;
 
-  // Initialize the dependency graph, metrics aggregator, request tracer, and search engine
+  // Initialize the dependency graph, metrics aggregator, request tracer, search engine, theme manager, and admin manager
   const graph = new ServiceDependencyGraph(options);
   const metricsAggregator = new MetricsAggregator({
     historySize: 1000,
@@ -58,6 +60,10 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   const searchEngine = new MonitoringSearchEngine({
     maxResults: 100
   });
+  const themeManager = new ThemeManager({
+    defaultTheme: 'auto'
+  });
+  const adminManager = new AdminManager();
 
   logger?.info('[Monitoring] Initializing monitoring service', {
     provider: providerType,
@@ -534,6 +540,139 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   }
 
   /**
+   * Set theme (light or dark).
+   * @param {string} theme - Theme to set (light|dark)
+   */
+  function setTheme(theme) {
+    themeManager.setTheme(theme);
+  }
+
+  /**
+   * Get current theme.
+   * @return {string} Current theme (light|dark)
+   */
+  function getTheme() {
+    return themeManager.getTheme();
+  }
+
+  /**
+   * Toggle between light and dark theme.
+   */
+  function toggleTheme() {
+    themeManager.toggleTheme();
+  }
+
+  /**
+   * Check if dark mode is active.
+   * @return {boolean} True if dark mode is active
+   */
+  function isDarkMode() {
+    return themeManager.isDark();
+  }
+
+  /**
+   * Set a rate limit policy.
+   * @param {string} endpoint - Endpoint path pattern
+   * @param {Object} policy - Rate limiting policy
+   * @return {Object} Updated policy
+   */
+  function setRateLimitPolicy(endpoint, policy) {
+    return adminManager.setRateLimitPolicy(endpoint, policy);
+  }
+
+  /**
+   * Get a rate limit policy.
+   * @param {string} endpoint - Endpoint path pattern
+   * @return {Object|null} Rate limiting policy or null
+   */
+  function getRateLimitPolicy(endpoint) {
+    return adminManager.getRateLimitPolicy(endpoint);
+  }
+
+  /**
+   * Get all rate limit policies.
+   * @return {Array<Object>} All rate limiting policies
+   */
+  function getAllRateLimitPolicies() {
+    return adminManager.getAllRateLimitPolicies();
+  }
+
+  /**
+   * Delete a rate limit policy.
+   * @param {string} endpoint - Endpoint path pattern
+   * @return {boolean} True if deleted, false if not found
+   */
+  function deleteRateLimitPolicy(endpoint) {
+    return adminManager.deleteRateLimitPolicy(endpoint);
+  }
+
+  /**
+   * Update tracing configuration.
+   * @param {Object} config - Tracing configuration
+   * @return {Object} Updated tracing configuration
+   */
+  function setTracingConfig(config) {
+    return adminManager.setTracingConfig(config);
+  }
+
+  /**
+   * Get tracing configuration.
+   * @return {Object} Current tracing configuration
+   */
+  function getTracingConfig() {
+    return adminManager.getTracingConfig();
+  }
+
+  /**
+   * Update system settings.
+   * @param {Object} settings - System settings to update
+   * @return {Object} Updated system settings
+   */
+  function setSystemSettings(settings) {
+    return adminManager.setSystemSettings(settings);
+  }
+
+  /**
+   * Get system settings.
+   * @return {Object} Current system settings
+   */
+  function getSystemSettings() {
+    return adminManager.getSystemSettings();
+  }
+
+  /**
+   * Enable maintenance mode.
+   * @param {string} [message] - Optional maintenance message
+   */
+  function enableMaintenanceMode(message) {
+    adminManager.enableMaintenanceMode(message);
+  }
+
+  /**
+   * Disable maintenance mode.
+   */
+  function disableMaintenanceMode() {
+    adminManager.disableMaintenanceMode();
+  }
+
+  /**
+   * Get audit log entries.
+   * @param {Object} [filter={}] - Filter options
+   * @return {Array<Object>} Audit log entries
+   */
+  function getAuditLog(filter) {
+    return adminManager.getAuditLog(filter);
+  }
+
+  /**
+   * Get system health and status summary.
+   * @return {Object} Health status summary
+   */
+  function getAdminHealthSummary() {
+    return adminManager.getHealthSummary();
+  }
+
+  /**
    * Export complete monitoring snapshot and metrics.
    * @param {string} [format='json'] - Export format (json or csv)
    * @return {Object|string} Exported data
@@ -543,7 +682,9 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
       graph: graph.export(),
       metrics: metricsAggregator.export(format),
       traces: requestTracer.export(),
-      searches: searchEngine.export()
+      searches: searchEngine.export(),
+      theme: themeManager.export(),
+      admin: adminManager.export()
     };
   }
 
@@ -584,11 +725,29 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     getSearch,
     listSearches,
     deleteSearch,
+    setTheme,
+    getTheme,
+    toggleTheme,
+    isDarkMode,
+    setRateLimitPolicy,
+    getRateLimitPolicy,
+    getAllRateLimitPolicies,
+    deleteRateLimitPolicy,
+    setTracingConfig,
+    getTracingConfig,
+    setSystemSettings,
+    getSystemSettings,
+    enableMaintenanceMode,
+    disableMaintenanceMode,
+    getAuditLog,
+    getAdminHealthSummary,
     logger,
     graph,
     metricsAggregator,
     requestTracer,
-    searchEngine
+    searchEngine,
+    themeManager,
+    adminManager
   };
 
   // Setup routes and views for the monitoring service

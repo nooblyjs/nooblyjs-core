@@ -1195,6 +1195,423 @@ function setupMonitoringRoutes(app, service, authMiddleware) {
     }
   });
 
+  /**
+   * PUT /services/monitoring/api/theme
+   * Set application theme
+   *
+   * Body Parameters:
+   * - theme: theme to set (light|dark)
+   */
+  app.put('/services/monitoring/api/theme', authMiddleware, (req, res) => {
+    try {
+      const { theme } = req.body;
+
+      if (!theme || (theme !== 'light' && theme !== 'dark')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid theme. Must be light or dark.'
+        });
+      }
+
+      service.setTheme(theme);
+
+      res.status(200).json({
+        success: true,
+        data: { theme: service.getTheme() },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to set theme', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/theme
+   * Get current application theme
+   */
+  app.get('/services/monitoring/api/theme', authMiddleware, (req, res) => {
+    try {
+      res.status(200).json({
+        success: true,
+        data: {
+          theme: service.getTheme(),
+          isDark: service.isDarkMode()
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get theme', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/theme/toggle
+   * Toggle between light and dark theme
+   */
+  app.post('/services/monitoring/api/theme/toggle', authMiddleware, (req, res) => {
+    try {
+      service.toggleTheme();
+
+      res.status(200).json({
+        success: true,
+        data: { theme: service.getTheme() },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to toggle theme', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/admin/rate-limit
+   * Set a rate limiting policy
+   *
+   * Body Parameters:
+   * - endpoint: endpoint path pattern
+   * - requestsPerMinute: requests per minute limit
+   * - requestsPerHour: requests per hour limit (optional)
+   * - burstSize: burst size allowed (optional)
+   */
+  app.post('/services/monitoring/api/admin/rate-limit', authMiddleware, (req, res) => {
+    try {
+      const { endpoint, ...policy } = req.body;
+
+      if (!endpoint) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required field: endpoint'
+        });
+      }
+
+      const updated = service.setRateLimitPolicy(endpoint, policy);
+
+      res.status(200).json({
+        success: true,
+        data: updated,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to set rate limit policy', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/admin/rate-limit
+   * Get all rate limiting policies
+   */
+  app.get('/services/monitoring/api/admin/rate-limit', authMiddleware, (req, res) => {
+    try {
+      const policies = service.getAllRateLimitPolicies();
+
+      res.status(200).json({
+        success: true,
+        data: policies,
+        count: policies.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get rate limit policies', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * DELETE /services/monitoring/api/admin/rate-limit/:endpoint
+   * Delete a rate limiting policy
+   */
+  app.delete('/services/monitoring/api/admin/rate-limit/:endpoint', authMiddleware, (req, res) => {
+    try {
+      const { endpoint } = req.params;
+      const deleted = service.deleteRateLimitPolicy(endpoint);
+
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          error: `Policy for ${endpoint} not found`
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Policy for ${endpoint} deleted`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to delete rate limit policy', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * PUT /services/monitoring/api/admin/tracing
+   * Update tracing configuration
+   *
+   * Body Parameters:
+   * - enabled: enable/disable tracing
+   * - samplingRate: sampling rate (0-1)
+   * - excludedPaths: paths to exclude from tracing
+   * - maxTraces: maximum traces to keep
+   */
+  app.put('/services/monitoring/api/admin/tracing', authMiddleware, (req, res) => {
+    try {
+      const config = service.setTracingConfig(req.body);
+
+      res.status(200).json({
+        success: true,
+        data: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to update tracing config', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/admin/tracing
+   * Get tracing configuration
+   */
+  app.get('/services/monitoring/api/admin/tracing', authMiddleware, (req, res) => {
+    try {
+      const config = service.getTracingConfig();
+
+      res.status(200).json({
+        success: true,
+        data: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get tracing config', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * PUT /services/monitoring/api/admin/settings
+   * Update system settings
+   *
+   * Body Parameters:
+   * - maintenanceMode: enable/disable maintenance mode
+   * - maintenanceMessage: maintenance message
+   * - maxConcurrentRequests: max concurrent requests
+   * - requestTimeout: request timeout (ms)
+   * - cacheEnabled: enable/disable caching
+   * - logLevel: log level (debug|info|warn|error)
+   */
+  app.put('/services/monitoring/api/admin/settings', authMiddleware, (req, res) => {
+    try {
+      const settings = service.setSystemSettings(req.body);
+
+      res.status(200).json({
+        success: true,
+        data: settings,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to update system settings', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/admin/settings
+   * Get system settings
+   */
+  app.get('/services/monitoring/api/admin/settings', authMiddleware, (req, res) => {
+    try {
+      const settings = service.getSystemSettings();
+
+      res.status(200).json({
+        success: true,
+        data: settings,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get system settings', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/admin/maintenance/enable
+   * Enable maintenance mode
+   *
+   * Body Parameters:
+   * - message: optional maintenance message
+   */
+  app.post('/services/monitoring/api/admin/maintenance/enable', authMiddleware, (req, res) => {
+    try {
+      const { message } = req.body;
+      service.enableMaintenanceMode(message);
+
+      res.status(200).json({
+        success: true,
+        message: 'Maintenance mode enabled',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to enable maintenance mode', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/admin/maintenance/disable
+   * Disable maintenance mode
+   */
+  app.post('/services/monitoring/api/admin/maintenance/disable', authMiddleware, (req, res) => {
+    try {
+      service.disableMaintenanceMode();
+
+      res.status(200).json({
+        success: true,
+        message: 'Maintenance mode disabled',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to disable maintenance mode', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/admin/audit-log
+   * Get audit log entries
+   *
+   * Query Parameters:
+   * - type: filter by change type
+   * - action: filter by action
+   * - limit: result limit (default: 100)
+   */
+  app.get('/services/monitoring/api/admin/audit-log', authMiddleware, (req, res) => {
+    try {
+      const filter = {
+        type: req.query.type,
+        action: req.query.action,
+        limit: parseInt(req.query.limit || '100', 10)
+      };
+
+      const log = service.getAuditLog(filter);
+
+      res.status(200).json({
+        success: true,
+        data: log,
+        count: log.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get audit log', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/admin/health
+   * Get admin panel health and status summary
+   */
+  app.get('/services/monitoring/api/admin/health', authMiddleware, (req, res) => {
+    try {
+      const summary = service.getAdminHealthSummary();
+
+      res.status(200).json({
+        success: true,
+        data: summary,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get admin health summary', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   return {
     getDependencyGraph: () => service.getDependencyGraph(),
     getHealthOverview: () => service.getHealthOverview(),
