@@ -9274,9 +9274,22 @@ body {
 
 .health-summary-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-top: 0;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .health-summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .health-summary-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .health-stat {
@@ -9384,10 +9397,19 @@ body {
 .page-header-health {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.page-header-health > div:first-child {
+  flex: 1;
+}
+
+.page-header-health > div:last-child {
+  flex-shrink: 0;
+  padding-top: 0.25rem;
 }
 
 .page-header-health-status {
