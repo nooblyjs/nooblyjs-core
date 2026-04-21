@@ -25,7 +25,7 @@ const path = require('node:path');
 describe('Filing Service - Feature Verification', () => {
   let filing;
   let mockEventEmitter;
-  const testDir = path.join(__dirname, '../../../.test-files');
+  const testDir = path.join(__dirname, '../../../.test/files');
 
   beforeEach(() => {
     mockEventEmitter = new EventEmitter();
