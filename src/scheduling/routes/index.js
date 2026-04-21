@@ -182,7 +182,7 @@ module.exports = (options, eventEmitter, scheduler) => {
     res.status(200).json(settings);
   }));
 
-  app.post('/services/scheduling/api/settings', wrap(async (req, res) => {
+  app.post('/services/scheduling/api/settings', async (req, res) => {
     const body = req.body;
     if (!body || typeof body !== 'object') {
       return res.status(400).json({ error: 'Bad Request: Missing settings body' });
@@ -193,7 +193,7 @@ module.exports = (options, eventEmitter, scheduler) => {
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
-  }));
+  });
 
   app.get('/services/scheduling/api/health', async (req, res) => {
     try {
@@ -205,117 +205,111 @@ module.exports = (options, eventEmitter, scheduler) => {
     }
   });
 
-    /**
-     * GET /services/scheduling/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/scheduling/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'scheduling', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'scheduling-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/scheduling/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/scheduling/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'scheduling', limit: 10000 });
-
-    /**
-     * POST /services/scheduling/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/scheduling/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'scheduling-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'scheduling-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/scheduling/api/export
-     * Exports service data
-     */
-    app.get('/services/scheduling/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('scheduling-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'scheduling-export' });
-      }
-    });
+  /**
+   * GET /services/scheduling/api/audit
+   * Retrieves audit log entries
+   */
+  app.get('/services/scheduling/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    try {
+      const filters = { service: 'scheduling', limit: parseInt(req.query.limit) || 100 };
+      Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+      const logs = auditLog.query(filters);
+      const stats = auditLog.getStats(filters);
+      sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
+    } catch (error) {
+      handleError(res, error, { operation: 'scheduling-audit-query' });
     }
-    await scheduler.saveSettings(body);
-    res.status(200).json({ status: 'OK', message: 'Settings updated' });
-  }));
+  });
+
+  /**
+   * POST /services/scheduling/api/audit/export
+   * Exports audit logs
+   */
+  app.post('/services/scheduling/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
+    try {
+      const format = req.query.format || 'json';
+      const exported = auditLog.export(format, { service: 'scheduling', limit: 10000 });
+      const mimeType = DataExporter.getMimeType(format);
+      const filename = DataExporter.getFilename('audit-logs', format);
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(exported);
+    } catch (error) {
+      handleError(res, error, { operation: 'scheduling-audit-export' });
+    }
+  });
+
+  /**
+   * POST /services/scheduling/api/import
+   * Imports data from specified format
+   *
+   * @param {express.Request} req - Express request object
+   * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
+   * @param {string|Array} req.body.data - Data to import
+   * @param {string} req.query.dryRun - Dry-run mode (true/false)
+   * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
+   * @param {express.Response} res - Express response object
+   * @return {void}
+   */
+  app.post('/services/scheduling/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+    try {
+      const { data: rawData, format = 'json' } = req.body;
+      const dryRun = req.query.dryRun === 'true';
+      const conflictStrategy = req.query.conflictStrategy || 'error';
+
+      if (!rawData) {
+        return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
+      }
+
+      // Parse data based on format
+      let parsedData = Array.isArray(rawData) ? rawData : rawData;
+      if (typeof rawData === 'string') {
+        parsedData = DataImporter.parse(rawData, format);
+      }
+
+      if (!Array.isArray(parsedData)) {
+        return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
+      }
+
+      // Dry-run mode
+      if (dryRun) {
+        const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
+        return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
+      }
+
+      // Perform actual import
+      const importHandler = async (item) => {
+        try {
+          // Service-specific import logic would go here
+          return { success: true, type: 'new' };
+        } catch (error) {
+          throw error;
+        }
+      };
+
+      const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
+      sendSuccess(res, result, 'Data imported successfully', 201);
+    } catch (error) {
+      handleError(res, error, { operation: 'scheduling-import' });
+    }
+  });
+
+  /**
+   * GET /services/scheduling/api/export
+   * Exports service data
+   */
+  app.get('/services/scheduling/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
+    try {
+      const format = req.query.format || 'json';
+      const data = { note: 'Data export available' };
+      const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
+      const mimeType = DataExporter.getMimeType(format);
+      const filename = DataExporter.getFilename('scheduling-export', format);
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(exported);
+    } catch (error) {
+      handleError(res, error, { operation: 'scheduling-export' });
+    }
+  });
 };

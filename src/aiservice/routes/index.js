@@ -237,7 +237,15 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       }
     });
 
-
+  app.get('/services/aiservice/api/health', async (req, res) => {
+    try {
+      const result = await healthCheck.check({ service: aiService });
+      const statusCode = result.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json(result);
+    } catch (err) {
+      handleError(res, err, { operation: 'health-check' });
+    }
+  });
 
     /**
      * GET /services/aiservice/api/audit
@@ -263,6 +271,15 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
       try {
         const format = req.query.format || 'json';
         const exported = auditLog.export(format, { service: 'aiservice', limit: 10000 });
+        const mimeType = DataExporter.getMimeType(format);
+        const filename = DataExporter.getFilename('audit-logs', format);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exported);
+      } catch (error) {
+        handleError(res, error, { operation: 'aiservice-audit-export' });
+      }
+    });
 
     /**
      * POST /services/aiservice/api/import
@@ -316,17 +333,6 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
         sendSuccess(res, result, 'Data imported successfully', 201);
       } catch (error) {
         handleError(res, error, { operation: 'aiservice-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'aiservice-audit-export' });
       }
     });
 

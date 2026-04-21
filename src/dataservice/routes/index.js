@@ -433,7 +433,7 @@ module.exports = (options, eventEmitter, dataservice) => {
      */
     app.get('/services/dataservice/api/health', async (req, res) => {
       try {
-        const result = await healthCheck.check({ service: dataService });
+        const result = await healthCheck.check({ service: dataservice });
         const statusCode = result.status === 'healthy' ? 200 : 503;
         res.status(statusCode).json(result);
       } catch (err) {
