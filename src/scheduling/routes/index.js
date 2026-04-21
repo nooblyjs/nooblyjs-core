@@ -186,15 +186,24 @@ module.exports = (options, eventEmitter, scheduler) => {
     const body = req.body;
     if (!body || typeof body !== 'object') {
       return res.status(400).json({ error: 'Bad Request: Missing settings body' });
-    app.get('/services/scheduling/api/health', async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: scheduler });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
+    }
+    try {
+      await scheduler.saveSettings(body);
+      res.status(200).json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }));
+
+  app.get('/services/scheduling/api/health', async (req, res) => {
+    try {
+      const result = await healthCheck.check({ service: scheduler });
+      const statusCode = result.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json(result);
+    } catch (err) {
+      handleError(res, err, { operation: 'health-check' });
+    }
+  });
 
     /**
      * GET /services/scheduling/api/audit
