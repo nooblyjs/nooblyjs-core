@@ -68,6 +68,15 @@ const authservice = serviceRegistry.authservice('file', {
 
 const monitoring = serviceRegistry.monitoring('memory');
 
+// Setup distributed tracing middleware for request correlation
+const createTracingMiddleware = require('./src/monitoring/middleware/tracingMiddleware');
+const tracingMiddleware = createTracingMiddleware(monitoring, {
+  serviceName: 'api-noauth',
+  excludePaths: ['/health', '/status', '/public', '/docs'],
+  propagateHeaders: true
+});
+app.use(tracingMiddleware);
+
 // Launch the application docs folder to show the docs on the public site
 // /docs retrieves the document
 // /docs/list retrieves the list of documents

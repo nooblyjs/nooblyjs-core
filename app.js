@@ -181,6 +181,15 @@ const healthCheckManager = setupHealthChecks(app, serviceRegistry.servicesAuthMi
 // Mark application as ready after services are initialized
 healthCheckManager.markReady();
 
+// Setup distributed tracing middleware for request correlation
+const createTracingMiddleware = require('./src/monitoring/middleware/tracingMiddleware');
+const tracingMiddleware = createTracingMiddleware(monitoring, {
+  serviceName: 'api',
+  excludePaths: ['/health', '/status', '/public', '/docs'],
+  propagateHeaders: true
+});
+app.use(tracingMiddleware);
+
 // Expose the public folder
 app.use('/', express.static(__dirname + '/public'));
 
