@@ -18,6 +18,7 @@ const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
+const { HealthCheck } = require('../../appservice/utils/healthCheck');
 
 /**
  * Configures and registers notification routes with the Express application.

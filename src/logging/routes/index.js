@@ -19,7 +19,7 @@ const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
-const HealthCheck = require('../../appservice/utils/healthCheck');
+const { HealthCheck } = require('../../appservice/utils/healthCheck');
 const { sendSuccess, sendError, sendStatus, sendList, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**

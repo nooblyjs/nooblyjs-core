@@ -89,7 +89,8 @@
       "Bash(npm list:*)",
       "Bash(npx jest:*)",
       "Skill(update-config)",
-      "Bash([ -f \"src/$service/routes/swagger/docs.json\" ])"
+      "Bash([ -f \"src/$service/routes/swagger/docs.json\" ])",
+      "Bash(wait)"
     ],
     "deny": [],
     "ask": []

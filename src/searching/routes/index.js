@@ -18,7 +18,7 @@ const AuditLog = require('../../appservice/modules/auditLog');
 const DataExporter = require('../../appservice/utils/exportUtils');
 const DataImporter = require('../../appservice/utils/importUtils');
 const BulkOperations = require('../../appservice/utils/bulkOperations');
-const HealthCheck = require('../../appservice/utils/healthCheck');
+const { HealthCheck } = require('../../appservice/utils/healthCheck');
 
 /**
  * Configures and registers search routes with the Express application.
