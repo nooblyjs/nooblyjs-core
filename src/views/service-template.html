@@ -111,13 +111,97 @@
                 <div class="tab-content" id="serviceTabContent">
                     <!-- DASHBOARD TAB -->
                     <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <!-- Health Diagnostics Card -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                                    <div>
+                                        <h2 class="card-title">
+                                            <i class="bi bi-heart-pulse"></i> Service Health Diagnostics
+                                        </h2>
+                                        <p class="card-subtitle">Current health status and detailed information</p>
+                                    </div>
+                                    <div id="healthStatusBadge" class="health-badge unknown" style="margin: 0;">
+                                        <span class="health-dot unknown"></span>
+                                        <span>Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Health Summary Grid -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info mb-0">
+                                            <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>Service Status</h6>
+                                            <div id="healthStatusDetails" style="font-size: 0.9rem;">
+                                                <div class="placeholder-glow">
+                                                    <span class="placeholder col-8"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-light border mb-0">
+                                            <h6 class="mb-2"><i class="bi bi-clock me-2"></i>Last Checked</h6>
+                                            <div id="healthLastChecked" style="font-size: 0.9rem;">
+                                                <div class="placeholder-glow">
+                                                    <span class="placeholder col-8"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Health Checks Details -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-list-check me-2"></i>Health Checks</h6>
+                                    <div id="healthChecksContainer" class="ms-3">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-12 mb-2"></span>
+                                            <span class="placeholder col-12 mb-2"></span>
+                                            <span class="placeholder col-10"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Error Details (if any) -->
+                                <div id="healthErrorSection" style="display: none;">
+                                    <div class="alert alert-danger">
+                                        <h6 class="alert-heading">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Error Details
+                                        </h6>
+                                        <div id="healthErrorDetails" style="font-size: 0.9rem; font-family: monospace; white-space: pre-wrap; word-break: break-word;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Troubleshooting Tips -->
+                                <div id="troubleshootingSection" style="display: none;">
+                                    <div class="alert alert-warning">
+                                        <h6 class="alert-heading">
+                                            <i class="bi bi-lightbulb me-2"></i>Troubleshooting Tips
+                                        </h6>
+                                        <ul class="mb-0" id="troubleshootingTips">
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Refresh Button -->
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="refreshHealthBtn" onclick="updateServiceHealthDetails()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Refresh Health Status
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Dashboard content placeholder -->
                         <div class="card">
                             <div class="card-header">
                                 <h2 class="card-title">Dashboard</h2>
                                 <p class="card-subtitle">Service metrics and overview</p>
                             </div>
-                            <div class="card-content">
+                            <div class="card-body">
                                 <p>Dashboard content will be populated by service-specific script</p>
                             </div>
                         </div>
@@ -372,19 +456,118 @@
                     const data = await response.json();
                     const status = data.status || 'unknown';
 
-                    // Update health badge
+                    // Update health badge in header
                     const healthBadge = document.getElementById('serviceHealthBadge');
                     if (healthBadge) {
                         healthBadge.className = `health-badge ${status}`;
                         const statusText = status.charAt(0).toUpperCase() + status.slice(1);
                         healthBadge.innerHTML = `<span class="health-dot ${status}"></span><span>${statusText}</span>`;
                     }
+
+                    // Update dashboard diagnostics
+                    updateServiceHealthDetails(data);
                 } else {
                     updateHealthBadgeStatus('unknown', 'Unable to fetch health status');
+                    updateServiceHealthDetails(null, 'Health check endpoint unreachable');
                 }
             } catch (error) {
                 console.error('Error fetching service health:', error);
                 updateHealthBadgeStatus('unknown', 'Error checking health');
+                updateServiceHealthDetails(null, error.message);
+            }
+        }
+
+        async function updateServiceHealthDetails(healthData, errorMsg) {
+            const authToken = localStorage.getItem('authToken');
+            const servicePath = window.location.pathname.split('/')[2];
+
+            try {
+                // Fetch fresh health data if not provided
+                if (!healthData && !errorMsg) {
+                    const response = await fetch(`/services/${servicePath}/api/health?authToken=${authToken}`);
+                    if (response.ok) {
+                        healthData = await response.json();
+                    }
+                }
+
+                const status = healthData?.status || 'unknown';
+                const statusBadge = document.getElementById('healthStatusBadge');
+
+                if (statusBadge) {
+                    statusBadge.className = `health-badge ${status}`;
+                    const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+                    statusBadge.innerHTML = `<span class="health-dot ${status}"></span><span>${statusText}</span>`;
+                }
+
+                // Update status details
+                const statusDetails = document.getElementById('healthStatusDetails');
+                if (statusDetails) {
+                    const statusColor = status === 'healthy' ? 'success' : status === 'degraded' ? 'warning' : 'danger';
+                    const statusIcon = status === 'healthy' ? '✓' : status === 'degraded' ? '⚡' : '✕';
+                    statusDetails.innerHTML = `<span style="color: var(--bs-${statusColor}); font-weight: 600;">${statusIcon} ${statusText}</span>`;
+                }
+
+                // Update last checked
+                const lastChecked = document.getElementById('healthLastChecked');
+                if (lastChecked) {
+                    const now = new Date().toLocaleTimeString();
+                    lastChecked.textContent = now;
+                }
+
+                // Update health checks
+                const checksContainer = document.getElementById('healthChecksContainer');
+                if (checksContainer && healthData?.checks) {
+                    let checksHTML = '';
+                    for (const [checkName, checkResult] of Object.entries(healthData.checks)) {
+                        const checkStatus = checkResult.status === 'ok' ? 'success' : checkResult.status === 'warning' ? 'warning' : 'danger';
+                        const checkIcon = checkResult.status === 'ok' ? '✓' : checkResult.status === 'warning' ? '⚠' : '✕';
+                        checksHTML += `
+                            <div class="mb-2">
+                                <span style="color: var(--bs-${checkStatus}); font-weight: 600;">${checkIcon}</span>
+                                <strong>${checkName}:</strong> ${checkResult.status}
+                                ${checkResult.message ? `<br><small class="text-muted">${checkResult.message}</small>` : ''}
+                            </div>
+                        `;
+                    }
+                    checksContainer.innerHTML = checksHTML || '<small class="text-muted">No checks available</small>';
+                }
+
+                // Show error section if there are errors
+                const errorSection = document.getElementById('healthErrorSection');
+                if (errorMsg || healthData?.error) {
+                    errorSection.style.display = 'block';
+                    const errorDetails = document.getElementById('healthErrorDetails');
+                    if (errorDetails) {
+                        if (errorMsg) {
+                            errorDetails.textContent = errorMsg;
+                        } else if (healthData.error) {
+                            errorDetails.textContent = JSON.stringify(healthData.error, null, 2);
+                        }
+                    }
+                } else {
+                    errorSection.style.display = 'none';
+                }
+
+                // Show troubleshooting for unhealthy services
+                const troubleshootingSection = document.getElementById('troubleshootingSection');
+                if (status !== 'healthy') {
+                    troubleshootingSection.style.display = 'block';
+                    const tips = document.getElementById('troubleshootingTips');
+                    if (tips) {
+                        tips.innerHTML = `
+                            <li>Check the service logs for error messages</li>
+                            <li>Verify all required dependencies are available</li>
+                            <li>Review the service settings and configuration</li>
+                            <li>Ensure the service has necessary permissions</li>
+                            <li>Try restarting the service</li>
+                            <li>Check network connectivity if external services are required</li>
+                        `;
+                    }
+                } else {
+                    troubleshootingSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error updating health details:', error);
             }
         }
 
