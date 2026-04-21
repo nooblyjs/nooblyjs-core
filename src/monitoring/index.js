@@ -15,6 +15,11 @@ const RequestTracer = require('./utils/requestTracer');
 const MonitoringSearchEngine = require('./utils/searchUtils');
 const ThemeManager = require('./utils/darkModeUtils');
 const AdminManager = require('./utils/adminUtils');
+const {
+  DashboardConfig,
+  VisualizationHelper,
+  ResponsiveHelper
+} = require('./utils/uiUtils');
 const setupRoutes = require('./routes');
 const Views = require('./views');
 
@@ -64,6 +69,11 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     defaultTheme: 'auto'
   });
   const adminManager = new AdminManager();
+  const dashboardConfig = new DashboardConfig({
+    title: 'Monitoring Dashboard'
+  });
+  const visualizationHelper = new VisualizationHelper();
+  const responsiveHelper = new ResponsiveHelper();
 
   logger?.info('[Monitoring] Initializing monitoring service', {
     provider: providerType,
@@ -673,6 +683,146 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
   }
 
   /**
+   * Create a new dashboard configuration.
+   * @param {Object} options - Dashboard options
+   * @return {DashboardConfig} Dashboard configuration instance
+   */
+  function createDashboardConfig(options = {}) {
+    const config = new DashboardConfig(options);
+    logger?.info('[Monitoring] Dashboard configuration created', {
+      title: config.title,
+      layout: config.layout
+    });
+    return config;
+  }
+
+  /**
+   * Get current dashboard configuration.
+   * @return {DashboardConfig} Current dashboard configuration
+   */
+  function getDashboardConfig() {
+    return dashboardConfig;
+  }
+
+  /**
+   * Add a widget to the dashboard.
+   * @param {Object} widget - Widget configuration
+   * @return {Object} Added widget
+   */
+  function addDashboardWidget(widget) {
+    const added = dashboardConfig.addWidget(widget);
+    logger?.info('[Monitoring] Widget added to dashboard', {
+      widgetId: widget.id,
+      widgetType: widget.type
+    });
+    return added;
+  }
+
+  /**
+   * Remove a widget from the dashboard.
+   * @param {string} widgetId - Widget ID to remove
+   * @return {boolean} True if removed successfully
+   */
+  function removeDashboardWidget(widgetId) {
+    const removed = dashboardConfig.removeWidget(widgetId);
+    if (removed) {
+      logger?.info('[Monitoring] Widget removed from dashboard', {
+        widgetId
+      });
+    }
+    return removed;
+  }
+
+  /**
+   * Update a dashboard widget configuration.
+   * @param {string} widgetId - Widget ID to update
+   * @param {Object} updates - Configuration updates
+   * @return {Object|null} Updated widget or null if not found
+   */
+  function updateDashboardWidget(widgetId, updates) {
+    const updated = dashboardConfig.updateWidget(widgetId, updates);
+    if (updated) {
+      logger?.info('[Monitoring] Widget configuration updated', {
+        widgetId
+      });
+    }
+    return updated;
+  }
+
+  /**
+   * Export dashboard configuration.
+   * @return {Object} Exported configuration
+   */
+  function exportDashboard() {
+    return dashboardConfig.export();
+  }
+
+  /**
+   * Import dashboard configuration.
+   * @param {Object} config - Configuration to import
+   */
+  function importDashboard(config) {
+    dashboardConfig.import(config);
+    logger?.info('[Monitoring] Dashboard configuration imported');
+  }
+
+  /**
+   * Get responsive column count for viewport width.
+   * @param {number} viewportWidth - Viewport width in pixels
+   * @return {number} Column count
+   */
+  function getResponsiveColumns(viewportWidth) {
+    return dashboardConfig.getResponsiveColumns(viewportWidth);
+  }
+
+  /**
+   * Get responsive breakpoint for viewport width.
+   * @param {number} viewportWidth - Viewport width in pixels
+   * @return {string} Breakpoint name (mobile|tablet|desktop|wide)
+   */
+  function getResponsiveBreakpoint(viewportWidth) {
+    return dashboardConfig.getResponsiveBreakpoint(viewportWidth);
+  }
+
+  /**
+   * Generate a bar chart SVG.
+   * @param {Array<Object>} data - Chart data points
+   * @param {Object} [options={}] - Chart options
+   * @return {string} SVG markup
+   */
+  function generateBarChart(data, options = {}) {
+    return visualizationHelper.generateBarChart(data, options);
+  }
+
+  /**
+   * Generate a line chart SVG.
+   * @param {Array<Object>} data - Data points with x, y values
+   * @param {Object} [options={}] - Chart options
+   * @return {string} SVG markup
+   */
+  function generateLineChart(data, options = {}) {
+    return visualizationHelper.generateLineChart(data, options);
+  }
+
+  /**
+   * Generate a metric card HTML.
+   * @param {Object} metric - Metric data
+   * @return {string} HTML markup
+   */
+  function generateMetricCard(metric) {
+    return visualizationHelper.generateMetricCard(metric);
+  }
+
+  /**
+   * Generate responsive grid CSS.
+   * @param {number} [columns=3] - Number of columns for desktop
+   * @return {string} CSS rules
+   */
+  function generateResponsiveGridCSS(columns = 3) {
+    return responsiveHelper.generateResponsiveGrid(columns);
+  }
+
+  /**
    * Export complete monitoring snapshot and metrics.
    * @param {string} [format='json'] - Export format (json or csv)
    * @return {Object|string} Exported data
@@ -684,7 +834,8 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
       traces: requestTracer.export(),
       searches: searchEngine.export(),
       theme: themeManager.export(),
-      admin: adminManager.export()
+      admin: adminManager.export(),
+      dashboard: dashboardConfig.export()
     };
   }
 
@@ -741,13 +892,29 @@ function createMonitoring(providerType = 'memory', options = {}, eventEmitter) {
     disableMaintenanceMode,
     getAuditLog,
     getAdminHealthSummary,
+    createDashboardConfig,
+    getDashboardConfig,
+    addDashboardWidget,
+    removeDashboardWidget,
+    updateDashboardWidget,
+    exportDashboard,
+    importDashboard,
+    getResponsiveColumns,
+    getResponsiveBreakpoint,
+    generateBarChart,
+    generateLineChart,
+    generateMetricCard,
+    generateResponsiveGridCSS,
     logger,
     graph,
     metricsAggregator,
     requestTracer,
     searchEngine,
     themeManager,
-    adminManager
+    adminManager,
+    dashboardConfig,
+    visualizationHelper,
+    responsiveHelper
   };
 
   // Setup routes and views for the monitoring service

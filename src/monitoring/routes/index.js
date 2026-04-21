@@ -1612,6 +1612,399 @@ function setupMonitoringRoutes(app, service, authMiddleware) {
     }
   });
 
+  /**
+   * POST /services/monitoring/api/dashboard/config
+   * Create or update dashboard configuration
+   *
+   * Body Parameters:
+   * - title: dashboard title
+   * - layout: layout type (grid|flex|masonry)
+   * - columnCount: number of columns
+   * - theme: theme configuration
+   */
+  app.post('/services/monitoring/api/dashboard/config', authMiddleware, (req, res) => {
+    try {
+      const { title, layout, columnCount, theme } = req.body;
+      const config = service.createDashboardConfig({
+        title,
+        layout,
+        columnCount,
+        theme
+      });
+
+      res.status(201).json({
+        success: true,
+        data: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to create dashboard config', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/dashboard/config
+   * Get current dashboard configuration
+   */
+  app.get('/services/monitoring/api/dashboard/config', authMiddleware, (req, res) => {
+    try {
+      const config = service.getDashboardConfig();
+
+      res.status(200).json({
+        success: true,
+        data: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get dashboard config', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/dashboard/widgets
+   * Add a widget to dashboard
+   *
+   * Body Parameters:
+   * - id: widget unique ID
+   * - title: widget title
+   * - type: widget type (chart|table|metric|card)
+   * - width: width in columns (1-4)
+   * - height: height in pixels
+   * - config: widget-specific configuration
+   */
+  app.post('/services/monitoring/api/dashboard/widgets', authMiddleware, (req, res) => {
+    try {
+      const widget = service.addDashboardWidget(req.body);
+
+      res.status(201).json({
+        success: true,
+        data: widget,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to add widget', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * DELETE /services/monitoring/api/dashboard/widgets/:widgetId
+   * Remove a widget from dashboard
+   *
+   * URL Parameters:
+   * - widgetId: widget ID to remove
+   */
+  app.delete('/services/monitoring/api/dashboard/widgets/:widgetId', authMiddleware, (req, res) => {
+    try {
+      const { widgetId } = req.params;
+      const removed = service.removeDashboardWidget(widgetId);
+
+      res.status(200).json({
+        success: removed,
+        message: removed ? 'Widget removed' : 'Widget not found',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to remove widget', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * PUT /services/monitoring/api/dashboard/widgets/:widgetId
+   * Update a widget configuration
+   *
+   * URL Parameters:
+   * - widgetId: widget ID to update
+   *
+   * Body Parameters:
+   * - title: new widget title
+   * - visible: visibility state
+   * - config: widget configuration updates
+   */
+  app.put('/services/monitoring/api/dashboard/widgets/:widgetId', authMiddleware, (req, res) => {
+    try {
+      const { widgetId } = req.params;
+      const widget = service.updateDashboardWidget(widgetId, req.body);
+
+      if (!widget) {
+        return res.status(404).json({
+          success: false,
+          error: 'Widget not found'
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: widget,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to update widget', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/dashboard/export
+   * Export dashboard configuration
+   */
+  app.post('/services/monitoring/api/dashboard/export', authMiddleware, (req, res) => {
+    try {
+      const exported = service.exportDashboard();
+
+      res.status(200).json({
+        success: true,
+        data: exported,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to export dashboard', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/dashboard/import
+   * Import dashboard configuration
+   *
+   * Body Parameters:
+   * - config: dashboard configuration to import
+   */
+  app.post('/services/monitoring/api/dashboard/import', authMiddleware, (req, res) => {
+    try {
+      const { config } = req.body;
+      service.importDashboard(config);
+
+      res.status(200).json({
+        success: true,
+        message: 'Dashboard configuration imported',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to import dashboard', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/visualization/bar-chart
+   * Generate bar chart SVG
+   *
+   * Body Parameters:
+   * - data: array of {label, value, color?} objects
+   * - options: {width?, height?, title?}
+   */
+  app.post('/services/monitoring/api/visualization/bar-chart', authMiddleware, (req, res) => {
+    try {
+      const { data, options } = req.body;
+      const svg = service.generateBarChart(data, options);
+
+      res.status(200)
+        .set('Content-Type', 'image/svg+xml')
+        .send(svg);
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to generate bar chart', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/visualization/line-chart
+   * Generate line chart SVG
+   *
+   * Body Parameters:
+   * - data: array of {x, y} objects
+   * - options: {width?, height?, title?}
+   */
+  app.post('/services/monitoring/api/visualization/line-chart', authMiddleware, (req, res) => {
+    try {
+      const { data, options } = req.body;
+      const svg = service.generateLineChart(data, options);
+
+      res.status(200)
+        .set('Content-Type', 'image/svg+xml')
+        .send(svg);
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to generate line chart', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /services/monitoring/api/visualization/metric-card
+   * Generate metric card HTML
+   *
+   * Body Parameters:
+   * - metric: {label, value, unit?, status?}
+   */
+  app.post('/services/monitoring/api/visualization/metric-card', authMiddleware, (req, res) => {
+    try {
+      const { metric } = req.body;
+      const html = service.generateMetricCard(metric);
+
+      res.status(200)
+        .set('Content-Type', 'text/html')
+        .send(html);
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to generate metric card', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/responsive/columns
+   * Get responsive column count for viewport width
+   *
+   * Query Parameters:
+   * - viewportWidth: width in pixels
+   */
+  app.get('/services/monitoring/api/responsive/columns', authMiddleware, (req, res) => {
+    try {
+      const viewportWidth = parseInt(req.query.viewportWidth || '1024', 10);
+      const columns = service.getResponsiveColumns(viewportWidth);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          viewportWidth,
+          columns
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get responsive columns', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/responsive/breakpoint
+   * Get responsive breakpoint for viewport width
+   *
+   * Query Parameters:
+   * - viewportWidth: width in pixels
+   */
+  app.get('/services/monitoring/api/responsive/breakpoint', authMiddleware, (req, res) => {
+    try {
+      const viewportWidth = parseInt(req.query.viewportWidth || '1024', 10);
+      const breakpoint = service.getResponsiveBreakpoint(viewportWidth);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          viewportWidth,
+          breakpoint
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to get responsive breakpoint', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /services/monitoring/api/responsive/grid-css
+   * Generate responsive grid CSS
+   *
+   * Query Parameters:
+   * - columns: number of columns (default: 3)
+   */
+  app.get('/services/monitoring/api/responsive/grid-css', authMiddleware, (req, res) => {
+    try {
+      const columns = parseInt(req.query.columns || '3', 10);
+      const css = service.generateResponsiveGridCSS(columns);
+
+      res.status(200)
+        .set('Content-Type', 'text/css')
+        .send(css);
+    } catch (error) {
+      logger?.error('[MonitoringRoutes] Failed to generate responsive grid CSS', {
+        error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   return {
     getDependencyGraph: () => service.getDependencyGraph(),
     getHealthOverview: () => service.getHealthOverview(),
