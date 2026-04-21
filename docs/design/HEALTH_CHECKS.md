@@ -6,12 +6,16 @@ This document describes the health check endpoints available for monitoring and 
 
 Noobly JS Core provides multiple health check endpoints designed for different monitoring and orchestration scenarios:
 
+- **Global Health**: `GET /health` - Application-level status
+- **Per-Service Health**: `GET /services/{service}/api/health` - Individual service status (14 services)
 - **Docker**: `HEALTHCHECK` in Dockerfile uses `/health`
 - **Load Balancers**: Use `/health` for fast availability checks
 - **Kubernetes**: Use `/health/ready` (readiness), `/health/live` (liveness), `/health/startup` (startup)
 - **Monitoring Tools**: Use `/health/detailed` for comprehensive status (requires authentication)
 
 ## Quick Reference
+
+### Global Endpoints
 
 | Endpoint | Purpose | Status Code | Use Case |
 |----------|---------|-------------|----------|
@@ -20,6 +24,18 @@ Noobly JS Core provides multiple health check endpoints designed for different m
 | `GET /health/ready` | Kubernetes readiness probe | 200/503 | Traffic routing decisions |
 | `GET /health/startup` | Kubernetes startup probe | 200/503 | Slow startup handling |
 | `GET /health/detailed` | Full status report (protected) | 200/500 | Monitoring dashboards |
+
+### Per-Service Endpoints
+
+| Service | Endpoint | Status Code | Use Case |
+|---------|----------|-------------|----------|
+| All 14 services | `GET /services/{service}/api/health` | 200/503 | Individual service health monitoring |
+
+**Available Services:**
+- `logging`, `caching`, `fetching`, `queueing`, `notifying`, `working`, `scheduling`
+- `measuring`, `searching`, `dataservice`, `filing`, `workflow`, `authservice`, `aiservice`
+
+---
 
 ## Endpoint Details
 
@@ -209,6 +225,124 @@ curl -H "X-API-Key: your-api-key" \
 # With bearer token
 curl -H "Authorization: Bearer token" \
   https://api.example.com/health/detailed
+```
+
+---
+
+## Per-Service Health Endpoints
+
+Each of the 14 microservices provides its own health check endpoint for granular service monitoring.
+
+### GET /services/{service}/api/health
+
+Health status for an individual service.
+
+**Example - Caching Service:**
+```
+GET /services/caching/api/health
+```
+
+**Response (200 OK - Healthy):**
+```json
+{
+  "status": "healthy",
+  "service": "caching",
+  "provider": "memory",
+  "uptime": 3600,
+  "timestamp": "2026-04-21T14:30:00.000Z",
+  "dependencies": {
+    "checked": true,
+    "status": "ok"
+  }
+}
+```
+
+**Response (503 Service Unavailable - Unhealthy):**
+```json
+{
+  "status": "unhealthy",
+  "service": "caching",
+  "provider": "redis",
+  "message": "Failed to connect to Redis",
+  "timestamp": "2026-04-21T14:30:00.000Z"
+}
+```
+
+### Available Per-Service Health Endpoints
+
+```bash
+# Core Services
+GET /services/logging/api/health
+GET /services/caching/api/health
+GET /services/fetching/api/health
+GET /services/queueing/api/health
+GET /services/notifying/api/health
+
+# Business Logic Services
+GET /services/dataservice/api/health
+GET /services/working/api/health
+GET /services/measuring/api/health
+
+# Application Services
+GET /services/scheduling/api/health
+GET /services/searching/api/health
+GET /services/workflow/api/health
+GET /services/filing/api/health
+
+# Integration Services
+GET /services/authservice/api/health
+GET /services/aiservice/api/health  # Uses provider-specific health (Ollama)
+```
+
+### Per-Service Health Check Examples
+
+**Monitoring individual service:**
+```bash
+curl http://localhost:11000/services/caching/api/health
+```
+
+**With authentication (if required):**
+```bash
+curl -H "X-API-Key: your-api-key" \
+  http://localhost:11000/services/dataservice/api/health
+```
+
+**Check multiple services in a loop:**
+```bash
+for service in logging caching fetching queueing dataservice; do
+  status=$(curl -s http://localhost:11000/services/$service/api/health | jq -r '.status')
+  echo "$service: $status"
+done
+```
+
+### Monitoring All Services
+
+Create a monitoring dashboard that checks all 14 services:
+
+```javascript
+async function checkAllServices() {
+  const services = [
+    'logging', 'caching', 'fetching', 'queueing', 'notifying', 'working',
+    'scheduling', 'measuring', 'searching', 'dataservice', 'filing',
+    'workflow', 'authservice', 'aiservice'
+  ];
+
+  const results = await Promise.all(
+    services.map(async (service) => {
+      try {
+        const response = await fetch(
+          `http://localhost:11000/services/${service}/api/health`
+        );
+        const data = await response.json();
+        return { service, status: data.status, healthy: response.ok };
+      } catch (err) {
+        return { service, status: 'error', healthy: false, error: err.message };
+      }
+    })
+  );
+
+  return results;
+}
 ```
 
 ---

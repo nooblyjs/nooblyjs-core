@@ -4,6 +4,7 @@ Complete REST API documentation for Noobly JS Core services.
 
 ## Table of Contents
 
+- [Health Check Endpoints](#health-check-endpoints)
 - [Authentication](#authentication)
 - [AI Service](#ai-service)
 - [Auth Service](#auth-service)
@@ -18,6 +19,59 @@ Complete REST API documentation for Noobly JS Core services.
 - [Searching Service](#searching-service)
 - [Workflow Service](#workflow-service)
 - [Working Service](#working-service)
+
+---
+
+## Health Check Endpoints
+
+All 14 services provide health check endpoints for monitoring and orchestration.
+
+### Per-Service Health Status
+
+```http
+GET /services/{service}/api/health
+```
+
+**Available Services:**
+
+| Service | Endpoint | Status |
+|---------|----------|--------|
+| AI Service | `GET /services/ai/api/health` | ✅ |
+| Auth Service | `GET /services/authservice/api/health` | ✅ |
+| Caching Service | `GET /services/caching/api/health` | ✅ |
+| Data Service | `GET /services/dataservice/api/health` | ✅ |
+| Filing Service | `GET /services/filing/api/health` | ✅ |
+| Fetching Service | `GET /services/fetching/api/health` | ✅ |
+| Logging Service | `GET /services/logging/api/health` | ✅ |
+| Measuring Service | `GET /services/measuring/api/health` | ✅ |
+| Notifying Service | `GET /services/notifying/api/health` | ✅ |
+| Queueing Service | `GET /services/queueing/api/health` | ✅ |
+| Scheduling Service | `GET /services/scheduling/api/health` | ✅ |
+| Searching Service | `GET /services/searching/api/health` | ✅ |
+| Workflow Service | `GET /services/workflow/api/health` | ✅ |
+| Working Service | `GET /services/working/api/health` | ✅ |
+
+**Response (200 OK - Healthy):**
+```json
+{
+  "status": "healthy",
+  "service": "caching",
+  "provider": "memory",
+  "timestamp": "2026-04-21T14:30:00.000Z"
+}
+```
+
+**Response (503 Unavailable - Unhealthy):**
+```json
+{
+  "status": "unhealthy",
+  "service": "dataservice",
+  "message": "Service unavailable",
+  "timestamp": "2026-04-21T14:30:00.000Z"
+}
+```
+
+For complete health endpoint documentation, see [Health Checks Guide](./design/HEALTH_CHECKS.md).
 
 ---
 
@@ -48,9 +102,10 @@ x-auth-token: YOUR_SESSION_TOKEN
 ### Public Endpoints
 
 The following paths are excluded from authentication by default:
+- `GET /services/*/api/health` - Per-service health check endpoints (all 14 services)
 - `GET /services/*/status` - Service status endpoints
-- `POST /services/authservice/api/login` - Login
-- `POST /services/authservice/api/register` - Registration
+- `POST /services/authservice/api/login` - Login endpoint
+- `POST /services/authservice/api/register` - Registration endpoint
 
 ---
 

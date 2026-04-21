@@ -10,8 +10,9 @@ This document provides detailed examples and best practices for integrating and 
 4. [Advanced Patterns](#advanced-patterns)
 5. [Real-World Scenarios](#real-world-scenarios)
 6. [Error Handling](#error-handling)
-7. [Performance Tips](#performance-tips)
-8. [Testing with the Library](#testing-with-the-library)
+7. [Monitoring & Health Checks](#monitoring--health-checks)
+8. [Performance Tips](#performance-tips)
+9. [Testing with the Library](#testing-with-the-library)
 
 ---
 
@@ -1346,6 +1347,127 @@ app.get('/api/items', async (req, res) => {
   }
 });
 ```
+
+---
+
+## Monitoring & Health Checks
+
+Noobly JS Core provides comprehensive health check endpoints for monitoring and orchestration.
+
+### Global Health Endpoints
+
+```bash
+# Quick health check (Docker, load balancers)
+curl http://localhost:11000/health
+
+# Kubernetes liveness probe
+curl http://localhost:11000/health/live
+
+# Kubernetes readiness probe
+curl http://localhost:11000/health/ready
+
+# Detailed status report (requires authentication)
+curl -H "X-API-Key: your-api-key" \
+  http://localhost:11000/health/detailed
+```
+
+### Per-Service Health Endpoints
+
+Check the health of individual services:
+
+```javascript
+// Example: Check caching service health
+const response = await fetch('http://localhost:11000/services/caching/api/health');
+const health = await response.json();
+
+console.log(`Caching service status: ${health.status}`);
+// Output: Caching service status: healthy
+```
+
+**All Available Services:**
+- logging, caching, fetching, queueing, notifying, working
+- scheduling, measuring, searching, dataservice, filing
+- workflow, authservice, aiservice
+
+### Monitoring Pattern
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Check all service health
+app.get('/monitoring/services', async (req, res) => {
+  const services = [
+    'logging', 'caching', 'fetching', 'queueing', 'dataservice'
+  ];
+
+  const health = await Promise.all(
+    services.map(async (service) => {
+      try {
+        const response = await fetch(
+          `http://localhost:11000/services/${service}/api/health`
+        );
+        const data = await response.json();
+        return {
+          service,
+          status: data.status,
+          healthy: response.ok
+        };
+      } catch (error) {
+        return {
+          service,
+          status: 'error',
+          healthy: false
+        };
+      }
+    })
+  );
+
+  const allHealthy = health.every(h => h.healthy);
+  res.status(allHealthy ? 200 : 503).json({
+    overall: allHealthy ? 'healthy' : 'unhealthy',
+    services: health
+  });
+});
+```
+
+### Kubernetes Integration
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nooblyjs-core
+spec:
+  containers:
+  - name: app
+    image: nooblyjs-core:latest
+    
+    # Liveness probe
+    livenessProbe:
+      httpGet:
+        path: /health/live
+        port: 11000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    
+    # Readiness probe
+    readinessProbe:
+      httpGet:
+        path: /health/ready
+        port: 11000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+### Docker Integration
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:11000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+```
+
+For complete monitoring documentation, see [Health Checks Guide](./design/HEALTH_CHECKS.md).
 
 ---
 
