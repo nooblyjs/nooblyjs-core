@@ -10,14 +10,13 @@
 
 'use strict';
 
+// Load Dependancies
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { EventEmitter } = require('events');
 const config = require('dotenv').config();
-
-const serviceRegistry = require('.');
 
 // Load rate limiting configuration
 const rateLimitConfig = require('./src/config/rateLimitConfig');
@@ -27,6 +26,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Instantiate the service registry
+const serviceRegistry = require('.');
+
+// Initialise the service registry
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter, {
   logDir: path.join(__dirname, './.application/', 'logs'),
@@ -42,11 +45,9 @@ serviceRegistry.initialize(app, eventEmitter, {
   }
 });
 
+
+
 const log = serviceRegistry.logger('memory');
-
-// Setup rate limiter middleware
-const rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
-
 const defaultCache = serviceRegistry.cache('memory');
 const cacheSessions = serviceRegistry.getService('caching', 'memory', { instanceName: 'sessions' });
 const cacheMetrics = serviceRegistry.getService('caching', 'memory', { instanceName: 'metrics' });
@@ -61,14 +62,14 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 const aiservice = serviceRegistry.aiservice('ollama', {});
-
+const monitoring = serviceRegistry.monitoring('memory');
 const authservice = serviceRegistry.authservice('file', {
   'express-app': app
 });
 
-const monitoring = serviceRegistry.monitoring('memory');
 
 // Setup distributed tracing middleware for request correlation
+const rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
 const createTracingMiddleware = require('./src/monitoring/middleware/tracingMiddleware');
 const tracingMiddleware = createTracingMiddleware(monitoring, {
   serviceName: 'api-noauth',
@@ -171,6 +172,7 @@ function extractDocumentMetadata(content) {
 // Launch the application readme file to be shown on the docs readme area
 app.use('/readme', express.static(path.join(__dirname, 'README.md')));
 
+// Load the public site
 app.use('/', express.static(__dirname + '/public'));
 
 const PORT = process.env.PORT || 9000;
