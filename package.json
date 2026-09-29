@@ -41,7 +41,10 @@
     "kill": "node scripts/kill-port.js",
     "kill-test": "node scripts/kill-test-port.js",
     "certs": "node scripts/generate-certs.js",
-    "certs:force": "node scripts/generate-certs.js --force"
+    "certs:force": "node scripts/generate-certs.js --force",
+    "test:ui": "playwright test",
+    "test:ui:headed": "playwright test --headed --project=chromium",
+    "test:ui:report": "playwright show-report .temp/tests/playwright/report"
   },
   "jest": {
     "modulePaths": [
@@ -49,13 +52,19 @@
     ],
     "transform": {},
     "forceExit": true,
-    "detectOpenHandles": true
+    "detectOpenHandles": true,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/tests/ui/",
+      "<rootDir>/.temp/"
+    ]
   },
   "overrides": {
     "uuid": "$uuid",
     "qs": "^6.15.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "javascript-obfuscator": "^5.4.2",
     "jest": "^30.0.3",
     "knip": "^6.12.2",

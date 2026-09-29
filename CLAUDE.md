@@ -13,6 +13,7 @@ NooblyJS Core is a modular Node.js backend framework: a set of services (logging
 - `npm start` — `node ./app.js`
 - `npm test` (alias `npm run tests`) — all Jest tests
 - `npm test -- tests/unit/caching/cache.test.js` — a single file; `npm test -- -t "name"` for a single test
+- `npm run test:ui` — Playwright UI tests in `tests/ui/` (desktop + mobile Chromium); `npm run test:ui -- --project=chromium tests/ui/smoke.spec.js` for one file/project, `npm run test:ui:headed` to watch, `npm run test:ui:report` to open the HTML report
 - `npm run kill` / `npm run kill-test` — free port 11000 / 3101 when a server hangs
 - `npm run certs` / `npm run certs:force` — generate self-signed TLS certs for local HTTPS
 - `npm run build` — `scripts/build.js`
@@ -20,6 +21,8 @@ NooblyJS Core is a modular Node.js backend framework: a set of services (logging
 There is no linter. Jest runs with `forceExit` and `detectOpenHandles`; tests must clean up timers/handles in `afterEach`/`afterAll`.
 
 Skipped by default: MongoDB/DocumentDB suites (need `RUN_MONGODB_TESTS=1` / `RUN_DOCUMENTDB_TESTS=1` and a live DB), TensorFlow (needs optional `@tensorflow/tfjs-node`), SimpleDB (needs optional `aws-sdk` v2). Files named `*.disabled.js` / `*.disable.js` (Redis, Memcached, S3, filing, API-key integration) are not picked up by Jest.
+
+UI tests (`playwright.config.js`): Playwright starts `app-noauth.js` itself on port `11100` (`UI_TEST_PORT`) with `ALLOW_NOAUTH=1` — `app-noauth.js` refuses to start without that flag. Set `UI_TEST_BASE_URL` to test an already-running server instead. Results, traces, screenshots and the HTML report go to `.temp/tests/playwright/`. Jest ignores `tests/ui/` and `.temp/` (`testPathIgnorePatterns`), so Playwright specs must stay in `tests/ui/`. After `npm install` on a new machine, run `npx playwright install --with-deps chromium`. Note the AI dashboard is at `/services/ai`, not `/services/aiservice`.
 
 `tests/app/{service}/app-*.js` are standalone apps showing one service with a specific provider — run directly with `node`.
 

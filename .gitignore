@@ -37,3 +37,6 @@ screenshots/
 *.sh
 
 
+
+# Local working docs and ad-hoc test output
+.temp/
