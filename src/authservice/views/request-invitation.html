@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Request Invitation - NooblyJS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/services/css/styles.css">
+    <style>
+        /* Restore 12px base font: this page is sized in rem against a 12px root
+           (previously provided by public/styles.css before the CSS consolidation). */
+        html { font-size: 12px; }
+        :root {
+            --custom-primary: #059DA2;
+            --custom-secondary: #6c757d;
+            --custom-warning: #ffc107;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 1rem;
+        }
+
+        .auth-card {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 1rem;
+        }
+
+        .auth-card .card-body {
+            padding: 2.5rem 2rem;
+        }
+
+        .auth-logo {
+            color: var(--custom-primary);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-card .text-center p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .auth-card .form-control {
+            font-size: 1.2rem;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .auth-card .btn {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--custom-primary);
+            box-shadow: 0 0 0 0.2rem rgba(2, 121, 125, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: var(--custom-primary);
+            border-color: var(--custom-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #025a5d;
+            border-color: #025a5d;
+        }
+
+        .auth-link {
+            color: var(--custom-primary);
+            text-decoration: none;
+        }
+
+        .auth-link:hover {
+            color: #025a5d;
+            text-decoration: underline;
+        }
+
+        .success-message {
+            text-align: center;
+        }
+
+        .success-message i {
+            font-size: 4rem;
+            color: var(--custom-primary);
+            margin-bottom: 1rem;
+        }
+
+        .invitation-code {
+            background: #f8f9fa;
+            border: 2px dashed var(--custom-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .invitation-code-label {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .invitation-code-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--custom-primary);
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            margin-top: 1rem;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="card auth-card">
+            <div class="card-body">
+                <!-- Form Section -->
+                <div id="formSection">
+                    <div class="text-center mb-4">
+                        <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" style="max-height: 60px; width: auto; margin-bottom: 1rem;">
+                        <div class="auth-logo" id="app-name">NooblyJS</div>
+                        <p>Request an invitation to create your account</p>
+                    </div>
+
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="invitationForm">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" name="fullName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mobile" class="form-label">Mobile Number <span class="text-muted">(optional)</span></label>
+                            <input type="tel" class="form-control" id="mobile" name="mobile" placeholder="+1 (555) 123-4567">
+                        </div>
+
+                        <button type="submit" class="btn btn-secondary w-100 py-2 mb-3" id="submitBtn">
+                            Request Invitation
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">Already have an invitation? <a href="#" id="redeemLink" class="auth-link fw-semibold">Redeem here</a></p>
+                    </div>
+                </div>
+
+                <!-- Success Section -->
+                <div id="successSection" class="d-none">
+                    <div class="success-message">
+                        <i class="bi bi-check-circle"></i>
+                        <h3>Invitation Ready!</h3>
+                        <p class="text-muted mb-3">Save this code — you'll need it to create your account.</p>
+
+                        <div class="invitation-code">
+                            <div class="invitation-code-label">Your Invitation Code</div>
+                            <div class="invitation-code-value" id="invitationCode"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" id="copyCodeBtn">
+                                <i class="bi bi-clipboard"></i> Copy Code
+                            </button>
+                        </div>
+
+                        <a href="#" id="redeemNowBtn" class="btn btn-secondary w-100 mt-2">
+                            Redeem Now
+                        </a>
+
+                        <p class="text-muted small mt-3">
+                            Or visit the <a href="#" id="redeemPageLink" class="auth-link">redemption page</a> later. Code expires in 7 days.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const invitationForm = document.getElementById('invitationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorAlert = document.getElementById('errorAlert');
+        const formSection = document.getElementById('formSection');
+        const successSection = document.getElementById('successSection');
+        const invitationCode = document.getElementById('invitationCode');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const redeemLink = document.getElementById('redeemLink');
+        const redeemPageLink = document.getElementById('redeemPageLink');
+        const redeemNowBtn = document.getElementById('redeemNowBtn');
+
+        // Set redeem links
+        redeemLink.href = '/services/authservice/redeem-invitation';
+        redeemPageLink.href = '/services/authservice/redeem-invitation';
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.remove('d-none');
+            window.scrollTo(0, 0);
+        }
+
+        function hideError() {
+            errorAlert.classList.add('d-none');
+        }
+
+        invitationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const formData = new FormData(invitationForm);
+            const invitationData = {
+                name: formData.get('fullName'),
+                email: formData.get('email'),
+                mobile: formData.get('mobile') || undefined
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+
+            try {
+                const response = await fetch('/services/authservice/api/invitations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(invitationData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const code = result.data.code;
+                    invitationCode.textContent = code;
+                    // Pre-fill the code on the redeem page so the user doesn't have to re-type it
+                    const redeemUrl = `/services/authservice/redeem-invitation?code=${encodeURIComponent(code)}`;
+                    redeemNowBtn.href = redeemUrl;
+                    redeemPageLink.href = redeemUrl;
+                    formSection.classList.add('d-none');
+                    successSection.classList.remove('d-none');
+                } else {
+                    showError(result.error || 'Failed to request invitation');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Request Invitation';
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Request Invitation';
+            }
+        });
+
+        copyCodeBtn.addEventListener('click', function() {
+            const code = invitationCode.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = copyCodeBtn.innerHTML;
+                copyCodeBtn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+                setTimeout(() => {
+                    copyCodeBtn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        });
+
+        // Load branding if available
+        async function loadBranding() {
+            try {
+                const response = await fetch('/services/authservice/api/branding');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const brandingConfig = result.data;
+                    if (brandingConfig.appName) {
+                        document.getElementById('app-name').textContent = brandingConfig.appName;
+                        document.getElementById('page-title').textContent = `Request Invitation - ${brandingConfig.appName}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load branding:', error);
+            }
+        }
+
+        loadBranding();
+    </script>
+</body>
+</html>

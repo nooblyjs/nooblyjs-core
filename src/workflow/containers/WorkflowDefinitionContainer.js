@@ -3,7 +3,7 @@
  * Stores and manages workflow definitions with metadata.
  * Provides storage, retrieval, and update functionality for workflow definitions.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  */
 
@@ -51,7 +51,7 @@ class WorkflowDefinitionContainer {
         tags: metadata.tags || [],
         createdAt: isUpdate ? this.definitions.get(name).metadata.createdAt : now,
         updatedAt: now,
-        version: isUpdate ? (this.definitions.get(name).version || 1) + 1 : 1
+        version: isUpdate ? (this.definitions.get(name).metadata.version || 1) + 1 : 1
       }
     };
 
@@ -134,6 +134,37 @@ class WorkflowDefinitionContainer {
     };
 
     this.definitions.set(name, definition);
+    return definition;
+  }
+
+  /**
+   * Renames a workflow definition, keeping its steps and metadata.
+   * @param {string} oldName - Current workflow name
+   * @param {string} newName - New workflow name
+   * @return {Object} The renamed definition
+   * @throws {Error} When the workflow is missing or the new name is taken
+   */
+  rename(oldName, newName) {
+    const definition = this.definitions.get(oldName);
+    if (!definition) {
+      throw new Error(`Workflow '${oldName}' not found`);
+    }
+    if (!newName || typeof newName !== 'string') {
+      throw new Error('Workflow name must be a non-empty string');
+    }
+    if (oldName === newName) return definition;
+    if (this.definitions.has(newName)) {
+      throw new Error(`Workflow '${newName}' already exists`);
+    }
+
+    this.definitions.delete(oldName);
+    definition.name = newName;
+    definition.metadata = {
+      ...definition.metadata,
+      updatedAt: new Date().toISOString(),
+      version: (definition.metadata.version || 1) + 1
+    };
+    this.definitions.set(newName, definition);
     return definition;
   }
 

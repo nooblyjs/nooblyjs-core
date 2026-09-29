@@ -45,7 +45,7 @@ module.exports = (options, eventEmitter, cache) => {
     /**
      * GET /services/Scheduling/scripts
      * Serves the client-side Scheduling library as JavaScript
-     * This endpoint returns the digitalTechnologiesScheduling library for use in web applications.
+     * This endpoint returns the nooblyjsScheduling library for use in web applications.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -55,7 +55,7 @@ module.exports = (options, eventEmitter, cache) => {
      * <script src="/services/Scheduling/scripts"></script>
      *
      * // Use in JavaScript:
-     * const cache = new digitalTechnologiesScheduling({ instanceName: 'default' });
+     * const cache = new nooblyjsScheduling({ instanceName: 'default' });
      * cache.put('key', { data: 'value' });
      * cache.get('key').then(data => console.log(data));
      */
@@ -76,10 +76,7 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(200).send(libraryCode);
       } catch (error) {
         eventEmitter.emit('api-Scheduling-scripts-error', error.message);
-        res.status(500).json({
-          error: 'Failed to load Scheduling library',
-          message: error.message
-        });
+        res.status(500).json({ error: 'Failed to load Scheduling library' });
       }
     });
 

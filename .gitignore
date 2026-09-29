@@ -1,19 +1,30 @@
-#Noobly JS specfic exclusions
+#application specific
 .application/
 .cache/
 .data/
+documents/
+documents-readonly/
+documents-shared/
 
-#Node Modules and Other Files
+#nodent goes here...
 node_modules/
 
 #electron
 dist/
 .DS_Store
 *.log
+.logs/
 
-#Environment variables
+
+#env
 .env
 *.env.*
+
+#tls certificates (dev self-signed; never commit private keys)
+certs/
+*.key
+*.crt
+*.pem
 
 #tests
 .test/
@@ -22,5 +33,7 @@ dist/
 #screenshots
 screenshots/
 
-#claude
-.claude/**
+#shell files
+*.sh
+
+

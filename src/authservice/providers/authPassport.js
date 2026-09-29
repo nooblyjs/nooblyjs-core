@@ -1,7 +1,7 @@
 /**
  * @fileoverview Passport Authentication Provider
  * Passport.js local strategy authentication provider.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -166,7 +166,8 @@ class AuthPassport extends AuthBase {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      if (!requiredRoles.includes(req.user.role)) {
+      const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [req.user.role || 'user'];
+      if (!requiredRoles.some(role => userRoles.includes(role))) {
         return res.status(403).json({ error: 'Insufficient permissions' });
       }
 

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Application demonstrating Noobly JS Core services.
+ * @fileoverview Application demonstrating NooblyJS Core services.
  * This file serves as a comprehensive example of how to use all available
- * services in the Noobly JS Core framework.
+ * services in the NooblyJS Core framework.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -13,12 +13,31 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
+// Patch Express so rejected async route handlers are forwarded to the error
+// handler instead of becoming unhandled rejections (P0-5). Must be required
+// before routes are registered.
+require('express-async-errors');
+const helmet = require('helmet');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
 const { EventEmitter } = require('events');
-const config = require('dotenv').config();
+const config = require('dotenv').config({quiet: true });
+// HTTP / HTTPS server — transport is controlled by HTTPS_ENABLED in .env.
+// See src/shared/utils/createServer.js for the supported HTTPS_* variables.
+// Generate development certificates with: npm run certs
+const { createServer, createHttpRedirectServer } = require('./src/shared/utils/createServer');
+
+/** Maximum accepted request body size (P2-2). Override via BODY_LIMIT. */
+const BODY_LIMIT = process.env.BODY_LIMIT || '1mb';
+
+/** Comma-separated list of allowed CORS origins (P2-1). */
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const parseCommaSeparated = (value = '') =>
   value
@@ -28,8 +47,20 @@ const parseCommaSeparated = (value = '') =>
 
 // Create the Express application
 const app = express();
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Security headers (P2-1). CSP is left disabled here because the service
+// dashboards use inline styles/scripts; enable a tuned CSP per deployment.
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// CORS (P2-1): same-origin only unless explicit origins are configured.
+app.use(cors({
+  origin: corsOrigins.length > 0 ? corsOrigins : false,
+  credentials: true
+}));
+
+// Body parsers with explicit size limits (P2-2).
+app.use(bodyParser.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 /**
  * Configure session management with secure defaults
@@ -67,10 +98,6 @@ app.use(passport.session());
 // Load the service registry library
 const serviceRegistry = require('./index');
 
-// Load rate limiting configuration
-const rateLimitConfig = require('./src/config/rateLimitConfig');
-const { setupRateLimiter } = require('./src/middleware/setupRateLimiter');
-
 /**
  * Configure API keys for authentication
  *
@@ -98,9 +125,6 @@ if (configuredApiKeys.length === 0 && isProduction) {
   console.error('Example: export API_KEYS="key1,key2,key3"');
   process.exit(1);
 }
-
-// Initialize rate limiter (will be enhanced once logger is available)
-let rateLimiter = null;
 
 // Generate a development API key only if not in production
 let generatedDevApiKey = null;
@@ -141,11 +165,6 @@ serviceRegistry.initialize(app, eventEmitter, options);
 // Initialize all services
 const log = serviceRegistry.logger('file');
 app.set('logger', log); // Make logger available to app
-
-// Setup rate limiter middleware
-rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
-
-// Initialize services
 const cache = serviceRegistry.cache('inmemory');
 const dataService = serviceRegistry.dataService('file');
 const filing = serviceRegistry.filing('local');
@@ -158,7 +177,8 @@ const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 const fetching = serviceRegistry.fetching('node');
 const authservice = serviceRegistry.authservice('file');
-const monitoring = serviceRegistry.monitoring('memory');
+const settings = serviceRegistry.settings('file');
+const aiservice = serviceRegistry.aiservice('ollama', {});
 
 /**
  * Setup production health checks for load balancers and orchestration
@@ -172,26 +192,57 @@ const monitoring = serviceRegistry.monitoring('memory');
 const { createHealthCheckMiddleware } = require('./src/middleware/healthCheck');
 const setupHealthChecks = createHealthCheckMiddleware({
   logger: log,
-  criticalDependencies: ['cache', 'dataService']
+  criticalDependencies: ['cache', 'dataService'],
+  // P1-1: real, live dependency checks rather than trusting in-memory state.
+  dependencyCheckers: {
+    // Cache round-trip: write a probe key and read it back.
+    cache: async () => {
+      const key = '__healthcheck__';
+      await cache.put(key, '1');
+      const value = await cache.get(key);
+      return value === '1';
+    },
+    // Data service connectivity: a lightweight settings read must succeed.
+    dataService: async () => {
+      await dataService.getSettings();
+      return true;
+    }
+  }
 });
 
 // Setup health check endpoints (must be before other middleware)
 const healthCheckManager = setupHealthChecks(app, serviceRegistry.servicesAuthMiddleware);
 
-// Mark application as ready after services are initialized
-healthCheckManager.markReady();
+// P1-1: Only mark ready once the critical dependencies actually pass a live
+// check. Until then /health/ready returns 503 so traffic is not routed in.
+healthCheckManager.checkCriticalDependencies()
+  .then((healthy) => {
+    if (healthy) {
+      healthCheckManager.markReady();
+    } else {
+      log.warn('[HealthCheck] Critical dependencies not healthy at startup; readiness deferred.');
+    }
+  })
+  .catch((error) => {
+    log.error('[HealthCheck] Startup dependency check failed:', error.message);
+  });
 
-// Setup distributed tracing middleware for request correlation
-const createTracingMiddleware = require('./src/monitoring/middleware/tracingMiddleware');
-const tracingMiddleware = createTracingMiddleware(monitoring, {
-  serviceName: 'api',
-  excludePaths: ['/health', '/status', '/public', '/docs'],
-  propagateHeaders: true
+// Configure MIME types for static files
+app.use((req, res, next) => {
+  if (req.path.endsWith('.css')) {
+    res.type('text/css');
+  }
+  next();
 });
-app.use(tracingMiddleware);
 
 // Expose the public folder
-app.use('/', express.static(__dirname + '/public'));
+app.use('/', express.static(__dirname + '/public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 
 // ... (docs/ui route definitions)
 
@@ -199,23 +250,90 @@ app.use('/', express.static(__dirname + '/public'));
 const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 9000;
-app.listen(process.env.PORT, () => {
-  log.info(`Server is running on port ${process.env.PORT}`);
+// Build an HTTP or HTTPS server depending on HTTPS_ENABLED in .env.
+const PORT = process.env.PORT || 11000;
+const { server, protocol, httpsEnabled } = createServer(app, { baseDir: __dirname });
+
+// When serving HTTPS, also listen on HTTP and 301-redirect to the HTTPS URL so
+// plain-HTTP clients are bounced to the secure endpoint. A failure to bind the
+// redirect port (e.g. port 80 needs privileges, or it's already in use) is
+// logged but does not stop the main server.
+let httpRedirectServer = null;
+
+server.listen(PORT, () => {
+  log.info(`Server is running on port ${PORT} (${protocol.toUpperCase()})`);
+  log.info(`  ${protocol}://localhost:${PORT}`);
+  if (httpsEnabled) {
+    log.info('  Note: self-signed certificates trigger a browser warning — accept it to proceed.');
+  }
 });
 
+if (httpsEnabled) {
+  const { server: redirectServer, port: redirectPort } = createHttpRedirectServer({ httpsPort: PORT });
+  httpRedirectServer = redirectServer;
+
+  httpRedirectServer.on('error', (error) => {
+    if (error.code === 'EACCES') {
+      log.warn(`HTTP→HTTPS redirect: cannot bind port ${redirectPort} (insufficient privileges). ` +
+        'Set HTTP_REDIRECT_PORT to an unprivileged port (>1024), or run with elevated privileges.');
+    } else if (error.code === 'EADDRINUSE') {
+      log.warn(`HTTP→HTTPS redirect: port ${redirectPort} already in use. Set HTTP_REDIRECT_PORT to a free port.`);
+    } else {
+      log.warn(`HTTP→HTTPS redirect server error: ${error.message}`);
+    }
+  });
+
+  httpRedirectServer.listen(redirectPort, () => {
+    log.info(`HTTP→HTTPS redirect listening on port ${redirectPort} → https://localhost:${PORT}`);
+  });
+}
+
 // Handle graceful shutdown
+let shuttingDown = false;
 const gracefulShutdown = async (signal) => {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
   log.info(`${signal} received. Starting graceful shutdown...`);
+
+  // P2-5: Force-exit watchdog so a hung teardown cannot wedge the process.
+  const forceTimeoutMs = Number(process.env.SHUTDOWN_TIMEOUT_MS) || 15000;
+  const forceTimer = setTimeout(() => {
+    log.error(`Graceful shutdown exceeded ${forceTimeoutMs}ms. Forcing exit.`);
+    process.exit(1);
+  }, forceTimeoutMs);
+  forceTimer.unref();
+
   try {
+    // Stop accepting new connections, then tear down services.
+    await new Promise((resolve) => server.close(resolve));
+    if (httpRedirectServer) {
+      await new Promise((resolve) => httpRedirectServer.close(resolve));
+      log.info('HTTP→HTTPS redirect server closed.');
+    }
     await serviceRegistry.shutdown();
     log.info('All services shut down successfully.');
+    clearTimeout(forceTimer);
     process.exit(0);
   } catch (error) {
     log.error('Error during graceful shutdown:', error.message);
+    clearTimeout(forceTimer);
     process.exit(1);
   }
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Process-level safety nets (P0-5): log and shut down cleanly instead of
+// crashing uncontrolled. A failed shutdown still forces exit via gracefulShutdown.
+process.on('unhandledRejection', (reason) => {
+  log.error('Unhandled promise rejection:', reason instanceof Error ? reason.stack : reason);
+  gracefulShutdown('unhandledRejection');
+});
+
+process.on('uncaughtException', (error) => {
+  log.error('Uncaught exception:', error?.stack || error?.message || error);
+  gracefulShutdown('uncaughtException');
+});

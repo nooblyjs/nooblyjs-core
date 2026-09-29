@@ -1,9 +1,9 @@
 /**
- * @fileoverview Azure Queue Storage provider for Noobly JS Core queueing service.
+ * @fileoverview Azure Queue Storage provider for NooblyJS Core queueing service.
  * Leverages Azure Queue Storage for distributed, serverless queue operations.
  * Provides FIFO queue behavior with automatic message expiration and retention.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -46,7 +46,7 @@ class QueueingAzure {
     const connectionString = options?.connectionString || process.env.AZURE_STORAGE_CONNECTION_STRING;
 
     if (!connectionString) {
-      throw new Error('Azure Storage connection string is required. Set AZURE_STORAGE_CONNECTION_STRING env var or provide in options.');
+      throw new Error('Azure Storage connection string is required. Set AZURE_STORAGE_CONNECTION_STRING env let or provide in options.');
     }
 
     /** @private @const {QueueServiceClient} */

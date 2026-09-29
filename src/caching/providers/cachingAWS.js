@@ -1,9 +1,9 @@
 /**
- * @fileoverview AWS ElastiCache provider for Noobly JS Core caching service.
+ * @fileoverview AWS ElastiCache provider for NooblyJS Core caching service.
  * Leverages Redis and Memcached ElastiCache clusters for distributed caching.
  * Uses the existing CacheRedis provider under the hood with AWS-specific configuration.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */

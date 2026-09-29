@@ -6,7 +6,7 @@
  * Supports multiple named instances of queueing service through optional
  * instance parameter in URL paths.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -15,6 +15,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { sendSafeError } = require('../../../../shared/utils/safeError');
 
 /**
  * Gets the appropriate queue instance based on instance name
@@ -83,11 +84,7 @@ module.exports = (options, eventEmitter, queue) => {
         eventEmitter.emit('api-queueing-scripts-served', 'Queueing script library served');
       } catch (error) {
         eventEmitter.emit('api-queueing-scripts-error', error.message);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to load script library',
-          message: error.message
-        });
+        res.status(500).json({ success: false, error: 'Failed to load script library' });
       }
     });
 
@@ -109,11 +106,7 @@ module.exports = (options, eventEmitter, queue) => {
         eventEmitter.emit('api-queueing-swagger-docs-served', 'Queueing Swagger documentation served');
       } catch (error) {
         eventEmitter.emit('api-queueing-swagger-docs-error', error.message);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to load Swagger documentation',
-          message: error.message
-        });
+        res.status(500).json({ success: false, error: 'Failed to load Swagger documentation' });
       }
     });
 
@@ -136,7 +129,7 @@ module.exports = (options, eventEmitter, queue) => {
             res.status(200).send('OK');
           } catch (err) {
             eventEmitter.emit('api-queueing-enqueue-error', { error: err.message });
-            res.status(500).send(err.message);
+            sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
           }
         } else {
           res.status(400).send('Bad Request: Missing task');
@@ -198,7 +191,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(task);
         } catch (err) {
           eventEmitter.emit('api-queueing-dequeue-error', { error: err.message });
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       };
     };
@@ -255,7 +248,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(size);
         } catch (err) {
           eventEmitter.emit('api-queueing-size-error', { error: err.message });
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       };
     };
@@ -308,7 +301,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(queues);
         } catch (err) {
           eventEmitter.emit('api-queueing-list-error', { error: err.message });
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       };
     };
@@ -363,7 +356,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).send('OK');
         } catch (err) {
           eventEmitter.emit('api-queueing-purge-error', { error: err.message });
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       };
     };
@@ -487,7 +480,7 @@ module.exports = (options, eventEmitter, queue) => {
             queueList: queueList
           });
         } catch (error) {
-          res.status(500).json({ error: error.message });
+          sendSafeError(res, error, { status: 500, eventEmitter });
         }
       };
     };
@@ -534,10 +527,7 @@ module.exports = (options, eventEmitter, queue) => {
         res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-queueing-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve settings' });
       }
     });
 
@@ -558,7 +548,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).send('OK');
         } catch (err) {
           eventEmitter.emit('api-queueing-settings-save-error', err.message);
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       } else {
         res.status(400).send('Bad Request: Missing settings');

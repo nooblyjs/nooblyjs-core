@@ -3,7 +3,7 @@
  * Captures and stores analytics about workflow executions including run counts, error counts,
  * completion counts, duration, and last run timestamps for each unique workflow.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -48,20 +48,35 @@ class WorkflowAnalytics {
       return;
     }
 
-    // Listen for workflow start events
-    this.eventEmitter_.on('workflow:start', (data) => {
-      this.recordWorkflowStart_(data.workflowName, data.workflowId);
-    });
+    // Store listener references so they can be removed in destroy() (P2-6).
+    this.listeners_ = {
+      'workflow:start': (data) => {
+        this.recordWorkflowStart_(data.workflowName, data.workflowId);
+      },
+      'workflow:complete': (data) => {
+        this.recordWorkflowCompletion_(data.workflowId);
+      },
+      'workflow:error': (data) => {
+        this.recordWorkflowError_(data.workflowId);
+      }
+    };
 
-    // Listen for workflow completion events
-    this.eventEmitter_.on('workflow:complete', (data) => {
-      this.recordWorkflowCompletion_(data.workflowId);
-    });
+    for (const [event, handler] of Object.entries(this.listeners_)) {
+      this.eventEmitter_.on(event, handler);
+    }
+  }
 
-    // Listen for workflow error events
-    this.eventEmitter_.on('workflow:error', (data) => {
-      this.recordWorkflowError_(data.workflowId);
-    });
+  /**
+   * Removes all event listeners registered by this analytics module.
+   * Call when the owning service is disposed to prevent listener leaks (P2-6).
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const [event, handler] of Object.entries(this.listeners_)) {
+        this.eventEmitter_.removeListener(event, handler);
+      }
+      this.listeners_ = null;
+    }
   }
 
   /**

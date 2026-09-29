@@ -43,5 +43,11 @@ module.exports = (options, eventEmitter, workflow) => {
     
     // Serve static files from the views directory for workflow service
     app.use('/services/workflow', express.static(path.join(__dirname)));
+
+    // Serve the workflow manager UI library by its static path, e.g.
+    // /services/workflow/scripts/js/index.js. Only the `js` folder is exposed;
+    // the server-side route module next to it must not be served.
+    app.use('/services/workflow/scripts/js',
+      express.static(path.join(__dirname, '../scripts/js')));
   }
 };

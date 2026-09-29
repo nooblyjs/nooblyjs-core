@@ -1,8 +1,17 @@
+/**
+ * @fileoverview AI Service Factory views script 
+ * Client-side JavaScript for managing AI service views, including prompt submission, analytics display, and settings management.
+ * @author NooblyJS Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+
 const numberFormatter = new Intl.NumberFormat();
+
 let analyticsData = [];
 let currentSort = { column: 'lastPrompt', direction: 'desc' };
-let selectedProvider = 'claude';
 let isProcessing = false;
+let selectedInstance = 'default';
 
 function formatNumber(value) {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -73,6 +82,60 @@ async function makeRequest(url, method = 'GET', body = null) {
     return payload;
 }
 
+/**
+ * Rewrites an AI API path to target the currently selected instance.
+ * The default instance uses the unprefixed path.
+ * @param {string} basePath - A `/services/ai/api/...` path.
+ * @returns {string} The instance-scoped path.
+ */
+function buildAiUrl(basePath) {
+    if (selectedInstance === 'default') {
+        return basePath;
+    }
+    return basePath.replace('/services/ai/api/', `/services/ai/api/${selectedInstance}/`);
+}
+
+/** Loads the list of available AI service instances into the selector. */
+async function loadAiInstances() {
+    try {
+        const response = await fetch('/services/ai/api/instances');
+        if (!response.ok) {
+            return;
+        }
+        const data = await response.json();
+        if (data.instances && Array.isArray(data.instances)) {
+            updateAiInstanceSelector(data.instances);
+        }
+    } catch (error) {
+        console.error('Error loading instances:', error);
+    }
+}
+
+/**
+ * Populates the instance dropdown, preserving the current selection when possible.
+ * @param {Array<{name: string}>} instances - Available instances.
+ */
+function updateAiInstanceSelector(instances) {
+    const selector = document.getElementById('instanceSelector');
+    if (!selector) {
+        return;
+    }
+    const currentValue = selector.value;
+    selector.innerHTML = '';
+    instances.forEach((instance) => {
+        const option = document.createElement('option');
+        option.value = instance.name;
+        option.textContent = `${instance.name}${instance.name === 'default' ? ' (default)' : ''}`;
+        selector.appendChild(option);
+    });
+    if (instances.some((i) => i.name === currentValue)) {
+        selector.value = currentValue;
+    } else {
+        selector.value = 'default';
+        selectedInstance = 'default';
+    }
+}
+
 function toggleAdvanced() {
     const content = document.getElementById('advancedContent');
     if (content) {
@@ -80,21 +143,8 @@ function toggleAdvanced() {
     }
 }
 
-function handleProviderSelection() {
-    document.querySelectorAll('.core-provider-option').forEach((option) => {
-        option.addEventListener('click', () => {
-            document.querySelectorAll('.core-provider-option').forEach((opt) => opt.classList.remove('core-selected'));
-            option.classList.add('core-selected');
-            const input = option.querySelector('input[type="radio"]');
-            if (input) input.checked = true;
-            selectedProvider = option.dataset.provider;
-            checkProviderStatus(selectedProvider);
-        });
-    });
-}
-
 function handleExamplePrompts() {
-    document.querySelectorAll('.core-example-btn').forEach((btn) => {
+    document.querySelectorAll('.kr-example-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const textarea = document.getElementById('promptText');
             if (textarea) {
@@ -102,21 +152,6 @@ function handleExamplePrompts() {
             }
         });
     });
-}
-
-async function checkProviderStatus(provider) {
-    try {
-        const result = await makeRequest('/services/ai/api/health');
-        const indicator = document.querySelector(`[data-provider="${provider}"] .status-indicator`);
-        if (indicator) {
-            indicator.className = 'core-status-indicator ' + (result.healthy ? 'status-online' : 'status-offline');
-        }
-    } catch (error) {
-        const indicator = document.querySelector(`[data-provider="${provider}"] .status-indicator`);
-        if (indicator) {
-            indicator.className = 'core-status-indicator core-status-offline';
-        }
-    }
 }
 
 function renderOverview(overview) {
@@ -307,7 +342,7 @@ async function loadAnalytics() {
     setAnalyticsPlaceholders();
 
     try {
-        const response = await makeRequest('/services/ai/api/analytics');
+        const response = await makeRequest(buildAiUrl('/services/ai/api/analytics'));
         renderOverview(response.overview || {});
         renderTopPrompts(response.topPrompts || []);
         analyticsData = response.topRecent || [];
@@ -354,10 +389,8 @@ async function handlePromptSubmit(event) {
     if (isProcessing) return;
 
     const prompt = document.getElementById('promptText')?.value.trim();
-    const username = document.getElementById('promptUsername')?.value.trim();
     const maxTokensValue = parseInt(document.getElementById('maxTokens')?.value || '0', 10);
     const temperatureValue = parseFloat(document.getElementById('temperature')?.value || '0.7');
-    const model = document.getElementById('modelName')?.value.trim();
 
     if (!prompt) {
         showAlert('Please enter a prompt', 'error');
@@ -371,17 +404,13 @@ async function handlePromptSubmit(event) {
         setLoading(true);
         const requestBody = {
             prompt,
-            username,
             options: {
                 maxTokens,
-                temperature,
-                provider: selectedProvider,
-                model: model || undefined,
-                username
+                temperature
             }
         };
 
-        const result = await makeRequest('/services/ai/api/prompt', 'POST', requestBody);
+        const result = await makeRequest(buildAiUrl('/services/ai/api/prompt'), 'POST', requestBody);
 
         const responseContainer = document.getElementById('responseContainer');
         const aiResponse = document.getElementById('aiResponse');
@@ -396,10 +425,10 @@ async function handlePromptSubmit(event) {
             document.getElementById('responseTokens').textContent = formatNumber(result.usage.completionTokens || 0);
             document.getElementById('totalTokens').textContent = formatNumber(result.usage.totalTokens || 0);
             document.getElementById('estimatedCost').textContent =
-                '$' + calculateCost(result.usage, result.provider || selectedProvider).toFixed(6);
+                '$' + calculateCost(result.usage, result.provider).toFixed(6);
         }
 
-        showAlert(`Response received from ${result.provider || selectedProvider}`);
+        showAlert(`Response received from ${result.provider || 'AI'}`);
         loadAnalytics();
     } catch (error) {
         showAlert('Error: ' + error.message, 'error');
@@ -418,7 +447,7 @@ function clearPrompt() {
 
 async function checkStatus() {
     try {
-        const result = await makeRequest('/services/ai/api/status');
+        const result = await makeRequest(buildAiUrl('/services/ai/api/status'));
         showResponse('statusResponse', 'statusResponseContent', result);
         showAlert('Status checked successfully');
     } catch (error) {
@@ -429,7 +458,7 @@ async function checkStatus() {
 
 async function checkModels() {
     try {
-        const result = await makeRequest('/services/ai/api/models');
+        const result = await makeRequest(buildAiUrl('/services/ai/api/models'));
         showResponse('statusResponse', 'statusResponseContent', result);
         showAlert('Models retrieved successfully');
     } catch (error) {
@@ -440,7 +469,7 @@ async function checkModels() {
 
 async function checkHealth() {
     try {
-        const result = await makeRequest('/services/ai/api/health');
+        const result = await makeRequest(buildAiUrl('/services/ai/api/health'));
         showResponse('statusResponse', 'statusResponseContent', result);
         showAlert('Health check completed');
     } catch (error) {
@@ -451,15 +480,14 @@ async function checkHealth() {
 
 async function checkServiceStatus() {
     try {
-        const result = await makeRequest('/services/ai/api/status');
+        const result = await makeRequest(buildAiUrl('/services/ai/api/status'));
         const submitBtn = document.getElementById('submitBtn');
         const promptTextarea = document.getElementById('promptText');
 
-        if (result.enabled === false || !result.hasApiKey) {
+        if (result.enabled === false) {
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'API Key Required';
-                submitBtn.className = 'btn btn-secondary';
             }
             if (promptTextarea) {
                 promptTextarea.placeholder = 'AI service disabled - API key required';
@@ -468,7 +496,6 @@ async function checkServiceStatus() {
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Send Prompt';
-                submitBtn.className = 'btn btn-secondary';
             }
             if (promptTextarea) {
                 promptTextarea.placeholder = 'Enter your prompt here...';
@@ -491,7 +518,7 @@ let currentSettings = {};
 // Fetch settings from API
 async function loadSettings() {
     try {
-        const response = await fetch('/services/ai/api/settings');
+        const response = await fetch(buildAiUrl('/services/ai/api/settings'));
         const data = await response.json();
         currentSettings = data;
         renderSettingsForm(data);
@@ -641,7 +668,7 @@ document.getElementById('settingsForm').addEventListener('submit', async (e) => 
         }
 
         // Send to API
-        const response = await fetch('/services/ai/api/settings', {
+        const response = await fetch(buildAiUrl('/services/ai/api/settings'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -672,18 +699,14 @@ document.getElementById('settings-tab')?.addEventListener('shown.bs.tab', functi
     loadSettings();
 });
 
-function initializeSwagger() {
-    const spec = {
-        openapi: '3.0.0',
-        info: {
-            title: 'AI Service API',
-            description: 'REST API for AI service operations with multiple provider support',
-            version: '1.0.0'
-        },
-        servers: [{ url: '/services/ai/api', description: 'AI Service API' }]
-    };
-
+async function initializeSwagger() {
     try {
+        const response = await fetch('/services/ai/api/swagger/docs.json');
+        if (!response.ok) {
+            throw new Error(`Failed to load Swagger docs: ${response.status}`);
+        }
+        const spec = await response.json();
+
         SwaggerUIBundle({
             spec,
             dom_id: '#swagger-ui',
@@ -733,15 +756,248 @@ function initializeEventHandlers() {
 
     document.getElementById('dashboard-tab')?.addEventListener('shown.bs.tab', () => loadAnalytics());
     document.getElementById('data-tab')?.addEventListener('shown.bs.tab', () => checkServiceStatus());
+
+    document.getElementById('refreshInstanceBtn')?.addEventListener('click', () => loadAiInstances());
 }
 
+// ─── Train tab ────────────────────────────────────────────────────────────────
+
+let trainPollInterval = null;
+
+/**
+ * Like makeRequest but returns { ok, status, data } instead of throwing on
+ * non-2xx, so callers can inspect 501 responses without a try/catch.
+ */
+async function fetchRaw(url, method = 'GET', body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const response = await fetch(url, opts);
+    const ct = response.headers.get('content-type') || '';
+    const data = ct.includes('application/json') ? await response.json() : await response.text();
+    return { ok: response.ok, status: response.status, data };
+}
+
+/** Renders the status badge with colour-coded pill. */
+function renderTrainStatusBadge(status) {
+    const badge = document.getElementById('trainStatusBadge');
+    if (!badge) return;
+    const colours = { idle: 'success', scheduled: 'warning', training: 'primary' };
+    const colour = colours[status] || 'secondary';
+    badge.innerHTML = `<span class="badge bg-${colour} fs-6 px-3 py-2">${status || '—'}</span>`;
+}
+
+/** Renders the model-ready indicator. */
+function renderTrainModelReady(ready) {
+    const el = document.getElementById('trainModelReady');
+    if (!el) return;
+    el.innerHTML = ready
+        ? '<span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle me-1"></i>Yes</span>'
+        : '<span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-hourglass me-1"></i>No</span>';
+}
+
+/** Fetches training status and updates the status section of the Train tab. */
+async function loadTrainStatus() {
+    const { ok, status, data } = await fetchRaw(buildAiUrl('/services/ai/api/train/status'));
+
+    const loading   = document.getElementById('trainLoading');
+    const supported = document.getElementById('trainSupported');
+    const notSupp   = document.getElementById('trainNotSupported');
+
+    if (loading)   loading.style.display   = 'none';
+
+    if (status === 501 || (data && data.supported === false)) {
+        if (supported) supported.style.display = 'none';
+        if (notSupp)   notSupp.style.display   = 'block';
+        const msg = document.getElementById('trainNotSupportedMessage');
+        if (msg) msg.textContent = data.error || 'This provider does not support training.';
+        stopTrainPolling();
+        return;
+    }
+
+    if (!ok) {
+        showAlert('Error loading training status: ' + (data.error || status), 'error');
+        return;
+    }
+
+    if (notSupp)   notSupp.style.display   = 'none';
+    if (supported) supported.style.display = 'block';
+
+    renderTrainStatusBadge(data.status);
+    renderTrainModelReady(data.modelReady);
+
+    const docCount  = document.getElementById('trainDocCount');
+    const vocabSize = document.getElementById('trainVocabSize');
+    if (docCount)  docCount.textContent  = formatNumber(data.dataCount  || 0);
+    if (vocabSize) vocabSize.textContent = formatNumber(data.vocabSize  || 0);
+
+    // Auto-poll while training is active; stop when idle.
+    if (data.status === 'training' || data.status === 'scheduled') {
+        startTrainPolling();
+    } else {
+        stopTrainPolling();
+        // Refresh the docs table once training settles so counts are current.
+        loadTrainDocs();
+    }
+}
+
+function startTrainPolling() {
+    if (trainPollInterval) return;
+    trainPollInterval = setInterval(loadTrainStatus, 3000);
+}
+
+function stopTrainPolling() {
+    if (trainPollInterval) {
+        clearInterval(trainPollInterval);
+        trainPollInterval = null;
+    }
+}
+
+/** Fetches and renders the training documents table. */
+async function loadTrainDocs() {
+    const { ok, data } = await fetchRaw(buildAiUrl('/services/ai/api/train/data'));
+    if (!ok || data.supported === false) return;
+
+    const tbody = document.getElementById('trainDocsTableBody');
+    const countEl = document.getElementById('trainDocsCount');
+    if (!tbody) return;
+
+    const docs = data.documents || {};
+    const entries = Object.entries(docs);
+
+    if (countEl) countEl.textContent = `${entries.length} document${entries.length !== 1 ? 's' : ''}`;
+
+    if (entries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">
+            No training documents yet. Add one above.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = entries.map(([key, text]) => {
+        const preview  = escapeHtml(text.slice(0, 120)) + (text.length > 120 ? '…' : '');
+        const safeKey  = escapeHtml(key);
+        const safeText = escapeHtml(text);
+        return `
+        <tr>
+            <td><code style="font-size:13px;">${safeKey}</code></td>
+            <td style="color:var(--kr-ink-600); font-size:13px;">${preview}</td>
+            <td style="text-align:right; font-size:13px;">${formatNumber(text.length)}</td>
+            <td style="text-align:center;">
+                <div class="d-flex gap-1 justify-content-center">
+                    <button class="kr-btn secondary sm"
+                        onclick="editTrainDoc(${JSON.stringify(safeKey)}, ${JSON.stringify(safeText)})"
+                        title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="kr-btn sm" style="background:var(--kr-red-50,#fef2f2); color:#dc2626; border-color:#fca5a5;"
+                        onclick="deleteTrainDoc(${JSON.stringify(safeKey)})"
+                        title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/** Pre-fills the add/update form so the user can edit an existing document. */
+function editTrainDoc(key, text) {
+    const keyInput  = document.getElementById('docKey');
+    const textInput = document.getElementById('docText');
+    const label     = document.getElementById('addDocBtnLabel');
+    if (keyInput)  keyInput.value  = key;
+    if (textInput) textInput.value = text;
+    if (label)     label.textContent = 'Update';
+    keyInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    keyInput?.focus();
+}
+
+/** Deletes a training document after a quick confirmation. */
+async function deleteTrainDoc(key) {
+    if (!confirm(`Delete training document "${key}"?\n\nThe model will retrain without this document.`)) return;
+    const { ok, data } = await fetchRaw(
+        buildAiUrl(`/services/ai/api/train/data/${encodeURIComponent(key)}`), 'DELETE'
+    );
+    if (ok) {
+        showAlert(`Document "${key}" removed — retraining scheduled`);
+        loadTrainStatus();
+        loadTrainDocs();
+    } else {
+        showAlert('Error deleting document: ' + (data.error || 'unknown error'), 'error');
+    }
+}
+
+function clearTrainDocForm() {
+    const keyInput  = document.getElementById('docKey');
+    const textInput = document.getElementById('docText');
+    const label     = document.getElementById('addDocBtnLabel');
+    if (keyInput)  keyInput.value  = '';
+    if (textInput) textInput.value = '';
+    if (label)     label.textContent = 'Add / Update';
+}
+
+async function handleAddTrainDoc(event) {
+    event.preventDefault();
+    const key  = document.getElementById('docKey')?.value.trim();
+    const text = document.getElementById('docText')?.value.trim();
+
+    if (!key)  { showAlert('Document key is required', 'error'); return; }
+    if (!text) { showAlert('Training text is required', 'error'); return; }
+
+    const btn     = document.getElementById('addDocBtn');
+    const spinner = document.getElementById('addDocSpinner');
+    if (btn)     btn.disabled = true;
+    if (spinner) spinner.classList.remove('d-none');
+
+    try {
+        const { ok, data } = await fetchRaw(buildAiUrl('/services/ai/api/train/data'), 'POST', { key, text });
+        if (ok) {
+            showAlert(data.isUpdate ? `Document "${key}" updated — retraining scheduled` : `Document "${key}" added — training scheduled`);
+            clearTrainDocForm();
+            loadTrainStatus();
+            loadTrainDocs();
+        } else {
+            showAlert('Error: ' + (data.error || 'could not save document'), 'error');
+        }
+    } catch (err) {
+        showAlert('Error: ' + err.message, 'error');
+    } finally {
+        if (btn)     btn.disabled = false;
+        if (spinner) spinner.classList.add('d-none');
+    }
+}
+
+// ─── End train tab ────────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
-    handleProviderSelection();
     handleExamplePrompts();
     initializeEventHandlers();
     initializeSwagger();
+    loadAiInstances();
     checkServiceStatus();
-    ['claude', 'chatgpt', 'ollama'].forEach(checkProviderStatus);
     loadAnalytics();
     setInterval(loadAnalytics, 30000);
+
+    // Train tab wiring
+    document.getElementById('addDocForm')?.addEventListener('submit', handleAddTrainDoc);
+    document.getElementById('clearDocFormBtn')?.addEventListener('click', clearTrainDocForm);
+    document.getElementById('trainRefreshBtn')?.addEventListener('click', () => {
+        loadTrainStatus();
+        loadTrainDocs();
+    });
+    document.getElementById('train-tab')?.addEventListener('shown.bs.tab', () => {
+        loadTrainStatus();
+        loadTrainDocs();
+    });
+    document.getElementById('train-tab')?.addEventListener('hidden.bs.tab', stopTrainPolling);
+
+    // Also reload train state when the instance selector changes.
+    document.getElementById('instanceSelector')?.addEventListener('change', function () {
+        selectedInstance = this.value || 'default';
+        loadAnalytics();
+        checkServiceStatus();
+        if (document.getElementById('train')?.classList.contains('active')) {
+            loadTrainStatus();
+            loadTrainDocs();
+        }
+    });
 });

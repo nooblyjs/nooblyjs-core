@@ -5,12 +5,15 @@
  * initialization, provider selection, and user management for multiple auth
  * providers (Passport, Google OAuth, Memory).
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
 
 'use strict';
+
+// Keep bcrypt hashing fast in tests (must be set before the provider is required).
+process.env.BCRYPT_COST = process.env.BCRYPT_COST || '6';
 
 const createAuthService = require('../../../src/authservice');
 const EventEmitter = require('events');
@@ -148,36 +151,35 @@ describe('Authentication Service Factory', () => {
 
     // Test user registration
     const user = await authService.createUser({
-      username: 'testuser',
-      password: 'password123',
       email: 'test@example.com',
-      name: 'Test User'
+      fullName: 'Test User',
+      password: 'Password123!'
     });
 
     expect(user).toBeDefined();
-    expect(user.username).toBe('testuser');
     expect(user.email).toBe('test@example.com');
-    // Test user authentication
-    const authResult = await authService.authenticateUser('testuser', 'password123');
+    expect(user.fullName).toBe('Test User');
+    // Test user authentication (by email)
+    const authResult = await authService.authenticateUser('test@example.com', 'Password123!');
     expect(authResult).toBeDefined();
     expect(authResult.user).toBeDefined();
     expect(authResult.session).toBeDefined();
-    expect(authResult.user.username).toBe('testuser');
+    expect(authResult.user.email).toBe('test@example.com');
     expect(authResult.session.token).toBeDefined();
 
     // Test invalid authentication - should throw error
-    await expect(authService.authenticateUser('testuser', 'wrongpassword')).rejects.toThrow('Invalid credentials');
+    await expect(authService.authenticateUser('test@example.com', 'wrongpassword')).rejects.toThrow('Invalid credentials');
 
     // Test user retrieval
-    const retrievedUser = await authService.getUser('testuser');
+    const retrievedUser = await authService.getUser('test@example.com');
     expect(retrievedUser).toBeDefined();
-    expect(retrievedUser.username).toBe('testuser');
+    expect(retrievedUser.email).toBe('test@example.com');
 
     // Test getting all users
     const allUsers = await authService.listUsers();
     expect(Array.isArray(allUsers)).toBe(true);
     expect(allUsers.length).toBeGreaterThanOrEqual(1); // May include default users
-    expect(allUsers.find(u => u.username === 'testuser')).toBeDefined();
+    expect(allUsers.find(u => u.email === 'test@example.com')).toBeDefined();
   });
 
   /**
@@ -191,24 +193,24 @@ describe('Authentication Service Factory', () => {
 
     // Register a user
     await authService.createUser({
-      username: 'testuser',
-      password: 'password123',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      fullName: 'Test User',
+      password: 'Password123!'
     });
 
     // Verify user exists
-    let user = await authService.getUser('testuser');
+    let user = await authService.getUser('test@example.com');
     expect(user).toBeDefined();
 
     // Delete user
-    await authService.deleteUser('testuser');
+    await authService.deleteUser('test@example.com');
 
     // Verify user no longer exists - should throw error
-    await expect(authService.getUser('testuser')).rejects.toThrow('User not found');
+    await expect(authService.getUser('test@example.com')).rejects.toThrow('User not found');
 
     // Verify user is removed from users list
     const allUsers = await authService.listUsers();
-    expect(allUsers.find(u => u.username === 'testuser')).toBeUndefined();
+    expect(allUsers.find(u => u.email === 'test@example.com')).toBeUndefined();
   });
 
   /**
@@ -222,12 +224,12 @@ describe('Authentication Service Factory', () => {
 
     // Register and login a user
     await authService.createUser({
-      username: 'testuser',
-      password: 'password123',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      fullName: 'Test User',
+      password: 'Password123!'
     });
 
-    const authResult = await authService.authenticateUser('testuser', 'password123');
+    const authResult = await authService.authenticateUser('test@example.com', 'Password123!');
     expect(authResult).toBeDefined();
     expect(authResult.session).toBeDefined();
     expect(authResult.session.token).toBeDefined();
@@ -247,17 +249,17 @@ describe('Authentication Service Factory', () => {
 
     // Register first user
     const user1 = await authService.createUser({
-      username: 'testuser',
-      password: 'password123',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      fullName: 'Test User',
+      password: 'Password123!'
     });
     expect(user1).toBeDefined();
 
-    // Attempt to register duplicate user - should throw error
+    // Attempt to register duplicate email - should throw error
     await expect(authService.createUser({
-      username: 'testuser',
-      password: 'password456',
-      email: 'test2@example.com'
-    })).rejects.toThrow('Username already exists');
+      email: 'test@example.com',
+      fullName: 'Another User',
+      password: 'Password456!'
+    })).rejects.toThrow('Email already exists');
   });
 });

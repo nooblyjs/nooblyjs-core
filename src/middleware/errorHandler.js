@@ -3,7 +3,7 @@
  * Centralizes error logging, monitoring, and response formatting.
  * Prevents sensitive information leakage in production.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.1
  */
 

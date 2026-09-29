@@ -4,7 +4,7 @@
  * Manages service discovery, status monitoring, and user-driven classification grouping
  * for all core, business, application, and advanced services.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -36,10 +36,10 @@
  * Provides service discovery, status monitoring, and interactive navigation UI generation.
  * Manages grouped service navigation with dynamic online/offline status indicators.
  *
- * @namespace DigitalTechnologiesNavigation
+ * @namespace NooblyJSNavigation
  * @type {Object}
  */
-const DigitalTechnologiesNavigation = {
+const NooblyJSNavigation = {
     /**
      * Array of all available services with configuration and metadata
      * Organized into 4 classifications: foundation, business, application, advanced
@@ -53,6 +53,7 @@ const DigitalTechnologiesNavigation = {
         { name: 'caching', icon: 'bi-server', title: 'Caching', path: 'caching', classification: 'foundation' },
         { name: 'queueing', icon: 'bi-list-task', title: 'Queueing', path: 'queueing', classification: 'foundation' },
         { name: 'fetching', icon: 'bi-globe', title: 'Fetching', path: 'fetching', classification: 'foundation' },
+        { name: 'settings', icon: 'bi-sliders', title: 'Settings', path: 'settings', classification: 'foundation' },
 
         // Business Services
         { name: 'notifying', icon: 'bi-bell-fill', title: 'Notifications', path: 'notifying', classification: 'business' },
@@ -122,13 +123,13 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Check all service statuses
-     * const status = await DigitalTechnologiesNavigation.checkAllStatuses();
+     * const status = await NooblyJSNavigation.checkAllStatuses();
      * console.log(status); // { logging: true, caching: false, workflow: true, ... }
      *
      * @example
      * // Use in navigation rendering
-     * await DigitalTechnologiesNavigation.checkAllStatuses();
-     * const onlineServices = DigitalTechnologiesNavigation.getOnlineServices();
+     * await NooblyJSNavigation.checkAllStatuses();
+     * const onlineServices = NooblyJSNavigation.getOnlineServices();
      */
     async checkAllStatuses() {
         const statusPromises = this.services.map(async (service) => {
@@ -155,8 +156,8 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Get online services after status check
-     * await DigitalTechnologiesNavigation.checkAllStatuses();
-     * const onlineServices = DigitalTechnologiesNavigation.getOnlineServices();
+     * await NooblyJSNavigation.checkAllStatuses();
+     * const onlineServices = NooblyJSNavigation.getOnlineServices();
      * console.log(`${onlineServices.length} services online`);
      */
     getOnlineServices() {
@@ -172,7 +173,7 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Check for offline services
-     * const offlineServices = DigitalTechnologiesNavigation.getOfflineServices();
+     * const offlineServices = NooblyJSNavigation.getOfflineServices();
      * if (offlineServices.length > 0) {
      *   console.warn(`${offlineServices.length} services offline:`, offlineServices);
      * }
@@ -196,11 +197,11 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Render navigation for the home/dashboard page
-     * await DigitalTechnologiesNavigation.renderNavigation('nav-container');
+     * await NooblyJSNavigation.renderNavigation('nav-container');
      *
      * @example
      * // Render navigation highlighting active service
-     * await DigitalTechnologiesNavigation.renderNavigation('nav-container', 'caching');
+     * await NooblyJSNavigation.renderNavigation('nav-container', 'caching');
      */
     async renderNavigation(containerId, activeService = 'home') {
         const container = document.getElementById(containerId);
@@ -209,11 +210,13 @@ const DigitalTechnologiesNavigation = {
         // Check all service statuses first
         await this.checkAllStatuses();
 
-        // Build navigation HTML
+        // Build navigation HTML using KI-UI classes
         let navHTML = `
-            <a href="/services" class="core-nav-item ${activeService === 'home' ? 'active' : ''}">
-                <i class="bi bi-house-fill"></i> Home
-            </a>
+            <div class="kr-side-section">
+                <a href="/services" class="kr-nav-item ${activeService === 'home' ? 'active' : ''}">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </div>
         `;
 
         // Group services by classification
@@ -236,27 +239,30 @@ const DigitalTechnologiesNavigation = {
             const onlineCount = services.filter(s => this.serviceStatus[s.name] === true).length;
 
             navHTML += `
-                <div class="core-nav-section-header" style="cursor: pointer;" onclick="DigitalTechnologiesNavigation.toggleClassificationNav('${classification}')">
-                    <i class="bi ${classConfig.icon}"></i> ${classConfig.label} <span style="font-size: 0.85rem; color: #999;">(${onlineCount}/${services.length})</span>
-                    <span id="toggle-icon-${classification}" style="margin-left: auto;">▼</span>
-                </div>
-                <div id="nav-services-${classification}" style="display: block;">
+                <div class="kr-side-section">
+                    <div class="kr-side-head" style="cursor: pointer;" onclick="NooblyJSNavigation.toggleClassificationNav('${classification}')">
+                        <span><i class="bi ${classConfig.icon}"></i> ${classConfig.label}</span>
+                        <span id="toggle-icon-${classification}" style="margin-left: auto;">▼</span>
+                    </div>
+                    <div id="nav-services-${classification}" style="display: block;">
             `;
 
             services.forEach(service => {
                 const isOnline = this.serviceStatus[service.name] === true;
                 const isActive = activeService === service.name ? 'active' : '';
-                const offlineClass = !isOnline ? 'offline' : '';
+                const statusClass = isOnline ? 'ok' : 'muted';
 
                 navHTML += `
-                    <a href="/services/${service.path}/" class="core-nav-item ${isActive} ${offlineClass}">
+                    <a href="/services/${service.path}/" class="kr-nav-item ${isActive}">
                         <i class="bi ${service.icon}"></i> ${service.title}
-                        <span class="core-status-dot ${isOnline ? 'core-online' : 'core-offline'}"></span>
+                        <span class="kr-chip ${statusClass}" style="margin-left: auto; font-size: 10px;">
+                            <i class="bi ${isOnline ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+                        </span>
                     </a>
                 `;
             });
 
-            navHTML += `</div>`;
+            navHTML += `</div></div>`;
         });
 
         container.innerHTML = navHTML;
@@ -277,11 +283,11 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Toggle the 'foundation' services section
-     * DigitalTechnologiesNavigation.toggleClassificationNav('foundation');
+     * NooblyJSNavigation.toggleClassificationNav('foundation');
      *
      * @example
      * // Used as onclick handler in navigation
-     * onclick="DigitalTechnologiesNavigation.toggleClassificationNav('business')"
+     * onclick="NooblyJSNavigation.toggleClassificationNav('business')"
      */
     toggleClassificationNav(classification) {
         const section = document.getElementById(`nav-services-${classification}`);
@@ -309,7 +315,7 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // This method is legacy and should not be used in new code
-     * DigitalTechnologiesNavigation.toggleOfflineNav(); // No effect
+     * NooblyJSNavigation.toggleOfflineNav(); // No effect
      */
     toggleOfflineNav() {
         // Legacy method - now using toggleClassificationNav
@@ -326,7 +332,7 @@ const DigitalTechnologiesNavigation = {
      *
      * @example
      * // Called internally during navigation initialization
-     * DigitalTechnologiesNavigation.initializeAuth();
+     * NooblyJSNavigation.initializeAuth();
      */
     initializeAuth() {
         // Auth is now handled in header via renderHeaderUserProfile()
@@ -341,4 +347,4 @@ const DigitalTechnologiesNavigation = {
  * @type {Object}
  * @global
  */
-window.DigitalTechnologiesNavigation = DigitalTechnologiesNavigation;
+window.NooblyJSNavigation = NooblyJSNavigation;

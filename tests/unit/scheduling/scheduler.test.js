@@ -5,7 +5,7 @@
  * execution management, and worker integration. Tests verify proper task
  * lifecycle management, singleton behavior, and event emission.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

@@ -249,7 +249,7 @@ describe('FilingService', () => {
     });
 
     it('should create a file on FTP server', async () => {
-      const filePath = '/remote/test.txt';
+      const filePath = 'remote/test.txt';
       const content = 'Hello FTP!';
       await ftpFilingService.create(filePath, content);
       expect(mockFtpClient.put).toHaveBeenCalledWith(
@@ -260,7 +260,7 @@ describe('FilingService', () => {
     });
 
     it('should read a file from FTP server', async () => {
-      const filePath = '/remote/test.txt';
+      const filePath = 'remote/test.txt';
       const content = await ftpFilingService.read(filePath, 'utf8');
       expect(mockFtpClient.get).toHaveBeenCalledWith(
         filePath,
@@ -270,7 +270,7 @@ describe('FilingService', () => {
     });
 
     it('should delete a file from FTP server', async () => {
-      const filePath = '/remote/test.txt';
+      const filePath = 'remote/test.txt';
       await ftpFilingService.delete(filePath);
       expect(mockFtpClient.delete).toHaveBeenCalledWith(
         filePath,
@@ -279,7 +279,7 @@ describe('FilingService', () => {
     });
 
     it('should list files on FTP server', async () => {
-      const dirPath = '/remote/';
+      const dirPath = 'remote/';
       const files = await ftpFilingService.list(dirPath);
       expect(mockFtpClient.list).toHaveBeenCalledWith(
         dirPath,
@@ -289,7 +289,7 @@ describe('FilingService', () => {
     });
 
     it('should update a file on FTP server', async () => {
-      const filePath = '/remote/test.txt';
+      const filePath = 'remote/test.txt';
       const newContent = 'Updated FTP content';
       await ftpFilingService.update(filePath, newContent);
       expect(mockFtpClient.put).toHaveBeenCalledWith(

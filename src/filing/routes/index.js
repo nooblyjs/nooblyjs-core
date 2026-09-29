@@ -4,24 +4,19 @@
  * removal, and status monitoring across multiple storage backends.
  * Supports multiple named instances of the filing service.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
 const upload = multer();
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const BulkOperations = require('../../appservice/utils/bulkOperations');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
@@ -41,9 +36,16 @@ module.exports = (options, eventEmitter, filing) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || filing.providerType || 'local';
-    const authMiddleware = options.authMiddleware;
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('filing', { dependencies: [] });
+
+    // P0-1: Enforce authentication on every filing API endpoint. The filing API
+    // is intentionally excluded from the /services portal *admin* guard so that
+    // non-admin users (web wiki, Teams, Chrome extension) can read/write
+    // documents — but it must still require a valid API key or an authenticated
+    // session. The shared API-key middleware enforces exactly that (it accepts
+    // an authenticated Passport session in lieu of an API key); without it these
+    // routes were reachable anonymously.
+    const requireApiAuth = options.authMiddleware || ((req, res, next) => next());
+    app.use('/services/filing/api', requireApiAuth);
 
     /**
      * POST /services/filing/api/upload/:key
@@ -81,7 +83,7 @@ module.exports = (options, eventEmitter, filing) => {
             .status(200)
             .json({ message: 'File uploaded successfully', key });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       },
     );
@@ -137,7 +139,7 @@ module.exports = (options, eventEmitter, filing) => {
           }
         }
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -224,7 +226,7 @@ module.exports = (options, eventEmitter, filing) => {
         analytics.trackDelete(key);
         res.status(200).json({ message: 'File removed successfully', key });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -238,7 +240,10 @@ module.exports = (options, eventEmitter, filing) => {
      */
     app.get('/services/filing/api/status', (req, res) => {
       eventEmitter.emit('api-filing-status', 'filing api running');
-      sendStatus(res, 'filing api running');
+      res.status(200).json({
+        status: 'filing api running',
+        timestamp: new Date().toISOString(),
+      });
     });
 
     /**
@@ -287,7 +292,7 @@ module.exports = (options, eventEmitter, filing) => {
         eventEmitter.emit('api-filing-instances-error', error.message);
         res.status(500).json({
           success: false,
-          error: error.message
+          error: 'Failed to list instances'
         });
       }
     });
@@ -311,7 +316,7 @@ module.exports = (options, eventEmitter, filing) => {
           .status(200)
           .json({ message: 'File uploaded successfully via stream', key });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -351,7 +356,7 @@ module.exports = (options, eventEmitter, filing) => {
           analytics.trackWrite(key);
           res.status(200).json({ message: 'File uploaded successfully', key });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       }
     );
@@ -403,7 +408,7 @@ module.exports = (options, eventEmitter, filing) => {
           }
         }
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -427,7 +432,7 @@ module.exports = (options, eventEmitter, filing) => {
         analytics.trackDelete(key);
         res.status(200).json({ message: 'File removed successfully', key });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -456,7 +461,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -561,7 +566,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -584,8 +589,7 @@ module.exports = (options, eventEmitter, filing) => {
       } catch (err) {
         eventEmitter.emit('api-filing-settings-error', err.message);
         res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
+          error: 'Failed to retrieve settings'
         });
       }
     });
@@ -609,7 +613,7 @@ module.exports = (options, eventEmitter, filing) => {
           await filingInstance.saveSettings(message);
           res.status(200).send('OK');
         } catch (err) {
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       } else {
         res.status(400).send('Bad Request: Missing settings');
@@ -644,7 +648,7 @@ module.exports = (options, eventEmitter, filing) => {
             await filing.syncFile(filePath);
             results.push({ path: filePath, status: 'synced' });
           } catch (error) {
-            results.push({ path: filePath, status: 'error', error: error.message });
+            results.push({ path: filePath, status: 'error', error: 'Operation failed' });
           }
         }
 
@@ -654,7 +658,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -686,7 +690,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -713,7 +717,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -737,7 +741,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -773,7 +777,7 @@ module.exports = (options, eventEmitter, filing) => {
             await filing.pushFile(filePath);
             results.push({ path: filePath, status: 'pushed' });
           } catch (error) {
-            results.push({ path: filePath, status: 'error', error: error.message });
+            results.push({ path: filePath, status: 'error', error: 'Operation failed' });
           }
         }
 
@@ -783,7 +787,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -811,7 +815,7 @@ module.exports = (options, eventEmitter, filing) => {
               await filing.pullFile(filePath);
               results.push({ path: filePath, status: 'pulled' });
             } catch (error) {
-              results.push({ path: filePath, status: 'error', error: error.message });
+              results.push({ path: filePath, status: 'error', error: 'Operation failed' });
             }
           }
 
@@ -829,7 +833,7 @@ module.exports = (options, eventEmitter, filing) => {
           });
         }
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -861,7 +865,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -885,7 +889,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -909,7 +913,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -948,7 +952,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -973,7 +977,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -997,7 +1001,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1021,7 +1025,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1050,7 +1054,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1081,7 +1085,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1105,7 +1109,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1129,7 +1133,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1156,7 +1160,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1175,7 +1179,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1194,7 +1198,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1295,7 +1299,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1329,7 +1333,7 @@ module.exports = (options, eventEmitter, filing) => {
           timestamp: new Date().toISOString()
         });
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -1414,8 +1418,7 @@ module.exports = (options, eventEmitter, filing) => {
       } catch (err) {
         eventEmitter.emit('api-filing-settings-error', err.message);
         res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
+          error: 'Failed to retrieve settings'
         });
       }
     });
@@ -1435,7 +1438,7 @@ module.exports = (options, eventEmitter, filing) => {
           await filing.saveSettings(message);
           res.status(200).send('OK');
         } catch (err) {
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       } else {
         res.status(400).send('Bad Request: Missing settings');
@@ -1524,16 +1527,14 @@ module.exports = (options, eventEmitter, filing) => {
           } catch (error) {
             // Silently handle PDF parse error
             res.status(400).json({
-              error: 'Failed to parse PDF',
-              message: error.message
+              error: 'Failed to parse PDF'
             });
           }
 
         } catch (error) {
           // Silently handle PDF preview error
           res.status(500).json({
-            error: 'Failed to process PDF preview',
-            message: error.message
+            error: 'Failed to process PDF preview'
           });
         }
       } catch (error) {
@@ -1548,130 +1549,6 @@ module.exports = (options, eventEmitter, filing) => {
     // Advise that we have loaded routes
     eventEmitter.emit('filing:loading routes', {
       folder: path.join(__dirname),
-    });
-
-    /**
-     * GET /services/filing/api/health
-     * Returns the health status of the filing service.
-     */
-    app.get('/services/filing/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: filing });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
-     * GET /services/filing/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/filing/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'filing', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'filing-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/filing/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/filing/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'filing', limit: 10000 });
-
-    /**
-     * POST /services/filing/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/filing/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'filing-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'filing-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/filing/api/export
-     * Exports service data
-     */
-    app.get('/services/filing/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('filing-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'filing-export' });
-      }
     });
   }
 };

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google Cloud Storage filing provider for file operations
  * in Google Cloud Storage with event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -11,6 +11,7 @@
 const { Storage } = require('@google-cloud/storage');
 const path = require('node:path');
 const fs = require('node:fs');
+const { assertSafeRelativePath } = require('../modules/pathSafety');
 
 /**
  * A class that implements a Google Cloud Storage-based file storage provider.
@@ -150,6 +151,7 @@ class GCPFilingProvider {
    */
   async create(filePath, content) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       if (content && typeof content.pipe === 'function') {
@@ -191,6 +193,7 @@ class GCPFilingProvider {
    */
   async read(filePath, encoding) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       // Check if file exists
@@ -234,6 +237,7 @@ class GCPFilingProvider {
    */
   async delete(filePath) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       // Check if file exists
@@ -271,6 +275,7 @@ class GCPFilingProvider {
    */
   async list(dirPath = '') {
     try {
+      assertSafeRelativePath(dirPath);
       const prefix = dirPath ? (dirPath.endsWith('/') ? dirPath : dirPath + '/') : '';
       const delimiter = '/';
       
@@ -316,6 +321,7 @@ class GCPFilingProvider {
    */
   async update(filePath, content) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       if (content && typeof content.pipe === 'function') {
@@ -356,6 +362,7 @@ class GCPFilingProvider {
    */
   async getMetadata(filePath) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       // Check if file exists
@@ -407,6 +414,8 @@ class GCPFilingProvider {
    */
   async copy(sourcePath, destinationPath) {
     try {
+      assertSafeRelativePath(sourcePath);
+      assertSafeRelativePath(destinationPath);
       const sourceFile = this.bucket_.file(sourcePath);
       const destinationFile = this.bucket_.file(destinationPath);
       
@@ -481,6 +490,7 @@ class GCPFilingProvider {
    */
   async generateSignedUrl(filePath, options = {}) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       
       const signedUrlOptions = {
@@ -520,6 +530,7 @@ class GCPFilingProvider {
    */
   async exists(filePath) {
     try {
+      assertSafeRelativePath(filePath);
       const file = this.bucket_.file(filePath);
       const [exists] = await file.exists();
       

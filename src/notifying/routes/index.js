@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @fileoverview Notification API routes for Express.js application.
  * Provides RESTful endpoints for pub/sub messaging system with topic management,
  * subscription handling, and message broadcasting capabilities.
@@ -6,7 +6,7 @@
  * Supports multiple named instances of notifying service through optional
  * instance parameter in URL paths.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -14,11 +14,7 @@
 'use strict';
 
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers notification routes with the Express application.
@@ -41,8 +37,13 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     const currentInstanceName = options.instanceName || 'default';
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('notifying', { dependencies: [] });
+
+    // Enforce authentication on every notifying API endpoint via a single
+    // path-mounted guard. This closes the gaps where read/analytics/settings
+    // routes were previously unguarded while only mutations carried an inline
+    // guard. Falls back to a pass-through only when no auth is configured.
+    const requireApiAuth = authMiddleware || ((req, res, next) => next());
+    app.use('/services/notifying/api', requireApiAuth);
 
     /**
      * Helper function to create topic handler
@@ -55,12 +56,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic) {
           try {
             await notifier.createTopic(topic);
-            sendSuccess(res, { topic }, 'Topic created successfully', 201);
+            res.status(200).json({ success: true });
           } catch (err) {
-            handleError(res, err, 'createTopic');
+            sendSafeError(res, err, { status: 500, eventEmitter });
           }
         } else {
-          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic name is required');
+          res.status(400).json({ error: 'Missing topic' });
         }
       };
     };
@@ -76,7 +77,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/topic',
-      authMiddleware || ((req, res, next) => next()),
       createTopicHandler(notifier)
     );
 
@@ -92,7 +92,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/:instanceName/topic',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
@@ -112,12 +111,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.subscribe(topic, callbackUrl);
-            sendSuccess(res, { topic, callbackUrl }, 'Subscription created successfully');
+            res.status(200).json({ success: true });
           } catch (err) {
-            handleError(res, err, 'subscribe');
+            sendSafeError(res, err, { status: 500, eventEmitter });
           }
         } else {
-          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and callback URL are required');
+          res.status(400).json({ error: 'Missing topic or callback URL' });
         }
       };
     };
@@ -134,7 +133,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/subscribe/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       createSubscribeHandler(notifier)
     );
 
@@ -151,7 +149,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/:instanceName/subscribe/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
@@ -171,12 +168,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && callbackUrl) {
           try {
             await notifier.unsubscribe(topic, callbackUrl);
-            sendSuccess(res, { topic, callbackUrl }, 'Subscription removed successfully');
+            res.status(200).json({ success: true });
           } catch (err) {
-            handleError(res, err, 'unsubscribe');
+            sendSafeError(res, err, { status: 500, eventEmitter });
           }
         } else {
-          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and callback URL are required');
+          res.status(400).json({ error: 'Missing topic or callback URL' });
         }
       };
     };
@@ -193,7 +190,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/unsubscribe/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       createUnsubscribeHandler(notifier)
     );
 
@@ -210,7 +206,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/:instanceName/unsubscribe/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
@@ -230,12 +225,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         if (topic && message) {
           try {
             await notifier.notify(topic, message);
-            sendSuccess(res, { topic }, 'Notification sent successfully');
+            res.status(200).json({ success: true });
           } catch (err) {
-            handleError(res, err, 'notify');
+            sendSafeError(res, err, { status: 500, eventEmitter });
           }
         } else {
-          sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Topic and message are required');
+          res.status(400).json({ error: 'Missing topic or message' });
         }
       };
     };
@@ -252,7 +247,6 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/notify/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       createNotifyHandler(notifier)
     );
 
@@ -269,11 +263,59 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.post(
       '/services/notifying/api/:instanceName/notify/topic/:topic',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
         createNotifyHandler(notifierInstance)(req, res);
+      }
+    );
+
+    /**
+     * Helper function to create a notification-history handler.
+     * @param {Object} notifier - Notifier instance
+     * @returns {Function} Express route handler
+     */
+    const createNotificationsHandler = (notifier) => {
+      return (req, res) => {
+        try {
+          const notifications = typeof notifier.getNotifications === 'function'
+            ? notifier.getNotifications()
+            : [];
+          res.status(200).json({ success: true, notifications });
+        } catch (err) {
+          sendSafeError(res, err, { status: 500, eventEmitter });
+        }
+      };
+    };
+
+    /**
+     * GET /services/notifying/api/notifications
+     * Returns the recorded history of published notifications, newest first.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get(
+      '/services/notifying/api/notifications',
+      createNotificationsHandler(notifier)
+    );
+
+    /**
+     * GET /services/notifying/api/:instanceName/notifications
+     * Returns the notification history for a named notifier instance.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.instanceName - The notifier instance name
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get(
+      '/services/notifying/api/:instanceName/notifications',
+      (req, res) => {
+        const instanceName = req.params.instanceName;
+        const notifierInstance = getServiceInstance('notifying', instanceName, notifier, options, providerType);
+        createNotificationsHandler(notifierInstance)(req, res);
       }
     );
 
@@ -287,7 +329,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
      */
     app.get('/services/notifying/api/status', (req, res) => {
       eventEmitter.emit('api-notifying-status', 'notifying api running');
-      sendStatus(res, 'notifying api running', { provider: providerType, instance: currentInstanceName });
+      res.status(200).json('notifying api running');
     });
 
     if (analytics) {
@@ -314,9 +356,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       app.get('/services/notifying/api/analytics/overview', (req, res) => {
         try {
           const overview = analytics.getOverview();
-          sendSuccess(res, overview);
+          res.status(200).json(overview);
         } catch (error) {
-          handleError(res, error, 'getAnalyticsOverview');
+          res.status(500).json({ error: 'Failed to retrieve notifying overview' });
         }
       });
 
@@ -325,9 +367,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const instanceName = req.params.instanceName;
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const overview = analyticsInstance.getOverview();
-          sendSuccess(res, overview);
+          res.status(200).json(overview);
         } catch (error) {
-          handleError(res, error, 'getAnalyticsOverview');
+          res.status(500).json({ error: 'Failed to retrieve notifying overview' });
         }
       });
 
@@ -335,9 +377,11 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const limit = parseInt(req.query.limit, 10);
           const topics = analytics.getTopTopics(Number.isNaN(limit) ? undefined : limit);
-          sendSuccess(res, { topics });
+          res.status(200).json({
+            topics,
+          });
         } catch (error) {
-          handleError(res, error, 'getTopTopics');
+          res.status(500).json({ error: 'Failed to retrieve top topics' });
         }
       });
 
@@ -347,9 +391,11 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const limit = parseInt(req.query.limit, 10);
           const topics = analyticsInstance.getTopTopics(Number.isNaN(limit) ? undefined : limit);
-          sendSuccess(res, { topics });
+          res.status(200).json({
+            topics,
+          });
         } catch (error) {
-          handleError(res, error, 'getTopTopics');
+          res.status(500).json({ error: 'Failed to retrieve top topics' });
         }
       });
 
@@ -357,9 +403,11 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const limit = parseInt(req.query.limit, 10);
           const topics = analytics.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
-          sendSuccess(res, { topics });
+          res.status(200).json({
+            topics,
+          });
         } catch (error) {
-          handleError(res, error, 'getTopicDetails');
+          res.status(500).json({ error: 'Failed to retrieve topic list' });
         }
       });
 
@@ -369,9 +417,11 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           const analyticsInstance = getAnalyticsInstance(instanceName);
           const limit = parseInt(req.query.limit, 10);
           const topics = analyticsInstance.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
-          sendSuccess(res, { topics });
+          res.status(200).json({
+            topics,
+          });
         } catch (error) {
-          handleError(res, error, 'getTopicDetails');
+          res.status(500).json({ error: 'Failed to retrieve topic list' });
         }
       });
     }
@@ -387,10 +437,10 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/settings', async (req, res) => {
       try {
         const settings = await notifier.getSettings();
-        sendSuccess(res, settings);
+        res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-notifying-settings-error', err.message);
-        handleError(res, err, 'getSettings');
+        res.status(500).json({ error: 'Failed to retrieve settings' });
       }
     });
 
@@ -407,12 +457,12 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
       if (message) {
         try {
           await notifier.saveSettings(message);
-          sendSuccess(res, {}, 'Settings saved successfully');
+          res.status(200).json({ success: true });
         } catch (err) {
-          handleError(res, err, 'saveSettings');
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       } else {
-        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+        res.status(400).json({ error: 'Missing settings' });
       }
     });
 
@@ -427,7 +477,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/instances', (req, res) => {
       try {
         if (!ServiceRegistry) {
-          sendSuccess(res, { instances: ['default'] });
+          res.status(200).json({
+            instances: ['default']
+          });
           return;
         }
 
@@ -440,9 +492,11 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
           }
         }
 
-        sendSuccess(res, { instances: Array.from(instances).sort() });
+        res.status(200).json({
+          instances: Array.from(instances).sort()
+        });
       } catch (error) {
-        handleError(res, error, 'listInstances');
+        res.status(500).json({ error: 'Failed to retrieve instances' });
       }
     });
 
@@ -457,128 +511,9 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
     app.get('/services/notifying/api/swagger/docs.json', (req, res) => {
       try {
         const swaggerDocs = require('./swagger/docs.json');
-        sendSuccess(res, swaggerDocs);
+        res.status(200).json(swaggerDocs);
       } catch (error) {
-        handleError(res, error, 'getSwaggerDocs');
-      }
-    });
-    app.get('/services/notifying/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: notifier });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
-     * GET /services/notifying/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/notifying/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'notifying', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'notifying-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/notifying/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/notifying/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'notifying', limit: 10000 });
-
-    /**
-     * POST /services/notifying/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/notifying/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'notifying-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'notifying-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/notifying/api/export
-     * Exports service data
-     */
-    app.get('/services/notifying/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('notifying-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'notifying-export' });
+        res.status(500).json({ error: 'Failed to retrieve Swagger documentation' });
       }
     });
   }

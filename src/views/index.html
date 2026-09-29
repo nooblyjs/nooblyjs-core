@@ -3,232 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Registry Dashboard - Noobly JS Core</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Favicon Assets -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <title>Service Registry Dashboard - NooblyJS Core</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/services/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <!-- APP HEADER -->
-    <header class="core-app-header">
-        <a class="navbar-brand" href="/">
-            <img src="/images/nooblyjs-logo.png" alt="Noobly JS Logo" class="core-logo-image">
-            <span>Noobly JS Core</span>
-        </a>
-        <div class="navbar-nav">
-            <div class="dropdown core-user-dropdown">
-                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
-                    <div class="core-user-info d-none d-md-block">
-                        <div class="core-user-label" id="headerUserLabel">User</div>
-                        <div class="core-user-name" id="headerUserName">Username</div>
-                    </div>
-                    <span class="core-user-dropdown-arrow">▼</span>
-                </div>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-                </ul>
+<div class="kr-app no-ai">
+    <!-- Topbar -->
+    <header class="kr-topbar">
+        <div class="kr-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="width: 32px; height: 32px; border-radius: 7px; object-fit: contain; background: #fff; padding: 2px;">
+            <div class="name">NooblyJS<small>Services</small></div>
+        </div>
+        <div class="kr-topbar-actions">
+            <div class="kr-avatar-pill" style="margin-left: auto;">
+                <span id="headerUserName">User</span>
+                <div class="av" id="headerUserAvatar">U</div>
             </div>
+            <a href="#" id="headerLogoutBtn" class="kr-icon-btn" title="Logout" style="margin-left: 4px;">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
         </div>
     </header>
 
-    <div class="core-app-container">
-        <aside class="core-sidebar" id="navigation-sidebar">
-            <!-- Navigation will be loaded here by navigation.js -->
-        </aside>
+    <!-- Sidebar -->
+    <aside class="kr-sidebar" id="navigation-sidebar">
+        <!-- Navigation will be loaded here by navigation.js -->
+    </aside>
 
-        <main class="core-main-content">
-            <div class="core-page-header page-header-health">
-                <div>
-                    <h1 class="core-page-title">Service Registry Dashboard</h1>
-                    <p class="core-page-subtitle">Overview of all available services and their current status</p>
-                </div>
-                <div id="systemHealthBadge" class="health-badge unknown">
-                    <span class="health-dot unknown"></span>
-                    <span>Checking Health...</span>
-                </div>
-            </div>
+    <!-- Main Content -->
+    <main class="kr-main">
 
-            <div class="core-page-content">
+        <!-- Page Title -->
+        <div class="kr-page-hero">
+            <div class="eyebrow">System Overview</div>
+            <h1>Service Registry Dashboard</h1>
+            <p>Real-time monitoring of all available services and system performance metrics</p>
+        </div>
 
-            <!-- System Monitoring Section -->
-            <div class="core-service-section">
-                <div class="core-section-header">
-                    <h2 class="core-section-title">System Monitoring</h2>
+        <!-- System Monitoring Section -->
+        <div class="mb-4">
+            <div class="kr-surface mb-3">
+                <div class="kr-surface-head">
+                    <h3><i class="bi bi-memory"></i> System Monitoring</h3>
                 </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-memory"></i> RAM Usage</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                <div class="kr-surface-body p-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">RAM Usage</div>
+                                    </div>
+                                    <div class="ico t"><i class="bi bi-memory"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="ramChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="ramStats" class="text-muted"></small>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="ramStats"></small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-cpu"></i> CPU Usage</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">CPU Usage</div>
+                                    </div>
+                                    <div class="ico b"><i class="bi bi-cpu"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="cpuChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="cpuStats" class="text-muted"></small>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="cpuStats"></small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-hdd-stack"></i> Active Handles</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">Active Handles</div>
+                                    </div>
+                                    <div class="ico o"><i class="bi bi-hdd-stack"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="threadsChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="threadsStats" class="text-muted"></small>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="threadsStats"></small>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Event Loop & GC Metrics -->
-                <div class="row mt-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-lightning"></i> Event Loop Lag</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                    <div class="row mt-3">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">Event Loop Lag</div>
+                                    </div>
+                                    <div class="ico t"><i class="bi bi-lightning"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="eventLoopChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="eventLoopStats" class="text-muted">Detecting event loop delay...</small>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="eventLoopStats">Detecting event loop delay...</small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-trash"></i> Garbage Collection</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">Garbage Collection</div>
+                                    </div>
+                                    <div class="ico g"><i class="bi bi-trash"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="gcChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="gcStats" class="text-muted">Tracking GC metrics...</small>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="gcStats">Tracking GC metrics...</small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-hourglass-split"></i> Heap Memory</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="core-chart-wrapper">
+                        <div class="col-md-4 mb-3">
+                            <div class="kr-stat-card">
+                                <div class="top">
+                                    <div>
+                                        <div class="lbl">Heap Memory</div>
+                                    </div>
+                                    <div class="ico b"><i class="bi bi-hourglass-split"></i></div>
+                                </div>
+                                <div style="height: 150px; position: relative;">
                                     <canvas id="heapChart"></canvas>
                                 </div>
-                                <div class="mt-2 text-center">
-                                    <small id="heapStats" class="text-muted">Memory breakdown...</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Marks Summary -->
-                <div class="row mt-4">
-                    <div class="col-12 mb-3">
-                        <div class="core-card">
-                            <div class="core-card-header">
-                                <h5 class="core-card-title mb-0"><i class="bi bi-speedometer2"></i> Operation Performance Marks</h5>
-                            </div>
-                            <div class="core-card-content">
-                                <div id="performanceMarksContainer" style="max-height: 300px; overflow-y: auto;">
-                                    <small class="text-muted">No performance marks recorded yet...</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- System Health Status -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="core-card" id="healthSummaryCard" style="display: none;">
-                            <div class="core-card-header">
-                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 2rem; flex-wrap: nowrap;">
-                                    <h5 class="core-card-title mb-0" style="display: flex; align-items: center; gap: 12px;">
-                                        <span class="health-dot healthy" style="width: 12px; height: 12px;"></span>
-                                        <i class="bi bi-heart-pulse"></i> System Health Status
-                                    </h5>
-                                    <div id="systemOverallStatus" style="font-size: 0.95rem; font-weight: 600; color: #28a745; white-space: nowrap;">
-                                        ✓ All Systems Operational
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="core-card-content">
-                                <div class="row">
-                                    <div class="col-md-3 col-sm-6 mb-3">
-                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #28a745 !important; background: #f8fff9;">
-                                            <i class="bi bi-check-circle-fill" style="font-size: 2rem; color: #28a745; display: block; margin-bottom: 0.75rem;"></i>
-                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="healthyServicesCount">0</h4>
-                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Healthy</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 col-sm-6 mb-3">
-                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #ffc107 !important; background: #fffef5;">
-                                            <i class="bi bi-exclamation-circle-fill" style="font-size: 2rem; color: #ffc107; display: block; margin-bottom: 0.75rem;"></i>
-                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="degradedServicesCount">0</h4>
-                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Degraded</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 col-sm-6 mb-3">
-                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #dc3545 !important; background: #fff9f9;">
-                                            <i class="bi bi-x-circle-fill" style="font-size: 2rem; color: #dc3545; display: block; margin-bottom: 0.75rem;"></i>
-                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="unhealthyServicesCount">0</h4>
-                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Unhealthy</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 col-sm-6 mb-3">
-                                        <div class="text-center p-3 border rounded" style="border-left: 4px solid #68A8C4 !important; background: #f5fafc;">
-                                            <i class="bi bi-diagram-3-fill" style="font-size: 2rem; color: #68A8C4; display: block; margin-bottom: 0.75rem;"></i>
-                                            <h4 class="mb-1" style="font-size: 2rem; font-weight: 800; color: #1F2937;" id="totalServicesCount">0</h4>
-                                            <small class="text-muted" style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Total Services</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Unhealthy/Degraded Services Details -->
-                                <div id="unhealthyServicesDetails" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; display: none;">
-                                    <div style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 1rem;">
-                                        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #ffc107;"></i>Services Requiring Attention:
-                                    </div>
-                                    <div id="unhealthyServicesList" style="display: flex; flex-wrap: wrap; gap: 0.75rem;"></div>
+                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                    <small id="heapStats">Memory breakdown...</small>
                                 </div>
                             </div>
                         </div>
@@ -236,32 +156,43 @@
                 </div>
             </div>
 
-            <!-- Services Grouped by Classification -->
-            <div id="services-by-classification-container"></div>
+            <!-- Performance Marks -->
+            <div class="kr-surface mb-3">
+                <div class="kr-surface-head">
+                    <h3><i class="bi bi-speedometer2"></i> Operation Performance</h3>
+                </div>
+                <div class="kr-surface-body p-3">
+                    <div id="performanceMarksContainer" style="max-height: 350px; overflow-y: auto;">
+                        <small style="color: var(--kr-ink-500);">No performance marks recorded yet...</small>
+                    </div>
+                </div>
             </div>
-            <!-- End Page Content -->
-        </main>
-    </div>
+        </div>
+
+        <!-- Services Grouped by Classification -->
+        <div id="services-by-classification-container"></div>
+    </main>
+</div>
 
     <script src="/services/js/navigation.js"></script>
     <script src="/services/js/header-init.js"></script>
     <script>
         // Initialize navigation
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof DigitalTechnologiesNavigation !== 'undefined') {
-                DigitalTechnologiesNavigation.renderNavigation('navigation-sidebar', 'home');
+            if (typeof NooblyJSNavigation !== 'undefined') {
+                NooblyJSNavigation.renderNavigation('navigation-sidebar', 'home');
             }
         });
 
         // Render services grouped by classification
         async function renderServices() {
-            await DigitalTechnologiesNavigation.checkAllStatuses();
+            await NooblyJSNavigation.checkAllStatuses();
 
             const container = document.getElementById('services-by-classification-container');
             if (!container) return;
 
-            const classifications = DigitalTechnologiesNavigation.classifications;
-            const services = DigitalTechnologiesNavigation.services;
+            const classifications = NooblyJSNavigation.classifications;
+            const services = NooblyJSNavigation.services;
             const classificationOrder = ['foundation', 'business', 'application', 'advanced'];
 
             let html = '';
@@ -271,23 +202,22 @@
                 if (classServices.length === 0) return;
 
                 const classConfig = classifications[classification];
-                const onlineServices = classServices.filter(s => DigitalTechnologiesNavigation.serviceStatus[s.name] === true);
-                const offlineServices = classServices.filter(s => DigitalTechnologiesNavigation.serviceStatus[s.name] === false);
+                const onlineServices = classServices.filter(s => NooblyJSNavigation.serviceStatus[s.name] === true);
+                const offlineServices = classServices.filter(s => NooblyJSNavigation.serviceStatus[s.name] === false);
 
                 html += `
-                    <div class="core-service-section">
-                        <div class="core-section-header">
-                            <h2 class="core-section-title">
-                                <i class="bi ${classConfig.icon}"></i> ${classConfig.label} Services
-                            </h2>
+                    <div class="kr-surface mb-3">
+                        <div class="kr-surface-head">
+                            <h3><i class="bi ${classConfig.icon}"></i> ${classConfig.label} Services</h3>
                         </div>
+                        <div class="kr-surface-body p-3">
                 `;
 
                 // Render online services in this classification
                 if (onlineServices.length > 0) {
-                    html += `<div class="core-services-grid">`;
+                    html += `<div class="row">`;
                     onlineServices.forEach(service => {
-                        html += createServiceCardHTML(service, true);
+                        html += `<div class="col-md-4 mb-3">` + createServiceCardHTML(service, true) + `</div>`;
                     });
                     html += `</div>`;
                 }
@@ -295,187 +225,88 @@
                 // Render offline services in this classification
                 if (offlineServices.length > 0) {
                     html += `
-                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
-                            <p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-wifi-off"></i> Offline Services</p>
-                            <div class="core-services-grid">
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--kr-border);">
+                            <p style="color: var(--kr-ink-400); font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-wifi-off"></i> Offline Services</p>
+                            <div class="row">
                     `;
                     offlineServices.forEach(service => {
-                        html += createServiceCardHTML(service, false);
+                        html += `<div class="col-md-4 mb-3">` + createServiceCardHTML(service, false) + `</div>`;
                     });
                     html += `</div></div>`;
                 }
 
-                html += `</div>`;
+                html += `</div></div>`;
             });
 
             container.innerHTML = html;
         }
 
         function createServiceCardHTML(service, isOnline) {
+            const statusClass = isOnline ? 'ok' : 'muted';
+            const statusIcon = isOnline ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+            const statusId = `service-status-${service.path}`;
             return `
-                <div class="core-service-card ${isOnline ? '' : 'offline'}" style="cursor: pointer;" onclick="window.location.href='/services/${service.path}/'">
-                    <div class="service-card-health" id="health-${service.name}">
-                        <span class="health-dot unknown" title="Loading health status..."></span>
-                    </div>
-                    <div class="core-service-card-header">
-                        <div>
-                            <h3 class="core-service-title">${service.title}</h3>
+                <div class="kr-stat-card" style="${isOnline ? '' : 'opacity: 0.6;'}">
+                    <div class="top">
+                        <div style="width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: var(--kr-ink-700); font-size: 12px; font-weight: 500;" onclick="window.location.href='/services/${service.path}/'">
+                                <i class="bi ${service.icon}" style="font-size: 14px; color: var(--kr-ink-700);"></i>
+                                <span>${service.title}</span>
+                                <span class="kr-chip ${statusClass}" style="font-size: 10px;">
+                                    <i class="bi ${statusIcon}"></i>
+                                </span>
+                            </div>
+                            <button type="button"
+                                onclick="toggleServiceStatus('${service.path}', '${statusId}', this)"
+                                style="background: none; border: none; padding: 0; color: var(--kr-ink-500); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                <i class="bi bi-chevron-right" style="transition: transform 0.15s ease;"></i>
+                                <span>Show status</span>
+                            </button>
+                            <div id="${statusId}" style="display: none; margin-top: 8px;">
+                                <pre style="background: var(--kr-surface-2); border: 1px solid var(--kr-border); border-radius: var(--kr-radius-sm); padding: 8px; font-size: 11px; max-height: 200px; overflow: auto; margin: 0;">Loading...</pre>
+                            </div>
                         </div>
-                    </div>
-                    <div class="core-service-status">
-                        <span class="core-status-text ${isOnline ? 'core-online' : 'core-offline'}">
-                            ${isOnline ? 'Online' : 'Offline'}
-                        </span>
-                        <span class="core-status-dot ${isOnline ? 'core-online' : 'core-offline'}"></span>
+                        <div class="ico ${isOnline ? 't' : 'o'}" style="cursor: pointer;" onclick="window.location.href='/services/${service.path}/'"><i class="bi bi-gear"></i></div>
                     </div>
                 </div>
             `;
         }
 
-        // Initialize services
-        renderServices();
+        async function toggleServiceStatus(servicePath, statusId, buttonEl) {
+            const statusBlock = document.getElementById(statusId);
+            const icon = buttonEl.querySelector('i');
+            const label = buttonEl.querySelector('span');
+            if (!statusBlock) return;
 
-        // Fetch health status for all services
-        async function updateHealthStatus() {
-            const authToken = localStorage.getItem('authToken');
-            const services = DigitalTechnologiesNavigation.services || [];
+            const isVisible = statusBlock.style.display !== 'none';
+            if (isVisible) {
+                statusBlock.style.display = 'none';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+                if (label) label.textContent = 'Show status';
+            } else {
+                statusBlock.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(90deg)';
+                if (label) label.textContent = 'Hide status';
 
-            let healthyCount = 0, degradedCount = 0, unhealthyCount = 0;
-            const unhealthyServices = [];
-            const degradedServices = [];
-
-            for (const service of services) {
+                const pre = statusBlock.querySelector('pre');
                 try {
-                    const healthUrl = `/services/${service.path}/api/health?authToken=${authToken}`;
-                    const response = await fetch(healthUrl);
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const status = data.status || 'unknown';
-
-                        // Update health dot
-                        const healthDot = document.getElementById(`health-${service.name}`);
-                        if (healthDot) {
-                            const dot = healthDot.querySelector('.health-dot');
-                            if (dot) {
-                                dot.className = `health-dot ${status}`;
-                                dot.title = `${service.title}: ${status}`;
-                            }
-                        }
-
-                        // Count health status and track unhealthy services
-                        if (status === 'healthy') healthyCount++;
-                        else if (status === 'degraded') {
-                            degradedCount++;
-                            degradedServices.push(service);
-                        }
-                        else if (status === 'unhealthy') {
-                            unhealthyCount++;
-                            unhealthyServices.push(service);
-                        }
+                    const response = await fetch(`/services/${servicePath}/api/status`);
+                    const contentType = response.headers.get('content-type') || '';
+                    let body;
+                    if (contentType.includes('application/json')) {
+                        body = JSON.stringify(await response.json(), null, 2);
                     } else {
-                        // Failed response = unhealthy
-                        unhealthyCount++;
-                        unhealthyServices.push(service);
-                        const healthDot = document.getElementById(`health-${service.name}`);
-                        if (healthDot) {
-                            const dot = healthDot.querySelector('.health-dot');
-                            if (dot) {
-                                dot.className = 'health-dot unhealthy';
-                                dot.title = `${service.title}: unhealthy (unreachable)`;
-                            }
-                        }
+                        body = await response.text();
                     }
+                    if (pre) pre.textContent = body || '(empty response)';
                 } catch (error) {
-                    console.log(`Could not fetch health for ${service.name}:`, error.message);
-                    unhealthyCount++;
-                    unhealthyServices.push(service);
-                }
-            }
-
-            // Update system health badge
-            const totalServices = services.length;
-            let overallStatus = 'healthy';
-            if (unhealthyCount > 0) overallStatus = 'unhealthy';
-            else if (degradedCount > 0) overallStatus = 'degraded';
-
-            const systemBadge = document.getElementById('systemHealthBadge');
-            if (systemBadge) {
-                systemBadge.className = `health-badge ${overallStatus}`;
-                const statusText = overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1);
-                systemBadge.innerHTML = `<span class="health-dot ${overallStatus}"></span><span>${statusText}</span>`;
-            }
-
-            // Update overall status message
-            const statusMessage = document.getElementById('systemOverallStatus');
-            if (statusMessage) {
-                let message = '✓ All Systems Operational';
-                let color = '#28a745';
-                if (unhealthyCount > 0) {
-                    message = `⚠ ${unhealthyCount} Service${unhealthyCount > 1 ? 's' : ''} Unhealthy`;
-                    color = '#dc3545';
-                } else if (degradedCount > 0) {
-                    message = `⚡ ${degradedCount} Service${degradedCount > 1 ? 's' : ''} Degraded`;
-                    color = '#ffc107';
-                }
-                statusMessage.textContent = message;
-                statusMessage.style.color = color;
-            }
-
-            // Show health summary card
-            const healthSummaryCard = document.getElementById('healthSummaryCard');
-            if (healthSummaryCard) {
-                healthSummaryCard.className = `health-summary-card ${overallStatus}`;
-                healthSummaryCard.style.display = 'block';
-                document.getElementById('healthyServicesCount').textContent = healthyCount;
-                document.getElementById('degradedServicesCount').textContent = degradedCount;
-                document.getElementById('unhealthyServicesCount').textContent = unhealthyCount;
-                document.getElementById('totalServicesCount').textContent = totalServices;
-            }
-
-            // Show unhealthy/degraded services details
-            const unhealthyDetails = document.getElementById('unhealthyServicesDetails');
-            const unhealthyList = document.getElementById('unhealthyServicesList');
-            if (unhealthyDetails && unhealthyList) {
-                const problematicServices = [...unhealthyServices, ...degradedServices];
-                if (problematicServices.length > 0) {
-                    unhealthyDetails.style.display = 'block';
-                    unhealthyList.innerHTML = problematicServices.map(service => {
-                        const isUnhealthy = unhealthyServices.includes(service);
-                        const badgeClass = isUnhealthy ? 'unhealthy' : 'degraded';
-                        const badgeColor = isUnhealthy ? '#dc3545' : '#ffc107';
-                        const badgeIcon = isUnhealthy ? '✕' : '⚡';
-                        return `
-                            <a href="/services/${service.path}/" style="
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 6px;
-                                padding: 6px 12px;
-                                background-color: ${badgeColor}20;
-                                border: 1px solid ${badgeColor}40;
-                                border-radius: 6px;
-                                color: ${badgeColor};
-                                text-decoration: none;
-                                font-weight: 600;
-                                font-size: 0.85rem;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                            " onmouseover="this.style.background='${badgeColor}30'; this.style.borderColor='${badgeColor}60';" onmouseout="this.style.background='${badgeColor}20'; this.style.borderColor='${badgeColor}40';">
-                                ${badgeIcon} ${service.title}
-                            </a>
-                        `;
-                    }).join('');
-                } else {
-                    unhealthyDetails.style.display = 'none';
+                    if (pre) pre.textContent = 'Error: ' + error.message;
                 }
             }
         }
 
-        // Update health status on page load
-        setTimeout(updateHealthStatus, 500);
-
-        // Update health status every 30 seconds
-        setInterval(updateHealthStatus, 30000);
+        // Initialize services
+        renderServices();
 
         // System Monitoring Charts
         let ramChart, cpuChart, threadsChart, eventLoopChart, gcChart, heapChart;
@@ -515,8 +346,8 @@
                     datasets: [{
                         label: 'RAM Usage (MB)',
                         data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderColor: '#4B5563',
+                        backgroundColor: 'rgba(158, 49, 59, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -545,8 +376,8 @@
                     datasets: [{
                         label: 'CPU Usage (%)',
                         data: [],
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderColor: '#2a6fdb',
+                        backgroundColor: 'rgba(42, 111, 219, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -576,8 +407,8 @@
                     datasets: [{
                         label: 'Active Handles',
                         data: [],
-                        borderColor: 'rgb(153, 102, 255)',
-                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                        borderColor: '#c98019',
+                        backgroundColor: 'rgba(201, 128, 25, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -606,8 +437,8 @@
                     datasets: [{
                         label: 'Event Loop Lag (ms)',
                         data: [],
-                        borderColor: 'rgb(255, 193, 7)',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        borderColor: '#4B5563',
+                        backgroundColor: 'rgba(158, 49, 59, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -636,8 +467,8 @@
                     datasets: [{
                         label: 'GC Duration (ms)',
                         data: [],
-                        borderColor: 'rgb(244, 67, 54)',
-                        backgroundColor: 'rgba(244, 67, 54, 0.6)',
+                        borderColor: '#1f8a5b',
+                        backgroundColor: 'rgba(31, 138, 91, 0.6)',
                         fill: true
                     }]
                 },
@@ -665,8 +496,8 @@
                     datasets: [{
                         label: 'Heap Used (MB)',
                         data: [],
-                        borderColor: 'rgb(76, 175, 80)',
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderColor: '#1f8a5b',
+                        backgroundColor: 'rgba(31, 138, 91, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -807,14 +638,14 @@
 
                 // Update Performance Marks table
                 if (data.markStatistics && data.markStatistics.length > 0) {
-                    let marksHTML = '<table class="table table-sm mb-0"><thead><tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead><tbody>';
+                    let marksHTML = '<table class="kr-table mb-0"><thead><tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead><tbody>';
 
                     data.markStatistics.forEach(stat => {
-                        const statusClass = stat.avg > 100 ? 'text-danger' : stat.avg > 50 ? 'text-warning' : 'text-success';
+                        const statusColor = stat.avg > 100 ? 'var(--kr-danger)' : stat.avg > 50 ? 'var(--kr-warning)' : 'var(--kr-success)';
                         marksHTML += `<tr>
                             <td><small>${stat.name}</small></td>
                             <td><small>${stat.count}</small></td>
-                            <td><small class="${statusClass}"><strong>${stat.avg.toFixed(2)}</strong></small></td>
+                            <td><small style="color: ${statusColor}; font-weight: 600;">${stat.avg.toFixed(2)}</small></td>
                             <td><small>${stat.min.toFixed(2)}</small></td>
                             <td><small>${stat.max.toFixed(2)}</small></td>
                         </tr>`;
@@ -824,7 +655,7 @@
                     document.getElementById('performanceMarksContainer').innerHTML = marksHTML;
                 } else {
                     document.getElementById('performanceMarksContainer').innerHTML =
-                        '<small class="text-muted">No performance marks recorded yet. Services will populate this data as they track operations.</small>';
+                        '<small style="color: var(--kr-ink-400);">No performance marks recorded yet. Services will populate this data as they track operations.</small>';
                 }
             } catch (error) {
                 console.error('Error fetching monitoring data:', error);

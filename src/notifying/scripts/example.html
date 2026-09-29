@@ -369,7 +369,7 @@
         async function initializeService() {
             try {
                 const instanceName = document.getElementById('instanceName').value;
-                notifying = new digitaltechnologiesNotifying({ instanceName });
+                notifying = new nooblyjsNotifying({ instanceName });
                 const status = await notifying.getStatus();
                 showStatus('initStatus', `✓ Service initialized (${instanceName}): ${status}`, 'success');
             } catch (error) {

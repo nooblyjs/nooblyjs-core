@@ -4,7 +4,7 @@
  * content removal, and service status monitoring with UUID-based keys.
  * Supports multiple named indexes for organizing different types of searchable content.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -13,12 +13,7 @@
 
 const crypto = require('crypto');
 const analytics = require('../modules/analytics');
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const BulkOperations = require('../../appservice/utils/bulkOperations');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers search routes with the Express application.
@@ -34,9 +29,13 @@ const { HealthCheck } = require('../../appservice/utils/healthCheck');
 module.exports = (options, eventEmitter, search) => {
   if (options['express-app'] && search) {
     const app = options['express-app'];
-    const authMiddleware = options.authMiddleware;
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('searching', { dependencies: [] });
+
+    // Enforce authentication on every search API endpoint. Mounting the shared
+    // API-key/session middleware on the /api prefix protects all routes below
+    // regardless of how each handler is registered. Falls back to a
+    // pass-through only when no auth is configured.
+    const requireApiAuth = options.authMiddleware || ((req, res, next) => next());
+    app.use('/services/searching/api', requireApiAuth);
 
     /**
      * POST /services/searching/api/add/
@@ -58,12 +57,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const added = await search.add(key, value, searchContainer);
         if (added) {
-          sendSuccess(res, { key }, 'Document added to index', 201);
+          res.status(200).json({ success: true });
         } else {
-          sendError(res, ERROR_CODES.DUPLICATE_FOUND, 'Key already exists');
+          res.status(400).json({ error: 'Key already exists' });
         }
       } catch (error) {
-        handleError(res, error, 'addDocument');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -84,12 +83,12 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const removed = await search.remove(key, searchContainer);
         if (removed) {
-          sendSuccess(res, { key }, 'Document removed from index');
+          res.status(200).json({ success: true });
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Key not found');
+          res.status(404).json({ error: 'Key not found' });
         }
       } catch (error) {
-        handleError(res, error, 'deleteDocument');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -110,12 +109,12 @@ module.exports = (options, eventEmitter, search) => {
       if (term) {
         try {
           const results = await search.search(term, searchContainer);
-          sendSuccess(res, { results });
+          res.status(200).json(results);
         } catch (err) {
-          handleError(res, err, 'search');
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       } else {
-        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Search term is required');
+        res.status(400).json({ error: 'Missing query' });
       }
     });
 
@@ -129,7 +128,7 @@ module.exports = (options, eventEmitter, search) => {
      */
     app.get('/services/searching/api/status', (req, res) => {
       eventEmitter.emit('api-searching-status', 'searching api running');
-      sendStatus(res, 'searching api running');
+      res.status(200).json('searching api is running');
     });
 
     /**
@@ -151,9 +150,9 @@ module.exports = (options, eventEmitter, search) => {
           };
         });
 
-        sendSuccess(res, { indexes, total: indexes.length });
+        res.status(200).json({ indexes });
       } catch (error) {
-        handleError(res, error, 'listIndexes');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -172,12 +171,12 @@ module.exports = (options, eventEmitter, search) => {
         const stats = search.getIndexStats(searchContainer);
 
         if (stats) {
-          sendSuccess(res, stats);
+          res.status(200).json(stats);
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
+          res.status(404).json({ error: 'Index not found' });
         }
       } catch (error) {
-        handleError(res, error, 'getIndexStats');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -196,12 +195,12 @@ module.exports = (options, eventEmitter, search) => {
         const result = search.deleteIndex(searchContainer);
 
         if (result) {
-          sendSuccess(res, { indexName: searchContainer }, `Index '${searchContainer}' deleted successfully`);
+          res.status(200).json({ message: `Index '${searchContainer}' deleted successfully` });
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
+          res.status(404).json({ error: 'Index not found' });
         }
       } catch (error) {
-        handleError(res, error, 'deleteIndex');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -220,12 +219,12 @@ module.exports = (options, eventEmitter, search) => {
         const result = search.clearIndex(searchContainer);
 
         if (result) {
-          sendSuccess(res, { indexName: searchContainer }, `Index '${searchContainer}' cleared successfully`);
+          res.status(200).json({ message: `Index '${searchContainer}' cleared successfully` });
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Index not found');
+          res.status(404).json({ error: 'Index not found' });
         }
       } catch (error) {
-        handleError(res, error, 'clearIndex');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -251,12 +250,12 @@ module.exports = (options, eventEmitter, search) => {
           )
         ]);
 
-        sendSuccess(res, {
+        res.status(200).json({
           ...analyticsData,
           stats
         });
       } catch (error) {
-        handleError(res, error, 'getAnalytics');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -272,9 +271,9 @@ module.exports = (options, eventEmitter, search) => {
       try {
         const searchContainer = req.query.searchContainer;
         const stats = analytics.getOperationStats(searchContainer);
-        sendSuccess(res, stats);
+        res.status(200).json(stats);
       } catch (error) {
-        handleError(res, error, 'getOperationStats');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -291,9 +290,9 @@ module.exports = (options, eventEmitter, search) => {
         const limit = parseInt(req.query.limit, 10) || 100;
         const searchContainer = req.query.searchContainer;
         const terms = analytics.getSearchTermAnalytics(limit, searchContainer);
-        sendSuccess(res, terms);
+        res.status(200).json(terms);
       } catch (error) {
-        handleError(res, error, 'getSearchTermAnalytics');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -308,9 +307,9 @@ module.exports = (options, eventEmitter, search) => {
     app.delete('/services/searching/api/analytics', (req, res) => {
       try {
         analytics.clear();
-        sendSuccess(res, {}, 'Analytics data cleared successfully');
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
       } catch (error) {
-        handleError(res, error, 'clearAnalytics');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -325,10 +324,10 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/settings', async (req, res) => {
       try {
         const settings = await search.getSettings();
-        sendSuccess(res, settings);
+        res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-searching-settings-error', err.message);
-        handleError(res, err, 'getSettings');
+        res.status(500).json({ error: 'Failed to retrieve settings' });
       }
     });
 
@@ -345,12 +344,12 @@ module.exports = (options, eventEmitter, search) => {
       if (message) {
         try {
           await search.saveSettings(message);
-          sendSuccess(res, {}, 'Settings saved successfully');
+          res.status(200).json({ success: true });
         } catch (err) {
-          handleError(res, err, 'saveSettings');
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       } else {
-        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+        res.status(400).json({ error: 'Missing settings' });
       }
     });
 
@@ -368,7 +367,9 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/suggest/:term', (req, res) => {
       try {
         if (!search.suggest) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Suggestions not supported by this search provider', undefined, 501);
+          return res.status(501).json({
+            error: 'Suggestions not supported by this search provider'
+          });
         }
 
         const term = req.params.term;
@@ -376,7 +377,7 @@ module.exports = (options, eventEmitter, search) => {
         const limit = parseInt(req.query.limit, 10) || 10;
 
         if (!term) {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Search term is required');
+          return res.status(400).json({ error: 'Missing search term' });
         }
 
         const suggestions = search.suggest(term, {
@@ -384,9 +385,9 @@ module.exports = (options, eventEmitter, search) => {
           containerName: searchContainer
         });
 
-        sendSuccess(res, { suggestions });
+        res.status(200).json(suggestions);
       } catch (error) {
-        handleError(res, error, 'getSuggestions');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
@@ -405,12 +406,131 @@ module.exports = (options, eventEmitter, search) => {
         const stats = search.getStats(searchContainer);
 
         if (!stats.totalTokens) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Token statistics not available for this search provider', undefined, 501);
+          return res.status(501).json({
+            error: 'Token statistics not available for this search provider'
+          });
         }
 
-        sendSuccess(res, stats);
+        res.status(200).json(stats);
       } catch (error) {
-        handleError(res, error, 'getTokenStats');
+        sendSafeError(res, error, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * GET /services/searching/api/autosuggest/:term
+     * Returns compositional ranked suggestions (token-based providers).
+     */
+    app.get('/services/searching/api/autosuggest/:term', async (req, res) => {
+      try {
+        if (typeof search.autoSuggest !== 'function') {
+          return res.status(501).json({
+            error: 'autoSuggest not supported by this search provider'
+          });
+        }
+        const term = req.params.term;
+        if (!term) return res.status(400).json({ error: 'Missing search term' });
+
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const containerName = req.query.searchContainer || 'default';
+        const fuzzy = req.query.fuzzy != null ? Number(req.query.fuzzy) : undefined;
+
+        const suggestions = await search.autoSuggest(term, {
+          maxSuggestions: limit,
+          containerName,
+          fuzzy
+        });
+        res.status(200).json(suggestions);
+      } catch (error) {
+        sendSafeError(res, error, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * POST /services/searching/api/search/:searchContainer
+     * Search with full options in the body — supports fields, boost, prefix,
+     * fuzzy, combineWith, maxResults. The GET /search/:term route remains for
+     * simple term queries; this POST variant exposes the field-aware options.
+     */
+    app.post('/services/searching/api/search/:searchContainer?', async (req, res) => {
+      try {
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const { query, ...searchOpts } = body;
+        if (!query || typeof query !== 'string') {
+          return res.status(400).json({ error: 'Missing query in request body' });
+        }
+        const containerName = req.params.searchContainer || searchOpts.containerName || 'default';
+        const results = await search.search(query, { ...searchOpts, containerName });
+        res.status(200).json(results);
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * POST /services/searching/api/add-bulk
+     * Adds an array of documents in one call. Each document must contain the
+     * configured idField (default: 'id'). Returns counts of added/skipped.
+     */
+    app.post('/services/searching/api/add-bulk', async (req, res) => {
+      try {
+        if (typeof search.addAll !== 'function') {
+          return res.status(501).json({ error: 'addAll not supported by this provider' });
+        }
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const documents = Array.isArray(body) ? body : body.documents;
+        if (!Array.isArray(documents)) {
+          return res.status(400).json({ error: 'Expected an array or { documents: [...] }' });
+        }
+        const containerName = (body && body.searchContainer) || req.query.searchContainer || 'default';
+        const result = await search.addAll(documents, containerName);
+        res.status(200).json({ success: true, ...result });
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * POST /services/searching/api/replace
+     * Replace (or insert) a document using its idField.
+     */
+    app.post('/services/searching/api/replace', async (req, res) => {
+      try {
+        if (typeof search.replace !== 'function') {
+          return res.status(501).json({ error: 'replace not supported by this provider' });
+        }
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const containerName = req.query.searchContainer
+          || (body && body.searchContainer)
+          || 'default';
+        const document = body.document || body;
+        await search.replace(document, containerName);
+        res.status(200).json({ success: true });
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * POST /services/searching/api/delete-bulk
+     * Remove many documents in one call. Body is an array of ids or
+     * { ids: [...], searchContainer }.
+     */
+    app.post('/services/searching/api/delete-bulk', async (req, res) => {
+      try {
+        if (typeof search.removeAll !== 'function') {
+          return res.status(501).json({ error: 'removeAll not supported by this provider' });
+        }
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const ids = Array.isArray(body) ? body : body.ids;
+        if (!Array.isArray(ids)) {
+          return res.status(400).json({ error: 'Expected an array or { ids: [...] }' });
+        }
+        const containerName = (body && body.searchContainer) || req.query.searchContainer || 'default';
+        const result = await search.removeAll(ids, containerName);
+        res.status(200).json({ success: true, ...result });
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -426,7 +546,9 @@ module.exports = (options, eventEmitter, search) => {
     app.post('/services/searching/api/rebuild', (req, res) => {
       try {
         if (!search.rebuild && !search.loadFromDisk) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Rebuild not supported by this search provider', undefined, 501);
+          return res.status(501).json({
+            error: 'Rebuild not supported by this search provider'
+          });
         }
 
         const searchContainer = req.body?.searchContainer;
@@ -440,132 +562,14 @@ module.exports = (options, eventEmitter, search) => {
           }
         });
 
-        sendSuccess(res, {}, 'Index rebuild started in background', 202);
+        res.status(202).json({
+          success: true,
+          message: 'Index rebuild started in background'
+        });
       } catch (error) {
-        handleError(res, error, 'rebuildIndex');
+        sendSafeError(res, error, { status: 500, eventEmitter });
       }
     });
 
-
-
-    /**
-     * GET /services/searching/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/searching/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: search });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    app.get('/services/searching/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'searching', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'searching-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/searching/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/searching/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'searching', limit: 10000 });
-
-    /**
-     * POST /services/searching/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/searching/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'searching-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'searching-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/searching/api/export
-     * Exports service data
-     */
-    app.get('/services/searching/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('searching-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'searching-export' });
-      }
-    });
   }
 };

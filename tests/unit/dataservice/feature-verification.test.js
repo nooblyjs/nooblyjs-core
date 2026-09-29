@@ -3,7 +3,7 @@
  * Comprehensive testing of all DataService features as documented
  * Tests cover: all providers, CRUD operations, search functionality,
  * analytics, settings, events, and dependency injection
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 

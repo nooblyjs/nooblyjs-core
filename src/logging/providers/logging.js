@@ -1,7 +1,7 @@
 /**
  * @fileoverview A console logger implementation providing formatted logging
  * with timestamps, device identification, and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

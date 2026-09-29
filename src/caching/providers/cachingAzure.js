@@ -1,9 +1,9 @@
 /**
- * @fileoverview Azure Cache for Redis provider for Noobly JS Core caching service.
+ * @fileoverview Azure Cache for Redis provider for NooblyJS Core caching service.
  * Leverages Redis-based Azure Cache for distributed caching with managed authentication.
  * Uses the existing CacheRedis provider under the hood with Azure-specific configuration.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */

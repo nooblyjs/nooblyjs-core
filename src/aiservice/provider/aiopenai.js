@@ -1,7 +1,7 @@
 /**
  * @fileoverview OpenAI Provider
  * OpenAI implementation providing LLM services with token tracking.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -10,6 +10,7 @@
 
 const AIServiceBase = require('./aibase');
 const OpenAI = require('openai');
+const { AzureOpenAI } = require('openai');
 
 /**
  * OpenAI provider implementation.
@@ -39,11 +40,24 @@ class AIOpenAI extends AIServiceBase {
     if (!options.apiKey) {
       throw new Error('OpenAI API key is required');
     }
-    
-    this.model_ = options.model || 'gpt-3.5-turbo';
-    this.client_ = new OpenAI({
-      apiKey: options.apiKey
-    });
+
+    if (options.endpoint) {
+      // Azure OpenAI: the API key only authenticates against the Azure
+      // endpoint, and the request is routed by deployment name (not model).
+      this.model_ = options.deployment || options.model || 'gpt-3.5-turbo';
+      this.client_ = new AzureOpenAI({
+        apiKey: options.apiKey,
+        endpoint: options.endpoint,
+        deployment: options.deployment,
+        apiVersion: options.apiVersion || '2024-12-01-preview'
+      });
+    } else {
+      // Public OpenAI API.
+      this.model_ = options.model || 'gpt-3.5-turbo';
+      this.client_ = new OpenAI({
+        apiKey: options.apiKey
+      });
+    }
   }
 
     /**
@@ -78,17 +92,30 @@ class AIOpenAI extends AIServiceBase {
    */
   async prompt(prompt, options = {}) {
     try {
-      const response = await this.client_.chat.completions.create({
+      const maxTokens = options.maxTokens || this.settings.maxtokens || 1000;
+      const temperature = options.temperature || this.settings.temperature || 0.7;
+
+      // Newer models (gpt-5 / o-series) renamed max_tokens -> max_completion_tokens
+      // and only accept the default temperature.
+      const isNewModel = /^(gpt-5|o\d)/i.test(this.model_);
+
+      const params = {
         model: this.model_,
-        max_tokens: options.maxTokens || this.settings.maxtokens ||  1000,
-        temperature: options.temperature || this.settings.temperature ||  0.7,
         messages: [
           {
             role: 'user',
             content: prompt
           }
         ]
-      });
+      };
+      if (isNewModel) {
+        params.max_completion_tokens = maxTokens;
+      } else {
+        params.max_tokens = maxTokens;
+        params.temperature = temperature;
+      }
+
+      const response = await this.client_.chat.completions.create(params);
 
       const usage = {
         promptTokens: response.usage.prompt_tokens,
@@ -106,9 +133,7 @@ class AIOpenAI extends AIServiceBase {
         provider: 'chatgpt'
       };
 
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('ai:prompt', { prompt, response: result });
-      }
+      this.emitPromptComplete_(prompt, result, options);
 
       return result;
     } catch (error) {

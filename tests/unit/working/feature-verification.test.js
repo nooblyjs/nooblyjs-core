@@ -2,7 +2,7 @@
  * @fileoverview Feature Verification Tests for Working Service
  * Comprehensive test suite verifying all documented features of the Working Service.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @date 2025-11-22
  */

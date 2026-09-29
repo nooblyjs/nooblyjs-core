@@ -1,7 +1,7 @@
 /**
  * @fileoverview API-based queueing service implementation that proxies requests to a remote queueing service.
  * Allows client applications to consume backend queueing API endpoints for enterprise systems.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */

@@ -3,7 +3,7 @@
  * Tracks data operations (add, remove, find) for analytics and monitoring.
  * Provides an unobtrusive way to collect metrics without impacting provider performance.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 

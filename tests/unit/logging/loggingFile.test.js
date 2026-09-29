@@ -4,7 +4,7 @@
  * This test suite covers the file logger provider, testing async file writing,
  * log rotation by size and period, and file retention policies.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.1.0
  * @since 1.0.0
  */
@@ -127,7 +127,7 @@ describe('loggingFile', () => {
     // Should use date-based filename pattern
     const calls = fs.promises.appendFile.mock.calls;
     const lastCall = calls[calls.length - 1];
-    expect(lastCall[0]).toMatch(/^\.logs\/app\.\d{4}-\d{2}-\d{2}\.log$/);
+    expect(lastCall[0]).toMatch(/^\.logs[\\/]app\.\d{4}-\d{2}-\d{2}\.log$/);
     // Log format is now: timestamp - LOG - device - message\n
     expect(lastCall[1]).toMatch(/^\d{4}-\d{2}-\d{2}T.*- LOG - .* - Default test message\n$/);
   });
@@ -146,7 +146,7 @@ describe('loggingFile', () => {
 
     expect(fs.promises.appendFile).toHaveBeenCalled();
     const call = fs.promises.appendFile.mock.calls[0];
-    expect(call[0]).toMatch(/custom-logs\/custom\.log$/);
+    expect(call[0]).toMatch(/custom-logs[\\/]custom\.log$/);
     // Log format is now: timestamp - LOG - device - message\n
     expect(call[1]).toMatch(/^\d{4}-\d{2}-\d{2}T.*- LOG - .* - Custom dir test\n$/);
   });

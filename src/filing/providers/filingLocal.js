@@ -1,7 +1,7 @@
 /**
  * @fileoverview Local file system filing provider for file operations
  * on the local file system with event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -11,6 +11,7 @@
 const fs = require('node:fs').promises;
 const fsSync = require('fs');
 const path = require('node:path');
+const { resolveWithin } = require('../modules/pathSafety');
 
 /**
  * A class that implements a local file system-based file storage provider.
@@ -42,33 +43,27 @@ class LocalFilingProvider {
 
   /**
    * Resolves a file path and verifies it stays within the base directory.
-   * @param {string} filePath The file path to resolve.
+   * @param {string} filePath The file path to resolve (empty string refers to baseDir).
    * @return {string} The resolved absolute file path.
    * @throws {Error} When the path is outside the base directory or invalid.
    * @private
    */
   _resolveAndVerifyPath(filePath) {
-    if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
-      throw new Error('Invalid filePath: must be a non-empty string');
-    }
-
     const baseDir = path.resolve(this.settings.baseDir);
-    const resolvedPath = path.resolve(baseDir, filePath);
-    
-    if (!resolvedPath.startsWith(baseDir)) {
-      const error = new Error('Path traversal detected: Path is outside the base directory');
+    try {
+      // resolveWithin fixes the prefix-bypass of the previous
+      // startsWith(baseDir) check (e.g. /srv/data vs /srv/data-secrets).
+      return resolveWithin(baseDir, filePath);
+    } catch (error) {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('filing:security-error', {
           error: error.message,
           filePath,
-          resolvedPath,
           baseDir
         });
       }
       throw error;
     }
-    
-    return resolvedPath;
   }
 
   /**
@@ -218,21 +213,31 @@ class LocalFilingProvider {
 
     // Transform entries to include type information and metadata
     const items = await Promise.all(entries.map(async entry => {
+      const isSymlink = entry.isSymbolicLink();
       const item = {
         name: entry.name,
         type: entry.isDirectory() ? 'folder' : 'file',
         isDirectory: entry.isDirectory(),
-        isFile: entry.isFile()
+        isFile: entry.isFile(),
+        isSymbolicLink: isSymlink
       };
 
       try {
         const fullPath = path.join(dirPath, entry.name);
+        // fs.stat (unlike lstat) follows symlinks, so for a link this resolves
+        // the target. A Dirent reports the link entry itself, so symlinks always
+        // arrive as neither file nor directory — reclassify them by their target.
         const stats = await fs.stat(fullPath);
+        if (isSymlink) {
+          item.isDirectory = stats.isDirectory();
+          item.isFile = stats.isFile();
+          item.type = stats.isDirectory() ? 'folder' : 'file';
+        }
         item.size = stats.size;
         item.created = stats.birthtime.toISOString();
         item.modified = stats.mtime.toISOString();
       } catch {
-        // If stat fails, leave metadata undefined
+        // Broken symlink or stat failure - keep the link-entry classification
       }
 
       return item;

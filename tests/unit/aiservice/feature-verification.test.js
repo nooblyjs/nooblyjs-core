@@ -174,7 +174,7 @@ describe('AI Service - Feature Verification', () => {
 
       await service.prompt('Test prompt');
 
-      expect(eventEmitter.emit).toHaveBeenCalledWith('ai:prompt', expect.any(Object));
+      expect(eventEmitter.emit).toHaveBeenCalledWith('ai:prompt:complete', expect.any(Object));
     });
 
     it('should handle settings with description', async () => {
@@ -264,7 +264,7 @@ describe('AI Service - Feature Verification', () => {
 
       await service.prompt('Test prompt');
 
-      expect(eventEmitter.emit).toHaveBeenCalledWith('ai:prompt', expect.any(Object));
+      expect(eventEmitter.emit).toHaveBeenCalledWith('ai:prompt:complete', expect.any(Object));
     });
 
     it('should handle saveSettings', async () => {
@@ -295,26 +295,26 @@ describe('AI Service - Feature Verification', () => {
     it('should have default baseUrl', () => {
       const service = createAIService('ollama', {}, eventEmitter);
 
-      expect(service.baseUrl_).toBeDefined();
-      expect(service.baseUrl_).toBe('http://localhost:11434');
+      expect(service.endpoint).toBeDefined();
+      expect(service.endpoint).toBe('http://localhost:11434');
     });
 
     it('should allow custom baseUrl', () => {
       const customUrl = 'http://192.168.1.100:11434';
       const service = createAIService('ollama', {
-        baseUrl: customUrl
+        endpoint: customUrl
       }, eventEmitter);
 
-      expect(service.baseUrl_).toBe(customUrl);
+      expect(service.endpoint).toBe(customUrl);
     });
 
     it('should have default model', () => {
       const service = createAIService('ollama', {
-        baseUrl: 'http://localhost:11434'
+        endpoint: 'http://localhost:11434'
       }, eventEmitter);
 
-      expect(service.model_).toBeDefined();
-      expect(service.model_).toBe('llama3.2');
+      expect(service.model).toBeDefined();
+      expect(service.model).toBe('llama3.2');
     });
 
     it('should allow custom model', () => {
@@ -322,7 +322,7 @@ describe('AI Service - Feature Verification', () => {
         model: 'mistral'
       }, eventEmitter);
 
-      expect(service.model_).toBe('mistral');
+      expect(service.model).toBe('mistral');
     });
 
     it('should have getSettings method', () => {
@@ -927,10 +927,13 @@ describe('AI Service - Feature Verification', () => {
       expect(typeof service.tokensStorePath_).toBe('string');
     });
 
-    it('should use .data directory by default', () => {
+    it('should use the application data directory by default', () => {
       const service = createAIService('ollama', validOllamaOptions, eventEmitter);
 
-      expect(service.tokensStorePath_).toContain('.data');
+      // The default token store lives under the runtime data directory
+      // (./.application/data), matching the framework's documented data dir.
+      expect(service.tokensStorePath_).toContain('data');
+      expect(service.tokensStorePath_).toContain('ai-tokens.json');
     });
 
     it('should have trackUsage_ method', () => {
@@ -1045,6 +1048,9 @@ describe('AI Service - Feature Verification', () => {
     return {
       get: jest.fn(),
       post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      patch: jest.fn(),
       use: jest.fn()
     };
   }

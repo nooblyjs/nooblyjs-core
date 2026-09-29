@@ -5,14 +5,14 @@
  * the queueing service API. Tests verify proper API call construction,
  * error handling, and parameter validation.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
 
 'use strict';
 
-const digitaltechnologiesqueueing = require('../../../src/queueing/scripts/client.js');
+const nooblyjsqueueing = require('../../../src/queueing/scripts/client.js');
 
 /**
  * Test suite for the queueing script library client.
@@ -21,7 +21,7 @@ const digitaltechnologiesqueueing = require('../../../src/queueing/scripts/clien
  * API request construction, error handling, and method validation.
  */
 describe('Queueing Script Library Client', () => {
-  /** @type {digitaltechnologiesqueueing} Client instance for testing */
+  /** @type {nooblyjsqueueing} Client instance for testing */
   let client;
 
   /**
@@ -29,7 +29,7 @@ describe('Queueing Script Library Client', () => {
    * Creates a fresh client instance with default settings.s
    */
   beforeEach(() => {
-    client = new digitaltechnologiesqueueing('default');
+    client = new nooblyjsqueueing('default');
 
     // Mock the global fetch function
     global.fetch = jest.fn();
@@ -55,7 +55,7 @@ describe('Queueing Script Library Client', () => {
    * Test initialization with custom instance name.
    */
   it('should initialize with custom instance name', () => {
-    const customClient = new digitaltechnologiesqueueing('custom-instance');
+    const customClient = new nooblyjsqueueing('custom-instance');
     expect(customClient.instanceName).toBe('custom-instance');
     expect(customClient.baseUrl).toBe('/services/queueing/api/custom-instance');
   });
@@ -68,7 +68,7 @@ describe('Queueing Script Library Client', () => {
       apiKey: 'test-key',
       debug: true
     };
-    const customClient = new digitaltechnologiesqueueing('default', options);
+    const customClient = new nooblyjsqueueing('default', options);
     expect(customClient.options.apiKey).toBe('test-key');
     expect(customClient.options.debug).toBe(true);
   });
@@ -78,7 +78,7 @@ describe('Queueing Script Library Client', () => {
    */
   it('should throw error if instanceName is not a string', () => {
     expect(() => {
-      new digitaltechnologiesqueueing(123);
+      new nooblyjsqueueing(123);
     }).toThrow(TypeError);
   });
 
@@ -318,7 +318,7 @@ describe('Queueing Script Library Client', () => {
    * Test API key is included in headers when provided.
    */
   it('should include API key in request headers when provided', async () => {
-    const apiKeyClient = new digitaltechnologiesqueueing('default', { apiKey: 'secret-key' });
+    const apiKeyClient = new nooblyjsqueueing('default', { apiKey: 'secret-key' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -353,7 +353,7 @@ describe('Queueing Script Library Client', () => {
    * Test request with custom instance name.
    */
   it('should use correct base URL for custom instance', async () => {
-    const customClient = new digitaltechnologiesqueueing('custom-queue');
+    const customClient = new nooblyjsqueueing('custom-queue');
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 

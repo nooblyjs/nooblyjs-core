@@ -3,7 +3,7 @@
  * Captures and stores fetch activity metrics for analytics purposes.
  * Tracks request operations, cache hits, misses, and provides statistics.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -40,28 +40,40 @@ class FetchingAnalytics {
       return;
     }
 
-    // Listen for successful fetches
-    this.eventEmitter_.on('fetch:success', (data) => {
-      this.recordActivity_(data.url, 'success', data.status, null);
-    });
+    // Store listener references so they can be removed in destroy() (P2-6).
+    this.listeners_ = {
+      'fetch:success': (data) => {
+        this.recordActivity_(data.url, 'success', data.status, null);
+      },
+      'fetch:cache-hit': (data) => {
+        this.recordActivity_(data.url, 'cache-hit', 0, null);
+      },
+      'fetch:dedup-hit': (data) => {
+        this.recordActivity_(data.url, 'dedup-hit', 0, null);
+      },
+      'fetch:error': (data) => {
+        this.recordActivity_(data.url, 'error', 0, data.error);
+        const currentErrors = this.urlErrors_.get(data.url) || 0;
+        this.urlErrors_.set(data.url, currentErrors + 1);
+      }
+    };
 
-    // Listen for cache hits
-    this.eventEmitter_.on('fetch:cache-hit', (data) => {
-      this.recordActivity_(data.url, 'cache-hit', 0, null);
-    });
+    for (const [event, handler] of Object.entries(this.listeners_)) {
+      this.eventEmitter_.on(event, handler);
+    }
+  }
 
-    // Listen for deduplication hits
-    this.eventEmitter_.on('fetch:dedup-hit', (data) => {
-      this.recordActivity_(data.url, 'dedup-hit', 0, null);
-    });
-
-    // Listen for fetch errors
-    this.eventEmitter_.on('fetch:error', (data) => {
-      this.recordActivity_(data.url, 'error', 0, data.error);
-      // Track errors separately
-      const currentErrors = this.urlErrors_.get(data.url) || 0;
-      this.urlErrors_.set(data.url, currentErrors + 1);
-    });
+  /**
+   * Removes all event listeners registered by this analytics module.
+   * Call when the owning service is disposed to prevent listener leaks (P2-6).
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const [event, handler] of Object.entries(this.listeners_)) {
+        this.eventEmitter_.removeListener(event, handler);
+      }
+      this.listeners_ = null;
+    }
   }
 
   /**

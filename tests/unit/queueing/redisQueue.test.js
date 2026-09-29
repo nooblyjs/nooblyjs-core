@@ -6,17 +6,25 @@
  * for multiple named queues using Redis data structures.
  * Tests verify proper FIFO behavior and event emission for queue operations.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
+// NOTE: this project's Jest config sets "transform": {} which DISABLES
+// babel-jest — so jest.mock() calls are NOT hoisted above imports. The mock
+// must therefore be registered *before* requiring any module that pulls in
+// ioredis, otherwise the provider captures the real client at load time.
+let mockRedisClient;
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => mockRedisClient);
+});
+
 const QueueingRedis = require('../../../src/queueing/providers/queueingRedis');
 const createQueue = require('../../../src/queueing');
 const EventEmitter = require('events');
-jest.mock('ioredis');
 
 /**
  * Test suite for Redis-backed queue operations.
@@ -29,25 +37,20 @@ describe('RedisQueue', () => {
   let queue;
   /** @type {EventEmitter} Mock event emitter for testing queue events */
   let mockEventEmitter;
-  /** @type {Object} Mocked Redis client */
-  let mockRedisClient;
 
   /**
    * Set up test environment before each test case.
    * Creates a fresh Redis queue instance with mocked Redis client.
    */
   beforeEach(() => {
-    // Setup mock Redis client - create new mock functions each time
-    const Redis = require('ioredis');
-
     const createMockClient = () => ({
       status: 'ready',
       connect: jest.fn().mockResolvedValue(undefined),
-      lpush: jest.fn(),
-      rpop: jest.fn(),
-      llen: jest.fn(),
-      keys: jest.fn(),
-      del: jest.fn(),
+      lpush: jest.fn().mockResolvedValue(1),
+      rpop: jest.fn().mockResolvedValue(null),
+      llen: jest.fn().mockResolvedValue(0),
+      keys: jest.fn().mockResolvedValue([]),
+      del: jest.fn().mockResolvedValue(0),
       quit: jest.fn().mockResolvedValue(undefined),
       disconnect: jest.fn().mockResolvedValue(undefined),
       on: jest.fn(),
@@ -59,9 +62,6 @@ describe('RedisQueue', () => {
     });
 
     mockRedisClient = createMockClient();
-
-    // Mock Redis constructor to return our mock client
-    Redis.mockImplementation(() => mockRedisClient);
 
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');

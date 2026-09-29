@@ -1,7 +1,7 @@
 /**
  * @fileoverview An in-memory queue implementation providing FIFO data structure
  * with enqueue and dequeue operations and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

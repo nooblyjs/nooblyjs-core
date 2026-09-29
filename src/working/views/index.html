@@ -4,30 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Working Management - Noobly JS Core</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Working Management - NooblyJS Core</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     
-    <link rel="stylesheet" href="/services/uiservice/css/styles.css">
+    <link rel="stylesheet" href="/services/css/styles.css">
 </head>
 <body>
-    <!-- APP HEADER -->
-    <header class="core-app-header">
-        <a class="navbar-brand" href="/">
-            <img src="/images/nooblyjs-logo.png" alt="Noobly JS Logo" class="logo-image">
-            <span>Noobly JS Core</span>
-        </a>
-        <div class="navbar-nav">
-            <div class="dropdown core-user-dropdown">
-                <div class="core-user-profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="core-user-avatar" id="headerUserAvatar">U</div>
-                    <div class="core-user-info d-none d-md-block">
-                        <div class="core-user-label" id="headerUserLabel">User</div>
-                        <div class="core-user-name" id="headerUserName">Username</div>
-                    </div>
-                    <span class="core-user-dropdown-arrow">▼</span>
-                </div>
+<div class="kr-app no-ai">
+    <!-- Topbar -->
+    <header class="kr-topbar">
+        <div class="kr-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+            <div class="name">NooblyJS<small>Core</small></div>
+        </div>
+        <div class="kr-topbar-actions">
+            <div class="kr-avatar-pill" style="margin-left: auto;">
+                <span id="headerUserName">User</span>
+                <div class="av" id="headerUserAvatar">U</div>
+            </div>
+            <div class="dropdown">
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                 </ul>
@@ -35,28 +35,28 @@
         </div>
     </header>
 
-    <div class="core-app-container">
-        <aside class="core-sidebar" id="core-navigation-sidebar">
+
+        <aside class="kr-sidebar" id="navigation-sidebar">
             <!-- Navigation will be loaded here by navigation.js -->
         </aside>
 
-        <main class="core-main-content">
-            <div class="core-page-header">
-                <h1 class="core-page-title">Background Task Management</h1>
-                <p class="core-page-subtitle">Run, stop, and monitor background tasks</p>
+        <main class="kr-main">
+            <div style="margin-bottom: 1.5rem;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 800;">Background Task Management</h1>
+                <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px;">Run, stop, and monitor background tasks</p>
             </div>
 
-            <div class="core-page-content">
+            <div class="kr-page-content">
 
-            <div class="core-page-content">
-
-            <div class="alert alert-success" id="successAlert">
+            <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert">
                 <strong>Success!</strong> <span id="successMessage"></span>
-            </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
 
-            <div class="alert alert-error" id="errorAlert">
+            <div class="alert alert-danger alert-dismissible fade" id="errorAlert" role="alert">
                 <strong>Error!</strong> <span id="errorMessage"></span>
-            </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
 
             <!-- Bootstrap 5 Tabs -->
             <ul class="nav nav-tabs mb-4" id="workingTabs" role="tablist">
@@ -80,25 +80,25 @@
             <!-- Tab Content -->
             <div class="tab-content" id="workingTabContent">
                 <!-- Settings Tab -->
-                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" style="min-height:1000px">
                     <!-- Settings Card -->
-                    <div class="core-card">
-                        <div class="core-card-header">
-                            <h2 class="core-card-title">Worker Service Settings</h2>
-                            <p class="core-card-subtitle">Configure the worker service parameters</p>
+                    <div class="kr-surface">
+                        <div class="kr-surface-head w-100">
+                            <h2 class="kr-card-title">Worker Service Settings</h2>
+                            <p class="kr-card-subtitle">Configure the worker service parameters</p>
                         </div>
-                        <div class="core-card-content">
+                        <div class="kr-surface-body">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="core-btn-group">
-                                    <button type="submit" class="btn btn-secondary">Save Settings</button>
-                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
+                                <div class="kr-btn-group">
+                                    <button type="submit" class="kr-btn primary">Save Settings</button>
+                                    <button type="button" class="kr-btn secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
-                                <div class="core-response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
+                            <div id="settingsSaveResponse" class="kr-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="kr-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="kr-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -109,21 +109,14 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
 
                     <!-- Statistics Card with Pie Chart -->
-                    <div class="core-card mb-4">
-                        <div class="core-card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="flex-grow-1">
-                                    <h2 class="core-card-title">Task Status Distribution</h2>
-                                    <p class="core-card-subtitle">Visual breakdown of task execution status</p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="refreshDashboard()">
-                                        <i class="bi bi-arrow-clockwise"></i> Refresh All
-                                    </button>
-                                </div>
+                    <div class="kr-surface mb-4">
+                        <div class="kr-surface-head w-100">
+                            <div>
+                                <h2 class="kr-card-title">Task Status Distribution</h2>
+                                <p class="kr-card-subtitle">Visual breakdown of task execution status</p>
                             </div>
                         </div>
-                        <div class="core-card-content">
+                        <div class="kr-surface-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div style="position: relative; height: 300px;">
@@ -131,9 +124,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="core-stats-summary">
+                                    <div class="kr-stats-summary">
                                         <h5 class="mb-3">Statistics Summary</h5>
-                                        <div class="core-stat-item mb-3">
+                                        <div class="kr-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-success">COMPLETED</span></span>
                                                 <strong id="statCompletedCount">0</strong>
@@ -144,7 +137,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="core-stat-item mb-3">
+                                        <div class="kr-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-danger">ERRORS</span></span>
                                                 <strong id="statErrorsCount">0</strong>
@@ -155,7 +148,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="core-stat-item mb-3">
+                                        <div class="kr-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-secondary">ACTIVE</span></span>
                                                 <strong id="statActiveCount">0</strong>
@@ -181,19 +174,24 @@
                         </div>
                     </div>
 
+                    <!-- Refresh Button -->
+                    <div class="d-flex justify-content-end mb-4">
+                        <button type="button" class="kr-btn solid" onclick="refreshDashboard()" id="refreshBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+
                     <!-- Task Analytics Table Card -->
-                    <div class="core-card">
-                        <div class="core-card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="core-card-title">Task Analytics</h2>
-                                    <p class="core-card-subtitle">Detailed analytics for each task (ordered by last run)</p>
-                                </div>
+                    <div class="kr-surface">
+                        <div class="kr-surface-head w-100">
+                            <div>
+                                <h2 class="kr-card-title">Task Analytics</h2>
+                                <p class="kr-card-subtitle">Detailed analytics for each task (ordered by last run)</p>
                             </div>
                         </div>
-                        <div class="core-card-content">
+                        <div class="kr-surface-body">
                             <div class="table-responsive">
-                                <table class="table table-hover table-striped">
+                                <table class="kr-table">
                                     <thead>
                                         <tr>
                                             <th>Script Path</th>
@@ -230,75 +228,75 @@
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Run Task Form -->
-            <div class="core-card">
-                <div class="core-card-header">
-                    <h2 class="core-card-title">Run Task</h2>
-                    <p class="core-card-subtitle">Run a new background task</p>
+            <div class="kr-surface">
+                <div class="kr-surface-head">
+                    <h2 class="kr-card-title">Run Task</h2>
+                    <p class="kr-card-subtitle">Run a new background task</p>
                 </div>
-                <div class="core-card-content">
+                <div class="kr-surface-body">
                     <form id="runForm">
-                        <div class="core-form-group">
-                            <label class="core-form-label" for="runTask">Task (JSON)</label>
-                            <textarea id="runTask" class="core-form-input core-form-textarea" placeholder='{"task": "/path/to/your/task.js", "data": { "param1": "value1" }}' required></textarea>
-                            <div id="runValidation" class="core-validation-message" style="display: none;"></div>
-                            <div class="core-helper-text">Enter a valid JSON object for the task, including the path to the task file and any data to pass.</div>
+                        <div class="kr-form-group">
+                            <label class="kr-form-label" for="runTask">Task (JSON)</label>
+                            <textarea id="runTask" class="kr-form-input kr-form-textarea" placeholder='{"task": "/path/to/your/task.js", "data": { "param1": "value1" }}' required></textarea>
+                            <div id="runValidation" class="kr-validation-message" style="display: none;"></div>
+                            <div class="form-text">Enter a valid JSON object for the task, including the path to the task file and any data to pass.</div>
                         </div>
-                        <div class="core-btn-group">
-                            <button type="submit" class="btn btn-secondary">Run Task</button>
-                            <button type="button" class="btn btn-secondary" onclick="formatJSON('runTask')">Format JSON</button>
-                            <button type="button" class="btn btn-secondary" onclick="loadExample('runTask')">Load Example</button>
+                        <div class="kr-btn-group">
+                            <button type="submit" class="kr-btn primary">Run Task</button>
+                            <button type="button" class="kr-btn secondary" onclick="formatJSON('runTask')">Format JSON</button>
+                            <button type="button" class="kr-btn secondary" onclick="loadExample('runTask')">Load Example</button>
                         </div>
                     </form>
-                    <div id="runResponse" class="core-response-container" style="display: none;">
-                        <div class="core-response-title">Response:</div>
-                        <div id="runResponseContent" class="core-response-content"></div>
+                    <div id="runResponse" class="kr-response-container" style="display: none;">
+                        <div class="kr-response-title">Response:</div>
+                        <div id="runResponseContent" class="kr-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Stop Task Form -->
-            <div class="core-card">
-                <div class="core-card-header">
-                    <h2 class="core-card-title">Stop Task</h2>
-                    <p class="core-card-subtitle">Stop a running background task</p>
+            <div class="kr-surface">
+                <div class="kr-surface-head">
+                    <h2 class="kr-card-title">Stop Task</h2>
+                    <p class="kr-card-subtitle">Stop a running background task</p>
                 </div>
-                <div class="core-card-content">
+                <div class="kr-surface-body">
                     <form id="stopForm">
-                        <div class="core-btn-group">
-                            <button type="submit" class="btn btn-error">Stop Task</button>
+                        <div class="kr-btn-group">
+                            <button type="submit" class="kr-btn primary">Stop Task</button>
                         </div>
                     </form>
-                    <div id="stopResponse" class="core-response-container" style="display: none;">
-                        <div class="core-response-title">Response:</div>
-                        <div id="stopResponseContent" class="core-response-content"></div>
+                    <div id="stopResponse" class="kr-response-container" style="display: none;">
+                        <div class="kr-response-title">Response:</div>
+                        <div id="stopResponseContent" class="kr-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Status Check -->
-            <div class="core-card">
-                <div class="core-card-header">
-                    <h2 class="core-card-title">Service Status</h2>
-                    <p class="core-card-subtitle">Check working service status</p>
+            <div class="kr-surface">
+                <div class="kr-surface-head">
+                    <h2 class="kr-card-title">Service Status</h2>
+                    <p class="kr-card-subtitle">Check working service status</p>
                 </div>
-                <div class="core-card-content">
-                    <div class="core-btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                <div class="kr-surface-body">
+                    <div class="kr-btn-group">
+                        <button type="button" class="kr-btn primary" onclick="checkStatus()">Check Status</button>
                     </div>
-                    <div id="statusResponse" class="core-response-container" style="display: none;">
-                        <div class="core-response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="core-response-content"></div>
+                    <div id="statusResponse" class="kr-response-container" style="display: none;">
+                        <div class="kr-response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="kr-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- API Documentation -->
-            <div class="core-card">
-                <div class="core-card-header">
-                    <h2 class="core-card-title">API Documentation</h2>
-                    <p class="core-card-subtitle">Interactive API documentation for Working service</p>
+            <div class="kr-surface">
+                <div class="kr-surface-head">
+                    <h2 class="kr-card-title">API Documentation</h2>
+                    <p class="kr-card-subtitle">Interactive API documentation for Working service</p>
                 </div>
-                <div class="core-card-content">
+                <div class="kr-surface-body">
                     <div id="swagger-ui"></div>
                 </div>
             </div>
@@ -314,7 +312,7 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
     <script>
@@ -503,7 +501,7 @@
                 });
             } catch (error) {
                 console.error('Error loading Swagger spec:', error);
-                document.getElementById('swagger-ui').innerHTML = '<div class="alert alert-error">Failed to load API documentation: ' + error.message + '</div>';
+                document.getElementById('swagger-ui').innerHTML = '<div class="alert alert-danger alert-dismissible fade">Failed to load API documentation: ' + error.message + '</div>';
             }
         }
 
@@ -758,7 +756,7 @@
     <script src="/services/js/navigation.js"></script>
     <script src="/services/js/header-init.js"></script>
     <script>
-        DigitalTechnologiesNavigation.renderNavigation('core-navigation-sidebar', 'working');
+        NooblyJSNavigation.renderNavigation('navigation-sidebar', 'working');
     
         // Settings functionality
         let currentSettings = {};

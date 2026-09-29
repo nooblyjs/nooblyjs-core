@@ -5,7 +5,7 @@
  * object storage, retrieval, searching, and removal operations. Tests verify proper
  * DocumentDB integration and data persistence.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -14,6 +14,12 @@
 
 const EventEmitter = require('events');
 const createDataService = require('../../../src/dataservice');
+
+// Opt-in: set RUN_DOCUMENTDB_TESTS=1 to run these against a real DocumentDB
+// instance (127.0.0.1:10260). Skipped by default so the unit run does not fail
+// on machines without DocumentDB.
+const runDocumentDbTests = !!process.env.RUN_DOCUMENTDB_TESTS;
+const describeDocumentDb = runDocumentDbTests ? describe : describe.skip;
 
 /**
  * Test suite for DocumentDB dataservice operations.
@@ -24,7 +30,7 @@ const createDataService = require('../../../src/dataservice');
  * Note: These tests require a running DocumentDB instance at 127.0.0.1:10260
  * If DocumentDB is not available, tests will be skipped with appropriate warnings.
  */
-describe('DocumentDB DataService', () => {
+describeDocumentDb('DocumentDB DataService', () => {
   /** @type {Object} DocumentDB dataservice instance for testing */
   let dataservice;
   /** @type {EventEmitter} Mock event emitter for testing events */
@@ -46,7 +52,7 @@ describe('DocumentDB DataService', () => {
       dataservice = createDataService('documentdb', {
         host: '127.0.0.1',
         port: 10260,
-        database: 'digital_technologies_test'
+        database: 'nooblyjs_test'
       }, mockEventEmitter);
 
       // Wait for connection attempt and test connectivity
@@ -382,7 +388,7 @@ describe('DocumentDB DataService', () => {
     expect(connectionInfo).toEqual({
       host: '127.0.0.1',
       port: 10260,
-      database: 'digital_technologies_test',
+      database: 'nooblyjs_test',
       ssl: false,
       status: documentDBAvailable ? 'connected' : 'disconnected'
     });

@@ -5,13 +5,13 @@
  * Provides both local client-side pub/sub (when no instanceName is provided) and remote
  * server-side integration (when instanceName is specified).
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.1.0
  * @license ISC
  *
  * @example
  * // Local client-side pub/sub (no server required)
- * const localNotifying = new digitaltechnologiesNotifying();
+ * const localNotifying = new nooblyjsNotifying();
  * await localNotifying.createTopic('user-events');
  * localNotifying.subscribe('user-events', (message) => {
  *   console.log('Local message:', message);
@@ -19,7 +19,7 @@
  * await localNotifying.notify('user-events', { type: 'test' });
  *
  * // Remote server-side pub/sub
- * const remoteNotifying = new digitaltechnologiesNotifying({ instanceName: 'production' });
+ * const remoteNotifying = new nooblyjsNotifying({ instanceName: 'production' });
  * await remoteNotifying.createTopic('server-events');
  * remoteNotifying.subscribe('server-events', (message) => {
  *   console.log('Server message:', message);
@@ -200,7 +200,7 @@
    * @param {Object} config.headers - Additional headers to include in requests
    * @param {boolean} config.useLocal - Force use of local service even if instanceName is provided
    */
-  function digitaltechnologiesNotifying(config) {
+  function nooblyjsNotifying(config) {
     config = config || {};
 
     // Determine if we should use local or remote service
@@ -232,7 +232,7 @@
    * @private
    * @returns {string} The base API URL
    */
-  digitaltechnologiesNotifying.prototype._buildApiBaseUrl = function() {
+  nooblyjsNotifying.prototype._buildApiBaseUrl = function() {
     if (this.isLocal) return null;
 
     const instancePath = this.config.instanceName === 'default'
@@ -250,7 +250,7 @@
    * @returns {Promise<any>} The response data
    * @throws {Error} If the request fails
    */
-  digitaltechnologiesNotifying.prototype._request = async function(method, path, body) {
+  nooblyjsNotifying.prototype._request = async function(method, path, body) {
     if (this.isLocal) return null;
 
     const url = `${this.apiBaseUrl}${path}`;
@@ -291,7 +291,7 @@
    * @returns {Promise<string>} Response message (typically "OK")
    * @throws {Error} If topic creation fails
    */
-  digitaltechnologiesNotifying.prototype.createTopic = async function(topic) {
+  nooblyjsNotifying.prototype.createTopic = async function(topic) {
     if (!topic || typeof topic !== 'string') {
       throw new Error('Topic name is required and must be a string');
     }
@@ -315,7 +315,7 @@
    * @returns {Promise<Object>} Subscription details including subscription ID
    * @throws {Error} If subscription fails
    */
-  digitaltechnologiesNotifying.prototype.subscribe = async function(topic, callback, options) {
+  nooblyjsNotifying.prototype.subscribe = async function(topic, callback, options) {
     if (!topic || typeof topic !== 'string') {
       throw new Error('Topic name is required and must be a string');
     }
@@ -372,7 +372,7 @@
    * @param {string} topic - The topic to poll
    * @param {number} pollingInterval - Polling interval in milliseconds
    */
-  digitaltechnologiesNotifying.prototype._startPollingForTopic = function(topic, pollingInterval) {
+  nooblyjsNotifying.prototype._startPollingForTopic = function(topic, pollingInterval) {
     if (this.isLocal || !this.pollingEnabled) return;
 
     const poll = async () => {
@@ -405,7 +405,7 @@
    * @returns {Promise<string>} Response message
    * @throws {Error} If unsubscription fails
    */
-  digitaltechnologiesNotifying.prototype.unsubscribe = async function(topic, subscriptionId, options) {
+  nooblyjsNotifying.prototype.unsubscribe = async function(topic, subscriptionId, options) {
     if (!topic || typeof topic !== 'string') {
       throw new Error('Topic name is required and must be a string');
     }
@@ -452,7 +452,7 @@
    * @returns {Promise<string>} Response message (typically "OK")
    * @throws {Error} If publishing fails
    */
-  digitaltechnologiesNotifying.prototype.notify = async function(topic, message) {
+  nooblyjsNotifying.prototype.notify = async function(topic, message) {
     if (!topic || typeof topic !== 'string') {
       throw new Error('Topic name is required and must be a string');
     }
@@ -472,7 +472,7 @@
    * @returns {Promise<string>} Service status message
    * @throws {Error} If status check fails
    */
-  digitaltechnologiesNotifying.prototype.getStatus = async function() {
+  nooblyjsNotifying.prototype.getStatus = async function() {
     if (this.isLocal) {
       return this.service.getStatus();
     } else {
@@ -485,7 +485,7 @@
    * @returns {Promise<Object>} Object with instances array
    * @throws {Error} If request fails
    */
-  digitaltechnologiesNotifying.prototype.getInstances = async function() {
+  nooblyjsNotifying.prototype.getInstances = async function() {
     if (this.isLocal) {
       throw new Error('Local service does not have multiple instances');
     }
@@ -497,7 +497,7 @@
    * @returns {Promise<Object>} OpenAPI specification
    * @throws {Error} If request fails
    */
-  digitaltechnologiesNotifying.prototype.getSwaggerSpec = async function() {
+  nooblyjsNotifying.prototype.getSwaggerSpec = async function() {
     if (this.isLocal) {
       throw new Error('Local service does not have Swagger documentation');
     }
@@ -508,7 +508,7 @@
    * Enable or disable polling for subscriptions (remote only)
    * @param {boolean} enabled - Whether polling should be enabled
    */
-  digitaltechnologiesNotifying.prototype.setPollingEnabled = function(enabled) {
+  nooblyjsNotifying.prototype.setPollingEnabled = function(enabled) {
     if (this.isLocal) return;
     this.pollingEnabled = !!enabled;
 
@@ -525,7 +525,7 @@
    * @param {number} interval - Polling interval in milliseconds
    * @throws {Error} If interval is not a positive number
    */
-  digitaltechnologiesNotifying.prototype.setPollingInterval = function(interval) {
+  nooblyjsNotifying.prototype.setPollingInterval = function(interval) {
     if (this.isLocal) return;
     if (typeof interval !== 'number' || interval <= 0) {
       throw new Error('Polling interval must be a positive number');
@@ -537,7 +537,7 @@
    * Get all active subscriptions
    * @returns {Object} Map of topics and their subscribers
    */
-  digitaltechnologiesNotifying.prototype.getSubscriptions = function() {
+  nooblyjsNotifying.prototype.getSubscriptions = function() {
     if (this.isLocal) {
       return this.service.getSubscriptions();
     } else {
@@ -553,7 +553,7 @@
    * Get all topics
    * @returns {Promise<Array>} Array of topic names
    */
-  digitaltechnologiesNotifying.prototype.getTopics = async function() {
+  nooblyjsNotifying.prototype.getTopics = async function() {
     if (this.isLocal) {
       return this.service.getTopics();
     } else {
@@ -565,7 +565,7 @@
   /**
    * Clear all subscriptions and stop polling
    */
-  digitaltechnologiesNotifying.prototype.disconnect = function() {
+  nooblyjsNotifying.prototype.disconnect = function() {
     if (this.isLocal) {
       this.service.disconnect();
     } else {
@@ -583,7 +583,7 @@
    * @param {string} topic - The topic
    * @param {any} message - The message to emit
    */
-  digitaltechnologiesNotifying.prototype._emitNotification = function(topic, message) {
+  nooblyjsNotifying.prototype._emitNotification = function(topic, message) {
     if (!this.isLocal) return;
     this.service.notify(topic, message);
   };
@@ -593,7 +593,7 @@
    * @param {string} topic - The topic
    * @param {any} message - The message to emit
    */
-  digitaltechnologiesNotifying.prototype.emitToSubscribers = function(topic, message) {
+  nooblyjsNotifying.prototype.emitToSubscribers = function(topic, message) {
     if (this.isLocal) {
       this.service.notify(topic, message);
     } else {
@@ -605,15 +605,15 @@
    * Check if this is a local service instance
    * @returns {boolean} True if local, false if remote
    */
-  digitaltechnologiesNotifying.prototype.isLocalService = function() {
+  nooblyjsNotifying.prototype.isLocalService = function() {
     return this.isLocal;
   };
 
   // Export to global scope
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = digitaltechnologiesNotifying;
+    module.exports = nooblyjsNotifying;
   } else {
-    global.digitaltechnologiesNotifying = digitaltechnologiesNotifying;
+    global.nooblyjsNotifying = nooblyjsNotifying;
   }
 
 })(typeof window !== 'undefined' ? window : global);

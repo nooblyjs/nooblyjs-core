@@ -1,10 +1,10 @@
 /**
- * @fileoverview Noobly JS Core Searching Client Library
- * A client-side JavaScript library for interacting with the Noobly JS Core Searching service.
+ * @fileoverview NooblyJS Core Searching Client Library
+ * A client-side JavaScript library for interacting with the NooblyJS Core Searching service.
  * This library provides a simple, intuitive API for search operations from web applications.
  * Includes both local (client-side) and remote (server-side) search implementations.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.15
  *
@@ -14,12 +14,12 @@
  *
  * // Create a remote search instance (server-side)
  * const remoteSearch = new searchService({ provider: 'remote' });
- * var results = await remoteSearch.search('apples');
+ * let results = await remoteSearch.search('apples');
  *
  * // Create a local search instance (client-side, no provider)
  * const localSearch = new searchService();
  * await localSearch.addDocument({ id: 1, title: 'Apple Pie', content: 'Delicious' });
- * var results = await localSearch.search('apple');
+ * let results = await localSearch.search('apple');
  *
  */
 
@@ -27,7 +27,7 @@
   'use strict';
 
   /**
-   * Client-side Search Service for Noobly JS Core
+   * Client-side Search Service for NooblyJS Core
    * Supports both remote (server) and local (client) search operations
    *
    * @class searchService
@@ -478,8 +478,8 @@
   global.searchService = searchService;
 
   // Also export as alias for backward compatibility
-  if (!global.digitalTechnologiesSearching) {
-    global.digitalTechnologiesSearching = searchService;
+  if (!global.nooblyjsSearching) {
+    global.nooblyjsSearching = searchService;
   }
 
 })(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this);

@@ -9,7 +9,7 @@
  * - GET /health/startup - Kubernetes startup probe
  * - GET /health/detailed - Full status report (protected)
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 
@@ -23,7 +23,17 @@ class HealthCheckManager {
   constructor(options = {}) {
     this.logger = options.logger;
     this.serviceRegistry = options.serviceRegistry;
-    this.dependencies = options.dependencies || [];
+    this.dependencies = options.dependencies || options.criticalDependencies || [];
+
+    // Live dependency checkers: { [name]: async () => boolean }. When a checker
+    // is present for a dependency, readiness actually probes it (e.g. cache
+    // round-trip, dataservice connectivity) rather than trusting in-memory state.
+    this.dependencyCheckers = new Map(
+      Object.entries(options.dependencyCheckers || {})
+    );
+
+    // Per-check timeout so a hung dependency cannot block the probe.
+    this.checkTimeoutMs = options.checkTimeoutMs || 2000;
 
     // Health state
     this.startTime = Date.now();
@@ -34,6 +44,39 @@ class HealthCheckManager {
     // Service health tracking
     this.serviceHealth = new Map();
     this.errorCounts = new Map();
+  }
+
+  /**
+   * Registers a live checker for a dependency.
+   * @param {string} name - Dependency name.
+   * @param {function(): (boolean|Promise<boolean>)} checker - Returns healthy.
+   */
+  registerDependencyChecker(name, checker) {
+    this.dependencyCheckers.set(name, checker);
+    if (!this.dependencies.includes(name)) {
+      this.dependencies.push(name);
+    }
+  }
+
+  /**
+   * Runs a checker with a timeout, resolving false if it hangs or throws.
+   * @param {function(): (boolean|Promise<boolean>)} checker - The checker.
+   * @return {Promise<boolean>} Whether the dependency is healthy.
+   * @private
+   */
+  async runWithTimeout_(checker) {
+    let timer;
+    const timeout = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(false), this.checkTimeoutMs);
+    });
+    try {
+      const result = await Promise.race([Promise.resolve().then(checker), timeout]);
+      return result === true;
+    } catch (error) {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /**
@@ -126,7 +169,13 @@ class HealthCheckManager {
     }
 
     const results = await Promise.all(checks);
-    return results.every(r => r.healthy);
+    const allHealthy = results.every(r => r.healthy);
+    this.criticalServicesHealthy = allHealthy;
+    this.lastHealthCheck = {
+      timestamp: new Date().toISOString(),
+      results
+    };
+    return allHealthy;
   }
 
   /**
@@ -137,16 +186,28 @@ class HealthCheckManager {
    * @private
    */
   async checkService(serviceName) {
-    // Simple ping/status check
-    // In production, implement actual health checks for each service
     try {
-      // Check if service is tracked and healthy
+      // Prefer a live checker (real ping/round-trip) when one is registered.
+      const checker = this.dependencyCheckers.get(serviceName);
+      if (checker) {
+        const healthy = await this.runWithTimeout_(checker);
+        if (healthy) {
+          this.recordServiceSuccess(serviceName);
+        } else {
+          this.recordServiceError(serviceName, new Error('health check failed'));
+        }
+        return healthy;
+      }
+
+      // No live checker: fall back to tracked health state.
       if (this.serviceHealth.has(serviceName)) {
         return this.serviceHealth.get(serviceName);
       }
 
-      // Default to healthy if no errors recorded
-      return this.errorCounts.get(serviceName) || 0 < 3;
+      // Default to healthy only while the error count is below the threshold.
+      // (Parenthesised to fix the original operator-precedence bug where
+      // `errorCount || 0 < 3` always evaluated truthy.)
+      return (this.errorCounts.get(serviceName) || 0) < 3;
     } catch (error) {
       return false;
     }
@@ -289,10 +350,7 @@ async function detailedStatus(req, res, manager) {
     const status = await manager.getDetailedStatus();
     res.status(200).json(status);
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to generate health report',
-      message: error.message
-    });
+    res.status(500).json({ error: 'Failed to generate health report' });
   }
 }
 

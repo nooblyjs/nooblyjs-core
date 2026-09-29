@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google OAuth Authentication Provider
  * Google OAuth authentication provider using passport-google-oauth20.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -114,22 +114,22 @@ class AuthGoogle extends AuthBase {
       if (!hasSerializers) {
         this.passport_.serializeUser((user, done) => {
           try {
-            if (!user || !user.username) {
-              return done(new Error('User object must have a username property'));
+            if (!user || !user.email) {
+              return done(new Error('User object must have an email property'));
             }
-            done(null, user.username);
+            done(null, user.email);
           } catch (error) {
             done(error);
           }
         });
 
         // Deserialize user from session
-        this.passport_.deserializeUser(async (username, done) => {
+        this.passport_.deserializeUser(async (email, done) => {
           try {
-            if (!username) {
-              return done(new Error('Username is required for deserialization'));
+            if (!email) {
+              return done(new Error('Email is required for deserialization'));
             }
-            const user = await this.getUser(username);
+            const user = await this.getUser(email);
             done(null, user);
           } catch (error) {
             done(error, null);
@@ -165,27 +165,25 @@ class AuthGoogle extends AuthBase {
    */
   async handleGoogleAuth_(profile, accessToken, refreshToken, returnUrl) {
     const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
-    const username = profile.id; // Use Google ID as username
-    const displayName = profile.displayName || email;
+    const fullName = profile.displayName || email; // Use Google display name as full name
 
     let user;
     try {
-      // Try to get existing user
-      user = await this.getUser(username);
+      // Try to get existing user (identified by email)
+      user = await this.getUser(email);
     } catch (error) {
       // User doesn't exist, create new one
       user = await this.createUser({
-        username,
         email,
+        fullName,
         password: Math.random().toString(36), // Random password for OAuth users
         role: 'user'
       });
     }
 
     // Update user with Google-specific data
-    await this.updateUser(username, {
-      email,
-      displayName,
+    await this.updateUser(email, {
+      fullName,
       googleId: profile.id,
       accessToken,
       refreshToken,
@@ -194,11 +192,13 @@ class AuthGoogle extends AuthBase {
 
     // Create session
     const sessionToken = this.generateSessionToken_();
+    const userRoles = Array.isArray(user.roles) ? user.roles : [user.role || 'user'];
     const session = {
       token: sessionToken,
       userId: user.id,
-      username: user.username,
-      role: user.role,
+      email: user.email,
+      fullName: user.fullName,
+      roles: userRoles,
       provider: 'google',
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + (24 * 60 * 60 * 1000)) // 24 hours
@@ -208,9 +208,8 @@ class AuthGoogle extends AuthBase {
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:google-login', {
-        username,
         email,
-        role: user.role
+        roles: userRoles
       });
     }
 
@@ -317,7 +316,8 @@ class AuthGoogle extends AuthBase {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      if (!requiredRoles.includes(req.user.role)) {
+      const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [req.user.role || 'user'];
+      if (!requiredRoles.some(role => userRoles.includes(role))) {
         return res.status(403).json({ error: 'Insufficient permissions' });
       }
 

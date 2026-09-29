@@ -1,7 +1,7 @@
 /**
  * @fileoverview API-based data service implementation that proxies requests to a remote data service.
  * Allows client applications to consume backend data API endpoints for enterprise systems.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */

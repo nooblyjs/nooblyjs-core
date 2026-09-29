@@ -3,7 +3,7 @@
  * Tracks system metrics (RAM, CPU, threads, event loop lag, GC metrics) for the Service Registry dashboard.
  * Keeps metrics in memory with a rolling window of data points using perf_hooks for detailed performance insights.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 2.0.0
  */
 
@@ -20,6 +20,11 @@ const { constants } = require('perf_hooks');
  */
 class SystemMonitoring {
   constructor() {
+    // Optional logging service. Injected post-construction via setLogger() so
+    // this foundational module can be required before the logging service
+    // exists. All logging uses optional chaining to fail silently when unset.
+    this.logger = null;
+
     // Store up to 60 data points (for 60 seconds of data if collected every second)
     this.maxDataPoints = 60;
     this.metrics = {
@@ -48,6 +53,15 @@ class SystemMonitoring {
     // Start collecting metrics
     this.startCollecting();
     this._initializePerformanceTracking();
+  }
+
+  /**
+   * Inject a logging service after construction.
+   * @param {Object} logger - Logging service exposing error/warn/info methods.
+   * @public
+   */
+  setLogger(logger) {
+    this.logger = logger || null;
   }
 
   /**
@@ -217,7 +231,7 @@ class SystemMonitoring {
       // Setup event loop lag measurement using setImmediate
       this._monitorEventLoop();
     } catch (error) {
-      console.error('[SystemMonitoring] Performance tracking initialization failed:', error.message);
+      this.logger?.error?.('[SystemMonitoring] Performance tracking initialization failed', { error: error.message });
     }
   }
 
@@ -226,13 +240,21 @@ class SystemMonitoring {
    * @private
    */
   _monitorEventLoop() {
-    setImmediate(() => {
+    this.eventLoopMonitor = setImmediate(() => {
       const now = Date.now();
       this.eventLoopLag = Math.max(0, now - this.lastEventLoopCheck - 1000);
 
-      // Schedule next check recursively
-      setTimeout(() => this._monitorEventLoop(), 100);
+      // Schedule next check recursively. Track and unref the timer so it can be
+      // cleared on teardown and never keeps the event loop (or a Jest worker)
+      // alive by itself.
+      this.eventLoopTimer = setTimeout(() => this._monitorEventLoop(), 100);
+      if (typeof this.eventLoopTimer.unref === 'function') {
+        this.eventLoopTimer.unref();
+      }
     });
+    if (this.eventLoopMonitor && typeof this.eventLoopMonitor.unref === 'function') {
+      this.eventLoopMonitor.unref();
+    }
   }
 
   /**
@@ -333,7 +355,7 @@ class SystemMonitoring {
       const gcMetrics = this._getGCMetrics();
       this._addDataPoint(this.metrics.memory, gcMetrics);
     } catch (error) {
-      console.error('Error collecting metrics:', error.message);
+      this.logger?.error?.('[SystemMonitoring] Error collecting metrics', { error: error.message });
     }
   }
 
@@ -344,10 +366,14 @@ class SystemMonitoring {
     // Collect initial metrics immediately
     this._collectMetrics();
 
-    // Then collect every second
+    // Then collect every second. unref() so this background timer never keeps
+    // the process (or the Jest worker) alive on its own.
     this.collectionInterval = setInterval(() => {
       this._collectMetrics();
     }, 1000);
+    if (typeof this.collectionInterval.unref === 'function') {
+      this.collectionInterval.unref();
+    }
   }
 
   /**
@@ -357,6 +383,17 @@ class SystemMonitoring {
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
+    }
+
+    // Clear the recursive event-loop lag monitor (both the pending setImmediate
+    // and the scheduled setTimeout) so nothing keeps the event loop alive.
+    if (this.eventLoopMonitor) {
+      clearImmediate(this.eventLoopMonitor);
+      this.eventLoopMonitor = null;
+    }
+    if (this.eventLoopTimer) {
+      clearTimeout(this.eventLoopTimer);
+      this.eventLoopTimer = null;
     }
 
     // Clean up performance observer

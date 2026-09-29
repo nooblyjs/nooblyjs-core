@@ -51,5 +51,23 @@ module.exports = (options, _eventEmitter, _auth) => {
       res.sendFile(path.join(__dirname, 'register.html'));
     });
 
+    // Serve invalid/insufficient privileges page
+    app.get('/services/authservice/views/invalid.html', (req, res) => {
+      res.sendFile(path.join(__dirname, 'invalid.html'));
+    });
+
+    // Serve the user profile page (change password + API token management) at a
+    // clean URL in addition to the static /views/profile.html path.
+    app.get('/services/authservice/profile', (req, res) => {
+      res.sendFile(path.join(__dirname, 'profile.html'));
+    });
+
+    // Serve the invitation redemption page at the clean URL used in
+    // invitation links (e.g. /services/authservice/redeem-invitation?code=...).
+    // The page reads the ?code= query string client-side.
+    app.get('/services/authservice/redeem-invitation', (req, res) => {
+      res.sendFile(path.join(__dirname, 'redeem-invitation.html'));
+    });
+
   }
 };

@@ -3,7 +3,7 @@
  * Comprehensive test suite verifying all documented features of the Workflow Service.
  * Tests focus on API contract verification rather than full workflow execution.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @date 2025-11-22
  */

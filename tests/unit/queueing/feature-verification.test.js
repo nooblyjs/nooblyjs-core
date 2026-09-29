@@ -3,7 +3,7 @@
  * Comprehensive test suite verifying all documented features of the Queueing Service.
  * Tests cover core API methods, analytics, multiple instances, and error handling.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @date 2025-11-22
  */

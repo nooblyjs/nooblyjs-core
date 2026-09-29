@@ -1,7 +1,7 @@
 /**
  * @fileoverview Metadata Store for sync filing provider
  * Tracks file states, locks, and synchronization information
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.15
  */
 

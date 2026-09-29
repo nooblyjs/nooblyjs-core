@@ -4,7 +4,7 @@
  * This test suite covers the API cache provider that connects to remote backend services.
  * Tests verify HTTP requests, API key authentication, and proper error handling.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -26,7 +26,7 @@ describe('Cache API Provider', () => {
   /** @type {EventEmitter} Mock event emitter for testing cache events */
   let mockEventEmitter;
   /** @type {string} Mock API root URL */
-  const apiRoot = 'https://nooblyjs-core-latest.onrender.com/';
+  const apiRoot = 'https://nooblyjs-core-latest.onrender.com';
   /** @type {string} Mock API key */
   const apiKey = 'test-api-key-12345';
 
@@ -38,7 +38,7 @@ describe('Cache API Provider', () => {
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
     cache = createCache('api', {
-      apiRoot,
+      api: apiRoot,
       apiKey,
       timeout: 5000
     }, mockEventEmitter);
@@ -62,9 +62,10 @@ describe('Cache API Provider', () => {
 
     await cache.put('testkey', 'testvalue');
 
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put:default', {
       key: 'testkey',
       value: 'testvalue',
+      instance: 'default',
     });
   });
 
@@ -82,9 +83,10 @@ describe('Cache API Provider', () => {
     const result = await cache.get('testkey');
 
     expect(result).toEqual(expectedValue);
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get:default', {
       key: 'testkey',
       value: expectedValue,
+      instance: 'default',
     });
   });
 
@@ -99,8 +101,9 @@ describe('Cache API Provider', () => {
 
     await cache.delete('testkey');
 
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete:default', {
       key: 'testkey',
+      instance: 'default',
     });
   });
 

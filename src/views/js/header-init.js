@@ -3,7 +3,7 @@
  * Manages user authentication display in the page header.
  * Hides/shows the user dropdown based on login status and handles logout functionality.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -28,7 +28,7 @@ function initializeHeaderUserProfile() {
     if (currentUser) {
         try {
             const user = JSON.parse(currentUser);
-            const userName = user.username || 'User';
+            const userName = user.fullName || user.email || 'User';
             const initials = userName.substring(0, 1).toUpperCase();
 
             const headerUserAvatar = document.getElementById('headerUserAvatar');
@@ -70,7 +70,7 @@ function initializeHeaderUserProfile() {
             }
             localStorage.removeItem('authToken');
             localStorage.removeItem('currentUser');
-            window.location.href = '/services/authservice/views/login.html';
+            window.location.href = '/services/authservice/views/login.html?returnUrl=%2Fapplications%2Fdatasources';
         });
     }
 }

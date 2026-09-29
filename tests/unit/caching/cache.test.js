@@ -5,7 +5,7 @@
  * operations for the in-memory cache provider. Tests verify proper event emission
  * and cache behavior under various scenarios.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -46,13 +46,15 @@ describe('Cache', () => {
   it('should put and get a value', async () => {
     await cache.put('key', 'value');
     await expect(cache.get('key')).resolves.toBe('value');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put:default', {
       key: 'key',
       value: 'value',
+      instance: 'default',
     });
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get:default', {
       key: 'key',
       value: 'value',
+      instance: 'default',
     });
   });
 
@@ -67,8 +69,9 @@ describe('Cache', () => {
     mockEventEmitter.emit.mockClear(); // Clear previous emits
     await cache.delete('key');
     await expect(cache.get('key')).resolves.toBeUndefined();
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete:default', {
       key: 'key',
+      instance: 'default',
     });
   });
 
@@ -80,9 +83,10 @@ describe('Cache', () => {
    */
   it('should return undefined for a non-existent key', async () => {
     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get:default', {
       key: 'non-existent-key',
       value: undefined,
+      instance: 'default',
     });
   });
 });

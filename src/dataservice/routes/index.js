@@ -3,7 +3,7 @@
  * Provides RESTful endpoints for data storage and retrieval operations
  * including put, get, delete, and status monitoring.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -11,12 +11,6 @@
 'use strict';
 
 const analytics = require('../modules/analytics');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const BulkOperations = require('../../appservice/utils/bulkOperations');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
 
 /**
  * Configures and registers data service routes with the Express application.
@@ -33,9 +27,28 @@ module.exports = (options, eventEmitter, dataservice) => {
     const app = options['express-app'];
     const authMiddleware = options.authMiddleware;
 
-    // Initialize audit logging for dataservice
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('dataservice', { dependencies: [] });
+    /**
+     * Sends a generic error response to the client while logging the full
+     * error details server-side. Prevents leaking internal error details
+     * (stack traces, file paths, DB driver messages) to API consumers.
+     *
+     * @param {express.Response} res - Express response object.
+     * @param {number} status - HTTP status code to send.
+     * @param {string} clientMessage - Safe, generic message for the client.
+     * @param {Error} err - The original error (logged, never sent to client).
+     * @param {string} operation - Operation name for server-side log context.
+     * @return {void}
+     */
+    const sendError = (res, status, clientMessage, err, operation) => {
+      if (eventEmitter) {
+        eventEmitter.emit('api-dataservice-error', {
+          operation,
+          error: err && err.message,
+          stack: err && err.stack
+        });
+      }
+      res.status(status).json({ error: clientMessage });
+    };
 
     /**
      * POST /services/dataservice/api/:container
@@ -60,9 +73,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const uuid = await dataservice.add(container, jsonObject);
-        sendSuccess(res, { id: uuid }, 'Data added successfully', 201);
+        res.status(201).json({ id: uuid });
       } catch (err) {
-        handleError(res, err, 'addData');
+        sendError(res, 500, 'Failed to add object', err, 'add');
       }
     });
 
@@ -81,9 +94,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       const searchTerm = req.query.q || '';
       try {
         const results = await dataservice.find(container, searchTerm);
-        sendSuccess(res, { results });
+        res.status(200).json(results);
       } catch (err) {
-        handleError(res, err, 'findData');
+        sendError(res, 500, 'Failed to search container', err, 'find');
       }
     });
 
@@ -100,9 +113,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       const container = req.params.container;
       try {
         const count = await dataservice.count(container);
-        sendSuccess(res, { count });
+        res.status(200).json({ count });
       } catch (err) {
-        handleError(res, err, 'countData');
+        sendError(res, 500, 'Failed to count container', err, 'count');
       }
     });
 
@@ -122,11 +135,11 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const value = await dataservice.getByUuid(container, uuid);
         if (value === null) {
-          return sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
+          return res.status(404).json({ error: 'Not found' });
         }
-        sendSuccess(res, value);
+        res.status(200).json(value);
       } catch (err) {
-        handleError(res, err, 'getByUuid');
+        sendError(res, 500, 'Failed to retrieve object', err, 'getByUuid');
       }
     });
 
@@ -148,12 +161,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const updated = await dataservice.update(container, uuid, jsonObject);
         if (updated) {
-          sendSuccess(res, { uuid }, 'Data updated successfully');
+          res.status(200).json({ updated: true });
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
+          res.status(404).json({ error: 'Not found' });
         }
       } catch (err) {
-        handleError(res, err, 'updateData');
+        sendError(res, 500, 'Failed to update object', err, 'update');
       }
     });
 
@@ -173,12 +186,12 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const success = await dataservice.remove(container, uuid);
         if (success) {
-          sendSuccess(res, { uuid }, 'Data deleted successfully');
+          res.status(200).json({ deleted: true });
         } else {
-          sendError(res, ERROR_CODES.NOT_FOUND, 'Data not found', { container, uuid });
+          res.status(404).json({ error: 'Not found' });
         }
       } catch (err) {
-        handleError(res, err, 'deleteData');
+        sendError(res, 500, 'Failed to delete object', err, 'remove');
       }
     });
 
@@ -201,14 +214,14 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         if (!criteria || typeof criteria !== 'object') {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Request body must contain a "criteria" object with path/value pairs');
+          return res.status(400).json({ error: 'Request body must contain a "criteria" object with path/value pairs' });
         }
 
         // Use safe criteria-based search instead of arbitrary code execution
         const results = await dataservice.jsonFindByCriteria(containerName, criteria);
-        sendSuccess(res, { results });
+        res.status(200).json(results);
       } catch (err) {
-        handleError(res, err, 'jsonFind');
+        sendError(res, 400, 'Search failed', err, 'jsonFind');
       }
     });
 
@@ -230,9 +243,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const results = await dataservice.jsonFindByPath(containerName, path, value);
-        sendSuccess(res, { results });
+        res.status(200).json(results);
       } catch (err) {
-        handleError(res, err, 'jsonFindByPath');
+        sendError(res, 500, 'Search failed', err, 'jsonFindByPath');
       }
     });
 
@@ -253,9 +266,9 @@ module.exports = (options, eventEmitter, dataservice) => {
 
       try {
         const results = await dataservice.jsonFindByCriteria(containerName, criteria);
-        sendSuccess(res, { results });
+        res.status(200).json(results);
       } catch (err) {
-        handleError(res, err, 'jsonFindByCriteria');
+        sendError(res, 500, 'Search failed', err, 'jsonFindByCriteria');
       }
     });
 
@@ -269,7 +282,7 @@ module.exports = (options, eventEmitter, dataservice) => {
      */
     app.get('/services/dataservice/api/status', (req, res) => {
       eventEmitter.emit('api-dataservice-status', 'dataservice api running');
-      sendStatus(res, 'dataservice api running');
+      res.status(200).json('dataservice api running');
     });
 
     /**
@@ -283,9 +296,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/analytics', (req, res) => {
       try {
         const data = analytics.getAllAnalytics();
-        sendSuccess(res, data);
+        res.status(200).json(data);
       } catch (error) {
-        handleError(res, error, 'getAnalytics');
+        sendError(res, 500, 'Failed to retrieve analytics', error, 'analytics');
       }
     });
 
@@ -300,9 +313,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/analytics/totals', (req, res) => {
       try {
         const stats = analytics.getTotalStats();
-        sendSuccess(res, stats);
+        res.status(200).json(stats);
       } catch (error) {
-        handleError(res, error, 'getTotalStats');
+        sendError(res, 500, 'Failed to retrieve analytics totals', error, 'analyticsTotals');
       }
     });
 
@@ -318,9 +331,9 @@ module.exports = (options, eventEmitter, dataservice) => {
       try {
         const limit = parseInt(req.query.limit) || 100;
         const containers = analytics.getContainerAnalytics(limit);
-        sendSuccess(res, { containers, total: containers.length });
+        res.status(200).json(containers);
       } catch (error) {
-        handleError(res, error, 'getContainerAnalytics');
+        sendError(res, 500, 'Failed to retrieve container analytics', error, 'analyticsContainers');
       }
     });
 
@@ -335,9 +348,9 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.delete('/services/dataservice/api/analytics', (req, res) => {
       try {
         analytics.clear();
-        sendSuccess(res, {}, 'Analytics data cleared successfully');
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
       } catch (error) {
-        handleError(res, error, 'clearAnalytics');
+        sendError(res, 500, 'Failed to clear analytics', error, 'analyticsClear');
       }
     });
 
@@ -352,10 +365,10 @@ module.exports = (options, eventEmitter, dataservice) => {
     app.get('/services/dataservice/api/settings', async (req, res) => {
       try {
         const settings = await dataservice.getSettings();
-        sendSuccess(res, settings);
+        res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-dataservice-settings-error', err.message);
-        handleError(res, err, 'getSettings');
+        sendError(res, 500, 'Failed to retrieve settings', err, 'getSettings');
       }
     });
 
@@ -372,287 +385,13 @@ module.exports = (options, eventEmitter, dataservice) => {
       if (message) {
         try {
           await dataservice.saveSettings(message);
-          sendSuccess(res, {}, 'Settings saved successfully');
+          res.status(200).json({ updated: true });
         } catch (err) {
-          handleError(res, err, 'saveSettings');
+          sendError(res, 500, 'Failed to save settings', err, 'saveSettings');
         }
       } else {
-        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
+        res.status(400).json({ error: 'Bad Request: Missing settings' });
       }
     });
-
-    /**
-     * POST /services/dataservice/api/bulk/delete
-     * Deletes multiple items from a container in bulk.
-     */
-    app.post('/services/dataservice/api/bulk/delete', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { ids, container, dryRun } = req.body;
-        if (!Array.isArray(ids) || ids.length === 0) {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'ids must be a non-empty array');
-        }
-        if (!container) {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'container is required');
-        }
-        const result = await BulkOperations.execute(ids, async (id) => {
-          await dataService.remove(container, id);
-          return { id, deleted: true };
-        }, { dryRun: dryRun === true });
-        sendSuccess(res, result, 'Bulk delete completed');
-      } catch (err) {
-        handleError(res, err, { operation: 'bulk-delete' });
-      }
-    });
-
-    /**
-     * POST /services/dataservice/api/bulk/update
-     * Updates multiple items in bulk.
-     */
-    app.post('/services/dataservice/api/bulk/update', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { items, container, dryRun } = req.body;
-        if (!Array.isArray(items) || items.length === 0) {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'items must be a non-empty array');
-        }
-        if (!container) {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'container is required');
-        }
-        const result = await BulkOperations.execute(items, async (item) => {
-          await dataService.put(container, item.id, item);
-          return { id: item.id, updated: true };
-        }, { dryRun: dryRun === true });
-        sendSuccess(res, result, 'Bulk update completed');
-      } catch (err) {
-        handleError(res, err, { operation: 'bulk-update' });
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/health
-     * Returns health status of the dataservice.
-     */
-    app.get('/services/dataservice/api/health', async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: dataservice });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/audit
-     * Retrieves audit log entries for dataservice operations
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = {
-          service: 'dataservice',
-          limit: parseInt(req.query.limit) || 100,
-          operation: req.query.operation,
-          status: req.query.status,
-          userId: req.query.userId
-        };
-
-        Object.keys(filters).forEach(key =>
-          filters[key] === undefined && delete filters[key]
-        );
-
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved successfully');
-      } catch (error) {
-        handleError(res, error, { operation: 'dataservice-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/dataservice/api/audit/export
-     * Exports audit logs in specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.query.format - Export format (json, csv, jsonl)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/dataservice/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const filters = {
-          service: 'dataservice',
-          limit: parseInt(req.query.limit) || 10000
-        };
-
-        const exported = auditLog.export(format, filters);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'dataservice-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/export
-     * Exports dataservice data in specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.query.format - Export format (json, csv, xml, jsonl)
-     * @param {string} req.query.container - Container to export (optional, exports all if not specified)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const container = req.query.container;
-
-        let data = [];
-
-        if (container) {
-          data = await dataservice.find(container, {});
-        } else {
-          // Export all containers
-          const containers = await dataservice.listContainers();
-          const exportData = {};
-
-          for (const containerName of containers) {
-            try {
-              exportData[containerName] = await dataservice.find(containerName, {});
-            } catch (err) {
-              // Skip containers that error
-            }
-          }
-
-          data = exportData;
-        }
-
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1).toUpperCase()}`]?.(data) ||
-                        DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename(`data-export-${container || 'all'}`, format);
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'dataservice-export' });
-      }
-    });
-
-    /**
-     * POST /services/dataservice/api/import
-     * Imports data from specified format into containers
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import (string or array)
-     * @param {string} req.body.container - Target container name
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/dataservice/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json', container = 'default' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        // Validate format
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Ensure container exists
-        try {
-          await dataservice.createContainer(container);
-        } catch (err) {
-          // Container may already exist, ignore error
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const existingData = await dataservice.find(container, {});
-          const dryRunResult = DataImporter.dryRun(parsedData, {
-            existingData,
-            conflictStrategy,
-            uniqueFields: ['id']
-          });
-
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        let imported = 0;
-        let failed = 0;
-        const importHandler = async (item) => {
-          try {
-            // Check for conflict
-            if (item.id) {
-              const existing = await dataservice.find(container, item.id);
-              if (existing && existing.length > 0) {
-                if (conflictStrategy === 'error') {
-                  return { success: false, conflict: true, reason: 'Item with this ID already exists' };
-                } else if (conflictStrategy === 'skip') {
-                  return { success: true, type: 'skipped' };
-                } else if (conflictStrategy === 'update') {
-                  await dataservice.update(container, existing[0]._id || item.id, item);
-                  return { success: true, type: 'updated' };
-                }
-              }
-            }
-
-            // Add new item
-            await dataservice.add(container, item);
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy, dryRun: false });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'dataservice-import' });
-      }
-    });
-
-    /**
-     * Record an operation to the audit log (internal use)
-     */
-    dataservice.recordAudit = (operation, details) => {
-      auditLog.record({
-        operation,
-        service: 'dataservice',
-        resourceType: details.resourceType || 'data',
-        resourceId: details.resourceId || null,
-        userId: details.userId || 'system',
-        status: details.status || 'SUCCESS',
-        errorMessage: details.errorMessage || null,
-        duration: details.duration || 0,
-        before: details.before,
-        after: details.after
-      });
-    };
   }
 };

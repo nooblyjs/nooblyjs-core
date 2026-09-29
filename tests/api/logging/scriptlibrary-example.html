@@ -161,7 +161,7 @@
         }
         .log-entry.info {
             background-color: #cfe2ff;
-            border-left-color: #059da2;
+            border-left-color: #DC2728;
         }
         .log-entry.warn {
             background-color: #fff3cd;
@@ -184,7 +184,7 @@
             margin-right: 8px;
         }
         .level-indicator.info {
-            background-color: #059da2;
+            background-color: #DC2728;
             color: white;
         }
         .level-indicator.warn {
@@ -318,7 +318,7 @@
                     minLogLevel: minLogLevel
                 };
 
-                logger = new digitaltechnologieslogging(instanceName, options);
+                logger = new nooblyjslogging(instanceName, options);
 
                 const statusDiv = document.getElementById('clientStatus');
                 statusDiv.classList.remove('disconnected');
@@ -491,11 +491,11 @@
             log('Page loaded. Script library ready. Configure and click "Initialize Client" to begin.', 'info');
 
             // Check if the library is available
-            if (typeof digitaltechnologieslogging === 'undefined') {
-                log('✗ ERROR: digitaltechnologieslogging library is not available!', 'error');
+            if (typeof nooblyjslogging === 'undefined') {
+                log('✗ ERROR: nooblyjslogging library is not available!', 'error');
                 log('Make sure the script library endpoint is accessible at /services/logging/scriptlibrary', 'error');
             } else {
-                log('✓ digitaltechnologieslogging library is available', 'info');
+                log('✓ nooblyjslogging library is available', 'info');
             }
         });
 

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Noobly JS Core - Service Registry
+ * @fileoverview NooblyJS Core - Service Registry
  * This is the container of all the services. It manages the various dependancies of the services
  */
 'use strict';
@@ -38,6 +38,10 @@ class ServiceRegistry {
     this.initialized = false;
     this.eventEmitter = new EventEmitter();
     this.dependenciesInitialized = false;
+    // App-declared default provider/options per service. When set, dependency
+    // injection uses these instead of the built-in defaults, so a provider
+    // chosen once (e.g. queueing→activemq) is shared by every dependent service.
+    this.defaultProviderConfig = new Map();
   }
 
   /**
@@ -150,6 +154,32 @@ class ServiceRegistry {
         middlewareOptions.excludePaths = excludePaths;
       }
 
+      // Late-bind the user-token validator: the authservice instance is created
+      // later (by the host app), so resolve it per-request rather than at setup
+      // time. This lets personal access tokens (dtk_) authenticate against any
+      // /services/* endpoint just like a static API key, but as the owning user.
+      middlewareOptions.validateApiToken = (rawToken) => {
+        const auth = this.getAuthProviderForTokens_();
+        if (!auth || typeof auth.validateApiToken !== 'function') {
+          return null;
+        }
+        return auth.validateApiToken(rawToken);
+      };
+
+      // Late-bind the session-token validator so the data-plane API guard
+      // accepts the same browser session credential the /services portal uses.
+      // Dashboard fetch() calls carry an `authToken` session token (cookie /
+      // Bearer / query) rather than a Passport login session or an API key;
+      // without this the filing/logging/etc. dashboards get 401s on their own
+      // API calls. Resolves to the session (with email/roles) when valid.
+      middlewareOptions.validateSession = (rawToken) => {
+        const auth = this.getAuthProviderForTokens_();
+        if (!auth || typeof auth.validateSession !== 'function') {
+          return null;
+        }
+        return auth.validateSession(rawToken);
+      };
+
       this.authMiddleware = createApiKeyAuthMiddleware(
         middlewareOptions,
         this.eventEmitter,
@@ -189,8 +219,12 @@ class ServiceRegistry {
       });
     }
 
-    // Serve the service registry landing page (protected) - MUST come before static middleware
-    this.expressApp.get('/services/', this.servicesAuthMiddleware, (req, res) => {
+    // Apply authentication middleware to all /services routes
+    // This enforces both authentication and admin role requirement across all service endpoints
+    this.expressApp.use('/services', this.servicesAuthMiddleware);
+
+    // Serve the service registry landing page
+    this.expressApp.get('/services/', (req, res) => {
       res.sendFile(path.join(__dirname, '/src/views', 'index.html'));
     });
 
@@ -211,7 +245,7 @@ class ServiceRegistry {
     );
 
     // Add system monitoring API endpoints
-    this.expressApp.get('/services/api/monitoring/metrics', this.servicesAuthMiddleware, (req, res) => {
+    this.expressApp.get('/services/api/monitoring/metrics', (req, res) => {
       try {
         const metrics = systemMonitoring.getMetrics();
         res.status(200).json(metrics);
@@ -220,7 +254,7 @@ class ServiceRegistry {
       }
     });
 
-    this.expressApp.get('/services/api/monitoring/snapshot', this.servicesAuthMiddleware, (req, res) => {
+    this.expressApp.get('/services/api/monitoring/snapshot', (req, res) => {
       try {
         const snapshot = systemMonitoring.getCurrentSnapshot();
         res.status(200).json(snapshot);
@@ -256,7 +290,7 @@ class ServiceRegistry {
     this.serviceDependencies.set('notifying', ['logging']);
     this.serviceDependencies.set('appservice', ['logging']);
     this.serviceDependencies.set('fetching', ['logging']);
-    this.serviceDependencies.set('monitoring', ['logging']);
+    this.serviceDependencies.set('settings', ['logging']);
 
     // Level 2 services (Business Logic - Use infrastructure services)
     this.serviceDependencies.set('dataservice', ['logging', 'queueing']);
@@ -265,7 +299,7 @@ class ServiceRegistry {
 
     // Level 3 services (Application - Use business logic services)
     this.serviceDependencies.set('scheduling', ['logging', 'working']);
-    this.serviceDependencies.set('searching', ['logging', 'caching', 'dataservice', 'queueing', 'working', 'scheduling']);
+    this.serviceDependencies.set('searching', ['logging']);
     this.serviceDependencies.set('workflow', ['logging', 'queueing', 'scheduling', 'measuring', 'working']);
     this.serviceDependencies.set('filing', ['logging', 'queueing', 'dataservice']);
 
@@ -323,7 +357,12 @@ class ServiceRegistry {
       const serviceFactory = require(`${__dirname}/src/${serviceName}`);
       service = serviceFactory(providerType, mergedOptions, this.eventEmitter);
     } catch (error) {
-      console.error(error)
+      this.eventEmitter?.emit?.('service:creation-error', {
+        serviceName,
+        providerType,
+        instanceName,
+        error: error.message
+      });
       throw new Error(
         `Failed to create service '${serviceName}' with provider '${providerType}' instance '${instanceName}': ${error.message}`,
       );
@@ -357,11 +396,35 @@ class ServiceRegistry {
   }
 
   /**
+   * Resolves the active authservice instance that can validate personal access
+   * tokens. Returns the first registered authservice provider exposing
+   * validateApiToken, or null when none has been created yet.
+   * @return {?Object} Auth provider instance or null.
+   * @private
+   */
+  getAuthProviderForTokens_() {
+    for (const [key, service] of this.services.entries()) {
+      if (key.startsWith('authservice:')
+          && service
+          && typeof service.validateApiToken === 'function') {
+        return service;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Get the default provider type for a specific service
    * @param {string} serviceName - Name of the service
    * @returns {string} Default provider type for the service
    */
   getDefaultProviderType(serviceName) {
+    // An app-declared override (via setDefaultProvider) wins, so dependency
+    // injection picks the same provider the app instantiated.
+    if (this.defaultProviderConfig.has(serviceName)) {
+      return this.defaultProviderConfig.get(serviceName).providerType;
+    }
+
     const defaultProviders = {
       'logging': 'memory',
       'filing': 'local',
@@ -374,13 +437,33 @@ class ServiceRegistry {
       'searching': 'memory',
       'workflow': 'memory',
       'notifying': 'memory',
-      'monitoring': 'memory',
       'authservice': 'file',
       'aiservice': 'claude',
-      'fetching': 'node'
+      'fetching': 'node',
+      'settings': 'file'
     };
 
     return defaultProviders[serviceName] || 'memory';
+  }
+
+  /**
+   * Declare the default provider (and options) for a service. Dependency
+   * injection then creates/reuses this provider wherever the service is needed,
+   * so a provider chosen once is shared everywhere instead of dependents
+   * silently falling back to the built-in default (e.g. an in-memory queue).
+   *
+   * Call this BEFORE the first service that depends on `serviceName` is created
+   * — dependencies are resolved at creation time and the result is cached.
+   *
+   * @param {string} serviceName - e.g. 'queueing'
+   * @param {string} providerType - e.g. 'activemq'
+   * @param {Object} [options] - Provider options passed when the dependency is
+   *   created (e.g. ActiveMQ host/port/credentials).
+   * @returns {ServiceRegistry} this (chainable)
+   */
+  setDefaultProvider(serviceName, providerType, options = {}) {
+    this.defaultProviderConfig.set(serviceName, { providerType, options });
+    return this;
   }
 
   /**
@@ -395,15 +478,16 @@ class ServiceRegistry {
 
     for (const depServiceName of requiredDependencies) {
       const depProviderType = this.getDefaultProviderType(depServiceName);
-      const depServiceKey = `${depServiceName}:${depProviderType}`;
+      // Use any app-declared options for this dependency (e.g. ActiveMQ
+      // connection settings) so the injected instance is configured correctly
+      // rather than created with bare provider defaults.
+      const depConfig = this.defaultProviderConfig.get(depServiceName);
+      const depOptions = depConfig ? depConfig.options : {};
 
-      // Check if dependency is already created
-      if (this.services.has(depServiceKey)) {
-        dependencies[depServiceName] = this.services.get(depServiceKey);
-      } else {
-        // Recursively create dependency with appropriate provider type
-        dependencies[depServiceName] = this.getService(depServiceName, depProviderType);
-      }
+      // getService is the single source of truth for the singleton cache
+      // (keyed by service:provider:instance), so just delegate to it — it
+      // returns the existing instance if one was already created.
+      dependencies[depServiceName] = this.getService(depServiceName, depProviderType, depOptions);
     }
 
     return dependencies;
@@ -569,6 +653,18 @@ class ServiceRegistry {
   }
 
   /**
+   * Get the settings service
+   * @param {string} providerType - 'file' (encrypted JSON file)
+   * @param {Object} options - Provider-specific options
+   * @param {string} options.filepath - Path of the encrypted settings file
+   * @param {string} options.secret - Master secret used to derive the encryption key
+   * @returns {Object} Settings service instance
+   */
+  settings(providerType = 'file', options = {}) {
+    return this.getService('settings', providerType, options);
+  }
+
+  /**
    * Get the workflow service
    * @param {string} providerType - 'memory'
    * @param {Object} options - Provider-specific options
@@ -648,16 +744,6 @@ class ServiceRegistry {
   }
 
   /**
-   * Get the monitoring service
-   * @param {string} providerType - 'memory'
-   * @param {Object} options - Provider-specific options
-   * @returns {Object} Monitoring service instance
-   */
-  monitoring(providerType = 'memory', options = {}) {
-    return this.getService('monitoring', providerType, options);
-  }
-
-  /**
    * Get the event emitter for inter-service communication
    * @returns {EventEmitter} The global event emitter
    */
@@ -709,41 +795,72 @@ class ServiceRegistry {
    * Gracefully shuts down all initialized services by closing their connections
    * @return {Promise<void>}
    */
-  async shutdown() {
+  async shutdown(options = {}) {
     if (!this.initialized) {
       return;
     }
 
+    // Per-service teardown timeout so one hung disconnect cannot block the
+    // whole shutdown (P2-5).
+    const perServiceTimeoutMs = options.perServiceTimeoutMs || 5000;
+    // Method names a service may expose to release resources, in priority order.
+    const TEARDOWN_METHODS = [
+      'close', 'disconnect', 'stop', 'stopIndexing', 'shutdown', 'quit',
+      'destroy', 'dispose', 'end'
+    ];
+
+    const logger = this.globalOptions && this.globalOptions.logger;
+    const reportError = (key, error) => {
+      if (logger?.error) {
+        logger.error(`[ServiceRegistry] Error shutting down service ${key}`, {
+          error: error?.message
+        });
+      } else if (this.eventEmitter_) {
+        this.eventEmitter_.emit('registry:shutdown-error', {
+          service: key,
+          error: error?.message
+        });
+      }
+    };
+
+    const withTimeout = (promise, key) => {
+      let timer;
+      const timeout = new Promise((resolve) => {
+        timer = setTimeout(() => {
+          reportError(key, new Error(`teardown timed out after ${perServiceTimeoutMs}ms`));
+          resolve();
+        }, perServiceTimeoutMs);
+      });
+      return Promise.race([
+        Promise.resolve()
+          .then(() => promise)
+          .catch((error) => reportError(key, error)),
+        timeout
+      ]).finally(() => clearTimeout(timer));
+    };
+
     const shutdownPromises = [];
 
     for (const [key, service] of this.services.entries()) {
-      const [serviceName] = key.split(':');
-      
       try {
-        // Handle services with close() method (MongoDB, DocumentDB, etc.)
-        if (typeof service.close === 'function') {
-          shutdownPromises.push(service.close());
-        } 
-        // Handle services with disconnect() method (Redis, FTP, etc.)
-        else if (typeof service.disconnect === 'function') {
-          shutdownPromises.push(service.disconnect());
+        // Remove analytics listeners so they don't outlive the service (P2-6).
+        if (service.analytics && typeof service.analytics.destroy === 'function') {
+          service.analytics.destroy();
         }
-        // Handle services with stopIndexing() or similar (Searching, Workflow)
-        else if (serviceName === 'searching' && typeof service.stopIndexing === 'function') {
-          shutdownPromises.push(service.stopIndexing());
-        }
-        else if (serviceName === 'workflow' && typeof service.stop === 'function') {
-          shutdownPromises.push(service.stop());
+        // Call the first teardown method the service exposes.
+        const method = TEARDOWN_METHODS.find((m) => typeof service[m] === 'function');
+        if (method) {
+          shutdownPromises.push(withTimeout(service[method](), key));
         }
       } catch (error) {
-        console.error(`Error shutting down service ${key}:`, error.message);
+        reportError(key, error);
       }
     }
 
     await Promise.allSettled(shutdownPromises);
     this.services.clear();
     this.initialized = false;
-    
+
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('registry:shutdown', {
         message: 'Service Registry shut down successfully',
@@ -753,11 +870,50 @@ class ServiceRegistry {
   }
 
   /**
+   * Disposes a service's analytics listeners (and the service itself if it
+   * exposes a destroy/dispose) so repeated create/reset cycles do not leak
+   * event-emitter listeners (P2-6).
+   * @param {Object} service - The service instance being removed.
+   * @private
+   */
+  disposeService_(service) {
+    if (!service) return;
+    try {
+      if (service.analytics && typeof service.analytics.destroy === 'function') {
+        service.analytics.destroy();
+      }
+      if (typeof service.destroy === 'function') {
+        service.destroy();
+      } else if (typeof service.dispose === 'function') {
+        service.dispose();
+      }
+    } catch (error) {
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('registry:dispose-error', { error: error?.message });
+      }
+    }
+  }
+
+  /**
    * Clears all service instances (useful for testing)
    * This clears all named and default instances of all services
    */
   reset() {
+    for (const service of this.services.values()) {
+      this.disposeService_(service);
+    }
     this.services.clear();
+
+    // Detach any listeners and restore a fresh internal event emitter. Without
+    // this, an emitter supplied to a previous initialize() call (and any
+    // listeners attached to it) would persist across re-initialization,
+    // accumulating listeners and firing stale handlers on later lifecycle
+    // events. A subsequent initialize(app, null, ...) keeps this fresh emitter.
+    if (this.eventEmitter && typeof this.eventEmitter.removeAllListeners === 'function') {
+      this.eventEmitter.removeAllListeners();
+    }
+    this.eventEmitter = new EventEmitter();
+
     this.initialized = false;
   }
 
@@ -778,7 +934,10 @@ class ServiceRegistry {
       }
     }
 
-    keysToDelete.forEach(key => this.services.delete(key));
+    keysToDelete.forEach(key => {
+      this.disposeService_(this.services.get(key));
+      this.services.delete(key);
+    });
     return count;
   }
 
@@ -791,6 +950,7 @@ class ServiceRegistry {
    */
   resetServiceInstance(serviceName, providerType = 'memory', instanceName = 'default') {
     const serviceKey = `${serviceName}:${providerType}:${instanceName}`;
+    this.disposeService_(this.services.get(serviceKey));
     return this.services.delete(serviceKey);
   }
 

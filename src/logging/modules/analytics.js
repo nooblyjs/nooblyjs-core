@@ -3,7 +3,7 @@
  * Captures and stores the last 1000 log entries in memory for analytics purposes.
  * Provides methods to retrieve logs filtered by level in descending order.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */

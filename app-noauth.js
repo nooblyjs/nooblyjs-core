@@ -1,35 +1,65 @@
 /**
- * @fileoverview Application demonstrating Noobly JS Core services.
+ * @fileoverview Application demonstrating NooblyJS Core services.
  * This file serves as a comprehensive example of how to use all available
- * services in the Noobly JS Core framework.
+ * services in the NooblyJS Core framework.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-// Load Dependancies
+const config = require('dotenv').config({quiet: true });
+
+// P2-9: This entrypoint disables ALL authentication and is for local testing
+// only. Refuse to start in production, and require an explicit opt-in flag
+// everywhere else so it cannot be deployed by accident.
+if (process.env.NODE_ENV === 'production') {
+  console.error('FATAL: app-noauth.js disables all authentication and must not run in production.');
+  process.exit(1);
+}
+if (process.env.ALLOW_NOAUTH !== '1') {
+  console.error('Refusing to start: app-noauth.js runs with ALL authentication disabled.');
+  console.error('This entrypoint is for local testing only. Set ALLOW_NOAUTH=1 to proceed.');
+  process.exit(1);
+}
+
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
+require('express-async-errors');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const { EventEmitter } = require('events');
-const config = require('dotenv').config();
 
-// Load rate limiting configuration
-const rateLimitConfig = require('./src/config/rateLimitConfig');
-const { setupRateLimiter } = require('./src/middleware/setupRateLimiter');
+const BODY_LIMIT = process.env.BODY_LIMIT || '1mb';
 
-const app = express();
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Instantiate the service registry
 const serviceRegistry = require('.');
 
-// Initialise the service registry
+const app = express();
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(bodyParser.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
+
+// Configure MIME types for static files
+app.set('default type', 'text/plain');
+app.use((req, res, next) => {
+  if (req.path.endsWith('.css')) {
+    res.type('text/css');
+  }
+  next();
+});
+
+// Serve public static files with proper MIME types
+app.use('/', express.static(__dirname + '/public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
+
 const eventEmitter = new EventEmitter();
 serviceRegistry.initialize(app, eventEmitter, {
   logDir: path.join(__dirname, './.application/', 'logs'),
@@ -45,8 +75,6 @@ serviceRegistry.initialize(app, eventEmitter, {
   }
 });
 
-
-
 const log = serviceRegistry.logger('memory');
 const defaultCache = serviceRegistry.cache('memory');
 const cacheSessions = serviceRegistry.getService('caching', 'memory', { instanceName: 'sessions' });
@@ -61,22 +89,12 @@ const measuring = serviceRegistry.measuring('memory');
 const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
+const settings = serviceRegistry.settings('file');
 const aiservice = serviceRegistry.aiservice('ollama', {});
-const monitoring = serviceRegistry.monitoring('memory');
+
 const authservice = serviceRegistry.authservice('file', {
   'express-app': app
 });
-
-
-// Setup distributed tracing middleware for request correlation
-const rateLimiter = setupRateLimiter(app, rateLimitConfig, log);
-const createTracingMiddleware = require('./src/monitoring/middleware/tracingMiddleware');
-const tracingMiddleware = createTracingMiddleware(monitoring, {
-  serviceName: 'api-noauth',
-  excludePaths: ['/health', '/status', '/public', '/docs'],
-  propagateHeaders: true
-});
-app.use(tracingMiddleware);
 
 // Launch the application docs folder to show the docs on the public site
 // /docs retrieves the document
@@ -172,12 +190,18 @@ function extractDocumentMetadata(content) {
 // Launch the application readme file to be shown on the docs readme area
 app.use('/readme', express.static(path.join(__dirname, 'README.md')));
 
-// Load the public site
-app.use('/', express.static(__dirname + '/public'));
-
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 11000;
 app.listen(PORT, () => {
   log.info(`Server is running on port ${PORT}`);
   log.info(cacheMetrics.get('Startup Time'));
   log.info(defaultCache.get('running status'));
+});
+
+// Process-level safety nets (P0-5).
+process.on('unhandledRejection', (reason) => {
+  (log?.error || console.error)('Unhandled promise rejection:', reason instanceof Error ? reason.stack : reason);
+});
+process.on('uncaughtException', (error) => {
+  (log?.error || console.error)('Uncaught exception:', error?.stack || error?.message || error);
+  process.exit(1);
 });

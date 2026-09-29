@@ -17,82 +17,92 @@ class UIService {
   createHeader(config = {}) {
     const {
       brandText = 'NooblyJS',
+      brandSubtext = '',
       brandIcon = '/images/nooblyjs-logo.png',
       showSearch = true,
+      searchPlaceholder = 'Search…',
       showCreateBtn = true,
       showAIChat = true,
-      showUserProfile=true,
+      showUserProfile = true,
       userProfile = { name: 'Admin User', role: 'Administrator', initials: 'AD' },
       onProfileClick = null,
       onSettingsClick = null,
       onLogoutClick = null
     } = config;
 
+    // KR Modern shell — keep the legacy classes (.navbar / .core-app-header / .navbar-nav)
+    // alongside kr-* classes so callers that still query them continue to work.
     const header = document.createElement('header');
-    header.className = 'navbar navbar-expand-lg core-app-header';
+    header.className = 'navbar navbar-expand-lg core-app-header kr-topbar';
 
-    const container = document.createElement('div');
-    container.className = 'container-fluid';
-
-    // Brand
-    const brand = document.createElement('a');
-    brand.className = 'navbar-brand d-flex align-items-center';
-    brand.href = '#';
+    // Brand block (logo + title + optional subtitle)
+    const brand = document.createElement('div');
+    brand.className = 'kr-brand navbar-brand d-flex align-items-center';
+    brand.style.cssText = 'border-right: 0; white-space: nowrap; color: #FFF';
 
     if (brandIcon) {
       const img = document.createElement('img');
       img.src = brandIcon;
       img.alt = brandText;
-      img.className = 'img-fluid';
-      img.style.cssText = 'max-width: 35px; height: auto;';
+      img.style.cssText = 'width: 32px; height: 32px; border-radius: 7px; object-fit: contain; background: #fff; padding: 2px; flex-shrink: 0;';
       brand.appendChild(img);
     }
 
-    const brandSpan = document.createElement('span');
-    brandSpan.style.marginLeft = '10px';
-    brandSpan.textContent = brandText;
-    brand.appendChild(brandSpan);
+    const brandTextWrap = document.createElement('div');
+    brandTextWrap.className = 'name';
+    brandTextWrap.style.whiteSpace = 'nowrap';
+    brandTextWrap.textContent = brandText;
+    if (brandSubtext) {
+      const small = document.createElement('small');
+      small.textContent = brandSubtext;
+      brandTextWrap.appendChild(small);
+    }
+    brand.appendChild(brandTextWrap);
+    header.appendChild(brand);
 
-    container.appendChild(brand);
-
-    // Search Bar
+    // Search bar (kr-search slot)
     if (showSearch) {
       const searchDiv = document.createElement('div');
-      searchDiv.className = 'flex-grow-1 mx-4 position-relative';
-      searchDiv.style.maxWidth = '2000px';
+      searchDiv.className = 'kr-search';
 
-      const inputGroup = document.createElement('div');
-      inputGroup.className = 'input-group';
-
-      const searchIcon = document.createElement('span');
-      searchIcon.className = 'input-group-text bg-transparent border-0 text-white-50';
-      searchIcon.innerHTML = '<i class="bi bi-search"></i>';
-      inputGroup.appendChild(searchIcon);
+      const wrap = document.createElement('div');
+      wrap.className = 'wrap';
+      wrap.style.maxWidth = 'none';
+      wrap.innerHTML = '<i class="bi bi-search"></i>';
 
       const searchInput = document.createElement('input');
       searchInput.type = 'text';
-      searchInput.className = 'form-control core-search-input border-0';
-      searchInput.placeholder = 'Search...';
-      inputGroup.appendChild(searchInput);
+      searchInput.className = 'core-search-input';
+      searchInput.placeholder = searchPlaceholder;
+      wrap.appendChild(searchInput);
 
-      searchDiv.appendChild(inputGroup);
-      container.appendChild(searchDiv);
+      const kbd = document.createElement('span');
+      kbd.className = 'kbd';
+      kbd.textContent = '⌘K';
+      wrap.appendChild(kbd);
+
+      searchDiv.appendChild(wrap);
+      header.appendChild(searchDiv);
+    } else {
+      // Empty 1fr spacer so the topbar grid still has three columns
+      const spacer = document.createElement('div');
+      header.appendChild(spacer);
     }
 
-    // Right Navigation Items
+    // Right-hand actions
     const navDiv = document.createElement('div');
-    navDiv.className = 'navbar-nav d-flex flex-row align-items-center';
+    navDiv.className = 'navbar-nav kr-topbar-actions';
 
-    // Create Button
+    // Create dropdown
     if (showCreateBtn) {
       const createDropdown = document.createElement('div');
-      createDropdown.className = 'dropdown me-3';
+      createDropdown.className = 'dropdown';
 
       const createBtn = document.createElement('button');
-      createBtn.className = 'btn btn-light btn-sm dropdown-toggle';
+      createBtn.className = 'kr-btn-create dropdown-toggle';
       createBtn.type = 'button';
       createBtn.setAttribute('data-bs-toggle', 'dropdown');
-      createBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Create';
+      createBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Create';
 
       const createMenu = document.createElement('ul');
       createMenu.className = 'dropdown-menu';
@@ -110,53 +120,34 @@ class UIService {
       navDiv.appendChild(createDropdown);
     }
 
-    // AI Chat Toggle
+    // AI Chat toggle
     if (showAIChat) {
       const aiBtn = document.createElement('button');
-      aiBtn.className = 'btn btn-light btn-sm me-3';
+      aiBtn.className = 'kr-icon-btn';
       aiBtn.title = 'Toggle AI Assistant';
       aiBtn.innerHTML = '<i class="bi bi-robot"></i>';
       navDiv.appendChild(aiBtn);
     }
 
-    // User Profile Dropdown
-    if(showUserProfile){
+    // User profile (kr-avatar-pill)
+    if (showUserProfile) {
       const profileDiv = document.createElement('div');
-      profileDiv.className = 'nav-item dropdown me-3';
+      profileDiv.className = 'nav-item dropdown';
 
-      const profileLink = document.createElement('a');
-      profileLink.className = 'nav-link dropdown-toggle d-flex align-items-center text-white';
-      profileLink.href = '#';
-      profileLink.style.textDecoration = 'none';
-      profileLink.setAttribute('data-bs-toggle', 'dropdown');
+      const pill = document.createElement('a');
+      pill.className = 'kr-avatar-pill dropdown-toggle';
+      pill.href = '#';
+      pill.style.textDecoration = 'none';
+      pill.setAttribute('data-bs-toggle', 'dropdown');
 
-      const avatarContainer = document.createElement('div');
-      avatarContainer.className = 'position-relative me-2';
-      avatarContainer.style.cssText = 'width: 32px; height: 32px;';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = userProfile.name || 'User';
+      pill.appendChild(nameSpan);
 
-      const avatarInitials = document.createElement('div');
-      avatarInitials.className = 'bg-light rounded-circle d-flex align-items-center justify-content-center';
-      avatarInitials.style.cssText = 'width: 32px; height: 32px;';
-      avatarInitials.textContent = userProfile.initials;
-
-      avatarContainer.appendChild(avatarInitials);
-      profileLink.appendChild(avatarContainer);
-
-      const profileInfo = document.createElement('div');
-      profileInfo.className = 'd-none d-md-block';
-
-      const profileName = document.createElement('div');
-      profileName.className = 'small';
-      profileName.textContent = userProfile.name;
-      profileInfo.appendChild(profileName);
-
-      const profileRole = document.createElement('div');
-      profileRole.className = 'text-white-50';
-      profileRole.style.fontSize = '0.75rem';
-      profileRole.textContent = userProfile.role;
-      profileInfo.appendChild(profileRole);
-
-      profileLink.appendChild(profileInfo);
+      const av = document.createElement('div');
+      av.className = 'av';
+      av.textContent = userProfile.initials || 'U';
+      pill.appendChild(av);
 
       const profileMenu = document.createElement('ul');
       profileMenu.className = 'dropdown-menu dropdown-menu-end';
@@ -180,14 +171,12 @@ class UIService {
       if (onLogoutClick) menuItem3.querySelector('a').addEventListener('click', onLogoutClick);
       profileMenu.appendChild(menuItem3);
 
-      profileDiv.appendChild(profileLink);
+      profileDiv.appendChild(pill);
       profileDiv.appendChild(profileMenu);
       navDiv.appendChild(profileDiv);
     }
 
-    container.appendChild(navDiv);
-    header.appendChild(container);
-
+    header.appendChild(navDiv);
     return header;
   }
 
@@ -204,35 +193,38 @@ class UIService {
 
     const aside = document.createElement('aside');
     aside.id = 'leftSidebar';
-    aside.className = 'core-app-sidebar bg-light border-end p-3';
+    aside.className = 'core-app-sidebar kr-sidebar';
 
     sections.forEach(section => {
       const sectionDiv = document.createElement('div');
-      sectionDiv.className = 'mb-4 core-sidebar-section';
+      sectionDiv.className = 'kr-side-section core-sidebar-section';
 
-      // Section Header
+      // Section header (kr-side-head — small uppercase label)
       if (section.title) {
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'd-flex align-items-center mb-2';
+        const headDiv = document.createElement('div');
+        headDiv.className = 'kr-side-head';
         if (section.collapsible) {
-          headerDiv.setAttribute('data-bs-toggle', 'collapse');
-          headerDiv.setAttribute('data-bs-target', `#${section.id}-content`);
-          headerDiv.style.cursor = 'pointer';
+          headDiv.setAttribute('data-bs-toggle', 'collapse');
+          headDiv.setAttribute('data-bs-target', `#${section.id}-content`);
+          headDiv.setAttribute('role', 'button');
+          headDiv.style.cursor = 'pointer';
         }
 
-        const icon = document.createElement('i');
-        icon.className = 'bi bi-chevron-down me-2';
-        headerDiv.appendChild(icon);
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = section.title;
+        headDiv.appendChild(titleSpan);
 
-        const title = document.createElement('span');
-        title.className = 'fw-semibold text-uppercase small text-muted';
-        title.textContent = section.title;
-        headerDiv.appendChild(title);
+        if (section.collapsible) {
+          const chev = document.createElement('i');
+          chev.className = 'bi bi-chevron-down';
+          chev.style.cssText = 'font-size: 9px; color: var(--kr-ink-400, #7d8e8e);';
+          headDiv.appendChild(chev);
+        }
 
-        sectionDiv.appendChild(headerDiv);
+        sectionDiv.appendChild(headDiv);
       }
 
-      // Section Content
+      // Section content (kr-nav-item rows)
       if (section.items) {
         const contentDiv = document.createElement('div');
         contentDiv.id = `${section.id}-content`;
@@ -240,32 +232,35 @@ class UIService {
           contentDiv.className = 'collapse show';
         }
 
-        const nav = document.createElement('nav');
-        nav.className = 'nav flex-column';
-
         section.items.forEach(item => {
           const link = document.createElement('a');
-          link.className = 'nav-link text-dark d-flex align-items-center py-2 px-2 rounded';
+          link.className = 'kr-nav-item nav-link';
+          if (item.active) link.classList.add('active');
           link.href = item.href || '#';
 
           if (item.icon) {
             const iconEl = document.createElement('i');
-            iconEl.className = `bi ${item.icon} me-2`;
+            iconEl.className = `bi ${item.icon}`;
             link.appendChild(iconEl);
           }
 
-          const text = document.createElement('span');
-          text.textContent = item.text;
+          const text = document.createTextNode(' ' + item.text);
           link.appendChild(text);
+
+          if (item.count != null) {
+            const countSpan = document.createElement('span');
+            countSpan.className = 'count';
+            countSpan.textContent = item.count;
+            link.appendChild(countSpan);
+          }
 
           if (item.onClick) {
             link.addEventListener('click', item.onClick);
           }
 
-          nav.appendChild(link);
+          contentDiv.appendChild(link);
         });
 
-        contentDiv.appendChild(nav);
         sectionDiv.appendChild(contentDiv);
       }
 
@@ -275,8 +270,8 @@ class UIService {
     if (resizable) {
       const handle = document.createElement('div');
       handle.id = 'sidebarResizeHandle';
-      handle.className = 'core-sidebar-resize-handle';
-      aside.parentElement?.insertBefore(handle, aside.nextSibling);
+      handle.className = 'core-sidebar-resize-handle kr-sidebar-resize';
+      aside.appendChild(handle);
     }
 
     return aside;
@@ -299,7 +294,7 @@ class UIService {
 
     const main = document.createElement('main');
     main.id = 'mainContent';
-    main.className = 'core-app-main p-4 overflow-auto';
+    main.className = 'core-app-main kr-main';
 
     // Header
     const headerDiv = document.createElement('div');
@@ -402,24 +397,23 @@ class UIService {
     } = config;
 
     const card = document.createElement('div');
-    card.className = 'card h-100';
+    card.className = 'card kr-surface h-100';
 
-    // Card Header
+    // Card Header (kr-surface-head)
     const cardHeader = document.createElement('div');
-    cardHeader.className = 'card-header d-flex justify-content-between align-items-center';
+    cardHeader.className = 'card-header kr-surface-head';
 
-    const headerContent = document.createElement('div');
-    headerContent.className = 'd-flex align-items-center';
+    const headerContent = document.createElement('h3');
+    headerContent.style.cssText = 'font-size: 13px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;';
 
     if (config.icon) {
       const icon = document.createElement('i');
-      icon.className = `bi ${config.icon} me-2`;
-      icon.style.color = '#02797d';
+      icon.className = `bi ${config.icon}`;
+      icon.style.color = 'var(--kr-teal-600, #4B5563)';
       headerContent.appendChild(icon);
     }
 
-    const titleEl = document.createElement('h5');
-    titleEl.className = 'mb-0';
+    const titleEl = document.createElement('span');
     titleEl.textContent = title;
     headerContent.appendChild(titleEl);
 
@@ -427,7 +421,8 @@ class UIService {
 
     if (showRefresh) {
       const refreshBtn = document.createElement('button');
-      refreshBtn.className = 'btn btn-outline-secondary btn-sm';
+      refreshBtn.className = 'kr-icon-btn';
+      refreshBtn.style.cssText = 'color: var(--kr-ink-500, #5a6b6b); border: 1px solid var(--kr-border, #e3eaea);';
       refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
       if (onRefresh) refreshBtn.addEventListener('click', onRefresh);
       cardHeader.appendChild(refreshBtn);
@@ -435,15 +430,15 @@ class UIService {
 
     card.appendChild(cardHeader);
 
-    // Card Body
+    // Card Body (kr-surface-body)
     const cardBody = document.createElement('div');
-    cardBody.className = 'card-body p-0';
+    cardBody.className = 'card-body kr-surface-body p-0';
 
     const tableDiv = document.createElement('div');
     tableDiv.className = 'table-responsive';
 
     const table = document.createElement('table');
-    table.className = 'table table-hover mb-0';
+    table.className = 'table kr-table mb-0';
 
     // Table Head
     const thead = document.createElement('thead');
@@ -514,32 +509,37 @@ class UIService {
     } = config;
 
     const card = document.createElement('div');
-    card.className = `card ${className}`;
+    card.className = `card kr-surface ${className}`;
     Object.assign(card.style, style);
 
     if (title || icon) {
       const header = document.createElement('div');
-      header.className = 'card-header';
+      header.className = 'card-header kr-surface-head';
+
+      const titleWrap = document.createElement('h3');
+      titleWrap.className = 'card-title';
+      titleWrap.style.cssText = 'font-size: 13px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;';
 
       if (icon) {
         const iconEl = document.createElement('i');
-        iconEl.className = `bi ${icon} me-2`;
-        header.appendChild(iconEl);
+        iconEl.className = `bi ${icon}`;
+        iconEl.style.color = 'var(--kr-teal-600, #4B5563)';
+        titleWrap.appendChild(iconEl);
       }
 
       if (title) {
-        const titleEl = document.createElement('h5');
-        titleEl.className = 'card-title mb-0';
-        titleEl.textContent = title;
-        header.appendChild(titleEl);
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = title;
+        titleWrap.appendChild(titleSpan);
       }
 
+      header.appendChild(titleWrap);
       card.appendChild(header);
     }
 
     if (content || subtitle) {
       const body = document.createElement('div');
-      body.className = 'card-body';
+      body.className = 'card-body kr-surface-body';
 
       if (subtitle) {
         const sub = document.createElement('p');
@@ -808,24 +808,39 @@ class UIService {
     }
 
     container.innerHTML = '';
+    // KR app shell: 100vh grid (topbar + body row), no AI panel by default.
+    // Apps that need an AI panel can append it as a third grid item with
+    // class kr-ai. Each region scrolls its own content (kr-main, kr-sidebar).
+    container.classList.add('kr-app', 'no-ai');
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'auto 1fr';
+    container.style.gridTemplateRows = '60px 1fr';
+    container.style.height = '100vh';
+    container.style.overflow = 'hidden';
 
-    // Add header
+    // Topbar — spans both columns of the body row, sits in row 1
     const headerEl = this.createHeader(header);
+    headerEl.style.gridColumn = '1 / -1';
+    headerEl.style.gridRow = '1';
     container.appendChild(headerEl);
 
-    // Create flex container for sidebar and content
-    const flexDiv = document.createElement('div');
-    flexDiv.className = 'd-flex';
-
-    // Add sidebar
+    // Sidebar — column 1, row 2
     const sidebarEl = this.createLeftSidebar(sidebar);
-    flexDiv.appendChild(sidebarEl);
+    sidebarEl.style.gridColumn = '1';
+    sidebarEl.style.gridRow = '2';
+    sidebarEl.style.height = '100%';
+    sidebarEl.style.minHeight = '0';
+    sidebarEl.style.overflowY = 'auto';
+    container.appendChild(sidebarEl);
 
-    // Add main content
+    // Main content — column 2, row 2
     const mainEl = this.createMainContent(content);
-    flexDiv.appendChild(mainEl);
-
-    container.appendChild(flexDiv);
+    mainEl.style.gridColumn = '2';
+    mainEl.style.gridRow = '2';
+    mainEl.style.height = '100%';
+    mainEl.style.minHeight = '0';
+    mainEl.style.overflowY = 'auto';
+    container.appendChild(mainEl);
   }
 
   /**
@@ -889,46 +904,49 @@ class UIService {
     const {
       label = 'Stat',
       value = '0',
-      change = '+0',
+      change = '',
       changeType = 'neutral',
-      icon = 'bi-graph-up'
+      icon = 'bi-graph-up',
+      iconVariant = 't'  // t (teal) | b (blue/info) | o (orange) | g (green/success)
     } = config;
 
     const card = document.createElement('div');
-    card.className = 'stat-card card h-100 border-0 shadow-sm';
+    card.className = 'stat-card kr-stat-card';
 
-    const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
+    // .top — icon + delta
+    const top = document.createElement('div');
+    top.className = 'top';
 
-    // Header with label and icon
-    const header = document.createElement('div');
-    header.className = 'd-flex justify-content-between align-items-start mb-3';
+    const iconWrap = document.createElement('div');
+    iconWrap.className = `ico ${iconVariant}`;
+    iconWrap.innerHTML = `<i class="bi ${icon}"></i>`;
+    top.appendChild(iconWrap);
 
-    const labelSpan = document.createElement('span');
-    labelSpan.className = 'text-muted small';
-    labelSpan.textContent = label;
+    if (change) {
+      const delta = document.createElement('span');
+      delta.className = 'delta';
+      // Re-tint delta for negative trend
+      if (changeType === 'decrease') {
+        delta.style.cssText = 'background: #fdebec; color: var(--kr-danger, #c2484a);';
+      }
+      delta.textContent = change;
+      top.appendChild(delta);
+    }
 
-    const iconEl = document.createElement('i');
-    iconEl.className = `bi ${icon} text-primary`;
-    iconEl.style.fontSize = '1.25rem';
+    card.appendChild(top);
 
-    header.appendChild(labelSpan);
-    header.appendChild(iconEl);
-    cardBody.appendChild(header);
+    // .num — big value
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = value;
+    card.appendChild(num);
 
-    // Value
-    const valueEl = document.createElement('h3');
-    valueEl.className = 'mb-2 fw-bold';
-    valueEl.textContent = value;
-    cardBody.appendChild(valueEl);
+    // .lbl — small label
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = label;
+    card.appendChild(lbl);
 
-    // Change indicator
-    const changeSpan = document.createElement('span');
-    changeSpan.className = `small ${changeType === 'increase' ? 'text-success' : changeType === 'decrease' ? 'text-danger' : 'text-muted'}`;
-    changeSpan.textContent = change;
-    cardBody.appendChild(changeSpan);
-
-    card.appendChild(cardBody);
     return card;
   }
 
@@ -944,16 +962,17 @@ class UIService {
     } = config;
 
     const statusConfig = {
-      running: { bg: 'bg-info', text: 'RUNNING', icon: 'bi-arrow-repeat' },
-      completed: { bg: 'bg-success', text: 'COMPLETED', icon: 'bi-check-circle-fill' },
-      failed: { bg: 'bg-danger', text: 'FAILED', icon: 'bi-x-circle-fill' },
-      queued: { bg: 'bg-warning', text: 'QUEUED', icon: 'bi-hourglass-split' }
+      running:   { variant: 'info',  text: 'Running',   icon: 'bi-arrow-repeat' },
+      completed: { variant: 'ok',    text: 'Completed', icon: 'bi-check-circle-fill' },
+      failed:    { variant: 'danger', text: 'Failed',   icon: 'bi-x-circle-fill' },
+      queued:    { variant: 'warn',  text: 'Queued',    icon: 'bi-hourglass-split' },
+      pending:   { variant: 'muted', text: 'Pending',   icon: 'bi-circle' }
     };
 
     const conf = statusConfig[status] || statusConfig.pending;
     const badge = document.createElement('span');
-    badge.className = `badge ${conf.bg} ${size === 'lg' ? 'badge-lg' : ''}`;
-    badge.innerHTML = `<i class="bi ${conf.icon} me-1"></i>${conf.text}`;
+    badge.className = `kr-chip ${conf.variant}`;
+    badge.innerHTML = `<i class="bi ${conf.icon}"></i>${conf.text}`;
 
     return badge;
   }

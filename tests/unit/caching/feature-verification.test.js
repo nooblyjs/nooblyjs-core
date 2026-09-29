@@ -1,7 +1,7 @@
 /**
  * @fileoverview Comprehensive feature verification tests for Caching Service
  * Tests all documented features from CACHING-SERVICE-USAGE.md
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 

@@ -1,8 +1,11 @@
 /**
- * @fileoverview API-based searching service implementation that proxies requests to a remote searching service.
- * Allows client applications to consume backend search API endpoints for enterprise systems.
- * @author Noobly JS Team
- * @version 1.0.14
+ * @fileoverview HTTP client that proxies search operations to a remote
+ * nooblyjs-core searching service. Exposes the same surface as
+ * the default and tokens providers (add / remove / search / listIndexes /
+ * etc.) so callers can swap providers without changing application code.
+ *
+ * @author NooblyJS Team
+ * @version 2.0.0
  * @since 1.0.14
  */
 
@@ -11,271 +14,317 @@
 const axios = require('axios');
 
 /**
- * A class that implements search operations via HTTP API calls to a remote service.
- * Provides methods for indexing and searching documents through REST endpoints.
- * @class
+ * @class SearchingApi
  */
 class SearchingApi {
   /**
-   * Initializes the Searching API client with configuration.
-   * @param {Object} options Configuration options for the API client.
-   * @param {string} options.apiRoot The root URL of the backend API service.
-   * @param {string=} options.apiKey Optional API key for authenticated requests.
-   * @param {number=} options.timeout Request timeout in milliseconds (default: 10000).
-   * @param {EventEmitter=} eventEmitter Optional event emitter for searching events.
+   * @param {Object} options
+   * @param {string} [options.apiRoot] Base URL of the remote searching service
+   *   (e.g. 'http://search.internal:11000'). Falls back to options.api or
+   *   localhost:3000.
+   * @param {string} [options.apiKey] Optional API key. Sent as X-API-Key.
+   * @param {number} [options.timeout=10000] Request timeout in milliseconds.
+   * @param {number} [options.retryLimit=3] (Reserved for future use.)
+   * @param {EventEmitter} [eventEmitter]
+   * @param {Object} [dependencies]
    */
-  constructor(options = {}, eventEmitter) {
+  constructor(options = {}, eventEmitter, dependencies = {}) {
     this.apiRoot = options.apiRoot || options.api || 'http://localhost:3000';
     this.apiKey = options.apiKey || null;
     this.timeout = options.timeout || 10000;
     this.eventEmitter_ = eventEmitter;
+    this.logger = (dependencies && dependencies.logging) || (options.dependencies && options.dependencies.logging) || null;
 
-    // Initialize logger from dependencies
-    const { dependencies = {} } = options;
-    /** @private */
-    this.logger = dependencies.logging || null;
+    this.client = this.buildClient_();
 
-    // Configure axios instance
-    this.client = axios.create({
+    this.settings = {
+      description: 'Configuration settings for the Searching API Provider',
+      list: [
+        { setting: 'url', type: 'string', values: [this.apiRoot] },
+        { setting: 'timeout', type: 'number', values: [this.timeout] },
+        { setting: 'retryLimit', type: 'number', values: [options.retryLimit || 3] }
+      ],
+      url: this.apiRoot,
+      timeout: this.timeout,
+      retryLimit: options.retryLimit || 3
+    };
+  }
+
+  buildClient_() {
+    return axios.create({
       baseURL: this.apiRoot,
       timeout: this.timeout,
       headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
     });
-
-    // Settings for searching API provider
-    this.settings = {};
-    this.settings.description = "Configuration settings for the Searching API Provider";
-    this.settings.list = [
-      {setting: "url", type: "string", values: ["http://localhost:3000"]},
-      {setting: "timeout", type: "number", values: [10000]},
-      {setting: "retryLimit", type: "number", values: [3]}
-    ];
-    this.settings.url = this.apiRoot;
-    this.settings.timeout = this.timeout;
-    this.settings.retryLimit = options.retryLimit || this.settings.list[2].values[0];
   }
 
   /**
-   * Indexes a document in the remote search service for full-text search capability.
-   * Adds or updates a document in a search index, making it searchable via search() method.
-   * Indexing is asynchronous - document becomes searchable shortly after the call completes.
-   *
-   * @param {string} index The name/identifier of the search index (e.g., 'products', 'articles')
-   * @param {string} id The unique document identifier within the index
-   * @param {Object} document The document content to index containing:
-   *   - title: {string} Searchable title
-   *   - content: {string} Searchable content/body
-   *   - tags: {Array} Array of searchable tags
-   *   - metadata: {Object} Additional fields for filtering
-   *   - Any other fields to be indexed
-   * @return {Promise<Object>} A promise that resolves to the indexing result containing:
-   *   - id: {string} Document identifier
-   *   - index: {string} Index name
-   *   - status: {string} Indexing status ('indexed', 'queued', 'error')
-   *   - timestamp: {string} ISO timestamp of indexing
-   * @throws {Error} When the HTTP request fails or the document is invalid
-   *
-   * @example
-   * // Index a product document
-   * await searchingApi.index('products', 'prod-123', {
-   *   title: 'Widget Pro',
-   *   content: 'A professional-grade widget with advanced features',
-   *   tags: ['widget', 'professional', 'hardware'],
-   *   price: 99.99
-   * });
+   * Emit an event if an emitter is configured.
+   * @private
    */
-  async index(index, id, document) {
+  emit_(name, payload) {
+    if (this.eventEmitter_) this.eventEmitter_.emit(name, payload);
+  }
+
+  // ─── CRUD ────────────────────────────────────────────────────────
+
+  /**
+   * Add a JSON object under `key` to the remote search service.
+   * Note: the local /add endpoint generates its own UUID — when targeting it,
+   * `key` is ignored server-side and a new id is returned in the response.
+   *
+   * @param {string} key
+   * @param {Object} jsonObject
+   * @param {string} [searchContainer]
+   * @return {Promise<boolean>}
+   */
+  async add(key, jsonObject, searchContainer) {
     try {
-      const response = await this.client.post(`/services/searching/api/index/${index}/${id}`, document);
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:index', { index, id });
-      return response.data;
+      const body = { ...jsonObject };
+      if (searchContainer) body.searchContainer = searchContainer;
+      const res = await this.client.post('/services/searching/api/add/', body);
+      this.emit_('searching:add', { key, searchContainer });
+      return res.data && res.data.success === true;
     } catch (error) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:error', { operation: 'index', index, id, error: error.message });
+      this.emit_('searching:error', { operation: 'add', key, error: error.message });
+      this.logger?.error?.(`[SearchingApi] add failed: ${error.message}`);
       throw error;
     }
   }
 
   /**
-   * Searches for documents in an index via the remote search service.
-   * Performs full-text and field search across indexed documents.
-   * Supports simple text queries, field-specific queries, filters, sorting, and pagination.
+   * Remove a document by key.
    *
-   * @param {string} index The name of the search index to query
-   * @param {Object} query The search query containing:
-   *   - text: {string} Search text for full-text matching
-   *   - field: {string} Specific field to search in (optional)
-   *   - filters: {Object} Field filters (e.g., { status: 'active', price: { $gt: 10 } })
-   *   - sort: {string} Sort field (prefix with '-' for descending)
-   *   - limit: {number} Maximum results to return
-   *   - offset: {number} Results offset for pagination
-   * @return {Promise<Array>} A promise that resolves to an array of matching documents with scores
-   * @throws {Error} When the HTTP request fails or the query is invalid
-   *
-   * @example
-   * // Simple full-text search
-   * const results = await searchingApi.search('products', {
-   *   text: 'widget',
-   *   limit: 10
-   * });
-   * console.log(`Found ${results.length} products`);
-   *
-   * @example
-   * // Filtered and sorted search
-   * const results = await searchingApi.search('articles', {
-   *   text: 'javascript',
-   *   filters: { published: true, category: 'tutorial' },
-   *   sort: '-createdAt',
-   *   limit: 20,
-   *   offset: 0
-   * });
+   * @param {string} key
+   * @param {string} [searchContainer]
+   * @return {Promise<boolean>}
    */
-  async search(index, query) {
+  async remove(key, searchContainer) {
     try {
-      const response = await this.client.post(`/services/searching/api/search/${index}`, { query });
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:search', { index, resultsCount: response.data.length });
-      return response.data;
+      const url = `/services/searching/api/delete/${encodeURIComponent(key)}`;
+      const params = searchContainer ? { searchContainer } : {};
+      const res = await this.client.delete(url, { params });
+      this.emit_('searching:remove', { key, searchContainer });
+      return !!(res.data && res.data.success);
     } catch (error) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:error', { operation: 'search', index, error: error.message });
+      if (error.response && error.response.status === 404) return false;
+      this.emit_('searching:error', { operation: 'remove', key, error: error.message });
       throw error;
     }
   }
 
   /**
-   * Retrieves a document by ID from the search index via the remote search service.
-   * Returns the original indexed document without search scoring.
+   * Search for a term.
    *
-   * @param {string} index The name of the search index
-   * @param {string} id The unique document identifier
-   * @return {Promise<Object>} A promise that resolves to the document object
-   * @throws {Error} When the HTTP request fails or the document is not found
-   *
-   * @example
-   * // Get a specific product from the index
-   * const product = await searchingApi.get('products', 'prod-123');
-   * console.log(`Product: ${product.title}`);
+   * @param {string} query
+   * @param {string|Object} [containerOrOptions] Container name (legacy) or
+   *   options object with { containerName, fields, boost, prefix, fuzzy,
+   *   combineWith, maxResults }. When options are supplied, POST /search/:c
+   *   is used to forward them; otherwise the simpler GET /search/:term is used.
+   * @return {Promise<Array<Object>>}
    */
-  async get(index, id) {
+  async search(query, containerOrOptions) {
     try {
-      const response = await this.client.get(`/services/searching/api/document/${index}/${id}`);
-      return response.data;
+      let containerName;
+      let options = null;
+      if (typeof containerOrOptions === 'string') {
+        containerName = containerOrOptions;
+      } else if (containerOrOptions && typeof containerOrOptions === 'object') {
+        ({ containerName, ...options } = containerOrOptions);
+      }
+
+      let res;
+      if (options && Object.keys(options).length > 0) {
+        const path = containerName
+          ? `/services/searching/api/search/${encodeURIComponent(containerName)}`
+          : '/services/searching/api/search/';
+        res = await this.client.post(path, { query, ...options });
+      } else {
+        const path = `/services/searching/api/search/${encodeURIComponent(query)}`;
+        const params = containerName ? { searchContainer: containerName } : {};
+        res = await this.client.get(path, { params });
+      }
+
+      const results = Array.isArray(res.data) ? res.data : [];
+      this.emit_('searching:search', { query, searchContainer: containerName, count: results.length });
+      return results;
     } catch (error) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:error', { operation: 'get', index, id, error: error.message });
+      this.emit_('searching:error', { operation: 'search', query, error: error.message });
+      throw error;
+    }
+  }
+
+  // ─── autoSuggest / suggest ───────────────────────────────────────
+
+  /**
+   * Token-provider-only: compositional ranked suggestions.
+   */
+  async autoSuggest(query, options = {}) {
+    try {
+      const url = `/services/searching/api/autosuggest/${encodeURIComponent(query)}`;
+      const params = {};
+      if (options.containerName) params.searchContainer = options.containerName;
+      if (options.maxSuggestions) params.limit = options.maxSuggestions;
+      if (options.fuzzy != null) params.fuzzy = options.fuzzy;
+      const res = await this.client.get(url, { params });
+      return Array.isArray(res.data) ? res.data : [];
+    } catch (error) {
+      this.emit_('searching:error', { operation: 'autoSuggest', error: error.message });
       throw error;
     }
   }
 
   /**
-   * Removes a document from the search index via the remote search service.
-   * Deletes a document so it will no longer appear in search results.
-   *
-   * @param {string} index The name of the search index
-   * @param {string} id The unique document identifier to delete
-   * @return {Promise<void>} A promise that resolves when the document is removed
-   * @throws {Error} When the HTTP request fails or the document doesn't exist
-   *
-   * @example
-   * // Remove a product from the search index
-   * await searchingApi.delete('products', 'prod-123');
-   * console.log('Product removed from search');
+   * Legacy suggest API (token providers).
    */
-  async delete(index, id) {
+  async suggest(query, options = {}) {
     try {
-      await this.client.delete(`/services/searching/api/document/${index}/${id}`);
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:delete', { index, id });
+      const url = `/services/searching/api/suggest/${encodeURIComponent(query)}`;
+      const params = {};
+      if (options.containerName) params.searchContainer = options.containerName;
+      if (options.maxSuggestions) params.limit = options.maxSuggestions;
+      const res = await this.client.get(url, { params });
+      return Array.isArray(res.data) ? res.data : [];
     } catch (error) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:error', { operation: 'delete', index, id, error: error.message });
+      this.emit_('searching:error', { operation: 'suggest', error: error.message });
+      throw error;
+    }
+  }
+
+  // ─── Bulk (token providers) ──────────────────────────────────────
+
+  async addAll(documents, searchContainer) {
+    try {
+      const body = searchContainer ? { documents, searchContainer } : { documents };
+      const res = await this.client.post('/services/searching/api/add-bulk', body);
+      return { added: res.data?.added || 0, skipped: res.data?.skipped || 0 };
+    } catch (error) {
+      this.emit_('searching:error', { operation: 'addAll', error: error.message });
+      throw error;
+    }
+  }
+
+  async removeAll(ids, searchContainer) {
+    try {
+      const body = searchContainer ? { ids, searchContainer } : { ids };
+      const res = await this.client.post('/services/searching/api/delete-bulk', body);
+      return { removed: res.data?.removed || 0, missing: res.data?.missing || 0 };
+    } catch (error) {
+      this.emit_('searching:error', { operation: 'removeAll', error: error.message });
+      throw error;
+    }
+  }
+
+  async replace(document, searchContainer) {
+    try {
+      const params = searchContainer ? { searchContainer } : {};
+      await this.client.post('/services/searching/api/replace', { document }, { params });
+      return true;
+    } catch (error) {
+      this.emit_('searching:error', { operation: 'replace', error: error.message });
       throw error;
     }
   }
 
   /**
-   * Deletes all documents from a search index via the remote search service.
-   * Clears the entire index, removing all indexed documents.
-   * This operation is not reversible - use with caution.
-   *
-   * @param {string} index The name of the search index to clear
-   * @return {Promise<void>} A promise that resolves when the index is cleared
-   * @throws {Error} When the HTTP request fails or the index doesn't exist
-   *
-   * @example
-   * // Clear all products from the search index
-   * await searchingApi.clearIndex('products');
-   * console.log('Products index cleared');
+   * discard — MiniSearch-compatible alias for remove.
    */
-  async clearIndex(index) {
+  async discard(key, searchContainer) {
+    return this.remove(key, searchContainer);
+  }
+
+  // ─── Index management ────────────────────────────────────────────
+
+  async listIndexes() {
     try {
-      await this.client.delete(`/services/searching/api/index/${index}`);
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:clearIndex', { index });
+      const res = await this.client.get('/services/searching/api/indexes');
+      const indexes = res.data && Array.isArray(res.data.indexes) ? res.data.indexes : [];
+      return indexes.map(i => i.name);
     } catch (error) {
-      if (this.eventEmitter_)
-        this.eventEmitter_.emit('searching:error', { operation: 'clearIndex', index, error: error.message });
+      this.emit_('searching:error', { operation: 'listIndexes', error: error.message });
       throw error;
     }
   }
 
-  /**
-   * Retrieves all current configuration settings for the searching API provider.
-   * Returns the settings object including API URL, timeout, and retry configuration.
-   *
-   * @return {Promise<Object>} A promise that resolves to the settings object containing:
-   *   - description: {string} Description of the provider
-   *   - list: {Array} Array of configurable settings definitions
-   *   - url: {string} The remote API URL
-   *   - timeout: {number} Request timeout in milliseconds
-   *   - retryLimit: {number} Maximum number of retry attempts
-   *
-   * @example
-   * const settings = await searchingApi.getSettings();
-   * console.log(`API URL: ${settings.apiUrl}`);
-   */
-  async getSettings(){
-    return this.settings;
+  async getIndexStats(searchContainer) {
+    try {
+      const url = `/services/searching/api/indexes/${encodeURIComponent(searchContainer)}/stats`;
+      const res = await this.client.get(url);
+      return res.data;
+    } catch (error) {
+      if (error.response && error.response.status === 404) return null;
+      this.emit_('searching:error', { operation: 'getIndexStats', error: error.message });
+      throw error;
+    }
   }
 
-  /**
-   * Updates configuration settings for the searching API provider.
-   * Only specified settings are updated; unspecified settings are left unchanged.
-   *
-   * @param {Object} settings The settings object containing new values
-   * @param {string} [settings.url] The new remote API URL
-   * @param {number} [settings.timeout] The new request timeout in milliseconds
-   * @param {number} [settings.retryLimit] The new retry limit
-   * @return {Promise<void>} A promise that resolves when all settings are updated
-   *
-   * @example
-   * // Update API timeout
-   * await searchingApi.saveSettings({
-   *   timeout: 12000,
-   *   url: 'https://search-api.internal.service'
-   * });
-   */
-  async saveSettings(settings){
-    for (let i = 0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        this.logger?.info(`[${this.constructor.name}] Setting changed: ${this.settings.list[i].setting}`, {
-          setting: this.settings.list[i].setting,
-          newValue: settings[this.settings.list[i].setting]
+  async clearIndex(searchContainer) {
+    try {
+      const url = `/services/searching/api/indexes/${encodeURIComponent(searchContainer)}/clear`;
+      const res = await this.client.delete(url);
+      return res.status === 200;
+    } catch (error) {
+      if (error.response && error.response.status === 404) return false;
+      this.emit_('searching:error', { operation: 'clearIndex', error: error.message });
+      throw error;
+    }
+  }
+
+  async deleteIndex(searchContainer) {
+    try {
+      const url = `/services/searching/api/indexes/${encodeURIComponent(searchContainer)}`;
+      const res = await this.client.delete(url);
+      return res.status === 200;
+    } catch (error) {
+      if (error.response && error.response.status === 404) return false;
+      this.emit_('searching:error', { operation: 'deleteIndex', error: error.message });
+      throw error;
+    }
+  }
+
+  // ─── Analytics + stats ───────────────────────────────────────────
+
+  async getStats(searchContainer) {
+    try {
+      const params = searchContainer ? { searchContainer } : {};
+      const res = await this.client.get('/services/searching/api/analytics', { params });
+      return (res.data && res.data.stats) || res.data;
+    } catch (error) {
+      this.emit_('searching:error', { operation: 'getStats', error: error.message });
+      throw error;
+    }
+  }
+
+  // ─── Settings ────────────────────────────────────────────────────
+
+  async getSettings() {
+    try {
+      const res = await this.client.get('/services/searching/api/settings');
+      return res.data;
+    } catch (_) {
+      return this.settings;
+    }
+  }
+
+  async saveSettings(settings) {
+    for (const def of this.settings.list) {
+      if (settings[def.setting] != null) {
+        this.settings[def.setting] = settings[def.setting];
+        this.logger?.info?.(`[SearchingApi] Setting changed: ${def.setting}`, {
+          setting: def.setting,
+          newValue: settings[def.setting]
         });
       }
     }
-    // Rebuild axios client if URL or timeout changed
     if (settings.url || settings.timeout) {
       this.apiRoot = this.settings.url;
       this.timeout = this.settings.timeout;
-      this.client = axios.create({
-        baseURL: this.apiRoot,
-        timeout: this.timeout,
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {}
-      });
+      this.client = this.buildClient_();
+    }
+    try {
+      await this.client.post('/services/searching/api/settings', settings);
+    } catch (error) {
+      this.logger?.warn?.(`[SearchingApi] Remote saveSettings failed: ${error.message}`);
     }
   }
 }

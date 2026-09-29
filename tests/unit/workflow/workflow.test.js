@@ -5,7 +5,7 @@
  * definition, execution, step management, and error handling. Tests verify
  * proper step execution order, data passing between steps, and event emission.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

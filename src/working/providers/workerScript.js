@@ -2,7 +2,7 @@
  * @fileoverview Worker thread script for executing user-defined tasks
  * with status tracking and message-based communication with the parent thread.
  * Initializes the serviceRegistry to allow activities to access NooblyJS Services.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

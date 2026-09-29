@@ -45,7 +45,7 @@ module.exports = (options, eventEmitter, cache) => {
     /**
      * GET /services/caching/scripts
      * Serves the client-side caching library as JavaScript
-     * This endpoint returns the digitalTechnologiesCaching library for use in web applications.
+     * This endpoint returns the nooblyjsCaching library for use in web applications.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -55,7 +55,7 @@ module.exports = (options, eventEmitter, cache) => {
      * <script src="/services/caching/scripts"></script>
      *
      * // Use in JavaScript:
-     * const cache = new digitalTechnologiesCaching({ instanceName: 'default' });
+     * const cache = new nooblyjsCaching({ instanceName: 'default' });
      * cache.put('key', { data: 'value' });
      * cache.get('key').then(data => console.log(data));
      */
@@ -76,10 +76,7 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(200).send(libraryCode);
       } catch (error) {
         eventEmitter.emit('api-caching-scripts-error', error.message);
-        res.status(500).json({
-          error: 'Failed to load caching library',
-          message: error.message
-        });
+        res.status(500).json({ error: 'Failed to load caching library' });
       }
     });
 
@@ -112,10 +109,7 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(200).send(testHTML);
       } catch (error) {
         eventEmitter.emit('api-caching-scripts-test-error', error.message);
-        res.status(500).json({
-          error: 'Failed to load caching library test page',
-          message: error.message
-        });
+        res.status(500).json({ error: 'Failed to load caching library test page' });
       }
     });
 

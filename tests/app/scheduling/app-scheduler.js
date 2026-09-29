@@ -12,7 +12,14 @@ const path = require('node:path');
 const EventEmitter = require('events');
 const express = require('express');
 
+const helmet = require('helmet');
 const app = express();
+
+// Security headers: applied before other middleware so every response is
+// covered. CSP is disabled here to match the main apps (app.js / app-noauth.js)
+// because the service dashboards use inline styles/scripts; enable a tuned CSP
+// per deployment.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 
 // Add options

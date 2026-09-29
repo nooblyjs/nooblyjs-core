@@ -2,7 +2,7 @@
  * @fileoverview Authentication Service Factory
  * Factory module for creating authentication service instances with multiple provider support.
  * Supports passport local strategy and Google OAuth with user management and role-based access.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -11,6 +11,7 @@
 
 const AuthPassport = require('./providers/authPassport');
 const AuthGoogle = require('./providers/authGoogle');
+const AuthAzure = require('./providers/authAzure');
 const AuthMemory = require('./providers/authMemory');
 const AuthFile = require('./providers/authFile');
 const AuthApi = require('./providers/authApi');
@@ -40,7 +41,7 @@ function passportConfigurator(strategyFactoryOrConfig) {
 /**
  * Creates an authentication service instance with the specified provider.
  * Automatically configures routes and views for the auth service.
- * @param {string} type - The auth provider type ('passport', 'google', 'memory', 'file', 'api', 'secure-email')
+ * @param {string} type - The auth provider type ('passport', 'google', 'azure', 'memory', 'file', 'api', 'secure-email')
  * @param {Object} options - Provider-specific configuration options
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -86,6 +87,9 @@ function createAuth(type, options, eventEmitter) {
       break;
     case 'google':
       auth = new AuthGoogle(options, eventEmitter);
+      break;
+    case 'azure':
+      auth = new AuthAzure(options, eventEmitter);
       break;
     case 'file':
       auth = new AuthFile(options, eventEmitter);

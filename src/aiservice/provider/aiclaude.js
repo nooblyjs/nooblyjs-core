@@ -1,7 +1,7 @@
 /**
  * @fileoverview Claude AI Provider
  * Claude AI implementation providing LLM services with token tracking.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -17,10 +17,11 @@ const Anthropic = require('@anthropic-ai/sdk');
  * @extends {AIServiceBase}
  */
 class AIClaude extends AIServiceBase {
+  
   /**
    * Initializes the Claude AI service.
    * @param {Object} options Configuration options.
-   * @param {string} options.apiKey Claude API key.
+   * @param {string} options.apikey Claude API key.
    * @param {string} options.model Model to use (default: claude-3-5-sonnet-20241022).
    * @param {EventEmitter} eventEmitter Optional event emitter for AI service events.
    */
@@ -36,11 +37,15 @@ class AIClaude extends AIServiceBase {
       {setting: "temperature", type: "number", values : ['0.7']} 
     ]
 
-    if (!options.apikey) {
+    // Accept the framework-standard `apiKey` (as documented and used by the
+    // ServiceRegistry) while remaining backward compatible with the legacy
+    // lowercase `apikey` option.
+    const apiKey = options.apiKey || options.apikey;
+    if (!apiKey) {
       throw new Error('Claude API key is required');
     }
 
-    this.settings.apikey = options.apikey;
+    this.settings.apikey = apiKey;
     this.settings.model = options.model || 'claude-sonnet-4-5-20250929';
     this.settings.maxtokens = options.maxtokens || 4000;
     this.settings.temperature = options.temperature || 0.7;
@@ -101,7 +106,7 @@ class AIClaude extends AIServiceBase {
       };
 
       // Track usage and costs
-      await this.trackUsage_(usage, this.model_, 'claude');
+      await this.trackUsage_(usage, this.settings.model, 'claude');
 
       const result = {
         content: response.content[0].text,
@@ -110,9 +115,7 @@ class AIClaude extends AIServiceBase {
         provider: 'claude'
       };
 
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('ai:prompt', { prompt, response: result });
-      }
+      this.emitPromptComplete_(prompt, result, options);
 
       return result;
     } catch (error) {
@@ -124,7 +127,7 @@ class AIClaude extends AIServiceBase {
   }
 
   /**
-   * Lists available models from Ollama.
+   * Lists available models from Claude.
    * @return {Promise<Array>} List of available models.
    */
   async listModels() {

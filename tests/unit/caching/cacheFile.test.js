@@ -5,7 +5,7 @@
  * clear, and stats operations for the file-based cache provider. Tests verify 
  * proper file persistence, event emission, and cache behavior under various scenarios.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -71,13 +71,15 @@ describe('CacheFile', () => {
     await cache.put('key1', 'value1');
     await expect(cache.get('key1')).resolves.toBe('value1');
     
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put:default', {
       key: 'key1',
       value: 'value1',
+      instance: 'default',
     });
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get:default', {
       key: 'key1',
       value: 'value1',
+      instance: 'default',
     });
 
     // Verify file was created
@@ -124,8 +126,9 @@ describe('CacheFile', () => {
     await cache.delete('deleteKey');
     await expect(cache.get('deleteKey')).resolves.toBeUndefined();
     
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:delete:default', {
       key: 'deleteKey',
+      instance: 'default',
     });
 
     // Verify file was removed
@@ -141,9 +144,10 @@ describe('CacheFile', () => {
    */
   it('should return undefined for a non-existent key', async () => {
     await expect(cache.get('non-existent-key')).resolves.toBeUndefined();
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get', {
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:get:default', {
       key: 'non-existent-key',
       value: undefined,
+      instance: 'default',
     });
   });
 
@@ -274,8 +278,9 @@ describe('CacheFile', () => {
     await expect(cache.delete('non-existent')).resolves.not.toThrow();
     
     // Should not emit cache:delete for non-existent keys
-    expect(mockEventEmitter.emit).not.toHaveBeenCalledWith('cache:delete', {
+    expect(mockEventEmitter.emit).not.toHaveBeenCalledWith('cache:delete:default', {
       key: 'non-existent',
+      instance: 'default',
     });
   });
 });

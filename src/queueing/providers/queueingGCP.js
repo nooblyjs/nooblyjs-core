@@ -1,9 +1,9 @@
 /**
- * @fileoverview Google Cloud Tasks provider for Noobly JS Core queueing service.
+ * @fileoverview Google Cloud Tasks provider for NooblyJS Core queueing service.
  * Leverages GCP Cloud Tasks for distributed, managed task scheduling and execution.
  * Supports HTTP and App Engine targets with configurable retry policies.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -26,7 +26,7 @@ class QueueingGCP {
    *
    * @param {Object=} options Configuration options
    * @param {string} options.projectId - GCP project ID (default: from GOOGLE_CLOUD_PROJECT env var)
-   * @param {string} options.region - GCP region (default: from GCP_REGION env var or 'us-central1')
+   * @param {string} options.region - GCP region (default: from GCP_REGION env let or 'us-central1')
    * @param {string} options.queue - Queue name (default: 'default')
    * @param {string} options.keyFilePath - Path to GCP service account JSON key file (optional)
    * @param {string} options.instanceName - Instance name for this queue instance (default: 'default')
@@ -49,7 +49,7 @@ class QueueingGCP {
     const projectId = options?.projectId || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
 
     if (!projectId) {
-      throw new Error('GCP Project ID is required. Set GOOGLE_CLOUD_PROJECT env var or provide in options.');
+      throw new Error('GCP Project ID is required. Set GOOGLE_CLOUD_PROJECT env let or provide in options.');
     }
 
     const clientOptions = {};

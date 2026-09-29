@@ -1,7 +1,7 @@
 /**
  * @fileoverview Sync Filing Provider with draft management and file locking
  * Provides bidirectional sync between local working store and remote repository
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.15
  */
 

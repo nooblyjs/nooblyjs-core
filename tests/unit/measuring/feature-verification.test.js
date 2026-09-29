@@ -4,7 +4,7 @@
  * Tests cover factory function, providers, metrics operations, analytics, REST API,
  * settings, events, and integration patterns.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @since 1.0.0
  */
 
@@ -206,13 +206,16 @@ describe('MeasuringService Feature Verification', () => {
     });
 
     it('should calculate total correctly', () => {
-      const now = new Date();
+      const start = new Date(Date.now() - 1000);
 
       measuring.add('metric', 100);
       measuring.add('metric', 50);
       measuring.add('metric', 75);
 
-      const total = measuring.total('metric', now, now);
+      // End the window slightly in the future so all just-added measures
+      // (timestamped at insertion time) fall inside the inclusive range.
+      const end = new Date(Date.now() + 1000);
+      const total = measuring.total('metric', start, end);
 
       expect(total).toBe(225);
     });
@@ -235,13 +238,16 @@ describe('MeasuringService Feature Verification', () => {
     });
 
     it('should calculate average correctly', () => {
-      const now = new Date();
+      const start = new Date(Date.now() - 1000);
 
       measuring.add('metric', 100);
       measuring.add('metric', 80);
       measuring.add('metric', 120);
 
-      const average = measuring.average('metric', now, now);
+      // End the window slightly in the future so all just-added measures
+      // (timestamped at insertion time) fall inside the inclusive range.
+      const end = new Date(Date.now() + 1000);
+      const average = measuring.average('metric', start, end);
 
       expect(average).toBe(100);
     });

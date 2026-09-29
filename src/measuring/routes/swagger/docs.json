@@ -5,7 +5,7 @@
     "description": "RESTful API for metric collection, data aggregation, and statistical analysis with time-based filtering capabilities",
     "version": "1.0.14",
     "contact": {
-      "name": "Noobly JS Team",
+      "name": "NooblyJS Core Team",
       "url": "https://github.com/nooblyjs/nooblyjs-core"
     },
     "license": {

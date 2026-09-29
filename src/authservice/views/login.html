@@ -7,10 +7,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
      
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/services/css/styles.css">
     <style>
+        /* Restore 12px base font: this page is sized in rem against a 12px root
+           (previously provided by public/styles.css before the CSS consolidation). */
+        html { font-size: 12px; }
         :root {
-            --custom-primary: #02797d;
+            --custom-primary: #059DA2;
             --custom-secondary: #6c757d;
             --custom-warning: #ffc107;
         }
@@ -49,7 +52,7 @@
             flex-direction: column;
         }
         .auth-logo {
-            color: #02797d;
+            color: #059DA2;
             font-weight: 700;
             font-size: 1.5rem;
             margin: 0;
@@ -62,7 +65,7 @@
             margin-bottom: 0.5rem !important;
         }
         .auth-card .text-center p {
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             margin: 0.5rem 0 0 0;
         }
         .auth-card .mb-3 {
@@ -72,24 +75,24 @@
             margin-bottom: 0.75rem !important;
         }
         .auth-card .form-label {
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             margin-bottom: 0.25rem !important;
         }
         .auth-card .form-control {
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             padding: 0.4rem 0.75rem !important;
         }
         .auth-card .btn {
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             padding: 0.5rem 1rem !important;
         }
         .btn-secondary {
-            background-color: #02797d;
-            border-color: #02797d;
+            background-color: #059DA2;
+            border-color: #059DA2;
         }
         .btn-secondary:hover {
-            background-color: #02797d;
-            border-color: #02797d;
+            background-color: #059DA2;
+            border-color: #059DA2;
         }
         .btn-secondary.btn-error {
             background-color: #dc3545 !important;
@@ -100,9 +103,9 @@
             border-color: #c82333 !important;
         }
         .btn-outline-primary.btn-highlight {
-            background-color: #02797d !important;
+            background-color: #059DA2 !important;
             color: white !important;
-            border-color: #02797d !important;
+            border-color: #059DA2 !important;
             font-weight: 600;
             box-shadow: 0 0 0 3px rgba(2, 121, 125, 0.2);
         }
@@ -111,24 +114,24 @@
             border-color: #016165 !important;
         }
         .btn-outline-primary {
-            color: #02797d;
-            border-color: #02797d;
+            color: #059DA2;
+            border-color: #059DA2;
         }
         .btn-outline-primary:hover {
-            background-color: #02797d;
-            border-color: #02797d;
+            background-color: #059DA2;
+            border-color: #059DA2;
             color: white;
         }
         .form-control:focus {
-            border-color: #02797d;
-            box-shadow: 0 0 0 0.2rem rgba(104, 168, 196, 0.25);
+            border-color: #059DA2;
+            box-shadow: 0 0 0 0.2rem rgba(5, 157, 162, 0.25);
         }
         .auth-link {
-            color: #02797d;
+            color: #059DA2;
             text-decoration: none;
         }
         .auth-link:hover {
-            color: #02797d;
+            color: #059DA2;
             text-decoration: underline;
         }
     </style>
@@ -142,7 +145,7 @@
                         <div class="card-body p-5">
                             <div class="text-center mb-4">
                                 <div id="logo-container" class="mb-3">
-                                    <img src="/images/nooblyjs-logo.png" alt="Noobly JS Logo" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
+                                    <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
                                     <div class="auth-logo" id="app-name">NooblyJS</div>
                                 </div>
                                 <p class="text-muted">Welcome back! Please sign in to your account.</p>
@@ -159,8 +162,8 @@
 
                             <form id="login-form" class="d-none">
                                 <div class="mb-3">
-                                    <label for="username" class="form-label fw-semibold">Username</label>
-                                    <input type="text" id="username" name="username" class="form-control" required>
+                                    <label for="email" class="form-label fw-semibold">Email</label>
+                                    <input type="email" id="email" name="email" class="form-control" required>
                                 </div>
 
                                 <div class="mb-4">
@@ -176,7 +179,7 @@
                             <div id="login-actions" class="text-center d-none">
                                 <div class="mb-3">
                                     <p class="mb-2 text-muted">Don't have an account?</p>
-                                    <a href="/services/authservice/views/register.html" class="btn btn-outline-primary w-100">Create New Account</a>
+                                    <a href="/services/authservice/views/request-invitation.html" class="btn btn-outline-primary w-100">Create New Account</a>
                                 </div>
                             </div>
                         </div>
@@ -224,16 +227,16 @@
                 appNameEl.textContent = brandingConfig.appName;
             }
 
-            // Add logo if provided (use default S-Tech logo if not)
+            // Add logo if provided (use default NooblyJS logo if not)
             const logoContainer = document.getElementById('logo-container');
             const logoUrl = brandingConfig.logoUrl || '/images/nooblyjs-logo.png';
             logoContainer.innerHTML = `<img src="${logoUrl}" alt="${brandingConfig.appName || 'Logo'}" style="max-height: 80px; width: auto; margin-bottom: 1rem;"><div class="auth-logo" id="app-name">${brandingConfig.appName || 'NooblyJS'}</div>`;
 
-            // Apply custom colors to CSS variables
+            // Apply custom colors to CSS variables.
+            // Note: the primary color is intentionally fixed (#059DA2) on this
+            // shared auth screen for cross-site consistency, so any per-site
+            // brandingConfig.primaryColor is deliberately ignored here.
             const root = document.documentElement;
-            if (brandingConfig.primaryColor) {
-                root.style.setProperty('--custom-primary', brandingConfig.primaryColor);
-            }
             if (brandingConfig.secondaryColor) {
                 root.style.setProperty('--custom-secondary', brandingConfig.secondaryColor);
             }
@@ -253,14 +256,16 @@
             document.body.classList.remove('loading');
         }
 
-        // Load branding on page load
-        loadBranding();
+        // NOTE: branding + existing-auth handling are kicked off by decideEntry()
+        // at the very bottom of this script, but only when we are NOT auto-bouncing
+        // to SSO. Don't call loadBranding() here or the form/branding would render
+        // for a frame before the SSO redirect.
 
         const loginForm = document.getElementById('login-form');
         const loginBtn = document.getElementById('login-btn');
         const errorMessage = document.getElementById('error-message');
         const successMessage = document.getElementById('success-message');
-        const createAccountBtn = document.querySelector('a[href*="register"]');
+        const createAccountBtn = document.querySelector('a[href*="request-invitation"]');
 
         function showError(message) {
             loginBtn.textContent = message || 'Login failed try again';
@@ -301,7 +306,7 @@
             const returnUrl = urlParams.get('returnUrl');
 
             const loginData = {
-                username: formData.get('username'),
+                email: formData.get('email'),
                 password: formData.get('password')
             };
 
@@ -419,7 +424,43 @@
             }
         }
 
-        checkExistingAuth();
+        // Decide how to enter this page:
+        //   • ?local=1             → always show the credential form (admin escape hatch)
+        //   • SSO enabled          → bounce straight to the IdP; no form is ever shown
+        //   • otherwise / on error → fall back to the normal local login form
+        // Kept at the bottom so every helper and `let`/`const` above is initialized
+        // before it runs (avoids a temporal-dead-zone error on the synchronous path).
+        (function decideEntry() {
+            const params = new URLSearchParams(window.location.search);
+            const forceLocal = params.get('local') === '1';
+            const returnUrl = params.get('returnUrl') || '';
+
+            function startLocalLogin() {
+                loadBranding();
+                checkExistingAuth();
+            }
+
+            if (forceLocal) {
+                startLocalLogin();
+                return;
+            }
+
+            // Probe whether a redirect-based SSO provider (Entra) is configured.
+            // The page is still hidden (body.loading), so if we redirect there is
+            // no visible flash; any failure falls back to the local form.
+            fetch('/services/authservice/api/sso-config', { credentials: 'include' })
+                .then(r => (r.ok ? r.json() : null))
+                .then(cfg => {
+                    const data = cfg && cfg.data;
+                    if (data && data.enabled && data.initiateUrl) {
+                        const q = returnUrl ? ('?returnUrl=' + encodeURIComponent(returnUrl)) : '';
+                        window.location.replace(data.initiateUrl + q);
+                    } else {
+                        startLocalLogin();
+                    }
+                })
+                .catch(startLocalLogin);
+        })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

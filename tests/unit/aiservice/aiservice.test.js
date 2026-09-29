@@ -5,7 +5,7 @@
  * provider selection, and dependency injection for multiple AI providers
  * (Claude, OpenAI/ChatGPT, Ollama).
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

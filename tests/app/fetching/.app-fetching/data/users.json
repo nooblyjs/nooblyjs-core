@@ -9,10 +9,10 @@
     "lastLogin": null,
     "isActive": true
   },
-  "srbooysen@nooblyjs.co.za": {
+  "admin@nooblyjs.co.za": {
     "id": "asblq0z8mmluiv9ro",
-    "username": "srbooysen@nooblyjs.co.za",
-    "email": "srbooysen@nooblyjs.co.za",
+    "username": "admin@nooblyjs.co.za",
+    "email": "admin@nooblyjs.co.za",
     "password": "6ad5b02e27d516db5471d80d0b20ba37ee758d84678389f999a63a24da22e08b",
     "role": "user",
     "createdAt": "2026-02-20T06:41:56.533Z",

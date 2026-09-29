@@ -1,6 +1,6 @@
 /**
- * @fileoverview Noobly JS Core - Application Service Base Class
- * Base class for all custom service implementations in the Noobly JS Core framework.
+ * @fileoverview NooblyJS Core - Application Service Base Class
+ * Base class for all custom service implementations in the NooblyJS Core framework.
  * Provides common initialization patterns, Express app integration, and event emission capabilities.
  *
  * This class is designed to be extended by:
@@ -10,7 +10,7 @@
  * - appWorkerBase (background workers)
  * - appDataBase (data layer implementations)
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -18,7 +18,7 @@
 'use strict';
 
 /**
- * Base class for application services in Noobly JS Core.
+ * Base class for application services in NooblyJS Core.
  * Provides foundational properties and initialization for all service types.
  * This is an abstract base class meant to be extended by other classes.
  *

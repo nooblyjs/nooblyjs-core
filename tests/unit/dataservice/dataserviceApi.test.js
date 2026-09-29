@@ -3,7 +3,7 @@
  *
  * This test suite covers the API data service provider that connects to remote backend services.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -24,7 +24,7 @@ describe('DataService API Provider', () => {
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');
     dataService = createDataService('api', {
-      apiRoot,
+      api: apiRoot,
       apiKey,
       timeout: 10000
     }, mockEventEmitter);

@@ -1,5 +1,5 @@
 ###
-### Noobly JS Core - Authentication Service API Tests
+### NooblyJS Core - Authentication Service API Tests
 ###
 ### These tests demonstrate the Authentication service API endpoints with different providers.
 ### Make sure your server is running with API keys configured before testing.
@@ -82,13 +82,13 @@ Authorization: ApiKey {{apiKey}}
 
 ###
 
-### LOGIN - Authenticate with username and password
+### LOGIN - Authenticate with email and password
 POST {{baseUrl}}/services/authservice/api/login
 Content-Type: application/json
 x-api-key: {{apiKey}}
 
 {
-    "username": "john_doe",
+    "email": "john@example.com",
     "password": "SecurePass123!"
 }
 

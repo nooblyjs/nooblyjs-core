@@ -8,7 +8,7 @@
  * Note: This activity uses the global serviceRegistry to access services
  * because service instances cannot be passed through worker threads.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

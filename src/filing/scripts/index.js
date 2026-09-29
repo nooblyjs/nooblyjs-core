@@ -44,7 +44,7 @@ module.exports = (options, eventEmitter, cache) => {
     /**
      * GET /services/filing/scripts
      * Serves the client-side filing library as JavaScript
-     * This endpoint returns the digitalTechnologiesfiling library for use in web applications.
+     * This endpoint returns the nooblyjsfiling library for use in web applications.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -54,7 +54,7 @@ module.exports = (options, eventEmitter, cache) => {
      * <script src="/services/filing/scripts"></script>
      *
      * // Use in JavaScript:
-     * const cache = new digitalTechnologiesfiling({ instanceName: 'default' });
+     * const cache = new nooblyjsfiling({ instanceName: 'default' });
      * cache.put('key', { data: 'value' });
      * cache.get('key').then(data => console.log(data));
      */
@@ -75,10 +75,7 @@ module.exports = (options, eventEmitter, cache) => {
         res.status(200).send(libraryCode);
       } catch (error) {
         eventEmitter.emit('api-filing-scripts-error', error.message);
-        res.status(500).json({
-          error: 'Failed to load filing library',
-          message: error.message
-        });
+        res.status(500).json({ error: 'Failed to load filing library' });
       }
     });
 

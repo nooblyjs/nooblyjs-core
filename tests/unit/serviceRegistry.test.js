@@ -4,7 +4,7 @@
  * This test suite covers the ServiceRegistry functionality including service
  * creation, API key configuration, and middleware integration.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.2.1
  * @since 1.2.1
  */
@@ -159,7 +159,8 @@ describe('ServiceRegistry', () => {
     it('should protect API endpoints when API keys are configured', async () => {
       serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
-        requireApiKey: true
+        requireApiKey: true,
+        security: { servicesAuth: { requireLogin: false } }
       });
 
       // Create cache service to register routes
@@ -180,7 +181,8 @@ describe('ServiceRegistry', () => {
     it('should allow access with valid API key', async () => {
       serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
-        requireApiKey: true
+        requireApiKey: true,
+        security: { servicesAuth: { requireLogin: false } }
       });
 
       // Create cache service to register routes
@@ -197,7 +199,8 @@ describe('ServiceRegistry', () => {
     it('should allow access to status endpoints without API key', async () => {
       serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
-        requireApiKey: true
+        requireApiKey: true,
+        security: { servicesAuth: { requireLogin: false } }
       });
 
       // Create cache service to register routes
@@ -215,7 +218,8 @@ describe('ServiceRegistry', () => {
 
       serviceRegistry.initialize(app, null, {
         apiKeys: [apiKey1, apiKey2],
-        requireApiKey: true
+        requireApiKey: true,
+        security: { servicesAuth: { requireLogin: false } }
       });
 
       // Create cache service to register routes
@@ -238,7 +242,8 @@ describe('ServiceRegistry', () => {
     it('should allow disabling API key requirement', async () => {
       serviceRegistry.initialize(app, null, {
         apiKeys: [validApiKey],
-        requireApiKey: false
+        requireApiKey: false,
+        security: { servicesAuth: { requireLogin: false } }
       });
 
       // Create cache service to register routes

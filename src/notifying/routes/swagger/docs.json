@@ -5,7 +5,7 @@
     "description": "RESTful API for pub/sub messaging system with topic management, subscription handling, and message broadcasting capabilities.",
     "version": "1.0.15",
     "contact": {
-      "name": "Noobly JS Team",
+      "name": "NooblyJS Core Team",
       "url": "https://github.com/nooblyjs/nooblyjs-core"
     },
     "license": {

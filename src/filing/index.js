@@ -3,7 +3,7 @@
  * Factory module for creating file service instances with multiple provider support.
  * Supports local filesystem, FTP, and S3 backends with routing and views.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -350,6 +350,18 @@ class FilingService {
   async saveSettings(settings){
     return this.provider.saveSettings(settings);
   }
+
+  /**
+   * Initializes the filing provider (e.g., clone git repo, start periodic tasks)
+   * Only available for providers that support initialization
+   * @return {Promise<void>}
+   */
+  async initialize() {
+    if (this.provider.initialize && typeof this.provider.initialize === 'function') {
+      return this.provider.initialize();
+    }
+    // Some providers don't need initialization, that's okay
+  }
 }
 
 /**
@@ -464,7 +476,7 @@ function createFilingService(type = 'local', options, eventEmitter) {
         ...options,
         remoteProvider
       };
-      const SyncFilingProvider = require('./providers/filingSyncProvider');
+      const SyncFilingProvider = require('./modules/filingSyncProvider');
       provider = new SyncFilingProvider(syncOptions, eventEmitter);
       break;
     default:

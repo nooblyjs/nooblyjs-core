@@ -2,6 +2,19 @@
  * @fileoverview Unit tests for the DataService and its providers.
  */
 
+// The SimpleDB provider depends on the optional `aws-sdk` (v2) package, which
+// is not part of the default dependency set (the project uses the modular v3
+// @aws-sdk/* packages). When aws-sdk is not installed we skip the SimpleDB
+// suite cleanly rather than failing the whole file (which also covers the
+// memory and file providers).
+let awsSdkAvailable = true;
+try {
+  require.resolve('aws-sdk');
+} catch (_) {
+  awsSdkAvailable = false;
+}
+const describeSimpleDb = awsSdkAvailable ? describe : describe.skip;
+
 // Mock the AWS SimpleDB client FIRST before any imports
 const mockPromise = jest.fn();
 const mockSimpleDB = {
@@ -15,16 +28,17 @@ const mockConfig = {
 };
 const mockSimpleDBConstructor = jest.fn(() => mockSimpleDB);
 
-jest.mock('aws-sdk', () => ({
-  SimpleDB: mockSimpleDBConstructor,
-  config: mockConfig,
-}));
+if (awsSdkAvailable) {
+  jest.mock('aws-sdk', () => ({
+    SimpleDB: mockSimpleDBConstructor,
+    config: mockConfig,
+  }));
+}
 
 // Now import other modules
 const fs = require('node:fs').promises;
 const path = require('node:path');
 const EventEmitter = require('events');
-const AWS = require('aws-sdk');
 const createDataServiceService = require('../../../src/dataservice');
 
 describe('DataService', () => {
@@ -292,7 +306,7 @@ describe('DataService', () => {
   });
 
   // Test SimpleDbDataRingProvider
-  describe('SimpleDbDataRingProvider', () => {
+  describeSimpleDb('SimpleDbDataRingProvider', () => {
     const mockRegion = 'us-east-1';
     const mockAccessKeyId = 'test-access-key';
     const mockSecretAccessKey = 'test-secret-key';

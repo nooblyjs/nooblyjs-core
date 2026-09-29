@@ -23,8 +23,30 @@
  * not keep the Node event loop alive on its own — long-running services
  * still tick, but unit tests and short-lived scripts exit cleanly.
  *
- * @author Noobly JS Core Team
- * @version 2.0.0
+ * COMPLETION IS CORRELATED BY TASK ID, NOT CARRIED ON THE QUEUE. Everything
+ * enqueued here must survive a JSON round trip, because the queueing service may
+ * be out of process: the ActiveMQ provider enqueues with `JSON.stringify` and
+ * dequeues with `JSON.parse`. A caller's `completionCallback` is therefore kept
+ * in `pendingCallbacks_` on the process that called `start()`, and the task
+ * carries only an `origin` stamp naming that process. Two paths settle it:
+ *
+ *   - LOCAL — the process that queued the task also ran it (always so for the
+ *     in-memory provider). `finaliseTask_` fires the callback directly, with no
+ *     broker round trip.
+ *   - REMOTE — another process ran it and wrote the result to the shared
+ *     complete/error queue. `processResults_` drains those queues and matches
+ *     results to the waiters this process holds; results belonging to a sibling
+ *     are put back for it, up to `MAX_RESULT_ROUTING_ATTEMPTS`.
+ *
+ * Every waiter has a deadline (`callbackTimeout`), so a task whose result never
+ * arrives fails loudly instead of leaving the caller awaiting a promise that can
+ * never settle. This matters because the callback is the ONLY way a workflow
+ * step advances — `WorkflowService` awaits a promise that resolves nowhere else.
+ * Before this, putting the function on the queue meant it was silently dropped
+ * by JSON and every workflow hung after its first step.
+ *
+ * @author NooblyJS Core Team
+ * @version 2.1.0
  * @since 1.0.0
  */
 
@@ -33,6 +55,7 @@
 const { Worker } = require('worker_threads');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const crypto = require('node:crypto');
 
 /** @const {number} Queue processor poll interval in ms. */
@@ -40,6 +63,21 @@ const QUEUE_TICK_MS = 1000;
 
 /** @const {number} Max task history entries kept in memory. */
 const TASK_HISTORY_LIMIT = 1000;
+
+/**
+ * @const {number} How many times a result belonging to another process may be
+ * put back on the shared result queue before it is dropped. Bounds the case
+ * where the owning process has gone away permanently — without it the message
+ * would circulate between the surviving consumers forever.
+ */
+const MAX_RESULT_ROUTING_ATTEMPTS = 10;
+
+/**
+ * @const {number} Grace period added to `workerTimeout` to derive the default
+ * deadline for a waiting callback. A waiter must outlive the work it is waiting
+ * for, or a slow-but-successful task would settle as a timeout.
+ */
+const CALLBACK_TIMEOUT_GRACE_MS = 60000;
 
 /**
  * Production-grade worker manager.
@@ -75,10 +113,44 @@ class WorkerManager {
         { setting: 'maxQueueSize',  type: 'number',  values: null },
         { setting: 'enableLogging', type: 'boolean', values: null }
       ],
-      workerTimeout: this.coerceNumber_(options.workerTimeout, 300000, 1000),
+      workerTimeout: this.coerceNumber_(options.workerTimeout, 120000000, 1000),
       maxQueueSize:  this.coerceNumber_(options.maxQueueSize,  1000,   1),
-      enableLogging: options.enableLogging !== undefined ? !!options.enableLogging : true
+      enableLogging: options.enableLogging !== undefined ? !!options.enableLogging : true,
+      callbackTimeout: 0 // resolved just below, once workerTimeout is known
     };
+    this.settings.list.push({ setting: 'callbackTimeout', type: 'number', values: null });
+    this.settings.callbackTimeout = this.coerceNumber_(
+      options.callbackTimeout,
+      this.settings.workerTimeout + CALLBACK_TIMEOUT_GRACE_MS,
+      1000
+    );
+
+    /**
+     * Identifies THIS manager instance among every process sharing the queueing
+     * backend. Stamped on each task and carried onto its result, so a result
+     * dequeued from the shared result queue can be told apart from one belonging
+     * to a sibling process. Override via `options.originId` to pin it across
+     * restarts (a restarted process does not inherit the previous one's waiters,
+     * so a stable id mainly aids log correlation).
+     * @private @const {string}
+     */
+    this.originId_ = options.originId
+      || `${os.hostname()}-${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+
+    /**
+     * Callbacks awaiting a result, keyed by task id: `{callback, expiresAt, scriptPath}`.
+     *
+     * THE CALLBACK NEVER GOES ON THE QUEUE. It used to be a property of the
+     * enqueued task, which works only while the queue hands back the very same
+     * object — true of the in-memory provider, false of every out-of-process one:
+     * ActiveMQ enqueues with `JSON.stringify` and dequeues with `JSON.parse`, and
+     * JSON silently drops function-valued properties. The task then completed
+     * with `task.completionCallback` undefined, so nothing ever settled the
+     * promise WorkflowService awaits — every workflow hung after its first step
+     * with no error logged anywhere.
+     * @private @const {!Map<string, !Object>}
+     */
+    this.pendingCallbacks_ = new Map();
 
     /** @private @const {number} Maximum concurrent worker threads. */
     this.maxThreads_ = this.coerceNumber_(options.maxThreads, 4, 1);
@@ -106,6 +178,12 @@ class WorkerManager {
 
     /** @private {?NodeJS.Timeout} Queue processing interval. */
     this.queueProcessorInterval_ = null;
+
+    /** @private {boolean} Whether a queue-processor pass is still running (see startQueueProcessor_). */
+    this.tickInFlight_ = false;
+
+    /** @private {number} Ticks dropped because the previous pass had not finished. */
+    this.skippedTicks_ = 0;
 
     /** @private @const {string} Queue name for incoming tasks. */
     this.QUEUE_INCOMING_ = 'nooblyjs-core-working-incoming';
@@ -210,6 +288,210 @@ class WorkerManager {
     return crypto.randomBytes(16).toString('hex');
   }
 
+  // ---------------------------------------------------------------------------
+  // Completion waiters
+  //
+  // A caller's completionCallback stays in THIS process, keyed by task id, while
+  // only serialisable data goes on the queue. Two things then settle it:
+  //
+  //   1. the local fast path — when this process both queued and executed the
+  //      task (always true for an in-process queue, and the common case for a
+  //      single deployment), finaliseTask_ settles it directly, with no broker
+  //      round trip and identical latency to the previous behaviour;
+  //   2. the results consumer — when another process executed it, that process
+  //      writes the result to the shared result queue, and processResults_ here
+  //      correlates it back by task id.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Records a callback to be fired when `taskId` finishes, wherever it runs.
+   * No-ops when no callback was supplied, so `start()` stays allocation-free
+   * for fire-and-forget callers.
+   *
+   * @private
+   * @param {string} taskId
+   * @param {Function|undefined} callback
+   * @param {string} scriptPath Retained for the timeout message and logs.
+   */
+  registerWaiter_(taskId, callback, scriptPath) {
+    if (typeof callback !== 'function') return;
+    this.pendingCallbacks_.set(taskId, {
+      callback,
+      scriptPath,
+      expiresAt: Date.now() + this.settings.callbackTimeout
+    });
+  }
+
+  /**
+   * Fires and removes the waiter for `taskId`, if this process holds one.
+   *
+   * @private
+   * @param {string} taskId
+   * @param {string} status `'completed'` or `'error'`.
+   * @param {*} data Result payload, or error message.
+   * @return {boolean} Whether a waiter was found and fired.
+   */
+  settleWaiter_(taskId, status, data) {
+    const waiter = this.pendingCallbacks_.get(taskId);
+    if (!waiter) return false;
+
+    this.pendingCallbacks_.delete(taskId);
+    try {
+      waiter.callback(status, data);
+    } catch (err) {
+      this.eventEmitter_?.emit('worker:callback:error', { taskId, error: err.message });
+      this.logIf_('error', 'Completion callback threw', { taskId, error: err.message });
+    }
+    return true;
+  }
+
+  /**
+   * Fails any waiter whose result never arrived.
+   *
+   * Without this, moving the callback off the queue would merely relocate the
+   * hang it was introduced to fix: a task lost because the process that claimed
+   * it died mid-flight leaves a caller awaiting a promise that can never settle.
+   * The deadline is `callbackTimeout` (workerTimeout + a grace period by
+   * default), so a slow-but-successful task is never cut short.
+   *
+   * @private
+   */
+  sweepExpiredWaiters_() {
+    if (this.pendingCallbacks_.size === 0) return;
+
+    const now = Date.now();
+    for (const [taskId, waiter] of this.pendingCallbacks_) {
+      if (waiter.expiresAt > now) continue;
+
+      this.pendingCallbacks_.delete(taskId);
+      const message =
+        `No result received for task ${taskId} within ${this.settings.callbackTimeout}ms`;
+
+      this.eventEmitter_?.emit('worker:callback:timeout', {
+        taskId,
+        scriptPath: waiter.scriptPath,
+        timeoutMs: this.settings.callbackTimeout
+      });
+      this.logIf_('error', 'Completion callback timed out', {
+        taskId,
+        scriptPath: waiter.scriptPath,
+        timeoutMs: this.settings.callbackTimeout
+      });
+
+      try {
+        waiter.callback('error', message);
+      } catch (_) { /* swallow — the caller's own handler failed */ }
+    }
+  }
+
+  /**
+   * Drains the shared result queues and settles the waiters this process owns.
+   *
+   * Results are written by whichever process EXECUTED the task, so on a shared
+   * broker a process routinely dequeues results belonging to its siblings. Those
+   * are put straight back, and draining stops for this tick so the message is
+   * not immediately re-read in a tight loop; `routingAttempts` bounds the
+   * recycling so a result whose owner has gone for good is eventually dropped
+   * rather than circulating forever.
+   *
+   * A result of our own with no waiter is normal, not an error: the local fast
+   * path in finaliseTask_ already settled it, and this pass is what stops the
+   * queue growing without bound.
+   *
+   * @private
+   * @return {Promise<void>}
+   */
+  async processResults_() {
+    if (!this.queueService_ || !this.isRunning_) return;
+
+    for (const queueName of [this.QUEUE_COMPLETE_, this.QUEUE_ERROR_]) {
+      // Ask for the size first: dequeue on an empty queue waits out the
+      // provider's full dequeue timeout, which would otherwise be paid on
+      // every tick of an idle system.
+      let queueSize = 0;
+      try {
+        queueSize = await this.queueService_.size(queueName);
+      } catch (_) {
+        continue; // transient backend trouble; try again next tick
+      }
+
+      while (queueSize > 0) {
+        const result = await this.queueService_.dequeue(queueName);
+        if (!result) break;
+        queueSize--;
+
+        const taskId = result.taskId;
+        const isOurs = !result.origin || result.origin === this.originId_;
+
+        if (isOurs) {
+          // Settles a task another process ran on our behalf; a no-op when the
+          // local fast path already fired, which is the single-process norm.
+          this.settleWaiter_(taskId, result.status, this.resultPayload_(result));
+          continue;
+        }
+
+        if (this.pendingCallbacks_.has(taskId)) {
+          // Ours after all — the origin stamp says otherwise, but the waiter is
+          // the authoritative claim.
+          this.settleWaiter_(taskId, result.status, this.resultPayload_(result));
+          continue;
+        }
+
+        await this.recycleForeignResult_(queueName, result);
+        break; // let the owner have a turn before we read this queue again
+      }
+    }
+  }
+
+  /**
+   * Extracts the value a completion callback should receive from a task result.
+   * Mirrors how finaliseTask_ splits `result` and `error` across the two fields.
+   *
+   * @private
+   * @param {!Object} taskResult
+   * @return {*}
+   */
+  resultPayload_(taskResult) {
+    return taskResult.status === 'completed' ? taskResult.result : taskResult.error;
+  }
+
+  /**
+   * Puts a sibling process's result back on its queue so the owner can claim it,
+   * dropping it once it has been passed over too many times.
+   *
+   * @private
+   * @param {string} queueName
+   * @param {!Object} result
+   * @return {Promise<void>}
+   */
+  async recycleForeignResult_(queueName, result) {
+    const attempts = (result.routingAttempts || 0) + 1;
+
+    if (attempts > MAX_RESULT_ROUTING_ATTEMPTS) {
+      this.eventEmitter_?.emit('worker:result:orphaned', {
+        taskId: result.taskId,
+        origin: result.origin,
+        attempts
+      });
+      this.logIf_('warn', 'Dropped orphaned task result', {
+        taskId: result.taskId,
+        origin: result.origin,
+        attempts,
+        reason: `no process claimed it within ${MAX_RESULT_ROUTING_ATTEMPTS} passes`
+      });
+      return;
+    }
+
+    try {
+      await this.queueService_.enqueue(queueName, { ...result, routingAttempts: attempts });
+    } catch (err) {
+      this.logIf_('error', 'Failed to requeue another process’s task result', {
+        taskId: result.taskId,
+        error: err.message
+      });
+    }
+  }
+
   /**
    * Resolves an activity script path to an absolute filesystem path.
    * Absolute inputs are trusted as-is; relative inputs are resolved against
@@ -288,16 +570,30 @@ class WorkerManager {
     const resolvedScriptPath = await this.resolveActivityPath_(scriptPath);
 
     const taskId = this.generateTaskId_();
+
+    // The task must be SERIALISABLE — it may cross a process boundary. The
+    // callback is held here and correlated back by task id (see the completion
+    // waiters section); `origin` marks whose waiter is owed the result.
     const task = {
       id: taskId,
       scriptPath: resolvedScriptPath,
       originalScriptPath: scriptPath,
       data,
-      completionCallback,
+      origin: this.originId_,
       queuedAt: new Date()
     };
 
-    await this.queueService_.enqueue(this.QUEUE_INCOMING_, task);
+    this.registerWaiter_(taskId, completionCallback, resolvedScriptPath);
+
+    try {
+      await this.queueService_.enqueue(this.QUEUE_INCOMING_, task);
+    } catch (err) {
+      // Never leave a waiter behind for a task that was never queued — it would
+      // sit until callbackTimeout and then report a misleading timeout instead
+      // of the real enqueue failure.
+      this.pendingCallbacks_.delete(taskId);
+      throw err;
+    }
     const queueSize = await this.queueService_.size(this.QUEUE_INCOMING_);
 
     this.eventEmitter_?.emit('worker:queued', {
@@ -331,8 +627,40 @@ class WorkerManager {
 
     this.queueProcessorInterval_ = setInterval(() => {
       if (!this.isRunning_ || !this.queueService_) return;
-      this.processQueue_().catch((err) => {
-        this.logIf_('error', 'Queue processor tick failed', { error: err?.message });
+
+      // Expiring waiters is local bookkeeping — run it even when the queue
+      // backend is unreachable, since that is exactly when results go missing.
+      this.sweepExpiredWaiters_();
+
+      // ONE TICK AT A TIME. Each pass talks to the queueing backend, and with
+      // an out-of-process one (ActiveMQ reads queue depth over HTTP) a pass can
+      // outlast the 1s interval whenever the host is busy. Unguarded, the timer
+      // keeps firing regardless and every stalled second adds another concurrent
+      // round of requests — so a process briefly too busy to serve one poll ends
+      // up owing ten, which is how a slow tick became a failing tick. The
+      // backlog is not useful work: each pass re-reads the same queue state.
+      if (this.tickInFlight_) {
+        this.skippedTicks_++;
+        return;
+      }
+      this.tickInFlight_ = true;
+
+      Promise.allSettled([
+        this.processQueue_().catch((err) => {
+          this.logIf_('error', 'Queue processor tick failed', { error: err?.message });
+        }),
+        this.processResults_().catch((err) => {
+          this.logIf_('error', 'Result processor tick failed', { error: err?.message });
+        })
+      ]).finally(() => {
+        this.tickInFlight_ = false;
+        if (this.skippedTicks_ > 0) {
+          // Worth knowing: it means the backend or this process is running
+          // slower than the poll interval. Reported once per catch-up rather
+          // than per skip, so a busy period costs one line.
+          this.logIf_('warn', 'Queue processor fell behind', { skippedTicks: this.skippedTicks_ });
+          this.skippedTicks_ = 0;
+        }
       });
     }, QUEUE_TICK_MS);
 
@@ -500,12 +828,21 @@ class WorkerManager {
       status,
       result: status === 'completed' ? data : undefined,
       error: status === 'error' ? data : undefined,
+      // Carries the waiter's owner through to the result so processResults_ in
+      // whichever process holds that waiter can recognise it.
+      origin: task.origin,
       queuedAt: task.queuedAt,
       startedAt: workerInfo.startedAt,
       completedAt: new Date()
     };
 
     this.recordHistory_(taskResult);
+
+    // Settle in-process FIRST when we own the waiter. This is the single-process
+    // case and it must not pay a broker round trip: the caller is resumed at
+    // exactly the point it was before, and the queued copy below is then drained
+    // by our own processResults_ as a no-op.
+    const settledLocally = this.settleWaiter_(task.id, status, data);
 
     if (this.queueService_) {
       try {
@@ -520,17 +857,16 @@ class WorkerManager {
           taskId: task.id,
           error: err.message
         });
-      }
-    }
 
-    if (task.completionCallback) {
-      try {
-        task.completionCallback(status, data);
-      } catch (err) {
-        this.eventEmitter_?.emit('worker:callback:error', {
-          taskId: task.id,
-          error: err.message
-        });
+        // The result never reached the queue, so a REMOTE waiter will never see
+        // it and would hang until its deadline. Nothing can be done for it here
+        // — surface it plainly rather than letting it fail silently later.
+        if (!settledLocally && task.origin && task.origin !== this.originId_) {
+          this.logIf_('error', 'Task result lost — the waiting process cannot be notified', {
+            taskId: task.id,
+            origin: task.origin
+          });
+        }
       }
     }
 
@@ -571,22 +907,19 @@ class WorkerManager {
       scriptPath: task.scriptPath,
       status: 'error',
       error: message,
+      origin: task.origin,
       queuedAt: task.queuedAt,
       startedAt: new Date(),
       completedAt: new Date()
     };
     this.recordHistory_(taskResult);
 
+    this.settleWaiter_(task.id, 'error', message);
+
     if (this.queueService_) {
       try {
         await this.queueService_.enqueue(this.QUEUE_ERROR_, taskResult);
       } catch (_) { /* best effort */ }
-    }
-
-    if (task.completionCallback) {
-      try {
-        task.completionCallback('error', message);
-      } catch (_) { /* swallow callback errors */ }
     }
   }
 
@@ -715,6 +1048,21 @@ class WorkerManager {
     await Promise.all(terminationPromises);
     this.activeWorkers_.clear();
 
+    // Fail anything still waiting. The workers that would have produced these
+    // results have just been terminated, so a caller left holding an unsettled
+    // promise would wait for a result that is now guaranteed never to arrive —
+    // the same silent hang this design exists to prevent, at shutdown.
+    if (this.pendingCallbacks_.size > 0) {
+      const stranded = this.pendingCallbacks_.size;
+      for (const [taskId, waiter] of this.pendingCallbacks_) {
+        this.pendingCallbacks_.delete(taskId);
+        try {
+          waiter.callback('error', 'Worker manager stopped before the task completed');
+        } catch (_) { /* swallow — the caller's own handler failed */ }
+      }
+      this.logIf_('warn', 'Failed pending callbacks on shutdown', { stranded });
+    }
+
     this.eventEmitter_?.emit('worker:manager:stopped');
     this.logIf_('info', 'Worker manager stopped');
   }
@@ -745,13 +1093,18 @@ class WorkerManager {
 
     return {
       isRunning: this.isRunning_,
+      originId: this.originId_,
       maxThreads: this.maxThreads_,
       activeWorkers: this.activeWorkers_.size,
+      // Results are now consumed rather than accumulated, so `complete`/`error`
+      // read near zero on a healthy system; task outcomes live in the history
+      // below (getTaskHistory), not in queue depth.
       queues: {
         incoming: incomingQueueSize,
         complete: completeQueueSize,
         error: errorQueueSize
       },
+      pendingCallbacks: this.pendingCallbacks_.size,
       completedTasks: this.taskHistory_.size
     };
   }

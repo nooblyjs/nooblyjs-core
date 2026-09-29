@@ -1,23 +1,23 @@
 header
 
   icon: /images/nooblyjs-logo.png
-  title: Noobly JS Core
-  links: [Services](/services/) [Github](https://github.com/nooblyjs/nooblyjs-core)
+  title: NooblyJS Core
+  links: [Services](/services/) [GitHub](https://github.com/nooblyjs/nooblyjs-core)
 
 ---
 
 hero-banner
 
-  title: Noobly JS Core
+  title: NooblyJS Core
   subtitle: Enterprise-Grade Modular Node.js Backend Framework — Production-ready services with dependency injection, event-driven architecture, and comprehensive tooling.
 
 ---
 
-## Welcome to Noobly JS Core
+## Welcome to NooblyJS Core
 
 A powerful, production-ready backend framework providing a complete suite of services with singleton pattern implementation, managed through a central ServiceRegistry. Build sophisticated applications with minimal boilerplate.
 
-**Version**: 2.0.1 | **Status**: Production Ready | **License**: nooblyjs Owned
+**Version**: 2.0.1 | **Status**: Production Ready | **License**: ISC
 
 ---
 
@@ -27,7 +27,7 @@ A powerful, production-ready backend framework providing a complete suite of ser
   left
 ### 🏗️ Architecture at a Glance
 
-Noobly JS Core uses a **5-level dependency hierarchy** to organize services:
+NooblyJS Core uses a **5-level dependency hierarchy** to organize services:
 
 - **Level 0**: Foundation (Logging)
 - **Level 1**: Infrastructure (Caching, Queueing, Fetching, Notifying)
@@ -506,7 +506,7 @@ npm run kill-test        # Kill port 3101
 
 ## Contributing
 
-To contribute to Noobly JS Core:
+To contribute to NooblyJS Core:
 
 1. Create a feature branch: `git checkout -b feature/your-feature`
 2. Write tests for your changes
@@ -569,8 +569,8 @@ npm run docker:publish   # Build and push Docker image
 footer
 
   icon: /images/nooblyjs-logo.png
-  title: Noobly JS Core
-  subtitle: © 2026 Noobly JS. All rights reserved. Production-ready Node.js backend framework.
-  links: [Bitbucket](https://github.com/nooblyjs/nooblyjs-core/src) [Documentation](/) [Contact](mailto:srbooysen@nooblyjs.co.za)
+  title: NooblyJS Knowledge Platform
+  subtitle: © 2026 NooblyJS. All rights reserved.
+  links: [GitHub](https://github.com/nooblyjs/nooblyjs-core) [Documentation](/) [Issues](https://github.com/nooblyjs/nooblyjs-core/issues)
 
 ---

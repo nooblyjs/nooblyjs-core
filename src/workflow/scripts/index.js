@@ -45,7 +45,7 @@ module.exports = (options, eventEmitter, workflow) => {
     /**
      * GET /services/workflow/scripts
      * Serves the client-side workflow library as JavaScript
-     * This endpoint returns the digitalTechnologiesworkflow library for use in web applications.
+     * This endpoint returns the WorkflowManagerUI library for use in web applications.
      *
      * @param {express.Request} req - Express request object
      * @param {express.Response} res - Express response object
@@ -55,9 +55,7 @@ module.exports = (options, eventEmitter, workflow) => {
      * <script src="/services/workflow/scripts"></script>
      *
      * // Use in JavaScript:
-     * const workflow = new digitalTechnologiesworkflow({ instanceName: 'default' });
-     * workflow.put('key', { data: 'value' });
-     * workflow.get('key').then(data => console.log(data));
+     * new WorkflowManagerUI({ containerId: 'workflowManager' }).initialize();
      */
     app.get('/services/workflow/scripts', (req, res) => {
       const fs = require('node:fs');
@@ -70,16 +68,13 @@ module.exports = (options, eventEmitter, workflow) => {
 
         // Set appropriate headers for JavaScript
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        res.setHeader('workflow-Control', 'public, max-age=3600'); // workflow for 1 hour
+        res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('X-Content-Type-Options', 'nosniff');
 
         res.status(200).send(libraryCode);
       } catch (error) {
         eventEmitter.emit('api-workflow-scripts-error', error.message);
-        res.status(500).json({
-          error: 'Failed to load workflow library',
-          message: error.message
-        });
+        res.status(500).json({ error: 'Failed to load workflow library' });
       }
     });
 

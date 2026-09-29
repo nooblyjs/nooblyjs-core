@@ -3,7 +3,7 @@
  * Client-side local logging implementation using browser console methods.
  * Provides methods for logging directly to the browser console without server communication.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -19,7 +19,7 @@
  *
  * @example
  * // Create a local logger (no server needed)
- * var logger = new LocalLogger();
+ * let logger = new LocalLogger();
  *
  * // Log at different levels
  * logger.info('User logged in', {userId: 123});

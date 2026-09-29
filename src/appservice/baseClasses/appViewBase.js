@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core - View Renderer Base Class
- * Base class for implementing view rendering and static file serving in Noobly JS Core.
+ * @fileoverview NooblyJS Core - View Renderer Base Class
+ * Base class for implementing view rendering and static file serving in NooblyJS Core.
  * Provides integration with Express view engines and static file middleware.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

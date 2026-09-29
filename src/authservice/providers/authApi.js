@@ -1,7 +1,7 @@
 /**
  * @fileoverview API-based authentication implementation that proxies requests to a remote auth service.
  * Allows client applications to consume backend authentication API endpoints for enterprise systems.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -105,7 +105,7 @@ class AuthApi {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:error', { operation: 'login', error: error.message });
         this.eventEmitter_.emit('auth:login-failed', {
-          username: credentials && credentials.username,
+          email: credentials && credentials.email,
           error: error.message
         });
       }

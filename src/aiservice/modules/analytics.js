@@ -7,13 +7,25 @@
 
 class Analytics {
 
-  constructor(eventEmitter) {
+  /**
+   * Instantiate the AI Service Analytics object
+   * @param {} eventEmitter 
+   * @param {*} instanceName 
+   */
+  constructor(eventEmitter, instanceName) {
 
     this.promptStats_ = new Map();
     this.maxEntries_ = 2000;
+    this.instanceName_ = instanceName || 'default';
+    this.eventEmitter_ = eventEmitter;
 
     if (eventEmitter) {
-      eventEmitter.on('ai:prompt:complete', (data = {}) => {
+      // Stored reference so it can be removed in destroy() (P2-6).
+      this.promptCompleteListener_ = (data = {}) => {
+        // Only record prompts that belong to this analytics instance.
+        if (data.instanceName && data.instanceName !== this.instanceName_) {
+          return;
+        }
         this.recordPrompt({
           prompt: data.prompt,
           username: data.username,
@@ -24,7 +36,18 @@ class Analytics {
           provider: data.provider || data.response?.provider || null,
           timestamp: data.timestamp || Date.now()
         });
-      });
+      };
+      eventEmitter.on('ai:prompt:complete', this.promptCompleteListener_);
+    }
+  }
+
+  /**
+   * Removes event listeners registered by this analytics module (P2-6).
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.promptCompleteListener_) {
+      this.eventEmitter_.removeListener('ai:prompt:complete', this.promptCompleteListener_);
+      this.promptCompleteListener_ = null;
     }
   }
 

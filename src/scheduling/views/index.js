@@ -43,5 +43,11 @@ module.exports = (options, eventEmitter, scheduler) => {
     
     // Serve static files from the views directory for scheduling service
     app.use('/services/scheduling', express.static(path.join(__dirname)));
+
+    // Serve the schedule manager UI library by its static path, e.g.
+    // /services/scheduling/scripts/js/index.js. Only the `js` folder is
+    // exposed; the server-side route module next to it must not be served.
+    app.use('/services/scheduling/scripts/js',
+      express.static(path.join(__dirname, '../scripts/js')));
   }
 };

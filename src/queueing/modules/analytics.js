@@ -3,7 +3,7 @@
  * Captures and stores queue activity metrics for analytics purposes.
  * Tracks enqueue/dequeue operations and provides statistics about queue usage.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */

@@ -1,358 +1,404 @@
 /**
  * @fileoverview AI API routes for Express.js application.
  * Provides RESTful endpoints for AI operations, prompt processing, and analytics retrieval.
- * 
- * @author Noobly JS Core Team
- * @version 1.0.14
+ *
+ * Supports multiple named instances of the AI service through optional
+ * instance parameter in URL paths (e.g. /services/ai/api/:instanceName/prompt).
+ *
+ * @author NooblyJS Core Team
+ * @version 1.0.15
  * @since 1.0.0
  */
 
 'use strict';
 
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const path = require('node:path');
+const express = require('express');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers AI service routes with the Express application.
- * Sets up endpoints for AI operations and monitoring.
+ * Sets up endpoints for AI operations and monitoring, for both the default
+ * instance and any named instances registered with the ServiceRegistry.
  *
  * @param {Object} options - Configuration options object
  * @param {Object} options.express-app - The Express application instance
+ * @param {Object} [options.ServiceRegistry] - ServiceRegistry singleton for instance lookup
+ * @param {string} [options.providerType] - Provider type of the default instance
  * @param {Object} eventEmitter - Event emitter for logging and notifications
- * @param {Object} aiService - The AI provider instance
- * @param {Object=} analytics - Prompt analytics module instance
+ * @param {Object} aiService - The default AI provider instance
+ * @param {Object=} analytics - Prompt analytics module for the default instance
  * @return {void}
  */
 module.exports = (options, eventEmitter, aiService, analytics) => {
-  if (options['express-app'] && aiService) {
-    const app = options['express-app'];
-    const authMiddleware = options.authMiddleware;
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('aiservice', { dependencies: [] });
+  
+  if (!options['express-app'] || !aiService) {
+    return;
+  }
 
-    /**
-     * GET /services/ai/api/status
-     * Returns the operational status of the AI service.
-     */
-    app.get('/services/ai/api/status', (req, res) => {
-      const status = aiService.enabled !== false ? 'ai api running' : 'ai api disabled - no api key';
-      eventEmitter.emit('api-ai-status', status);
-      sendStatus(res, status, {
-        provider: aiService.constructor.name,
-        enabled: aiService.enabled !== false,
-        hasApiKey: !!aiService.client_
-      });
-    });
+  const app = options['express-app'];
+  const ServiceRegistry = options.ServiceRegistry;
+  const providerType = options.providerType || 'claude';
 
-    /**
-     * POST /services/ai/api/prompt
-     * Sends a prompt to the AI service and returns the response.
-     */
-    app.post('/services/ai/api/prompt', async (req, res) => {
-      try {
-        // Check if AI service is enabled
-        if (aiService.enabled === false) {
-          return sendStatus(res, 'AI service disabled - API key not configured', { enabled: false }, 503);
+  // Serve the OpenAPI spec consumed by the Swagger UI on the dashboard.
+  // Registered before the auth guard so API documentation stays public.
+  app.use('/services/ai/api/swagger', express.static(path.join(__dirname, 'swagger')));
+
+  // Enforce authentication on every AI API endpoint. Mounting the shared
+  // API-key/session middleware on the /api prefix protects all routes below
+  // (default and instance-aware) regardless of how each handler is registered.
+  // Falls back to a pass-through only when no auth is configured.
+  const requireApiAuth = options.authMiddleware || ((req, res, next) => next());
+  app.use('/services/ai/api', requireApiAuth);
+
+  /**
+   * Resolves an AI service instance by name. Falls back to the default
+   * instance when no name is given or the named instance cannot be found.
+   * Instances may use different providers, so the registry is searched by
+   * instance name rather than assuming a fixed provider type.
+   *
+   * @param {string} instanceName - Instance name to resolve.
+   * @return {Object} The resolved AI service instance.
+   */
+  const resolveInstance = (instanceName) => {
+    if (!instanceName || instanceName === 'default') {
+      return aiService;
+    }
+    if (ServiceRegistry) {
+      const match = (ServiceRegistry.listInstances('aiservice') || [])
+        .find((inst) => inst.instanceName === instanceName);
+      if (match) {
+        const instance = ServiceRegistry.getServiceInstance('aiservice', match.providerType, instanceName);
+        if (instance) {
+          return instance;
         }
-
-        const { prompt, options = {}, username } = req.body;
-
-        if (!prompt || typeof prompt !== 'string') {
-          return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Prompt is required and must be a string');
-        }
-
-        const effectiveUsername =
-          (username && String(username).trim()) ||
-          (options && typeof options.username === 'string' && options.username.trim()) ||
-          (req.user && req.user.username) ||
-          'anonymous';
-
-        const promptOptions = {
-          ...options,
-          username: effectiveUsername
-        };
-
-        const response = await aiService.prompt(prompt, promptOptions);
-
-        const usage = response?.usage || {};
-        const promptTokens =
-          usage.promptTokens ?? usage.prompt_tokens ?? usage.inputTokens ?? usage.input_tokens ?? 0;
-        const completionTokens =
-          usage.completionTokens ?? usage.completion_tokens ?? usage.outputTokens ?? usage.output_tokens ?? 0;
-        const totalTokens =
-          usage.totalTokens ?? usage.total_tokens ?? promptTokens + completionTokens;
-
-        if (analytics) {
-          analytics.recordPrompt({
-            prompt,
-            username: effectiveUsername,
-            promptTokens,
-            completionTokens,
-            totalTokens,
-            model: response?.model || promptOptions.model || null,
-            provider: response?.provider || aiService.constructor.name || null,
-            timestamp: Date.now()
-          });
-        }
-
-        if (eventEmitter) {
-          eventEmitter.emit('ai:prompt:complete', {
-            prompt,
-            username: effectiveUsername,
-            usage,
-            model: response?.model,
-            provider: response?.provider,
-            response
-          });
-          eventEmitter.emit('api-ai-prompt', { prompt, username: effectiveUsername, response });
-        }
-
-        sendSuccess(res, response);
-      } catch (error) {
-        if (eventEmitter) {
-          eventEmitter.emit('api-ai-error', { error: error.message });
-        }
-        handleError(res, error, 'prompt');
       }
-    });
+    }
+    return aiService;
+  };
 
-    /**
-     * GET /services/ai/api/analytics
-     * Returns analytics data for the AI service.
-     */
-    app.get('/services/ai/api/analytics', (req, res) => {
-      try {
-        const limit = parseInt(req.query.limit, 10);
-        const recentLimit = parseInt(req.query.recentLimit, 10);
-        let payload;
+  /**
+   * Returns the analytics module belonging to a given service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Object|undefined} The analytics module for that instance.
+   */
+  const analyticsFor = (svc) => (svc && svc.promptAnalytics) || analytics;
 
-        if (analytics) {
-          payload = analytics.getAnalytics({
-            limit: Number.isNaN(limit) ? undefined : limit,
-            recentLimit: Number.isNaN(recentLimit) ? undefined : recentLimit
-          });
-        } else if (typeof aiService.getAnalytics === 'function') {
-          payload = aiService.getAnalytics();
-        } else {
-          payload = {};
-        }
-
-        if (eventEmitter) {
-          eventEmitter.emit('api-ai-analytics', payload);
-        }
-        sendSuccess(res, payload);
-      } catch (error) {
-        if (eventEmitter) {
-          eventEmitter.emit('api-ai-error', { error: error.message });
-        }
-        handleError(res, error, 'getAnalytics');
-      }
-    });
-
-    /**
-     * GET /services/ai/api/models
-     * Returns available models (for Ollama provider).
-     */
-    app.get('/services/ai/api/models', async (req, res) => {
-      try {
-        if (typeof aiService.listModels === 'function') {
-          const models = await aiService.listModels();
-          eventEmitter.emit('api-ai-models', models);
-          sendSuccess(res, { models });
-        } else {
-          sendSuccess(res, {
-            message: 'Model listing not supported by this provider',
-            currentModel: aiService.model_
-          });
-        }
-      } catch (error) {
-        eventEmitter.emit('api-ai-error', { error: error.message });
-        handleError(res, error, 'listModels');
-      }
-    });
-
-    /**
-     * GET /services/ai/api/health
-     * Health check endpoint (for Ollama provider).
-     */
-    app.get('/services/ai/api/health', async (req, res) => {
-      try {
-        if (typeof aiService.isRunning === 'function') {
-          const isRunning = await aiService.isRunning();
-          sendStatus(res, isRunning ? 'healthy' : 'unhealthy', {
-            healthy: isRunning,
-            provider: aiService.constructor.name
-          });
-        } else {
-          sendStatus(res, 'healthy', {
-            healthy: true,
-            provider: aiService.constructor.name
-          });
-        }
-      } catch (error) {
-        handleError(res, error, 'healthCheck');
-      }
-    });
-
-      /**
-     * GET /services/ai/api/settings
-     * Retrieves the settings
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/ai/api/settings', async (req, res) => {
-      try {
-        const settings = await aiService.getSettings();
-        sendSuccess(res, settings);
-      } catch (err) {
-        eventEmitter.emit('api-ai-settings-error', err.message);
-        handleError(res, err, 'getSettings');
-      }
-    });
-
-     /**
-     * POST /services/ai/api/settings
-     * Retrieves the settings
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/ai/api/settings', async (req, res) => {
-      const message = req.body;
-      if (message) {
-        try {
-          await aiService.saveSettings(message);
-          sendSuccess(res, {}, 'Settings saved successfully');
-        } catch (err) {
-          handleError(res, err, 'saveSettings');
-        }
-      } else {
-        sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Settings are required');
-      }
-    });
-
-  app.get('/services/aiservice/api/health', async (req, res) => {
+  /**
+   * GET /services/ai/api/instances
+   * Returns a list of all available AI service instances.
+   */
+  app.get('/services/ai/api/instances', (req, res) => {
     try {
-      const result = await healthCheck.check({ service: aiService });
-      const statusCode = result.status === 'healthy' ? 200 : 503;
-      res.status(statusCode).json(result);
-    } catch (err) {
-      handleError(res, err, { operation: 'health-check' });
+      const instances = [];
+      const seen = new Set();
+
+      if (ServiceRegistry) {
+        (ServiceRegistry.listInstances('aiservice') || []).forEach((inst) => {
+          if (!seen.has(inst.instanceName)) {
+            seen.add(inst.instanceName);
+            instances.push({
+              name: inst.instanceName,
+              provider: inst.providerType,
+              status: 'active'
+            });
+          }
+        });
+      }
+
+      // Ensure the default instance is always present.
+      if (!seen.has('default')) {
+        instances.unshift({ name: 'default', provider: providerType, status: 'active' });
+      }
+
+      eventEmitter.emit('api-ai-instances', `retrieved ${instances.length} instances`);
+      res.status(200).json({ success: true, instances, total: instances.length });
+    } catch (error) {
+      eventEmitter.emit('api-ai-instances-error', error.message);
+      sendSafeError(res, error, { status: 500, eventEmitter });
     }
   });
 
-    /**
-     * GET /services/aiservice/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/aiservice/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'aiservice', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'aiservice-audit-query' });
-      }
+  /**
+   * Builds a status handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createStatusHandler = (svc) => (req, res) => {
+    const status = svc.enabled !== false ? 'ai api running' : 'ai api disabled - no api key';
+    eventEmitter.emit('api-ai-status', status);
+    res.status(200).json({
+      status,
+      provider: svc.constructor.name,
+      enabled: svc.enabled !== false,
+      hasApiKey: !!svc.client_
     });
+  };
 
-    /**
-     * POST /services/aiservice/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/aiservice/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'aiservice', limit: 10000 });
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'aiservice-audit-export' });
+  /**
+   * Builds a prompt handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createPromptHandler = (svc) => async (req, res) => {
+    try {
+      if (svc.enabled === false) {
+        return res.status(503).json({
+          error: 'AI service is disabled - API key not configured',
+          enabled: false
+        });
       }
-    });
 
-    /**
-     * POST /services/aiservice/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/aiservice/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
+      const { prompt, options: promptOpts = {}, username } = req.body;
 
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'aiservice-import' });
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'Prompt is required and must be a string' });
       }
-    });
 
-    /**
-     * GET /services/aiservice/api/export
-     * Exports service data
-     */
-    app.get('/services/aiservice/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('aiservice-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'aiservice-export' });
+      const effectiveUsername =
+        (username && String(username).trim()) ||
+        (promptOpts && typeof promptOpts.username === 'string' && promptOpts.username.trim()) ||
+        (req.user && req.user.email) ||
+        'anonymous';
+
+      const promptOptions = { ...promptOpts, username: effectiveUsername };
+
+      // Note: the provider's prompt() emits 'ai:prompt:complete', which the
+      // matching per-instance Analytics module records. No manual recording here.
+      const response = await svc.prompt(prompt, promptOptions);
+
+      if (eventEmitter) {
+        eventEmitter.emit('api-ai-prompt', { prompt, username: effectiveUsername, response });
       }
-    });
-  }
+
+      res.status(200).json(response);
+    } catch (error) {
+      if (eventEmitter) {
+        eventEmitter.emit('api-ai-error', { error: error.message });
+      }
+      sendSafeError(res, error, { status: 500, eventEmitter });
+    }
+  };
+
+  /**
+   * Builds an analytics handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createAnalyticsHandler = (svc) => (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit, 10);
+      const recentLimit = parseInt(req.query.recentLimit, 10);
+      const svcAnalytics = analyticsFor(svc);
+      let payload;
+
+      if (svcAnalytics) {
+        payload = svcAnalytics.getAnalytics({
+          limit: Number.isNaN(limit) ? undefined : limit,
+          recentLimit: Number.isNaN(recentLimit) ? undefined : recentLimit
+        });
+      } else if (typeof svc.getAnalytics === 'function') {
+        payload = svc.getAnalytics();
+      } else {
+        payload = {};
+      }
+
+      if (eventEmitter) {
+        eventEmitter.emit('api-ai-analytics', payload);
+      }
+      res.status(200).json(payload);
+    } catch (error) {
+      if (eventEmitter) {
+        eventEmitter.emit('api-ai-error', { error: error.message });
+      }
+      sendSafeError(res, error, { status: 500, eventEmitter });
+    }
+  };
+
+  /**
+   * Builds a models handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createModelsHandler = (svc) => async (req, res) => {
+    try {
+      if (typeof svc.listModels === 'function') {
+        const models = await svc.listModels();
+        eventEmitter.emit('api-ai-models', models);
+        res.status(200).json({ models });
+      } else {
+        res.status(200).json({
+          message: 'Model listing not supported by this provider',
+          currentModel: svc.model_
+        });
+      }
+    } catch (error) {
+      eventEmitter.emit('api-ai-error', { error: error.message });
+      sendSafeError(res, error, { status: 500, eventEmitter });
+    }
+  };
+
+  /**
+   * Builds a health handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createHealthHandler = (svc) => async (req, res) => {
+    try {
+      if (typeof svc.isRunning === 'function') {
+        const isRunning = await svc.isRunning();
+        res.status(200).json({ healthy: isRunning, provider: svc.constructor.name });
+      } else {
+        res.status(200).json({ healthy: true, provider: svc.constructor.name });
+      }
+    } catch (error) {
+      sendSafeError(res, error, { status: 500, eventEmitter });
+    }
+  };
+
+  // ─── Train handlers ────────────────────────────────────────────────────────
+
+  /**
+   * Returns whether this provider supports training and, if so, the current
+   * training pipeline state. Non-trainable providers return 501 + explanation.
+   */
+  const createTrainStatusHandler = (svc) => async (req, res) => {
+    if (typeof svc.addData !== 'function') {
+      return res.status(501).json({
+        supported: false,
+        provider: svc.constructor.name,
+        error: `${svc.constructor.name} does not support training. ` +
+          'Training is only available for providers that implement local model training (e.g. TensorFlow).'
+      });
+    }
+    try {
+      const status = svc.getTrainingStatus();
+      res.status(200).json({ supported: true, ...status });
+    } catch (err) {
+      sendSafeError(res, err, { status: 500, eventEmitter });
+    }
+  };
+
+  /** Returns all training documents in the data store. */
+  const createGetTrainDataHandler = (svc) => async (req, res) => {
+    if (typeof svc.getData !== 'function') {
+      return res.status(501).json({ supported: false, error: 'Not supported by this provider' });
+    }
+    try {
+      const documents = await svc.getData();
+      res.status(200).json({ documents, total: Object.keys(documents).length });
+    } catch (err) {
+      sendSafeError(res, err, { status: 500, eventEmitter });
+    }
+  };
+
+  /** Adds or updates a training document. Body: { key, text } */
+  const createAddTrainDataHandler = (svc) => async (req, res) => {
+    if (typeof svc.addData !== 'function') {
+      return res.status(501).json({ supported: false, error: 'Not supported by this provider' });
+    }
+    const { key, text } = req.body || {};
+    if (!key || typeof key !== 'string' || !key.trim()) {
+      return res.status(400).json({ error: 'key is required and must be a non-empty string' });
+    }
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'text is required and must be a non-empty string' });
+    }
+    try {
+      const result = await svc.addData(key.trim(), text.trim());
+      if (eventEmitter) eventEmitter.emit('api-ai-train-add', { key, length: text.length });
+      res.status(200).json(result);
+    } catch (err) {
+      sendSafeError(res, err, { status: 400, eventEmitter });
+    }
+  };
+
+  /** Removes a training document by key. */
+  const createDeleteTrainDataHandler = (svc) => async (req, res) => {
+    if (typeof svc.removeData !== 'function') {
+      return res.status(501).json({ supported: false, error: 'Not supported by this provider' });
+    }
+    const { key } = req.params;
+    try {
+      const removed = await svc.removeData(key);
+      if (!removed) {
+        return res.status(404).json({ error: `No document found with key: ${key}` });
+      }
+      if (eventEmitter) eventEmitter.emit('api-ai-train-delete', { key });
+      res.status(200).json({ success: true, key });
+    } catch (err) {
+      sendSafeError(res, err, { status: 500, eventEmitter });
+    }
+  };
+
+  /**
+   * Builds a get-settings handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createGetSettingsHandler = (svc) => async (req, res) => {
+    try {
+      const settings = await svc.getSettings();
+      res.status(200).json(settings);
+    } catch (err) {
+      eventEmitter.emit('api-ai-settings-error', err.message);
+      res.status(500).json({ error: 'Failed to retrieve settings' });
+    }
+  };
+
+  /**
+   * Builds a save-settings handler bound to a specific service instance.
+   * @param {Object} svc - AI service instance.
+   * @return {Function} Express route handler.
+   */
+  const createPostSettingsHandler = (svc) => async (req, res) => {
+    const message = req.body;
+    if (message) {
+      try {
+        await svc.saveSettings(message);
+        res.status(200).send('OK');
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
+      }
+    } else {
+      res.status(400).send('Bad Request: Missing settings');
+    }
+  };
+
+  // Default-instance routes.
+  app.get('/services/ai/api/status', createStatusHandler(aiService));
+  app.post('/services/ai/api/prompt', createPromptHandler(aiService));
+  app.get('/services/ai/api/analytics', createAnalyticsHandler(aiService));
+  app.get('/services/ai/api/models', createModelsHandler(aiService));
+  app.get('/services/ai/api/health', createHealthHandler(aiService));
+  app.get('/services/ai/api/settings', createGetSettingsHandler(aiService));
+  app.post('/services/ai/api/settings', createPostSettingsHandler(aiService));
+  app.get('/services/ai/api/train/status', createTrainStatusHandler(aiService));
+  app.get('/services/ai/api/train/data', createGetTrainDataHandler(aiService));
+  app.post('/services/ai/api/train/data', createAddTrainDataHandler(aiService));
+  app.delete('/services/ai/api/train/data/:key', createDeleteTrainDataHandler(aiService));
+
+  // Instance-aware routes - resolve the named instance per request.
+  app.get('/services/ai/api/:instanceName/status', (req, res) =>
+    createStatusHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.post('/services/ai/api/:instanceName/prompt', (req, res) =>
+    createPromptHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/analytics', (req, res) =>
+    createAnalyticsHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/models', (req, res) =>
+    createModelsHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/health', (req, res) =>
+    createHealthHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/settings', (req, res) =>
+    createGetSettingsHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.post('/services/ai/api/:instanceName/settings', (req, res) =>
+    createPostSettingsHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/train/status', (req, res) =>
+    createTrainStatusHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.get('/services/ai/api/:instanceName/train/data', (req, res) =>
+    createGetTrainDataHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.post('/services/ai/api/:instanceName/train/data', (req, res) =>
+    createAddTrainDataHandler(resolveInstance(req.params.instanceName))(req, res));
+  app.delete('/services/ai/api/:instanceName/train/data/:key', (req, res) =>
+    createDeleteTrainDataHandler(resolveInstance(req.params.instanceName))(req, res));
 };

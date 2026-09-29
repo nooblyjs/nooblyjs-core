@@ -25,7 +25,7 @@ const path = require('node:path');
 describe('Filing Service - Feature Verification', () => {
   let filing;
   let mockEventEmitter;
-  const testDir = path.join(__dirname, '../../../.test/files');
+  const testDir = path.join(__dirname, '../../../.test-files');
 
   beforeEach(() => {
     mockEventEmitter = new EventEmitter();
@@ -176,14 +176,16 @@ describe('Filing Service - Feature Verification', () => {
     });
 
     it('should list directory contents', async () => {
-      const files = await filing.list('/');
+      const files = await filing.list('.');
       expect(Array.isArray(files)).toBe(true);
     });
 
-    it('should return array of strings', async () => {
-      const files = await filing.list('/');
+    it('should return array of entries', async () => {
+      const files = await filing.list('.');
       if (files.length > 0) {
-        expect(typeof files[0]).toBe('string');
+        // list() returns rich directory entries: { name, type, isDirectory, ... }
+        expect(typeof files[0]).toBe('object');
+        expect(typeof files[0].name).toBe('string');
       }
     });
 
@@ -193,7 +195,7 @@ describe('Filing Service - Feature Verification', () => {
     });
 
     it('should return promise', async () => {
-      const result = filing.list('/');
+      const result = filing.list('.');
       expect(result instanceof Promise).toBe(true);
       await result;
     });
@@ -600,7 +602,7 @@ describe('Filing Service - Feature Verification', () => {
       expect(filing.read('test.txt') instanceof Promise).toBe(true);
       expect(filing.update('test.txt', 'new') instanceof Promise).toBe(true);
       expect(filing.delete('test.txt') instanceof Promise).toBe(true);
-      expect(filing.list('/') instanceof Promise).toBe(true);
+      expect(filing.list('.') instanceof Promise).toBe(true);
       expect(filing.getSettings() instanceof Promise).toBe(true);
       expect(filing.saveSettings({}) instanceof Promise).toBe(true);
     });
@@ -615,7 +617,7 @@ describe('Filing Service - Feature Verification', () => {
       const read2 = await filing.read('workflow.txt', 'utf8');
       expect(read2).toContain('updated');
 
-      const list = await filing.list('/');
+      const list = await filing.list('.');
       expect(Array.isArray(list)).toBe(true);
 
       await filing.delete('workflow.txt');

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core - Application Service Base Class
- * Base class for implementing custom application services in Noobly JS Core.
+ * @fileoverview NooblyJS Core - Application Service Base Class
+ * Base class for implementing custom application services in NooblyJS Core.
  * Extends appBase with URL path normalization for route registration.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

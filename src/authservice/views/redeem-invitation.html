@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Redeem Invitation - NooblyJS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/services/css/styles.css">
+    <style>
+        /* Restore 12px base font: this page is sized in rem against a 12px root
+           (previously provided by public/styles.css before the CSS consolidation). */
+        html { font-size: 12px; }
+        :root {
+            --custom-primary: #059DA2;
+            --custom-secondary: #6c757d;
+            --custom-warning: #ffc107;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 1rem;
+        }
+
+        .auth-card {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 1rem;
+        }
+
+        .auth-card .card-body {
+            padding: 2.5rem 2rem;
+        }
+
+        .auth-logo {
+            color: var(--custom-primary);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-card .text-center p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .auth-card .form-control {
+            font-size: 1.2rem;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .auth-card .btn {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--custom-primary);
+            box-shadow: 0 0 0 0.2rem rgba(2, 121, 125, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: var(--custom-primary);
+            border-color: var(--custom-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #025a5d;
+            border-color: #025a5d;
+        }
+
+        .auth-link {
+            color: var(--custom-primary);
+            text-decoration: none;
+        }
+
+        .auth-link:hover {
+            color: #025a5d;
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .password-strength-indicator {
+            height: 6px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+            background-color: #dc3545;
+        }
+
+        .password-strength-bar.strong {
+            background-color: #28a745;
+        }
+
+        .strength-text {
+            font-size: 1.2rem;
+            margin-top: 0.25rem;
+            min-height: 1rem;
+        }
+
+        .invitation-status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--custom-primary);
+        }
+
+        .invitation-status.approved {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .invitation-status.expired {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .invitation-status.pending {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+
+        .status-label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-message {
+            font-size: 1.2rem;
+        }
+
+        .success-message {
+            text-align: center;
+        }
+
+        .success-message i {
+            font-size: 4rem;
+            color: var(--custom-primary);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="card auth-card">
+            <div class="card-body">
+                <!-- Redemption Form Section -->
+                <div id="formSection">
+                    <div class="text-center mb-4">
+                        <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" style="max-height: 60px; width: auto; margin-bottom: 1rem;">
+                        <div class="auth-logo" id="app-name">NooblyJS</div>
+                        <p>Redeem your invitation and create your account</p>
+                    </div>
+
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                    <div id="statusAlert" class="alert d-none" role="alert">
+                        <strong id="statusTitle"></strong>
+                        <p id="statusMessage" class="mb-0"></p>
+                    </div>
+
+                    <form id="redeemForm">
+                        <div class="mb-3">
+                            <label for="invitationCode" class="form-label">Invitation Code</label>
+                            <input type="text" class="form-control" id="invitationCode" name="invitationCode" placeholder="INV-XXXXXX" required>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3 w-100" id="checkCodeBtn">
+                            Check Code Status
+                        </button>
+
+                        <div id="codeStatusSection" class="d-none">
+                            <div id="codeStatus" class="invitation-status">
+                                <div class="status-label" id="statusLabel"></div>
+                                <div class="status-message" id="statusDetail"></div>
+                            </div>
+
+                            <div id="passwordSection" class="d-none">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Create Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required minlength="10">
+                                    <div class="password-strength-indicator">
+                                        <div class="password-strength-bar" id="strengthBar"></div>
+                                    </div>
+                                    <div class="strength-text" id="strengthText"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-secondary w-100 py-2">
+                                    Create Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-2">Don't have an invitation? <a href="/services/authservice/views/request-invitation.html" class="auth-link fw-semibold">Request one here</a></p>
+                        <p class="mb-0">Already have an account? <a href="/services/authservice/views/login.html" class="auth-link fw-semibold">Sign in</a></p>
+                    </div>
+                </div>
+
+                <!-- Success Section -->
+                <div id="successSection" class="d-none">
+                    <div class="success-message">
+                        <i class="bi bi-check-circle"></i>
+                        <h3>Account Created!</h3>
+                        <p class="text-muted mb-3">Your account has been set up successfully.</p>
+
+                        <div class="alert alert-success">
+                            You can now log in with your email and password.
+                        </div>
+
+                        <a href="/services/authservice/views/login.html" class="btn btn-secondary w-100">
+                            Go to Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const redeemForm = document.getElementById('redeemForm');
+        const invitationCode = document.getElementById('invitationCode');
+        const checkCodeBtn = document.getElementById('checkCodeBtn');
+        const errorAlert = document.getElementById('errorAlert');
+        const statusAlert = document.getElementById('statusAlert');
+        const codeStatusSection = document.getElementById('codeStatusSection');
+        const codeStatus = document.getElementById('codeStatus');
+        const passwordSection = document.getElementById('passwordSection');
+        const formSection = document.getElementById('formSection');
+        const successSection = document.getElementById('successSection');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.remove('d-none');
+            statusAlert.classList.add('d-none');
+            codeStatusSection.classList.add('d-none');
+        }
+
+        function hideError() {
+            errorAlert.classList.add('d-none');
+        }
+
+        // Check invitation code status
+        checkCodeBtn.addEventListener('click', async function() {
+            hideError();
+            const code = invitationCode.value.trim();
+
+            if (!code) {
+                showError('Please enter an invitation code');
+                return;
+            }
+
+            checkCodeBtn.disabled = true;
+            checkCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Checking...';
+
+            try {
+                const response = await fetch(`/services/authservice/api/invitations/${code}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const invitation = result.data;
+                    codeStatusSection.classList.remove('d-none');
+
+                    const statusLabel = document.getElementById('statusLabel');
+                    const statusDetail = document.getElementById('statusDetail');
+
+                    if (invitation.status === 'approved') {
+                        codeStatus.className = 'invitation-status approved';
+                        statusLabel.textContent = '✓ Approved';
+                        statusDetail.textContent = `Your invitation is active. Expires: ${new Date(invitation.expiresAt).toLocaleDateString()}`;
+                        passwordSection.classList.remove('d-none');
+                    } else if (invitation.status === 'pending') {
+                        codeStatus.className = 'invitation-status pending';
+                        statusLabel.textContent = '⏳ Pending';
+                        statusDetail.textContent = 'Your invitation is pending admin approval. Please wait.';
+                        passwordSection.classList.add('d-none');
+                    } else if (invitation.status === 'used') {
+                        codeStatus.className = 'invitation-status expired';
+                        statusLabel.textContent = '✗ Already Used';
+                        statusDetail.textContent = 'This invitation has already been redeemed.';
+                        passwordSection.classList.add('d-none');
+                    } else {
+                        codeStatus.className = 'invitation-status expired';
+                        statusLabel.textContent = '✗ Invalid';
+                        statusDetail.textContent = 'This invitation is no longer valid.';
+                        passwordSection.classList.add('d-none');
+                    }
+                } else {
+                    showError(result.error || 'Invitation code not found');
+                    codeStatusSection.classList.add('d-none');
+                }
+            } catch (error) {
+                showError('Error checking invitation: ' + error.message);
+                codeStatusSection.classList.add('d-none');
+            } finally {
+                checkCodeBtn.disabled = false;
+                checkCodeBtn.textContent = 'Check Code Status';
+            }
+        });
+
+        // Password strength indicator
+        passwordInput?.addEventListener('input', async function() {
+            const password = this.value;
+
+            if (!password) {
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'password-strength-bar';
+                strengthText.textContent = '';
+                return;
+            }
+
+            try {
+                const response = await fetch('/services/authservice/api/auth/password/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const result = await response.json();
+                const { valid, errors } = result.data;
+
+                if (valid) {
+                    strengthBar.style.width = '100%';
+                    strengthBar.className = 'password-strength-bar strong';
+                    strengthText.textContent = '✓ Strong password';
+                    strengthText.style.color = '#28a745';
+                } else {
+                    const errorCount = errors.length;
+                    const width = Math.max(25, 100 - (errorCount * 20));
+                    strengthBar.style.width = width + '%';
+                    strengthBar.className = 'password-strength-bar';
+                    strengthText.textContent = errors.slice(0, 2).join('; ');
+                    strengthText.style.color = '#dc3545';
+                }
+            } catch (error) {
+                console.error('Error validating password:', error);
+            }
+        });
+
+        // Form submission
+        redeemForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            hideError();
+
+            const code = invitationCode.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            const submitBtn = redeemForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating Account...';
+
+            try {
+                const response = await fetch(`/services/authservice/api/invitations/${code}/redeem`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    formSection.classList.add('d-none');
+                    successSection.classList.remove('d-none');
+                } else {
+                    showError(result.error || 'Failed to create account');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Create Account';
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Create Account';
+            }
+        });
+
+        // Load branding if available
+        async function loadBranding() {
+            try {
+                const response = await fetch('/services/authservice/api/branding');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const brandingConfig = result.data;
+                    if (brandingConfig.appName) {
+                        document.getElementById('app-name').textContent = brandingConfig.appName;
+                        document.getElementById('page-title').textContent = `Redeem Invitation - ${brandingConfig.appName}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load branding:', error);
+            }
+        }
+
+        loadBranding();
+
+        // Auto-prefill the code from ?code=... and check it
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeFromUrl = urlParams.get('code');
+        if (codeFromUrl) {
+            invitationCode.value = codeFromUrl;
+            checkCodeBtn.click();
+        }
+    </script>
+</body>
+</html>

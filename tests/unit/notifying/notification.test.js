@@ -6,7 +6,7 @@
  * error handling. Tests verify proper event emission and subscriber
  * callback execution.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

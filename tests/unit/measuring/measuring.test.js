@@ -6,7 +6,7 @@
  * filtering of measurements. Tests verify proper event emission and
  * data handling for performance metrics.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

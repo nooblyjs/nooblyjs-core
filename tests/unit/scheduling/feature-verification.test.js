@@ -2,7 +2,7 @@
  * @fileoverview Feature Verification Tests for Scheduling Service
  * Comprehensive test suite verifying all documented features of the Scheduling Service.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @date 2025-11-22
  */

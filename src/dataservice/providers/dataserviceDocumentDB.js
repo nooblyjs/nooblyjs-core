@@ -2,7 +2,7 @@
  * @fileoverview DocumentDB DataService provider for storing and searching JSON objects
  * with container-based organization using DocumentDB collections and event emission support.
  * Compatible with MongoDB-compatible DocumentDB implementations.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -23,7 +23,7 @@ class DocumentDBDataServiceProvider extends MongoBaseProvider {
    * @param {Object=} options Configuration options for DocumentDB connection.
    * @param {string=} options.host DocumentDB host (defaults to '127.0.0.1').
    * @param {number=} options.port DocumentDB port (defaults to 10260).
-   * @param {string=} options.database Database name to use (defaults to digitaltechnologies).
+   * @param {string=} options.database Database name to use (defaults to nooblyjs).
    * @param {string=} options.username Username for authentication (optional).
    * @param {string=} options.password Password for authentication (optional).
    * @param {boolean=} options.ssl Enable SSL connection (defaults to false for local development).
@@ -40,7 +40,7 @@ class DocumentDBDataServiceProvider extends MongoBaseProvider {
     this.port_ = options.port || 10260;
     
     /** @private @const {string} */
-    this.databaseName_ = options.database || 'digitaltechnologies';
+    this.databaseName_ = options.database || 'nooblyjs';
     
     /** @private @const {string} */
     this.username_ = options.username || '';

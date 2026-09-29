@@ -3,7 +3,7 @@
  * Captures and stores analytics about worker tasks including run counts, error counts,
  * completion counts, duration, and last run timestamps for each unique task.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */

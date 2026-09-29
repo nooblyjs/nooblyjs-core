@@ -5,7 +5,7 @@
     "description": "Enterprise-grade logging service API for structured logging operations. Supports multiple named instances, real-time log retrieval, analytics, and timeline tracking.",
     "version": "1.0.14",
     "contact": {
-      "name": "Noobly JS Team",
+      "name": "NooblyJS Core Team",
       "url": "https://github.com/nooblyjs/nooblyjs-core"
     },
     "license": {

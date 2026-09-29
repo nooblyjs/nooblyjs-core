@@ -10,12 +10,19 @@
 
 const path = require('node:path');
 const express = require('express');
+const helmet = require('helmet');
 const { EventEmitter } = require('events');
 
 const app = express();
+
+// Security headers: applied before other middleware so every response is
+// covered. CSP is disabled here to match the main apps (app.js / app-noauth.js)
+// because the service dashboards use inline styles/scripts; enable a tuned CSP
+// per deployment.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 
-var options = { 
+let options = { 
   logDir:  path.join(__dirname, './.application/', 'logs'),
   dataDir : path.join(__dirname, './.application/', 'data'),
   cacheDir : path.join(__dirname, './.application/', 'caching'),
@@ -47,22 +54,10 @@ serviceRegistry.initialize(app, eventEmitter, options);
 const authservice = serviceRegistry.authservice();
 
 // Get other services
-const cache = serviceRegistry.cache();
 const logger = serviceRegistry.logger('file');
-const dataService = serviceRegistry.dataService('file');
-const filing = serviceRegistry.filing();
-const queueing = serviceRegistry.queue();
-const worker = serviceRegistry.working('default', {
-  maxThreads: 4,
-  activitiesFolder: 'activities', // or use absolute path
-  dependencies: {
-    queueing,
-    filing
-  }
-});
-const scheduler = serviceRegistry.scheduling();
 
-// start the search service
+// start the search service (the local engine only depends on logging and
+// indexes documents synchronously on add())
 const searching = serviceRegistry.searching();
 
 // Redirect root to services
@@ -178,8 +173,10 @@ app.listen(3101, async () => {
   logger.info('Register page at: http://localhost:3101/services/authservice/views/register.html');
   logger.info('Activities folder: ./activities');
 
-  await searching.startIndexing(5, 100);
-  logger.info('Started search indexing processor (runs every 5 seconds, batch size: 100)');
+  // Documents are now indexed synchronously on add() by the local engine,
+  // so the old queue-based background indexing processor (startIndexing) is
+  // no longer required.
+  logger.info('Search engine ready (documents are indexed synchronously on add)');
 
   const addDocumentsToIndex = async (indexName, documents) => {
     let added = 0;
@@ -264,7 +261,7 @@ app.listen(3101, async () => {
   const addRandomData = async () => {
     try {
       const aggregatedStats = await searching.getStats();
-      logger.info(`Current stats -> indexes: ${aggregatedStats.totalIndexes}, indexed items: ${aggregatedStats.totalIndexedItems}, queue size: ${aggregatedStats.queueSize}`);
+      logger.info(`Current stats -> indexes: ${aggregatedStats.totalContainers}, indexed items: ${aggregatedStats.indexedDocuments}, total documents: ${aggregatedStats.totalDocuments}`);
 
       await addDocumentsToIndex('people', await generateRandomPeople(300));
       await addDocumentsToIndex('places', await generateRandomPlaces(150));
@@ -274,7 +271,7 @@ app.listen(3101, async () => {
       const placesStats = await searching.getStats('places');
       const transactionStats = await searching.getStats('transactions');
 
-      logger.info(`Index stats -> people: ${peopleStats.indexedItems || peopleStats.size}, places: ${placesStats.indexedItems || placesStats.size}, transactions: ${transactionStats.indexedItems || transactionStats.size}`);
+      logger.info(`Index stats -> people: ${peopleStats.indexedDocuments}, places: ${placesStats.indexedDocuments}, transactions: ${transactionStats.indexedDocuments}`);
 
       await performRandomSearches();
       await performRandomReads();

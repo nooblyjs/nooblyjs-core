@@ -1,9 +1,9 @@
 /**
- * @fileoverview Google Cloud Platform (GCP) Cloud Memorystore provider for Noobly JS Core caching service.
+ * @fileoverview Google Cloud Platform (GCP) Cloud Memorystore provider for NooblyJS Core caching service.
  * Supports both Redis and Memcached engines in Cloud Memorystore with IAM authentication.
  * Uses the existing CacheRedis provider under the hood with GCP-specific configuration.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */

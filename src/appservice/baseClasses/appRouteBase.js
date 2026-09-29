@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core - Application Route Handler Base Class
- * Base class for implementing custom route handlers in Noobly JS Core.
+ * @fileoverview NooblyJS Core - Application Route Handler Base Class
+ * Base class for implementing custom route handlers in NooblyJS Core.
  * Provides integration with Express routing and URL path normalization.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

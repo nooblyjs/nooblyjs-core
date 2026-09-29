@@ -1,7 +1,7 @@
 /**
  * @fileoverview Git Filing Provider with automated fetch and manual commit
  * Provides Git-backed file storage with commit message requirements and conflict resolution
- * @author Noobly JS Team  
+ * @author NooblyJS Team  
  * @version 1.0.15
  */
 
@@ -11,6 +11,7 @@ const simpleGit = require('simple-git');
 const path = require('node:path');
 const fs = require('node:fs').promises;
 const CommitQueue = require('../sync/CommitQueue');
+const { resolveWithin } = require('../modules/pathSafety');
 
 /**
  * Git filing provider that manages files in a Git repository
@@ -47,6 +48,10 @@ class GitFilingProvider {
     this.auth = options.auth || {};
     this.fetchInterval = options.fetchInterval || 30000; // 30 seconds
     this.autoFetch = options.autoFetch !== false;
+    this.autoCommit = options.autoCommit || false;
+    this.commitInterval = options.commitInterval || 300000; // 5 minutes
+    this.commitMessage = options.commitMessage || 'Auto-sync: periodic commit';
+    this.conflictThreshold = options.conflictThreshold ?? 100;
     this.eventEmitter_ = eventEmitter;
 
     this.git = null;
@@ -56,6 +61,7 @@ class GitFilingProvider {
     );
 
     this._fetchTimer = null;
+    this._commitTimer = null;
     this._initialized = false;
     this._lockedFiles = new Set(); // Local file locking
 
@@ -65,11 +71,19 @@ class GitFilingProvider {
     this.settings.list = [
       {setting: "fetchInterval", type: "number", values: [30000]},
       {setting: "autoFetch", type: "boolean", values: [true]},
-      {setting: "maxFileSize", type: "number", values: [10485760]}
+      {setting: "maxFileSize", type: "number", values: [10485760]},
+      {setting: "autoCommit", type: "boolean", values: [false]},
+      {setting: "commitInterval", type: "number", values: [300000]},
+      {setting: "commitMessage", type: "string", values: ['Auto-sync: periodic commit']},
+      {setting: "conflictThreshold", type: "number", values: [100]}
     ];
     this.settings.fetchInterval = options.fetchInterval || this.settings.list[0].values[0];
     this.settings.autoFetch = options.autoFetch !== undefined ? options.autoFetch : this.settings.list[1].values[0];
     this.settings.maxFileSize = options.maxFileSize || this.settings.list[2].values[0];
+    this.settings.autoCommit = options.autoCommit !== undefined ? options.autoCommit : this.settings.list[3].values[0];
+    this.settings.commitInterval = options.commitInterval || this.settings.list[4].values[0];
+    this.settings.commitMessage = options.commitMessage || this.settings.list[5].values[0];
+    this.settings.conflictThreshold = options.conflictThreshold ?? this.settings.list[6].values[0];
   }
 
   /**
@@ -81,17 +95,21 @@ class GitFilingProvider {
 
     await this._ensureRepository();
     await this.commitQueue.initialize();
-    
+
     if (this.autoFetch) {
       this.startAutoFetch();
     }
 
+    if (this.autoCommit) {
+      this.startAutoCommit();
+    }
+
     this._initialized = true;
-    this.eventEmitter_?.emit('git:initialized', { 
-      repoUrl: this.repoUrl, 
+    this.eventEmitter_?.emit('git:initialized', {
+      repoUrl: this.repoUrl,
       localPath: this.localPath,
       branch: this.branch,
-      userId: this.userId 
+      userId: this.userId
     });
   }
 
@@ -219,36 +237,70 @@ class GitFilingProvider {
   }
 
   /**
-   * Pulls changes with automatic conflict resolution (latest wins)
+   * Gets the count of locally changed files (modified, staged, untracked)
+   * @private
+   * @returns {Promise<number>} Number of changed files
+   */
+  async _getLocalChangedCount() {
+    const status = await this.git.status();
+    return status.files.length || 0;
+  }
+
+  /**
+   * Pulls changes with smart conflict resolution
+   * Local wins when changed files < threshold, remote wins when >= threshold
    * @private
    */
   async _pullWithConflictResolution() {
     try {
-      await this.git.pull();
-      this.eventEmitter_?.emit('git:pulled', { strategy: 'clean' });
-    } catch (error) {
-      if (error.message.includes('conflict') || error.message.includes('merge')) {
-        // Handle merge conflicts with "latest wins" strategy
-        await this._resolveConflictsLatestWins();
-        this.eventEmitter_?.emit('git:pulled', { strategy: 'latest-wins' });
+      const changedCount = await this._getLocalChangedCount();
+      const strategy = changedCount < this.conflictThreshold ? 'ours' : 'theirs';
+
+      if (strategy === 'ours') {
+        // Local wins: use --strategy-option=ours (keep local on conflicts)
+        await this.git.pull(['--strategy-option=ours']);
+        this.eventEmitter_?.emit('git:pulled', {
+          strategy: 'local-wins',
+          changedCount,
+          threshold: this.conflictThreshold
+        });
       } else {
-        throw error;
+        // Remote wins: reset hard (safety valve for large divergence)
+        await this.git.reset(['--hard', `origin/${this.branch}`]);
+        this.eventEmitter_?.emit('git:pulled', {
+          strategy: 'remote-wins',
+          changedCount,
+          threshold: this.conflictThreshold,
+          reason: `local changes (${changedCount}) exceeded threshold (${this.conflictThreshold})`
+        });
       }
+    } catch (error) {
+      // Last-resort fallback — abort merge and reset to remote
+      try {
+        await this.git.merge(['--abort']);
+      } catch (_) {
+        // Already not in a merge
+      }
+      await this.git.reset(['--hard', `origin/${this.branch}`]);
+      this.eventEmitter_?.emit('git:conflict-fallback', {
+        error: error.message,
+        message: 'Merge aborted and reset to remote due to error'
+      });
     }
   }
 
   /**
-   * Resolves merge conflicts using "latest wins" strategy
+   * Resolves merge conflicts using "latest wins" strategy (deprecated, kept for backwards compatibility)
    * @private
    */
   async _resolveConflictsLatestWins() {
     try {
       // Reset to remote state (latest wins)
       await this.git.reset(['--hard', `origin/${this.branch}`]);
-      
-      this.eventEmitter_?.emit('git:conflicts-resolved', { 
-        strategy: 'latest-wins', 
-        message: 'Local changes discarded in favor of remote changes' 
+
+      this.eventEmitter_?.emit('git:conflicts-resolved', {
+        strategy: 'latest-wins',
+        message: 'Local changes discarded in favor of remote changes'
       });
     } catch (error) {
       throw new Error(`Failed to resolve conflicts: ${error.message}`);
@@ -268,7 +320,7 @@ class GitFilingProvider {
       throw new Error(`File is locked: ${filePath}`);
     }
 
-    const fullPath = path.join(this.localPath, filePath);
+    const fullPath = resolveWithin(this.localPath, filePath);
     const dir = path.dirname(fullPath);
     
     await fs.mkdir(dir, { recursive: true });
@@ -299,7 +351,7 @@ class GitFilingProvider {
   async read(filePath, encoding) {
     await this._ensureInitialized();
     
-    const fullPath = path.join(this.localPath, filePath);
+    const fullPath = resolveWithin(this.localPath, filePath);
     
     try {
       const content = await fs.readFile(fullPath, encoding);
@@ -326,7 +378,7 @@ class GitFilingProvider {
       throw new Error(`File is locked: ${filePath}`);
     }
 
-    const fullPath = path.join(this.localPath, filePath);
+    const fullPath = resolveWithin(this.localPath, filePath);
     await fs.writeFile(fullPath, content);
     
     // Add to git staging
@@ -357,7 +409,7 @@ class GitFilingProvider {
       throw new Error(`File is locked: ${filePath}`);
     }
 
-    const fullPath = path.join(this.localPath, filePath);
+    const fullPath = resolveWithin(this.localPath, filePath);
     
     try {
       await fs.unlink(fullPath);
@@ -392,21 +444,53 @@ class GitFilingProvider {
   async list(dirPath = '.') {
     await this._ensureInitialized();
     
-    const fullPath = path.join(this.localPath, dirPath);
+    const fullPath = resolveWithin(this.localPath, dirPath);
     
     try {
-      const files = await fs.readdir(fullPath);
+      const entries = await fs.readdir(fullPath, { withFileTypes: true });
       // Filter out .git directory and other hidden files
-      const filteredFiles = files.filter(file => 
-        !file.startsWith('.') || file === '.gitkeep'
+      const filtered = entries.filter(entry =>
+        !entry.name.startsWith('.') || entry.name === '.gitkeep'
       );
-      
-      this.eventEmitter_?.emit('git:directory-listed', { 
-        path: dirPath, 
-        count: filteredFiles.length 
+
+      // Return metadata-bearing objects (name/type/size/created/modified),
+      // mirroring the local filing provider (providers/filingLocal.js list()).
+      // The folder tree and document-header rely on per-entry created/modified
+      // timestamps; returning bare filename strings previously left git-backed
+      // spaces showing "0 Bytes" / "N/A" in the list/card/grid views.
+      const items = await Promise.all(filtered.map(async entry => {
+        const isSymlink = entry.isSymbolicLink();
+        const item = {
+          name: entry.name,
+          type: entry.isDirectory() ? 'folder' : 'file',
+          isDirectory: entry.isDirectory(),
+          isFile: entry.isFile(),
+          isSymbolicLink: isSymlink
+        };
+
+        try {
+          const stats = await fs.stat(path.join(fullPath, entry.name));
+          if (isSymlink) {
+            item.isDirectory = stats.isDirectory();
+            item.isFile = stats.isFile();
+            item.type = stats.isDirectory() ? 'folder' : 'file';
+          }
+          item.size = stats.size;
+          item.created = stats.birthtime.toISOString();
+          item.modified = stats.mtime.toISOString();
+        } catch {
+          // stat failure (e.g. broken symlink) - keep the dirent classification.
+        }
+
+        return item;
+      }));
+
+      this.eventEmitter_?.emit('git:directory-listed', {
+        path: dirPath,
+        count: items.length
       });
-      
-      return filteredFiles;
+
+      return items;
     } catch (error) {
       if (error.code === 'ENOENT') {
         return [];
@@ -504,34 +588,105 @@ class GitFilingProvider {
    */
   async push() {
     await this._ensureInitialized();
-    
+
     try {
       const pushResult = await this.git.push('origin', this.branch);
-      
-      this.eventEmitter_?.emit('git:pushed', { 
+
+      this.eventEmitter_?.emit('git:pushed', {
         result: pushResult,
-        branch: this.branch 
+        branch: this.branch
       });
-      
+
       return pushResult;
     } catch (error) {
       // If push fails due to conflicts, try to resolve and retry
       if (error.message.includes('rejected') || error.message.includes('non-fast-forward')) {
         await this.fetch(); // This will pull and resolve conflicts
-        
+
         // Retry push
         const retryResult = await this.git.push('origin', this.branch);
-        
-        this.eventEmitter_?.emit('git:pushed', { 
+
+        this.eventEmitter_?.emit('git:pushed', {
           result: retryResult,
           branch: this.branch,
-          retry: true 
+          retry: true
         });
-        
+
         return retryResult;
       }
-      
+
       throw new Error(`Failed to push: ${error.message}`);
+    }
+  }
+
+  /**
+   * Automatically stages all changes, commits with configured message, and pushes to remote
+   * Skips silently if nothing is dirty
+   * @returns {Promise<void>}
+   */
+  async autoCommitAndPush() {
+    await this._ensureInitialized();
+    try {
+      // Stage all changes (including deletions)
+      await this.git.add(['-A']);
+
+      // Check if there's anything to commit
+      const status = await this.git.status();
+      const hasStagedChanges = status.staged.length || status.created.length ||
+                               status.deleted.length || status.modified.length;
+      if (!hasStagedChanges) {
+        return; // nothing to commit, exit silently
+      }
+
+      // Commit with timestamp appended to message
+      const message = `${this.commitMessage} [${new Date().toISOString()}]`;
+      await this.git.commit(message);
+
+      // Push to remote
+      await this.push();
+
+      this.eventEmitter_?.emit('git:auto-committed', {
+        message,
+        branch: this.branch
+      });
+    } catch (error) {
+      this.eventEmitter_?.emit('git:auto-commit-error', {
+        error: error.message
+      });
+      // Do not rethrow — periodic timers must not crash the app
+    }
+  }
+
+  /**
+   * Starts automatic periodic commits and pushes
+   */
+  startAutoCommit() {
+    if (this._commitTimer) return;
+
+    this._commitTimer = setInterval(async () => {
+      try {
+        await this.autoCommitAndPush();
+      } catch (error) {
+        this.eventEmitter_?.emit('git:auto-commit-timer-error', {
+          error: error.message
+        });
+      }
+    }, this.commitInterval);
+
+    this.eventEmitter_?.emit('git:auto-commit-started', {
+      interval: this.commitInterval,
+      message: this.commitMessage
+    });
+  }
+
+  /**
+   * Stops automatic periodic commits
+   */
+  stopAutoCommit() {
+    if (this._commitTimer) {
+      clearInterval(this._commitTimer);
+      this._commitTimer = null;
+      this.eventEmitter_?.emit('git:auto-commit-stopped');
     }
   }
 
@@ -596,6 +751,7 @@ class GitFilingProvider {
    */
   async cleanup() {
     this.stopAutoFetch();
+    this.stopAutoCommit();
     this._initialized = false;
   }
 

@@ -1,7 +1,7 @@
 /**
  * @fileoverview In-memory DataService provider for storing and searching JSON objects
  * with container-based organization and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

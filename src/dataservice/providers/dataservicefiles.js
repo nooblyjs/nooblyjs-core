@@ -1,7 +1,7 @@
 /**
  * @fileoverview File-based DataService provider for persistent storage of JSON objects
  * using the file system with container-based organization.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -25,8 +25,11 @@ class FileDataRingProvider {
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options, eventEmitter) {
-    // Support both 'dataDir' and 'baseDir' options for backward compatibility
-    this.dataDir = path.resolve(options.dataDir || options.baseDir);
+    // Support both 'dataDir' and 'baseDir' options for backward compatibility.
+    // Fall back to the documented default so the provider can be created
+    // without an explicit directory (path.resolve(undefined) would otherwise
+    // throw "The \"paths[0]\" argument must be of type string").
+    this.dataDir = path.resolve(options.dataDir || options.baseDir || './dataservice_data');
 
     this.containers = new Map(); 
     this.eventEmitter_ = eventEmitter;
@@ -45,12 +48,57 @@ class FileDataRingProvider {
   }
 
   /**
+   * Validates that a container name is safe to use as a filename component,
+   * preventing path traversal (e.g. "../../etc/passwd") or absolute paths from
+   * escaping the data directory.
+   * @param {string} containerName The container name to validate.
+   * @return {string} The validated container name.
+   * @throws {Error} When the name is empty or contains path separators / traversal.
+   * @private
+   */
+  _validateContainerName(containerName) {
+    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
+      throw new Error('Invalid containerName: must be a non-empty string');
+    }
+    // Reject any path separators or parent-directory references. Container
+    // names must be a single filesystem-safe segment. path.basename() would
+    // silently strip directories; we reject instead so callers get a clear
+    // error rather than a surprising file location.
+    if (/[\\/]/.test(containerName) || containerName === '.' || containerName === '..'
+        || containerName.split(/[\\/]/).includes('..')) {
+      throw new Error('Invalid containerName: must not contain path separators or traversal segments');
+    }
+    return containerName;
+  }
+
+  /**
+   * Validates that an object key is safe to use as a property accessor,
+   * preventing prototype pollution via keys like "__proto__", "constructor",
+   * or "prototype". User-supplied keys reach data[objectKey] assignments, so
+   * a malicious key could otherwise alter Object.prototype for the process.
+   * @param {string} objectKey The object key to validate.
+   * @return {string} The validated object key.
+   * @throws {Error} When the key is empty or a dangerous prototype-chain key.
+   * @private
+   */
+  _assertSafeKey(objectKey) {
+    if (!objectKey || typeof objectKey !== 'string' || objectKey.trim() === '') {
+      throw new Error('Invalid objectKey: must be a non-empty string');
+    }
+    if (objectKey === '__proto__' || objectKey === 'constructor' || objectKey === 'prototype') {
+      throw new Error('Invalid objectKey: reserved prototype key is not allowed');
+    }
+    return objectKey;
+  }
+
+  /**
    * Gets the file path for a container.
    * @param {string} containerName The name of the container.
    * @return {Promise<string>} A promise that resolves to the container file path.
    * @private
    */
   async _getContainerFilePath(containerName) {
+    this._validateContainerName(containerName);
     const containerFilePath = path.join(this.dataDir, `${containerName}.json`);
     if (!this.containers.has(containerName)) {
       try {
@@ -104,12 +152,13 @@ class FileDataRingProvider {
    * @throws {Error} When a container with the same name already exists.
    */
   async createContainer(containerName) {
-    if (!containerName || typeof containerName !== 'string' || containerName.trim() === '') {
-      const error = new Error('Invalid containerName: must be a non-empty string');
+    try {
+      this._validateContainerName(containerName);
+    } catch (validationError) {
       if (this.eventEmitter_) {
-        this.eventEmitter_.emit('api-dataservice-validation-error', { method: 'createContainer', error: error.message, containerName });
+        this.eventEmitter_.emit('api-dataservice-validation-error', { method: 'createContainer', error: validationError.message, containerName });
       }
-      throw error;
+      throw validationError;
     }
 
     const containerFilePath = path.join(this.dataDir, `${containerName}.json`);
@@ -199,9 +248,17 @@ class FileDataRingProvider {
       }
       throw error;
     }
+    try {
+      this._assertSafeKey(objectKey);
+    } catch (error) {
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', { method: 'remove', error: error.message, containerName, objectKey });
+      }
+      throw error;
+    }
 
     const data = await this._readContainerData(containerName);
-    if (data[objectKey]) {
+    if (Object.prototype.hasOwnProperty.call(data, objectKey)) {
       delete data[objectKey];
       await this._writeContainerData(containerName, data);
       if (this.eventEmitter_)
@@ -235,10 +292,18 @@ class FileDataRingProvider {
       }
       throw error;
     }
+    try {
+      this._assertSafeKey(objectKey);
+    } catch (error) {
+      if (this.eventEmitter_) {
+        this.eventEmitter_.emit('api-dataservice-validation-error', { method: 'getByUuid', error: error.message, containerName, objectKey });
+      }
+      throw error;
+    }
 
     try {
       const data = await this._readContainerData(containerName);
-      const obj = data[objectKey];
+      const obj = Object.prototype.hasOwnProperty.call(data, objectKey) ? data[objectKey] : undefined;
 
       if (obj && this.eventEmitter_) {
         this.eventEmitter_.emit('api-dataservice-getByUuid', {
@@ -388,9 +453,10 @@ class FileDataRingProvider {
    */
   async update(containerName, objectKey, jsonObject) {
     try {
+      this._assertSafeKey(objectKey);
       const data = await this._readContainerData(containerName);
 
-      if (!data[objectKey]) {
+      if (!Object.prototype.hasOwnProperty.call(data, objectKey)) {
         return false;
       }
 

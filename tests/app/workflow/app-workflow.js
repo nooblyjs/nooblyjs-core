@@ -10,9 +10,16 @@
 
 const path = require('node:path');
 const express = require('express');
+const helmet = require('helmet');
 const { EventEmitter } = require('events');
 
 const app = express();
+
+// Security headers: applied before other middleware so every response is
+// covered. CSP is disabled here to match the main apps (app.js / app-noauth.js)
+// because the service dashboards use inline styles/scripts; enable a tuned CSP
+// per deployment.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 
 // Add options
@@ -62,7 +69,7 @@ app.get('/', (req, res) => {
 app.use('/styles.css', express.static(path.join(__dirname, 'styles.css')));
 
 // Load styles
-app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, '/images/nooblyjs-logo.png')));
+app.use('/images/nooblyjs-logo.png', express.static(path.join(__dirname, 'nooblyjs-core.png')));
 
 app.listen(3101, async () => {
   logger.info('Server running on port 3101');

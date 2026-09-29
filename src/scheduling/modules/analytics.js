@@ -2,7 +2,7 @@
  * @fileoverview Analytics module for scheduling service
  * Tracks schedule execution statistics including pending, running, completed, and errored states.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

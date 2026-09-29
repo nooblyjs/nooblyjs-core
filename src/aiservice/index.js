@@ -1,10 +1,11 @@
 /**
  * @fileoverview AI Service Factory
  * Factory module for creating AI service instances with multiple provider support.
- * Supports claude, chatgpt, ollama.
- * @author Noobly JS Team
+ * Supports claude, openai, openai-kv, ollama, gemini, api.
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
+ * @humanreviewed true
  */
 
 'use strict';
@@ -12,8 +13,10 @@
 // Providers
 const AIClaude = require('./provider/aiclaude');
 const AIOpenAI = require('./provider/aiopenai');
+const AIOpenAIKv = require('./provider/aiopenaikv');
 const AIOllama = require('./provider/aiollama');
-const AIApi = require('./provider/aiapi');
+const AIGemini = require('./provider/gemini');
+const AITensorFlow = require('./provider/aitensorflow');
 
 // Analytics Object
 const Analytics = require('./modules/analytics');
@@ -25,7 +28,7 @@ const Views = require('./views');
 /**
  * Creates an AI service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the AI service.
- * @param {string} type - The AI provider type ('claude', 'chatgpt', 'ollama', 'api')
+ * @param {string} type - The AI provider type ('claude', 'openai', 'openai-kv', 'ollama', 'gemini', 'default')
  * @param {Object} options - Provider-specific configuration options
  * @param {string} [options.apiKey] - API key for the AI provider (required for claude/chatgpt)
  * @param {string} [options.model] - Model identifier (e.g., 'claude-3-sonnet', 'gpt-4', 'llama2')
@@ -35,7 +38,7 @@ const Views = require('./views');
  * @param {Object} options.dependencies.workflow - Workflow service instance
  * @param {Object} options.dependencies.queueing - Queueing service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {AIClaude|AIOpenAI|AIOllama|AIApi} AI service instance with specified provider
+ * @return {AIClaude|AIOpenAI|AIOllama|AIGemini|AIApi} AI service instance with specified provider
  * @throws {Error} When unsupported AI provider type is provided
  * @example
  * const aiService = createAIService('claude', {
@@ -58,14 +61,18 @@ const Views = require('./views');
  * });
  */
 function createAIService(type, options, eventEmitter) {
+
+  // Extract the dependancies from the option
   const { dependencies = {}, ...providerOptions } = options;
   const logger = dependencies.logging;
   const cache = dependencies.caching;
   const workflow = dependencies.workflow;
   const queueing = dependencies.queueing;
 
-  const analytics = new Analytics(eventEmitter);
+  // Instantiate the analytics object
+  const analytics = new Analytics(eventEmitter, options.instanceName);
 
+  // Create AI service instance based on provider type
   let aiservice;
 
   // Create AI service instance based on provider type
@@ -73,14 +80,21 @@ function createAIService(type, options, eventEmitter) {
     case 'claude':
       aiservice = new AIClaude(providerOptions, eventEmitter);
       break;
+    case 'openai':
     case 'chatgpt':
       aiservice = new AIOpenAI(providerOptions, eventEmitter);
+      break;
+    case 'openai-kv':
+      aiservice = new AIOpenAIKv(providerOptions, eventEmitter);
       break;
     case 'ollama':
       aiservice = new AIOllama(providerOptions, eventEmitter);
       break;
-    case 'api':
-      aiservice = new AIApi(providerOptions, eventEmitter);
+    case 'gemini':
+      aiservice = new AIGemini(providerOptions, eventEmitter);
+      break;
+    case 'tensorflow':
+      aiservice = new AITensorFlow(providerOptions, eventEmitter);
       break;
     default:
       throw new Error(`Unsupported AI provider type: ${type}`);

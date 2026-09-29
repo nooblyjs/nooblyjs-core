@@ -5,7 +5,7 @@
  * and output to the console. Tests verify proper timestamp formatting and message
  * structure in logged output.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

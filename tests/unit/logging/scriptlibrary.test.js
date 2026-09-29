@@ -5,14 +5,14 @@
  * the logging service API. Tests verify proper API call construction,
  * log level filtering, error handling, and parameter validation.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
 
 'use strict';
 
-const digitaltechnologieslogging = require('../../../src/logging/scripts/client.js');
+const nooblyjslogging = require('../../../src/logging/scripts/client.js');
 
 /**
  * Test suite for the logging script library client.
@@ -21,7 +21,7 @@ const digitaltechnologieslogging = require('../../../src/logging/scripts/client.
  * API request construction, log levels, error handling, and method validation.
  */
 describe('Logging Script Library Client', () => {
-  /** @type {digitaltechnologieslogging} Client instance for testing */
+  /** @type {nooblyjslogging} Client instance for testing */
   let logger;
 
   /**
@@ -29,7 +29,7 @@ describe('Logging Script Library Client', () => {
    * Creates a fresh logger instance with default settings.
    */
   beforeEach(() => {
-    logger = new digitaltechnologieslogging('default');
+    logger = new nooblyjslogging('default');
 
     // Mock the global fetch function
     global.fetch = jest.fn();
@@ -55,7 +55,7 @@ describe('Logging Script Library Client', () => {
    * Test initialization with custom instance name.
    */
   it('should initialize with custom instance name', () => {
-    const customLogger = new digitaltechnologieslogging('custom-instance');
+    const customLogger = new nooblyjslogging('custom-instance');
     expect(customLogger.instanceName).toBe('custom-instance');
     expect(customLogger.baseUrl).toBe('/services/logging/api/custom-instance');
   });
@@ -69,7 +69,7 @@ describe('Logging Script Library Client', () => {
       debug: true,
       minLogLevel: 'debug'
     };
-    const customLogger = new digitaltechnologieslogging('default', options);
+    const customLogger = new nooblyjslogging('default', options);
     expect(customLogger.options.apiKey).toBe('test-key');
     expect(customLogger.options.debug).toBe(true);
     expect(customLogger.options.minLogLevel).toBe('debug');
@@ -80,7 +80,7 @@ describe('Logging Script Library Client', () => {
    */
   it('should throw error if instanceName is not a string', () => {
     expect(() => {
-      new digitaltechnologieslogging(123);
+      new nooblyjslogging(123);
     }).toThrow(TypeError);
   });
 
@@ -148,7 +148,7 @@ describe('Logging Script Library Client', () => {
    * Test debug logging method.
    */
   it('should call debug endpoint with correct parameters', async () => {
-    const debugLogger = new digitaltechnologieslogging('default', { minLogLevel: 'debug' });
+    const debugLogger = new nooblyjslogging('default', { minLogLevel: 'debug' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -204,7 +204,7 @@ describe('Logging Script Library Client', () => {
    * Test log level filtering - info level should skip debug
    */
   it('should not log debug messages when log level is info', async () => {
-    const infoLogger = new digitaltechnologieslogging('default', { minLogLevel: 'info' });
+    const infoLogger = new nooblyjslogging('default', { minLogLevel: 'info' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -218,7 +218,7 @@ describe('Logging Script Library Client', () => {
    * Test log level filtering - warn level should skip debug and info
    */
   it('should not log info messages when log level is warn', async () => {
-    const warnLogger = new digitaltechnologieslogging('default', { minLogLevel: 'warn' });
+    const warnLogger = new nooblyjslogging('default', { minLogLevel: 'warn' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -232,7 +232,7 @@ describe('Logging Script Library Client', () => {
    * Test log level filtering - error level should only log errors
    */
   it('should only log errors when log level is error', async () => {
-    const errorLogger = new digitaltechnologieslogging('default', { minLogLevel: 'error' });
+    const errorLogger = new nooblyjslogging('default', { minLogLevel: 'error' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -332,7 +332,7 @@ describe('Logging Script Library Client', () => {
    * Test API key is included in headers when provided.
    */
   it('should include API key in request headers when provided', async () => {
-    const apiKeyLogger = new digitaltechnologieslogging('default', { apiKey: 'secret-key' });
+    const apiKeyLogger = new nooblyjslogging('default', { apiKey: 'secret-key' });
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 
@@ -352,7 +352,7 @@ describe('Logging Script Library Client', () => {
    * Test request with custom instance name.
    */
   it('should use correct base URL for custom instance', async () => {
-    const customLogger = new digitaltechnologieslogging('custom-logger');
+    const customLogger = new nooblyjslogging('custom-logger');
     const mockResponse = new Response('OK', { status: 200 });
     global.fetch.mockResolvedValueOnce(mockResponse);
 

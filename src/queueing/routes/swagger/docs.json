@@ -5,7 +5,7 @@
     "description": "RESTful API for FIFO task queue operations. Provides endpoints for managing named task queues with support for multiple named instances. All endpoints support both default and instance-specific operations.",
     "version": "1.0.15",
     "contact": {
-      "name": "Noobly JS Team",
+      "name": "NooblyJS Core Team",
       "url": "https://github.com/nooblyjs/nooblyjs-core"
     },
     "license": {

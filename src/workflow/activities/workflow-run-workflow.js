@@ -7,7 +7,7 @@
  * - Workflow steps (via workflow.runWorkflow with this activity as a step)
  * - Scheduler tasks (via scheduler.start with this activity file path)
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */

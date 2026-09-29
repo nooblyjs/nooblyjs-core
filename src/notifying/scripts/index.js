@@ -4,7 +4,7 @@
  * and scripts related to the notifying service. It registers routes to serve the notifying
  * client library through the Express application.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.0
  * @module NotifyingScripts
@@ -44,7 +44,7 @@ const fs = require('node:fs');
  * // In HTML:
  * // <script src="/services/notifying/scripts"></script>
  * // <script>
- * //   const notifying = new digitaltechnologiesNotifying({ instanceName: 'default' });
+ * //   const notifying = new nooblyjsNotifying({ instanceName: 'default' });
  * //   await notifying.createTopic('my-topic');
  * // </script>
  */

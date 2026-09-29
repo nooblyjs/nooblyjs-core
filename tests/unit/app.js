@@ -1,9 +1,9 @@
 /**
- * @fileoverview Application demonstrating Noobly JS Core services.
+ * @fileoverview Application demonstrating NooblyJS Core services.
  * This file serves as a comprehensive example of how to use all available
- * services in the Noobly JS Core framework.
+ * services in the NooblyJS Core framework.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

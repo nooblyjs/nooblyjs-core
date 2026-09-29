@@ -1,7 +1,7 @@
 /**
  * @fileoverview Unit tests for the API-based auth service functionality.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */
@@ -33,11 +33,11 @@ describe('AuthService API Provider', () => {
 
   it('should register a user via API', async () => {
     const userData = {
-      username: 'testuser',
-      password: 'password123',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      fullName: 'Test User',
+      password: 'Password123!'
     };
-    const expectedResponse = { id: 'user-123', username: 'testuser' };
+    const expectedResponse = { id: 'user-123', email: 'test@example.com' };
 
     nock(apiRoot)
       .post('/services/authservice/api/register', userData)
@@ -53,9 +53,9 @@ describe('AuthService API Provider', () => {
   });
 
   it('should login a user via API', async () => {
-    const credentials = { username: 'testuser', password: 'password123' };
+    const credentials = { email: 'test@example.com', password: 'Password123!' };
     const expectedResponse = {
-      user: { id: 'user-123', username: 'testuser' },
+      user: { id: 'user-123', email: 'test@example.com' },
       token: 'jwt-token-12345'
     };
 
@@ -88,7 +88,7 @@ describe('AuthService API Provider', () => {
 
   it('should get user by ID via API', async () => {
     const userId = 'user-123';
-    const expectedUser = { id: userId, username: 'testuser', email: 'test@example.com' };
+    const expectedUser = { id: userId, fullName: 'Test User', email: 'test@example.com' };
 
     nock(apiRoot)
       .get(`/services/authservice/api/user/${userId}`)
@@ -132,8 +132,8 @@ describe('AuthService API Provider', () => {
 
   it('should list all users via API', async () => {
     const expectedUsers = [
-      { id: 'user-1', username: 'user1' },
-      { id: 'user-2', username: 'user2' }
+      { id: 'user-1', email: 'user1@example.com' },
+      { id: 'user-2', email: 'user2@example.com' }
     ];
 
     nock(apiRoot)
@@ -147,7 +147,7 @@ describe('AuthService API Provider', () => {
   });
 
   it('should handle authentication errors properly', async () => {
-    const credentials = { username: 'wronguser', password: 'wrongpass' };
+    const credentials = { email: 'wrong@example.com', password: 'wrongpass' };
 
     nock(apiRoot)
       .post('/services/authservice/api/login', credentials)

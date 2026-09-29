@@ -1,7 +1,7 @@
 /**
  * @fileoverview Unit tests for the API-based logging service functionality.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.14
  */

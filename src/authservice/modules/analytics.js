@@ -1,6 +1,6 @@
 /**
  * @fileoverview Auth Analytics Module
- * Collects login activity metrics keyed by username without mutating provider logic.
+ * Collects login activity metrics keyed by email without mutating provider logic.
  */
 
 'use strict';
@@ -8,13 +8,14 @@
 class AuthAnalytics {
   constructor(eventEmitter) {
     /** @private @const {Map<string, {
-     *   username: string,
+     *   email: string,
      *   loginCount: number,
      *   failedCount: number,
      *   lastLoginAt: number|null,
      *   lastLoginIso: string|null
      * }>} */
     this.userStats_ = new Map();
+    this.eventEmitter_ = eventEmitter;
 
     if (eventEmitter) {
       this.bindEvents_(eventEmitter);
@@ -22,50 +23,57 @@ class AuthAnalytics {
   }
 
   bindEvents_(eventEmitter) {
-    eventEmitter.on('auth:login', ({ username }) => {
-      this.recordLogin(username);
-    });
-
-    eventEmitter.on('auth:login-failed', ({ username }) => {
-      this.recordFailure(username);
-    });
-
-    eventEmitter.on('auth:logout', ({ username }) => {
-      this.ensureUser_(username);
-    });
-
-    eventEmitter.on('auth:user-created', ({ username }) => {
-      this.ensureUser_(username);
-    });
-
-    eventEmitter.on('auth:user-deleted', ({ username }) => {
-      if (username && this.userStats_.has(username)) {
-        this.userStats_.delete(username);
+    // Store listener references so they can be removed in destroy() (P2-6).
+    this.listeners_ = {
+      'auth:login': ({ email }) => this.recordLogin(email),
+      'auth:login-failed': ({ email }) => this.recordFailure(email),
+      'auth:logout': ({ email }) => this.ensureUser_(email),
+      'auth:user-created': ({ email }) => this.ensureUser_(email),
+      'auth:user-deleted': ({ email }) => {
+        if (email && this.userStats_.has(email)) {
+          this.userStats_.delete(email);
+        }
       }
-    });
+    };
+
+    for (const [event, handler] of Object.entries(this.listeners_)) {
+      eventEmitter.on(event, handler);
+    }
   }
 
-  ensureUser_(username) {
-    if (!username) {
+  /**
+   * Removes all event listeners registered by this analytics module (P2-6).
+   */
+  destroy() {
+    if (this.eventEmitter_ && this.listeners_) {
+      for (const [event, handler] of Object.entries(this.listeners_)) {
+        this.eventEmitter_.removeListener(event, handler);
+      }
+      this.listeners_ = null;
+    }
+  }
+
+  ensureUser_(email) {
+    if (!email) {
       return null;
     }
 
-    let stats = this.userStats_.get(username);
+    let stats = this.userStats_.get(email);
     if (!stats) {
       stats = {
-        username,
+        email,
         loginCount: 0,
         failedCount: 0,
         lastLoginAt: null,
         lastLoginIso: null
       };
-      this.userStats_.set(username, stats);
+      this.userStats_.set(email, stats);
     }
     return stats;
   }
 
-  recordLogin(username) {
-    const stats = this.ensureUser_(username);
+  recordLogin(email) {
+    const stats = this.ensureUser_(email);
     if (!stats) {
       return;
     }
@@ -75,8 +83,8 @@ class AuthAnalytics {
     stats.lastLoginIso = new Date(now).toISOString();
   }
 
-  recordFailure(username) {
-    const stats = this.ensureUser_(username);
+  recordFailure(email) {
+    const stats = this.ensureUser_(email);
     if (!stats) {
       return;
     }
@@ -96,7 +104,7 @@ class AuthAnalytics {
       })
       .slice(0, effectiveLimit)
       .map((stats) => ({
-        username: stats.username,
+        email: stats.email,
         loginCount: stats.loginCount,
         failedCount: stats.failedCount,
         lastLogin: stats.lastLoginIso
@@ -116,7 +124,7 @@ class AuthAnalytics {
       })
       .slice(0, effectiveLimit)
       .map((stats) => ({
-        username: stats.username,
+        email: stats.email,
         loginCount: stats.loginCount,
         failedCount: stats.failedCount,
         lastLogin: stats.lastLoginIso

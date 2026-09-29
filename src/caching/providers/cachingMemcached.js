@@ -1,7 +1,7 @@
 /**
  * @fileoverview A Memcached-backed cache implementation providing distributed caching
  * functionality with TTL support and analytics tracking for cache operations.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

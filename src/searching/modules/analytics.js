@@ -3,7 +3,7 @@
  * Tracks search operations (add, read, delete, search) for analytics and monitoring.
  * Provides an unobtrusive way to collect metrics without impacting provider performance.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 
@@ -29,7 +29,7 @@ class SearchingAnalytics {
     const resolved = this.normalizeIndex_(indexName);
     if (!this.analyticsByIndex_.has(resolved)) {
       this.analyticsByIndex_.set(resolved, {
-        operations: { adds: 0, reads: 0, deletes: 0, searches: 0 },
+        operations: { adds: 0, deletes: 0, searches: 0 },
         searchTerms: new Map()
       });
     }
@@ -65,10 +65,6 @@ class SearchingAnalytics {
 
   trackAdd(indexName) {
     this.incrementOperation_('adds', indexName);
-  }
-
-  trackRead(indexName) {
-    this.incrementOperation_('reads', indexName);
   }
 
   trackDelete(indexName) {
@@ -163,12 +159,11 @@ class SearchingAnalytics {
       };
     }
 
-    const aggregate = { adds: 0, reads: 0, deletes: 0, searches: 0 };
+    const aggregate = { adds: 0, deletes: 0, searches: 0 };
     let termCount = 0;
 
     this.analyticsByIndex_.forEach((bucket) => {
       aggregate.adds += bucket.operations.adds;
-      aggregate.reads += bucket.operations.reads;
       aggregate.deletes += bucket.operations.deletes;
       aggregate.searches += bucket.operations.searches;
       termCount += bucket.searchTerms.size;

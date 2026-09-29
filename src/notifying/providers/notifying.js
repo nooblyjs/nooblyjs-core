@@ -1,7 +1,7 @@
 /**
  * @fileoverview Notification service for managing topics and subscribers
  * with publish-subscribe pattern implementation and error handling.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -33,6 +33,13 @@ class NotificationService {
     const { dependencies = {} } = this.options;
     /** @private */
     this.logger = dependencies.logging || null;
+
+    /** @private {!Array<Object>} Recent published notifications, oldest first. */
+    this.notificationHistory_ = [];
+    /** @private {number} Running counter used to build unique notification ids. */
+    this.notificationCounter_ = 0;
+    /** @private {number} Maximum notifications retained in the history buffer. */
+    this.maxNotificationHistory_ = (options && options.maxNotificationHistory) || 500;
 
     // Settings configuration
     this.settings = {};
@@ -107,6 +114,10 @@ class NotificationService {
    * @return {Promise<void>} A promise that resolves when all subscribers are notified.
    */
   async notify(topicName, message) {
+    // Record every published message so it can be surfaced in the inbox UI,
+    // independently of whether the topic currently has subscribers.
+    this.storeNotification_(topicName, message);
+
     if (this.topics.has(topicName)) {
       this.topics.get(topicName).forEach((callback) => {
         try {
@@ -133,6 +144,46 @@ class NotificationService {
         }
       });
     }
+  }
+
+  /**
+   * Records a published notification in the in-memory history buffer.
+   * The message is stored as text so the inbox UI can render a preview;
+   * non-string messages are JSON-serialised. The buffer is capped at
+   * maxNotificationHistory_ entries (oldest dropped first).
+   *
+   * @param {string} topicName The topic the message was published to.
+   * @param {*} message The published message.
+   * @private
+   */
+  storeNotification_(topicName, message) {
+    this.notificationCounter_ += 1;
+    const text = typeof message === 'string' ? message : JSON.stringify(message);
+
+    this.notificationHistory_.push({
+      id: `ntf_${Date.now()}_${this.notificationCounter_}`,
+      topic: topicName,
+      message: text,
+      timestamp: Date.now(),
+      read: false,
+    });
+
+    if (this.notificationHistory_.length > this.maxNotificationHistory_) {
+      this.notificationHistory_.splice(
+        0,
+        this.notificationHistory_.length - this.maxNotificationHistory_,
+      );
+    }
+  }
+
+  /**
+   * Returns the recorded notification history, newest first.
+   *
+   * @return {!Array<Object>} Array of notification records
+   *     ({id, topic, message, timestamp, read}).
+   */
+  getNotifications() {
+    return [...this.notificationHistory_].reverse();
   }
 
   /**

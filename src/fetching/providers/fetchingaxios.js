@@ -3,7 +3,7 @@
  * Implements HTTP fetching using axios library with advanced caching
  * and request deduplication support.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -11,6 +11,7 @@
 'use strict';
 
 const axios = require('axios');
+const { assertUrlAllowed } = require('../modules/ssrfGuard');
 
 /**
  * A class that implements HTTP fetching using axios.
@@ -42,6 +43,9 @@ class FetchingAxios {
     this.eventEmitter_ = eventEmitter;
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 1000;
+
+    // SSRF guard configuration (fails closed by default).
+    this.ssrfOptions_ = options.ssrf || {};
 
     // Create axios instance with custom config
     this.axiosInstance = axios.create({
@@ -84,6 +88,9 @@ class FetchingAxios {
    * @return {Promise<Object>} Response object with data, status, headers
    */
   async fetch(url, options = {}) {
+    // SSRF guard: validate the destination before any network/cache activity.
+    await assertUrlAllowed(url, this.ssrfOptions_);
+
     const cacheKey = this.getCacheKey_(url, options);
     const startTime = Date.now();
 

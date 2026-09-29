@@ -17,7 +17,7 @@ In your HTML file, add a script tag pointing to the notifying scripts endpoint:
 ### 2. Initialize the Service
 
 ```javascript
-const notifying = new digitaltechnologiesNotifying({
+const notifying = new nooblyjsNotifying({
   instanceName: 'default'  // Optional
 });
 ```
@@ -49,7 +49,7 @@ The library is automatically served by the NotifyingScripts module at two URLs:
    ```
    GET /services/notifying/scripts
    ```
-   Returns the compiled JavaScript library that automatically exposes the `digitaltechnologiesNotifying` class.
+   Returns the compiled JavaScript library that automatically exposes the `nooblyjsNotifying` class.
 
 2. **Direct file access:**
    ```
@@ -91,7 +91,7 @@ When the notifying service initializes, it automatically:
 The library can be configured when creating an instance:
 
 ```javascript
-const notifying = new digitaltechnologiesNotifying({
+const notifying = new nooblyjsNotifying({
   // Instance name (for multi-instance setups)
   instanceName: 'production',
 
@@ -136,7 +136,7 @@ See `README.md` for detailed API documentation.
 ```html
 <script src="/services/notifying/scripts"></script>
 <script>
-  const notifying = new digitaltechnologiesNotifying();
+  const notifying = new nooblyjsNotifying();
 
   async function main() {
     // Create a topic
@@ -161,7 +161,7 @@ See `README.md` for detailed API documentation.
 ### Real-time Updates Example
 
 ```javascript
-const notifying = new digitaltechnologiesNotifying();
+const notifying = new nooblyjsNotifying();
 
 // Create user events topic
 await notifying.createTopic('user-events');
@@ -181,12 +181,12 @@ await notifying.unsubscribe('user-events', sub.subscriptionId);
 
 ```javascript
 // Production instance
-const prodNotifying = new digitaltechnologiesNotifying({
+const prodNotifying = new nooblyjsNotifying({
   instanceName: 'production'
 });
 
 // Staging instance
-const stagingNotifying = new digitaltechnologiesNotifying({
+const stagingNotifying = new nooblyjsNotifying({
   instanceName: 'staging'
 });
 
@@ -275,7 +275,7 @@ The library sets `Access-Control-Allow-Origin: *` by default. If you're still ge
 3. Use custom headers if needed:
 
 ```javascript
-const notifying = new digitaltechnologiesNotifying({
+const notifying = new nooblyjsNotifying({
   headers: {
     'X-Custom-Header': 'value'
   }
@@ -301,7 +301,7 @@ try {
 3. Add custom headers for authentication:
 
 ```javascript
-const notifying = new digitaltechnologiesNotifying({
+const notifying = new nooblyjsNotifying({
   headers: {
     'Authorization': 'Bearer TOKEN'
   }

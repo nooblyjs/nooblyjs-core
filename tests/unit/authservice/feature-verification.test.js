@@ -6,8 +6,14 @@
 
 'use strict';
 
+// Keep bcrypt hashing fast in tests (must be set before the provider is required).
+process.env.BCRYPT_COST = process.env.BCRYPT_COST || '6';
+
 const createAuth = require('../../../src/authservice');
 const EventEmitter = require('events');
+
+// A password that satisfies the strength policy (>=10 chars, upper, lower, digit, special).
+const STRONG_PASSWORD = 'Password123!';
 
 describe('Auth Service - Feature Verification', () => {
   let eventEmitter;
@@ -99,133 +105,133 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should create a new user', async () => {
       const user = await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123',
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD,
         role: 'user'
       });
 
-      expect(user.username).toBe('alice');
       expect(user.email).toBe('alice@example.com');
-      expect(user.role).toBe('user');
+      expect(user.fullName).toBe('Alice Example');
+      expect(user.roles).toContain('user');
       expect(user.id).toBeDefined();
       expect(user.password).toBeUndefined(); // Password should not be returned
     });
 
-    it('should not allow duplicate usernames', async () => {
+    it('should not allow duplicate emails', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
       await expect(
         auth.createUser({
-          username: 'alice',
-          email: 'alice2@example.com',
-          password: 'password123'
-        })
-      ).rejects.toThrow('Username already exists');
-    });
-
-    it('should validate username is required', async () => {
-      await expect(
-        auth.createUser({
           email: 'alice@example.com',
-          password: 'password123'
+          fullName: 'Alice Two',
+          password: STRONG_PASSWORD
         })
-      ).rejects.toThrow(/username/i);
+      ).rejects.toThrow('Email already exists');
     });
 
     it('should validate email is required', async () => {
       await expect(
         auth.createUser({
-          username: 'alice',
-          password: 'password123'
+          fullName: 'Alice Example',
+          password: STRONG_PASSWORD
         })
       ).rejects.toThrow(/email/i);
+    });
+
+    it('should validate fullName is required', async () => {
+      await expect(
+        auth.createUser({
+          email: 'alice@example.com',
+          password: STRONG_PASSWORD
+        })
+      ).rejects.toThrow(/fullName/i);
     });
 
     it('should validate password is required', async () => {
       await expect(
         auth.createUser({
-          username: 'alice',
-          email: 'alice@example.com'
+          email: 'alice@example.com',
+          fullName: 'Alice Example'
         })
       ).rejects.toThrow(/password/i);
     });
 
     it('should emit auth:user-created event', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'auth:user-created',
-        expect.objectContaining({ username: 'alice' })
+        expect.objectContaining({ email: 'alice@example.com' })
       );
     });
 
-    it('should get user by username', async () => {
+    it('should get user by email', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      const user = await auth.getUser('alice');
-      expect(user.username).toBe('alice');
+      const user = await auth.getUser('alice@example.com');
       expect(user.email).toBe('alice@example.com');
+      expect(user.fullName).toBe('Alice Example');
       expect(user.password).toBeUndefined();
     });
 
     it('should throw error for nonexistent user', async () => {
-      await expect(auth.getUser('nonexistent')).rejects.toThrow('User not found');
+      await expect(auth.getUser('nobody@example.com')).rejects.toThrow('User not found');
     });
 
     it('should list all users', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
       await auth.createUser({
-        username: 'bob',
         email: 'bob@example.com',
-        password: 'password123'
+        fullName: 'Bob Example',
+        password: STRONG_PASSWORD
       });
 
       const users = await auth.listUsers();
       expect(users.length).toBe(2);
-      expect(users.some(u => u.username === 'alice')).toBe(true);
-      expect(users.some(u => u.username === 'bob')).toBe(true);
+      expect(users.some(u => u.email === 'alice@example.com')).toBe(true);
+      expect(users.some(u => u.email === 'bob@example.com')).toBe(true);
     });
 
     it('should update user information', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      const updated = await auth.updateUser('alice', {
-        email: 'newemail@example.com'
+      const updated = await auth.updateUser('alice@example.com', {
+        fullName: 'Alice Updated'
       });
 
-      expect(updated.email).toBe('newemail@example.com');
+      expect(updated.fullName).toBe('Alice Updated');
     });
 
     it('should emit auth:user-updated event', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      await auth.updateUser('alice', { email: 'new@example.com' });
+      await auth.updateUser('alice@example.com', { fullName: 'Alice Updated' });
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'auth:user-updated',
@@ -233,44 +239,44 @@ describe('Auth Service - Feature Verification', () => {
       );
     });
 
-    it('should not allow updating username', async () => {
+    it('should not allow updating email', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      const updated = await auth.updateUser('alice', {
-        username: 'bob'
+      const updated = await auth.updateUser('alice@example.com', {
+        email: 'somethingelse@example.com'
       });
 
-      expect(updated.username).toBe('alice'); // Should not change
+      expect(updated.email).toBe('alice@example.com'); // Should not change
     });
 
     it('should delete a user', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      await auth.deleteUser('alice');
+      await auth.deleteUser('alice@example.com');
 
-      await expect(auth.getUser('alice')).rejects.toThrow('User not found');
+      await expect(auth.getUser('alice@example.com')).rejects.toThrow('User not found');
     });
 
     it('should emit auth:user-deleted event', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      await auth.deleteUser('alice');
+      await auth.deleteUser('alice@example.com');
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'auth:user-deleted',
-        expect.objectContaining({ username: 'alice' })
+        expect.objectContaining({ email: 'alice@example.com' })
       );
     });
   });
@@ -285,47 +291,47 @@ describe('Auth Service - Feature Verification', () => {
     beforeEach(async () => {
       auth = createAuth('memory', { createDefaultAdmin: false }, eventEmitter);
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'correctPassword123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
     });
 
     it('should authenticate user with correct credentials', async () => {
-      const result = await auth.authenticateUser('alice', 'correctPassword123');
+      const result = await auth.authenticateUser('alice@example.com', STRONG_PASSWORD);
 
-      expect(result.user.username).toBe('alice');
+      expect(result.user.email).toBe('alice@example.com');
       expect(result.session.token).toBeDefined();
       expect(result.session.expiresAt).toBeDefined();
     });
 
     it('should reject authentication with wrong password', async () => {
       await expect(
-        auth.authenticateUser('alice', 'wrongPassword')
+        auth.authenticateUser('alice@example.com', 'wrongPassword')
       ).rejects.toThrow('Invalid credentials');
     });
 
     it('should reject authentication for nonexistent user', async () => {
       await expect(
-        auth.authenticateUser('nonexistent', 'password123')
+        auth.authenticateUser('nobody@example.com', STRONG_PASSWORD)
       ).rejects.toThrow('Invalid credentials');
     });
 
     it('should emit auth:login event on successful auth', async () => {
-      await auth.authenticateUser('alice', 'correctPassword123');
+      await auth.authenticateUser('alice@example.com', STRONG_PASSWORD);
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'auth:login',
-        expect.objectContaining({ username: 'alice' })
+        expect.objectContaining({ email: 'alice@example.com' })
       );
     });
 
     it('should emit auth:login-failed event on failed auth', async () => {
-      await auth.authenticateUser('alice', 'correctPassword123').catch(() => {});
+      await auth.authenticateUser('alice@example.com', STRONG_PASSWORD).catch(() => {});
       eventEmitter.emit.mockClear();
 
       try {
-        await auth.authenticateUser('alice', 'wrongPassword');
+        await auth.authenticateUser('alice@example.com', 'wrongPassword');
       } catch (e) {
         // Expected
       }
@@ -336,15 +342,15 @@ describe('Auth Service - Feature Verification', () => {
       );
     });
 
-    it('should validate username parameter', async () => {
+    it('should validate email parameter', async () => {
       await expect(
-        auth.authenticateUser('', 'password123')
-      ).rejects.toThrow(/username/i);
+        auth.authenticateUser('', STRONG_PASSWORD)
+      ).rejects.toThrow(/email/i);
     });
 
     it('should validate password parameter', async () => {
       await expect(
-        auth.authenticateUser('alice')
+        auth.authenticateUser('alice@example.com')
       ).rejects.toThrow(/password/i);
     });
   });
@@ -360,12 +366,12 @@ describe('Auth Service - Feature Verification', () => {
     beforeEach(async () => {
       auth = createAuth('memory', { createDefaultAdmin: false }, eventEmitter);
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      const result = await auth.authenticateUser('alice', 'password123');
+      const result = await auth.authenticateUser('alice@example.com', STRONG_PASSWORD);
       sessionToken = result.session.token;
     });
 
@@ -373,7 +379,7 @@ describe('Auth Service - Feature Verification', () => {
       const session = await auth.validateSession(sessionToken);
 
       expect(session.token).toBe(sessionToken);
-      expect(session.username).toBe('alice');
+      expect(session.email).toBe('alice@example.com');
       expect(session.expiresAt).toBeDefined();
     });
 
@@ -417,34 +423,34 @@ describe('Auth Service - Feature Verification', () => {
     beforeEach(async () => {
       auth = createAuth('memory', { createDefaultAdmin: false }, eventEmitter);
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123',
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD,
         role: 'user'
       });
 
       await auth.createUser({
-        username: 'bob',
         email: 'bob@example.com',
-        password: 'password123',
+        fullName: 'Bob Example',
+        password: STRONG_PASSWORD,
         role: 'admin'
       });
     });
 
     it('should assign user to role', async () => {
-      await auth.addUserToRole('alice', 'admin');
+      await auth.addUserToRole('alice@example.com', 'admin');
 
-      const user = await auth.getUser('alice');
-      expect(user.role).toBe('admin');
+      const user = await auth.getUser('alice@example.com');
+      expect(user.roles).toContain('admin');
     });
 
     it('should emit auth:role-assigned event', async () => {
-      await auth.addUserToRole('alice', 'admin');
+      await auth.addUserToRole('alice@example.com', 'admin');
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'auth:role-assigned',
         expect.objectContaining({
-          username: 'alice',
+          email: 'alice@example.com',
           role: 'admin'
         })
       );
@@ -454,7 +460,7 @@ describe('Auth Service - Feature Verification', () => {
       const admins = await auth.getUsersInRole('admin');
 
       expect(admins.length).toBe(1);
-      expect(admins[0].username).toBe('bob');
+      expect(admins[0].email).toBe('bob@example.com');
     });
 
     it('should list all available roles', async () => {
@@ -529,12 +535,12 @@ describe('Auth Service - Feature Verification', () => {
     beforeEach(async () => {
       auth = createAuth('memory', { createDefaultAdmin: false }, eventEmitter);
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      await auth.authenticateUser('alice', 'password123');
+      await auth.authenticateUser('alice@example.com', STRONG_PASSWORD);
     });
 
     it('should get service status', async () => {
@@ -557,7 +563,7 @@ describe('Auth Service - Feature Verification', () => {
     it('should track active sessions', async () => {
       const status1 = await auth.getStatus();
 
-      const result = await auth.authenticateUser('alice', 'password123');
+      await auth.authenticateUser('alice@example.com', STRONG_PASSWORD);
       const status2 = await auth.getStatus();
 
       expect(status2.activeSessions).toBeGreaterThan(status1.activeSessions);
@@ -694,9 +700,9 @@ describe('Auth Service - Feature Verification', () => {
 
       try {
         await auth.createUser({
-          username: '',
-          email: 'test@example.com',
-          password: 'password'
+          email: '',
+          fullName: 'Test User',
+          password: STRONG_PASSWORD
         });
       } catch (e) {
         // Expected
@@ -732,6 +738,7 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should accept dataservice dependency', () => {
       const auth = createAuth('file', {
+        dataDir: './.test/auth',
         dependencies: {
           dataservice: {}
         }
@@ -782,27 +789,27 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should validate updateUser input is object', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
       await expect(
-        auth.updateUser('alice', null)
+        auth.updateUser('alice@example.com', null)
       ).rejects.toThrow(/updates/i);
     });
 
     it('should handle inactive users', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'password123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
-      await auth.updateUser('alice', { isActive: false });
+      await auth.updateUser('alice@example.com', { isActive: false });
 
       await expect(
-        auth.authenticateUser('alice', 'password123')
+        auth.authenticateUser('alice@example.com', STRONG_PASSWORD)
       ).rejects.toThrow('Invalid credentials');
     });
   });
@@ -820,9 +827,9 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should hash passwords', async () => {
       const user = await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'plainTextPassword123'
+        fullName: 'Alice Example',
+        password: STRONG_PASSWORD
       });
 
       // Password should not be in returned user object
@@ -831,23 +838,23 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should support password updates', async () => {
       await auth.createUser({
-        username: 'alice',
         email: 'alice@example.com',
-        password: 'oldPassword123'
+        fullName: 'Alice Example',
+        password: 'OldPassword123!'
       });
 
       // Old password should fail after update
-      await auth.updateUser('alice', {
-        password: 'newPassword123'
+      await auth.updateUser('alice@example.com', {
+        password: 'NewPassword123!'
       });
 
       await expect(
-        auth.authenticateUser('alice', 'oldPassword123')
+        auth.authenticateUser('alice@example.com', 'OldPassword123!')
       ).rejects.toThrow('Invalid credentials');
 
       // New password should work
-      const result = await auth.authenticateUser('alice', 'newPassword123');
-      expect(result.user.username).toBe('alice');
+      const result = await auth.authenticateUser('alice@example.com', 'NewPassword123!');
+      expect(result.user.email).toBe('alice@example.com');
     });
   });
 
@@ -856,8 +863,6 @@ describe('Auth Service - Feature Verification', () => {
   // ============================================================================
 
   describe('Multi-Provider Support', () => {
-    const providers = ['memory', 'passport', 'google', 'file', 'api'];
-
     const testProviders = ['memory', 'passport', 'google', 'file'];
 
     testProviders.forEach(provider => {

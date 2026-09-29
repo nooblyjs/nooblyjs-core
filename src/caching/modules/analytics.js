@@ -3,7 +3,7 @@
  * Captures and stores cache activity metrics for analytics purposes.
  * Tracks get/put/delete operations, hits, misses, and provides statistics.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.14
  */

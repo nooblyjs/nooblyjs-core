@@ -12,17 +12,17 @@
             
             try {
                 JSON.parse(value);
-                element.classList.remove('core-json-invalid');
-                element.classList.add('core-json-valid');
+                element.classList.remove('kr-form-input-error');
+                element.classList.add('kr-form-input-success');
                 validation.textContent = '✓ Valid JSON';
-                validation.className = 'core-validation-message core-validation-success';
+                validation.className = 'form-text text-success';
                 validation.style.display = 'block';
                 return true;
             } catch (e) {
-                element.classList.remove('core-json-valid');
-                element.classList.add('core-json-invalid');
+                element.classList.remove('kr-form-input-success');
+                element.classList.add('kr-form-input-error');
                 validation.textContent = '✗ Invalid JSON: ' + e.message;
-                validation.className = 'core-validation-message core-validation-error';
+                validation.className = 'form-text text-danger';
                 validation.style.display = 'block';
                 return false;
             }
@@ -73,7 +73,7 @@
 
         // Initialize logger with selected instance
         function initializeLogger() {
-            logger = new digitaltechnologieslogging(selectedInstance);
+            logger = new nooblyjslogging(selectedInstance);
         }
 
         // Instance management functions
@@ -576,11 +576,12 @@
 
             // Build table rows
             const rows = logs.map((log, index) => {
-                // Determine badge color based on level
-                let badgeClass = 'bg-secondary';
-                if (log.level === 'INFO') badgeClass = 'bg-secondary';
-                else if (log.level === 'WARN') badgeClass = 'bg-warning text-dark';
-                else if (log.level === 'ERROR') badgeClass = 'bg-danger';
+                // Determine badge color based on level (theme-proof classes so
+                // INFO/LOG don't render red and clash with ERROR).
+                let badgeClass = 'kr-loglevel-log';
+                if (log.level === 'INFO') badgeClass = 'kr-loglevel-info';
+                else if (log.level === 'WARN') badgeClass = 'kr-loglevel-warn';
+                else if (log.level === 'ERROR') badgeClass = 'kr-loglevel-error';
 
                 // Format timestamp
                 const date = new Date(log.timestamp);
@@ -772,9 +773,11 @@
             formFieldsContainer.innerHTML = '';
 
             // Display description if available
-            if (data.desciption) {
-                infoContainer.textContent = data.desciption;
-                infoContainer.style.display = 'block';
+            if (data.description || data.desciption) {
+                infoContainer.textContent = data.description || data.desciption;
+                infoContainer.classList.add('show');
+            } else {
+                infoContainer.classList.remove('show');
             }
 
             // Render form fields from settings list
@@ -789,11 +792,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'core-form-group';
+            formGroup.className = 'kr-form-group';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'core-form-label';
+            label.className = 'kr-form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -807,7 +810,7 @@
                 case 'string':
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'form-input';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -819,7 +822,7 @@
                 case 'integer':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'form-input';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -829,7 +832,7 @@
                 case 'number':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'form-input';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -839,7 +842,7 @@
                 case 'date':
                     input = document.createElement('input');
                     input.type = 'date';
-                    input.className = 'form-input';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -848,7 +851,7 @@
                 case 'list':
                 case 'options':
                     input = document.createElement('select');
-                    input.className = 'form-select';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
 
@@ -869,7 +872,7 @@
                 default:
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'form-input';
+                    input.className = 'kr-form-input';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -878,10 +881,10 @@
             formGroup.appendChild(input);
 
             // Add description helper text if available
-            if (setting.desciption) {
+            if (setting.description || setting.desciption) {
                 const helperText = document.createElement('div');
-                helperText.className = 'core-helper-text';
-                helperText.textContent = setting.desciption;
+                helperText.className = 'form-text';
+                helperText.textContent = setting.description || setting.desciption;
                 formGroup.appendChild(helperText);
             }
 

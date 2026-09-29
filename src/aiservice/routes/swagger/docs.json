@@ -1,3 +1,242 @@
 {
-    
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AI Service API",
+    "description": "REST API for AI service operations with multi-instance support. Each named instance is a separate AI provider configuration; omit the instance segment to target the default instance.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "/services/ai/api", "description": "AI Service API" }
+  ],
+  "tags": [
+    { "name": "Default Instance", "description": "Operations on the default AI service instance" },
+    { "name": "Named Instance", "description": "Operations on a named AI service instance" }
+  ],
+  "components": {
+    "parameters": {
+      "InstanceName": {
+        "name": "instanceName",
+        "in": "path",
+        "required": true,
+        "description": "Name of the AI service instance",
+        "schema": { "type": "string", "example": "default" }
+      }
+    },
+    "requestBodies": {
+      "PromptBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["prompt"],
+              "properties": {
+                "prompt": {
+                  "type": "string",
+                  "example": "Please give me an inspiring quote"
+                },
+                "username": {
+                  "type": "string",
+                  "description": "Optional username for analytics attribution",
+                  "example": "anonymous"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "maxTokens": { "type": "integer", "example": 1000 },
+                    "temperature": { "type": "number", "example": 0.7 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SettingsBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Key/value map of settings to update"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Success": { "description": "Successful response" },
+      "BadRequest": { "description": "Invalid request" },
+      "ServiceDisabled": { "description": "AI service is disabled - API key not configured" },
+      "ServerError": { "description": "Internal server error" }
+    }
+  },
+  "paths": {
+    "/instances": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "List all AI service instances",
+        "description": "Returns every registered AI service instance, including the default.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "Get service status",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/prompt": {
+      "post": {
+        "tags": ["Default Instance"],
+        "summary": "Send a prompt to the default instance",
+        "requestBody": { "$ref": "#/components/requestBodies/PromptBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "503": { "$ref": "#/components/responses/ServiceDisabled" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "Get prompt analytics",
+        "parameters": [
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer" } },
+          { "name": "recentLimit", "in": "query", "required": false, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "List available models",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "Health check",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Default Instance"],
+        "summary": "Get service settings",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Default Instance"],
+        "summary": "Save service settings",
+        "requestBody": { "$ref": "#/components/requestBodies/SettingsBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/{instanceName}/status": {
+      "get": {
+        "tags": ["Named Instance"],
+        "summary": "Get status for an instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/{instanceName}/prompt": {
+      "post": {
+        "tags": ["Named Instance"],
+        "summary": "Send a prompt to a named instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "requestBody": { "$ref": "#/components/requestBodies/PromptBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "503": { "$ref": "#/components/responses/ServiceDisabled" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/{instanceName}/analytics": {
+      "get": {
+        "tags": ["Named Instance"],
+        "summary": "Get analytics for an instance",
+        "parameters": [
+          { "$ref": "#/components/parameters/InstanceName" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer" } },
+          { "name": "recentLimit", "in": "query", "required": false, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/{instanceName}/models": {
+      "get": {
+        "tags": ["Named Instance"],
+        "summary": "List models for an instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/{instanceName}/health": {
+      "get": {
+        "tags": ["Named Instance"],
+        "summary": "Health check for an instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/{instanceName}/settings": {
+      "get": {
+        "tags": ["Named Instance"],
+        "summary": "Get settings for an instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Named Instance"],
+        "summary": "Save settings for an instance",
+        "parameters": [{ "$ref": "#/components/parameters/InstanceName" }],
+        "requestBody": { "$ref": "#/components/requestBodies/SettingsBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    }
+  }
 }

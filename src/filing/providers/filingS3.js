@@ -1,7 +1,7 @@
 /**
  * @fileoverview AWS S3 filing provider for cloud-based file operations
  * using Amazon S3 with bucket-based organization and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -9,6 +9,7 @@
 'use strict';
 
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+const { assertSafeRelativePath } = require('../modules/pathSafety');
 
 /**
  * A class that implements an AWS S3-based file storage provider.
@@ -72,6 +73,7 @@ class S3FilingProvider {
    * @returns {Promise<void>}
    */
   async create(filePath, content) {
+    assertSafeRelativePath(filePath);
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
@@ -101,6 +103,7 @@ class S3FilingProvider {
    * @returns {Promise<Buffer|string>}
    */
   async read(filePath, encoding) {
+    assertSafeRelativePath(filePath);
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
@@ -131,6 +134,7 @@ class S3FilingProvider {
    * @returns {Promise<void>}
    */
   async delete(filePath) {
+    assertSafeRelativePath(filePath);
     const command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: filePath,
@@ -155,6 +159,7 @@ class S3FilingProvider {
    * @returns {Promise<Array<string>>}
    */
   async list(dirPath) {
+    assertSafeRelativePath(dirPath);
     const command = new ListObjectsV2Command({
       Bucket: this.bucketName,
       Prefix: dirPath,
@@ -182,6 +187,7 @@ class S3FilingProvider {
    * @returns {Promise<void>}
    */
   async update(filePath, content) {
+    assertSafeRelativePath(filePath);
     // For S3, update is essentially create (put) as it overwrites if exists
     const command = new PutObjectCommand({
       Bucket: this.bucketName,

@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core Filing UI Client Library
- * A client-side JavaScript library for interacting with the Noobly JS Core filing service.
+ * @fileoverview NooblyJS Core Filing UI Client Library
+ * A client-side JavaScript library for interacting with the NooblyJS Core filing service.
  * Provides a complete file browser UI with navigation, folder browsing, and file previews.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.15
  *
@@ -54,7 +54,339 @@
       this.refreshButton = null;
 
       this.initializeElements();
+      this.injectContentStyles();
       this.initFilePreview();
+    }
+
+    /**
+     * Inject the content-panel stylesheet, once per page.
+     *
+     * The content panel used to be styled entirely by assigning `style.cssText`
+     * on every element it created. That is why it looked wrong: inline styles
+     * cannot express a hover state, cannot respond to container width, and —
+     * being the last word in the cascade — cannot be corrected by a host either.
+     * The navigation tree beside it renders through CLASSES and consequently
+     * picks up the host's palette, which is why the two panes disagreed: teal
+     * folders in the tree, solid black ones in the content area.
+     *
+     * Everything below is self-contained (no Bootstrap utility classes — hosts
+     * are not required to load Bootstrap's CSS, and the component already
+     * depends on Bootstrap Icons for glyphs only) and every colour comes from a
+     * custom property with a fallback, so a host can theme the panel by setting
+     * `--kr-filer-*` anywhere above it.
+     */
+    injectContentStyles() {
+      if (document.getElementById('kr-filer-content-styles')) return;
+
+      const style = document.createElement('style');
+      style.id = 'kr-filer-content-styles';
+      style.textContent = `
+        .kr-filer-items {
+          /* The host may style the content container as a grid or a flex line
+             (the datasources shell sets display:grid with 200px columns). This
+             wrapper would then be laid out as ONE cell of that grid, squeezing
+             the whole listing into a single 200px column. Spanning every column
+             and filling the width makes the panel independent of whatever the
+             host decided its container should be. */
+          grid-column: 1 / -1;
+          flex: 1 1 100%;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        /* ── Grid view ─────────────────────────────────────────────────── */
+        .kr-filer-items.kr-filer-grid {
+          display: grid;
+          /* Was a fixed 6 columns, which is unusably narrow in a side panel and
+             sparse on a wide one. Tracks now size themselves to the container. */
+          grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+          gap: 6px;
+          padding: 12px;
+          align-content: start;
+        }
+
+        .kr-filer-tile {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          padding: 16px 10px 14px;
+          border: 1px solid transparent;
+          border-radius: 10px;
+          cursor: pointer;
+          text-align: center;
+          user-select: none;
+          background: transparent;
+          transition: background-color .12s ease, border-color .12s ease;
+        }
+        .kr-filer-tile:hover {
+          background: var(--kr-filer-hover-bg, #f1f6f7);
+          border-color: var(--kr-filer-hover-border, #cfe3e5);
+        }
+        .kr-filer-tile:focus-visible {
+          outline: 2px solid var(--kr-filer-accent, #02797d);
+          outline-offset: 1px;
+        }
+
+        .kr-filer-tile-icon {
+          /* 3rem icons left no room for the label, which is what forced the
+             two-line mid-word truncation ("L2 Admi…"). */
+          font-size: 1.9rem;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 34px;
+        }
+        .kr-filer-tile-icon.kr-is-folder { color: var(--kr-filer-folder, #0f7d80); }
+        .kr-filer-tile-icon.kr-is-file   { color: var(--kr-filer-file, #94a3b8); }
+
+        .kr-filer-tile-name {
+          font-size: 0.8125rem;
+          line-height: 1.35;
+          color: var(--kr-filer-text, #1f2937);
+          /* overflow-wrap:anywhere breaks a word only when it genuinely does
+             not fit, where word-break:break-word chopped every label. */
+          overflow-wrap: anywhere;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          max-width: 100%;
+        }
+        .kr-filer-tile-meta {
+          font-size: 0.6875rem;
+          color: var(--kr-filer-muted, #94a3b8);
+        }
+
+        /* ── List view ─────────────────────────────────────────────────── */
+        .kr-filer-items.kr-filer-list { display: block; padding: 0; }
+        .kr-filer-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 9px 16px;
+          border-bottom: 1px solid var(--kr-filer-line, #f1f3f5);
+          cursor: pointer;
+          transition: background-color .12s ease;
+        }
+        .kr-filer-row:hover { background: var(--kr-filer-hover-bg, #f1f6f7); }
+        .kr-filer-row-head {
+          font-weight: 600;
+          font-size: 0.75rem;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+          color: var(--kr-filer-muted, #94a3b8);
+          background: var(--kr-filer-head-bg, #f8fafc);
+          cursor: default;
+          position: sticky;
+          top: 0;
+          z-index: 1;
+        }
+        .kr-filer-row-head:hover { background: var(--kr-filer-head-bg, #f8fafc); }
+        .kr-filer-row-icon {
+          width: 20px;
+          flex: 0 0 20px;
+          display: flex;
+          justify-content: center;
+          font-size: 1rem;
+        }
+        .kr-filer-row-icon.kr-is-folder { color: var(--kr-filer-folder, #0f7d80); }
+        .kr-filer-row-icon.kr-is-file   { color: var(--kr-filer-file, #94a3b8); }
+        .kr-filer-row-name {
+          flex: 1;
+          min-width: 0;
+          font-size: 0.8125rem;
+          color: var(--kr-filer-text, #1f2937);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kr-filer-row-date {
+          width: 130px;
+          flex: 0 0 130px;
+          text-align: right;
+          font-size: 0.75rem;
+          color: var(--kr-filer-muted, #94a3b8);
+        }
+
+        /* ── File viewer ───────────────────────────────────────────────── */
+        /* The viewer emitted core-file-preview* classes that NO stylesheet
+           defined — not this component's (it had none) and not the hosts'. So a
+           previewed document rendered as unstyled body copy, inside the same
+           single 200px host-grid cell that squashed the listing: a tall narrow
+           column of text with its own scrollbar, stranded on the left. */
+        .core-file-preview {
+          grid-column: 1 / -1;
+          flex: 1 1 100%;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          background: #fff;
+          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border-radius: 10px;
+          overflow: hidden;
+        }
+
+        .core-file-preview-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 14px;
+          border-bottom: 1px solid var(--kr-filer-line, #e6e9ec);
+          background: var(--kr-filer-head-bg, #f8fafc);
+          flex: 0 0 auto;
+        }
+        .core-file-preview-title {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--kr-filer-text, #1f2937);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .core-file-preview-title i { color: var(--kr-filer-file, #94a3b8); flex: 0 0 auto; }
+        .core-file-preview-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+
+        .core-file-preview-content {
+          flex: 1 1 auto;
+          min-height: 0;
+          overflow: auto;
+          padding: 22px 26px;
+          font-size: 0.875rem;
+          line-height: 1.6;
+          color: var(--kr-filer-text, #1f2937);
+        }
+
+        /* Rendered markdown. Capped to a readable measure and CENTRED, rather
+           than running the full width of a wide panel. */
+        .core-markdown-content { max-width: 78ch; margin: 0 auto; }
+        .core-markdown-content > :first-child { margin-top: 0; }
+        .core-markdown-content h1,
+        .core-markdown-content h2,
+        .core-markdown-content h3 {
+          line-height: 1.25;
+          margin: 1.6em 0 .6em;
+          color: var(--kr-filer-text, #1f2937);
+        }
+        .core-markdown-content h1 { font-size: 1.5rem; padding-bottom: .3em; border-bottom: 1px solid var(--kr-filer-line, #e6e9ec); }
+        .core-markdown-content h2 { font-size: 1.2rem; }
+        .core-markdown-content h3 { font-size: 1.02rem; }
+        .core-markdown-content p { margin: 0 0 1em; }
+        .core-markdown-content ul,
+        .core-markdown-content ol { margin: 0 0 1em; padding-left: 1.4em; }
+        .core-markdown-content li { margin: .25em 0; }
+        .core-markdown-content a { color: var(--kr-filer-accent, #02797d); }
+        .core-markdown-content img { max-width: 100%; height: auto; border-radius: 6px; }
+        .core-markdown-content blockquote {
+          margin: 0 0 1em;
+          padding: .2em 1em;
+          border-left: 3px solid var(--kr-filer-line, #e6e9ec);
+          color: var(--kr-filer-muted, #94a3b8);
+        }
+        .core-markdown-content code {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: .875em;
+          background: var(--kr-filer-head-bg, #f8fafc);
+          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border-radius: 4px;
+          padding: .1em .35em;
+        }
+        .core-markdown-content pre {
+          background: var(--kr-filer-head-bg, #f8fafc);
+          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border-radius: 8px;
+          padding: 12px 14px;
+          overflow-x: auto;
+        }
+        .core-markdown-content pre code { background: none; border: 0; padding: 0; }
+        .core-markdown-content table { border-collapse: collapse; width: 100%; margin: 0 0 1em; font-size: .8125rem; }
+        .core-markdown-content th,
+        .core-markdown-content td { border: 1px solid var(--kr-filer-line, #e6e9ec); padding: 6px 10px; text-align: left; }
+        .core-markdown-content th { background: var(--kr-filer-head-bg, #f8fafc); font-weight: 600; }
+        .core-markdown-content hr { border: 0; border-top: 1px solid var(--kr-filer-line, #e6e9ec); margin: 1.6em 0; }
+
+        /* Code / JSON / plain text */
+        .core-file-preview-content.formatted-text,
+        .core-file-preview-content:not(.core-markdown-content) pre { padding: 0; }
+        .core-file-preview-content pre {
+          margin: 0;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: .8125rem;
+          line-height: 1.55;
+          white-space: pre;
+          overflow-x: auto;
+        }
+
+        .binary-file-notice {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin: 22px;
+          padding: 16px 18px;
+          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border-radius: 10px;
+          background: var(--kr-filer-head-bg, #f8fafc);
+          color: var(--kr-filer-text, #1f2937);
+          font-size: .8125rem;
+        }
+        .binary-file-notice i { font-size: 1.6rem; color: var(--kr-filer-file, #94a3b8); }
+        .binary-file-notice a { color: var(--kr-filer-accent, #02797d); }
+
+        /* ── Empty state ───────────────────────────────────────────────── */
+        .kr-filer-empty {
+          grid-column: 1 / -1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 56px 20px;
+          color: var(--kr-filer-muted, #94a3b8);
+          text-align: center;
+        }
+        .kr-filer-empty i { font-size: 1.75rem; opacity: .55; }
+        .kr-filer-empty-title { font-size: 0.875rem; font-weight: 600; color: var(--kr-filer-text, #1f2937); }
+        .kr-filer-empty-hint { font-size: 0.75rem; }
+
+        @media (max-width: 720px) {
+          .kr-filer-items.kr-filer-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+          .kr-filer-row-date { display: none; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    /**
+     * The Bootstrap Icons glyph for a file, chosen by extension.
+     * @param {string} name - The file name
+     * @returns {string} A `bi-*` class name
+     */
+    fileIconClass(name) {
+      const ext = String(name || '').split('.').pop().toLowerCase();
+      const iconMap = {
+        pdf: 'bi-file-earmark-pdf',
+        doc: 'bi-file-earmark-word', docx: 'bi-file-earmark-word',
+        xls: 'bi-file-earmark-excel', xlsx: 'bi-file-earmark-excel', csv: 'bi-file-earmark-spreadsheet',
+        ppt: 'bi-file-earmark-ppt', pptx: 'bi-file-earmark-ppt',
+        zip: 'bi-file-earmark-zip', gz: 'bi-file-earmark-zip', tar: 'bi-file-earmark-zip',
+        jpg: 'bi-file-earmark-image', jpeg: 'bi-file-earmark-image', png: 'bi-file-earmark-image',
+        gif: 'bi-file-earmark-image', svg: 'bi-file-earmark-image', webp: 'bi-file-earmark-image',
+        mp3: 'bi-file-earmark-music', wav: 'bi-file-earmark-music',
+        mp4: 'bi-file-earmark-play', mov: 'bi-file-earmark-play',
+        txt: 'bi-file-earmark-text', md: 'bi-file-earmark-text',
+        json: 'bi-file-earmark-code', js: 'bi-file-earmark-code', css: 'bi-file-earmark-code',
+        html: 'bi-file-earmark-code', xml: 'bi-file-earmark-code', yml: 'bi-file-earmark-code',
+        yaml: 'bi-file-earmark-code',
+      };
+      return iconMap[ext] || 'bi-file-earmark';
     }
 
     /**
@@ -102,13 +434,16 @@
             this.currentPath = '';
             this.displayFolderContents('');
             this.updateBreadcrumb('');
+            this.expandAndHighlight('');
           }
         });
       }
 
-      // View mode toggle buttons - scoped to this instance's parent content area
-      const contentArea = this.contentContainer.closest('.core-file-browser-content') || this.contentContainer.parentElement;
-      const viewModeButtons = contentArea.querySelectorAll('.core-view-mode-btn');
+      // View mode toggle buttons - scoped to this instance's parent content area.
+      // The markup uses the `kr-` prefixed classes (after the CSS-prefix
+      // migration), so query those rather than the legacy `core-` names.
+      const contentArea = this.contentContainer.closest('.kr-file-browser-content') || this.contentContainer.parentElement;
+      const viewModeButtons = contentArea.querySelectorAll('.kr-view-mode-btn');
       viewModeButtons.forEach(button => {
         button.addEventListener('click', (e) => {
           const viewMode = e.currentTarget.dataset.view;
@@ -121,12 +456,14 @@
      * Set the current view mode and update button states
      */
     setViewMode(viewMode) {
-      this.currentViewMode = viewMode;
+      // The card button carries data-view="core-card"; normalise it to the
+      // 'card' value that the render logic switches on.
+      this.currentViewMode = viewMode === 'core-card' ? 'card' : viewMode;
 
       // Update button states - scoped to this instance's parent content area only
-      const contentArea = this.contentContainer.closest('.core-file-browser-content') || this.contentContainer.parentElement;
+      const contentArea = this.contentContainer.closest('.kr-file-browser-content') || this.contentContainer.parentElement;
       if (contentArea) {
-        contentArea.querySelectorAll('.core-view-mode-btn').forEach(btn => {
+        contentArea.querySelectorAll('.kr-view-mode-btn').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.view === viewMode);
         });
       }
@@ -217,22 +554,23 @@
       li.className = 'core-file-tree-item';
       li.dataset.path = node.path;
       li.dataset.type = node.type;
+      // Children are fetched lazily the first time a folder is expanded.
+      li.dataset.loaded = 'false';
 
-      const hasChildren = node.type === 'folder' && node.children && node.children.length > 0;
+      const isFolder = node.type === 'folder';
 
       const content = document.createElement('div');
       content.className = 'core-file-tree-item-content';
 
-      // Toggle button
+      // Toggle button. Folders are always expandable because their children are
+      // loaded on demand - we cannot know up front whether they are empty.
       const toggle = document.createElement('span');
-      toggle.className = `core-file-tree-toggle ${hasChildren ? 'core-has-children' : 'core-no-children'}`;
-      toggle.innerHTML = hasChildren ? '▶' : '';
+      toggle.className = `core-file-tree-toggle ${isFolder ? 'core-has-children' : 'core-no-children'}`;
+      toggle.innerHTML = isFolder ? '▶' : '';
       toggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (hasChildren) {
-          const nested = li.querySelector('.core-file-tree-item-nested');
-          nested.classList.toggle('show');
-          toggle.classList.toggle('core-expanded');
+        if (isFolder) {
+          this.toggleTreeFolder(node, li, toggle);
         }
       });
       content.appendChild(toggle);
@@ -240,7 +578,7 @@
       // Icon
       const icon = document.createElement('span');
       icon.className = 'core-file-tree-item-icon';
-      icon.innerHTML = node.type === 'folder' ? '<i class="bi bi-folder-fill"></i>' : '<i class="bi bi-file-earmark"></i>';
+      icon.innerHTML = isFolder ? '<i class="bi bi-folder-fill"></i>' : '<i class="bi bi-file-earmark"></i>';
       content.appendChild(icon);
 
       // Name
@@ -256,15 +594,10 @@
 
       li.appendChild(content);
 
-      // Nested children
-      if (hasChildren) {
+      // Empty nested container, populated lazily on first expand.
+      if (isFolder) {
         const nested = document.createElement('ul');
         nested.className = 'core-file-tree-item-nested';
-        // Sort nested children: folders first, then files, both alphabetically
-        const sortedChildren = this.sortFileTreeItems(node.children);
-        sortedChildren.forEach(child => {
-          nested.appendChild(this.createFileTreeItem(child, level + 1));
-        });
         li.appendChild(nested);
       }
 
@@ -272,29 +605,117 @@
     }
 
     /**
+     * Lazily loads a folder's children into its nested list (once), then
+     * expands or collapses it.
+     * @param {Object} node - The folder node ({ name, path, type }).
+     * @param {HTMLElement} li - The folder's <li> element.
+     * @param {HTMLElement} toggle - The folder's toggle arrow element.
+     * @param {boolean} [forceExpand=false] - When true, always expand (never collapse).
+     */
+    async toggleTreeFolder(node, li, toggle, forceExpand = false) {
+      const nested = li.querySelector(':scope > .core-file-tree-item-nested');
+      if (!nested) return;
+
+      if (li.dataset.loaded === 'false') {
+        await this.loadNodeChildren(node.path, li, nested);
+      }
+
+      const shouldShow = forceExpand || !nested.classList.contains('show');
+      nested.classList.toggle('show', shouldShow);
+      if (toggle) toggle.classList.toggle('core-expanded', shouldShow);
+    }
+
+    /**
+     * Fetches the children of a folder path and renders them into a nested list.
+     * @param {string} folderPath - The folder path to browse.
+     * @param {HTMLElement} li - The folder's <li> element (its loaded flag is set).
+     * @param {HTMLElement} nested - The nested <ul> to populate.
+     */
+    async loadNodeChildren(folderPath, li, nested) {
+      try {
+        const encodedPath = folderPath ? encodeURIComponent(folderPath) : '';
+        const response = await this.fetchApi(`/browse/${encodedPath}`);
+        const data = await response.json();
+
+        nested.innerHTML = '';
+        const items = this.sortFileTreeItems(data.items || []);
+        items.forEach(item => {
+          nested.appendChild(this.createFileTreeItem({
+            name: item.name,
+            path: item.path,
+            type: item.type
+          }));
+        });
+        li.dataset.loaded = 'true';
+      } catch (error) {
+        console.error('Error loading folder children:', error);
+      }
+    }
+
+    /**
+     * Expands the navigation tree along the given path (lazy-loading each
+     * intermediate folder) and highlights the matching node, so the left nav
+     * always reflects the current location.
+     * @param {string} path - The path to reveal and highlight.
+     */
+    async expandAndHighlight(path) {
+      // Clear any existing highlight.
+      this.navContainer.querySelectorAll('.core-file-tree-item.active').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      if (!path) return;
+
+      const parts = path.split('/');
+      let currentPath = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        currentPath += (i ? '/' : '') + parts[i];
+        const li = this.navContainer.querySelector(
+          `.core-file-tree-item[data-path="${this.escapeSelector(currentPath)}"]`
+        );
+        if (!li) return; // Ancestor not present (e.g. tree not loaded yet).
+
+        const isLast = i === parts.length - 1;
+        if (isLast) {
+          li.classList.add('active');
+          li.scrollIntoView({ block: 'nearest' });
+        } else if (li.dataset.type === 'folder') {
+          // Expand (and lazily load) intermediate folders so the next segment
+          // exists in the DOM for the following iteration.
+          const toggle = li.querySelector(':scope > .core-file-tree-item-content > .core-file-tree-toggle');
+          const nested = li.querySelector(':scope > .core-file-tree-item-nested');
+          if (nested && li.dataset.loaded === 'false') {
+            await this.loadNodeChildren(currentPath, li, nested);
+          }
+          if (nested) nested.classList.add('show');
+          if (toggle) toggle.classList.add('core-expanded');
+        }
+      }
+    }
+
+    /**
      * Handle file tree item click
      */
     handleFileTreeItemClick(node) {
-      // Remove active class from all items
-      this.navContainer.querySelectorAll('.core-file-tree-item.active').forEach(item => {
-        item.classList.remove('active');
-      });
-
-      // Add active class to clicked item
-      const element = this.navContainer.querySelector(`[data-path="${this.escapeSelector(node.path)}"]`);
-      if (element) {
-        element.classList.add('active');
-      }
-
       this.currentPath = node.path;
 
       if (node.type === 'folder') {
         this.displayFolderContents(node.path);
+        // Expand the folder in place so its children are revealed.
+        const li = this.navContainer.querySelector(
+          `.core-file-tree-item[data-path="${this.escapeSelector(node.path)}"]`
+        );
+        if (li) {
+          const toggle = li.querySelector(':scope > .core-file-tree-item-content > .core-file-tree-toggle');
+          this.toggleTreeFolder(node, li, toggle, true);
+        }
       } else {
         this.displayFilePreview(node.path);
       }
 
       this.updateBreadcrumb(node.path);
+      this.expandAndHighlight(node.path);
     }
 
     /**
@@ -309,7 +730,15 @@
         const data = await response.json();
 
         if (!data.items || data.items.length === 0) {
-          this.contentContainer.innerHTML = '<div class="empty-state"><i class="bi bi-folder display-4 text-muted"></i><p class="mt-3 text-muted">This folder is empty</p></div>';
+          // Self-contained: `display-4`/`text-muted`/`mt-3` are Bootstrap
+          // utilities, and a host is not obliged to load Bootstrap's CSS — where
+          // it does not, this rendered as an oversized unstyled glyph.
+          this.contentContainer.innerHTML = `
+            <div class="kr-filer-empty">
+              <i class="bi bi-folder2-open"></i>
+              <div class="kr-filer-empty-title">This folder is empty</div>
+              <div class="kr-filer-empty-hint">Nothing has been added here yet.</div>
+            </div>`;
           return;
         }
 
@@ -325,62 +754,57 @@
         } else if (this.currentViewMode === 'list') {
           // Create list view
           const listTable = document.createElement('div');
-          listTable.className = 'file-list';
-          listTable.style.cssText = 'display: flex; flex-direction: column;';
+          listTable.className = 'kr-filer-items kr-filer-list';
 
-          // Add header for list view
+          // Column header. Sticky, so it survives a long folder.
           const headerRow = document.createElement('div');
-          headerRow.style.cssText = 'display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e9ecef; font-weight: 600; color: #666; font-size: 0.9rem; background: #f8f9fa;';
+          headerRow.className = 'kr-filer-row kr-filer-row-head';
           headerRow.innerHTML = `
-            <div style="width: 40px;"></div>
-            <div style="flex: 1; min-width: 200px;">Name</div>
-            <div style="width: 150px; text-align: right;">Date Created</div>
+            <div class="kr-filer-row-icon"></div>
+            <div class="kr-filer-row-name">Name</div>
+            <div class="kr-filer-row-date">Modified</div>
           `;
           listTable.appendChild(headerRow);
 
           sortedItems.forEach(item => {
+            const isFolder = item.type === 'folder';
+
             const itemEl = document.createElement('div');
-            itemEl.className = 'file-list-item';
-            itemEl.style.cssText = 'display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background-color 0.2s;';
+            itemEl.className = 'kr-filer-row';
+            itemEl.tabIndex = 0;
+            itemEl.setAttribute('role', 'button');
 
-            // Add hover effect
-            itemEl.addEventListener('mouseenter', (e) => {
-              if (this.currentViewMode === 'list') {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
-              }
-            });
-            itemEl.addEventListener('mouseleave', (e) => {
-              if (this.currentViewMode === 'list') {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            });
-
-            // Icon
             const iconDiv = document.createElement('div');
-            const iconColor = item.type === 'folder' ? '#000000' : '#999';
-            iconDiv.style.cssText = `width: 40px; display: flex; align-items: center; justify-content: center; color: ${iconColor}; font-size: 1.2rem;`;
-            iconDiv.innerHTML = item.type === 'folder' ? '<i class="bi bi-folder-fill"></i>' : '<i class="bi bi-file-earmark"></i>';
+            iconDiv.className = `kr-filer-row-icon ${isFolder ? 'kr-is-folder' : 'kr-is-file'}`;
+            iconDiv.innerHTML = isFolder
+              ? '<i class="bi bi-folder-fill"></i>'
+              : `<i class="bi ${this.fileIconClass(item.name)}"></i>`;
 
-            // Name
             const nameDiv = document.createElement('div');
-            nameDiv.style.cssText = 'flex: 1; min-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+            nameDiv.className = 'kr-filer-row-name';
             nameDiv.title = item.name;
             nameDiv.textContent = item.name;
 
-            // Date created (placeholder - would need to be added to API response)
             const dateDiv = document.createElement('div');
-            dateDiv.style.cssText = 'width: 150px; text-align: right; font-size: 0.9rem; color: #999;';
-            dateDiv.textContent = item.modified ? new Date(item.modified).toLocaleDateString() : '-';
+            dateDiv.className = 'kr-filer-row-date';
+            dateDiv.textContent = item.modified ? new Date(item.modified).toLocaleDateString() : '—';
 
             itemEl.appendChild(iconDiv);
             itemEl.appendChild(nameDiv);
             itemEl.appendChild(dateDiv);
 
-            itemEl.addEventListener('click', () => {
-              if (item.type === 'folder') {
+            const activate = () => {
+              if (isFolder) {
                 this.handleFolderItemClick(item);
               } else {
                 this.handleFileItemClick(item);
+              }
+            };
+            itemEl.addEventListener('click', activate);
+            itemEl.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activate();
               }
             });
 
@@ -424,27 +848,20 @@
      * Handle folder item click
      */
     handleFolderItemClick(item) {
-      const treeItem = this.navContainer.querySelector(`[data-path="${this.escapeSelector(item.path)}"]`);
-      if (treeItem) {
-        treeItem.click();
-      } else {
-        this.currentPath = item.path;
-        this.displayFolderContents(item.path);
-        this.updateBreadcrumb(item.path);
-      }
+      this.currentPath = item.path;
+      this.displayFolderContents(item.path);
+      this.updateBreadcrumb(item.path);
+      this.expandAndHighlight(item.path);
     }
 
     /**
      * Handle file item click
      */
     handleFileItemClick(item) {
-      const treeItem = this.navContainer.querySelector(`[data-path="${this.escapeSelector(item.path)}"]`);
-      if (treeItem) {
-        treeItem.click();
-      } else {
-        this.displayFilePreview(item.path);
-        this.updateBreadcrumb(item.path);
-      }
+      this.currentPath = item.path;
+      this.displayFilePreview(item.path);
+      this.updateBreadcrumb(item.path);
+      this.expandAndHighlight(item.path);
     }
 
     /**
@@ -561,73 +978,52 @@
     }
 
     /**
-     * Render grid view - 6 columns with icon and name only (NO PREVIEWS)
+     * Render grid view — auto-sizing tiles with an icon and a name.
+     *
+     * Tracks size themselves (`auto-fill` + a `minmax` floor) rather than the
+     * fixed six columns this used to force: six columns is unreadably narrow in
+     * a side panel and stranded on a wide one, and it was six columns of a
+     * single 200px cell once a host styled the content container as a grid.
      */
     renderGridView(container, sortedItems, path) {
-      container.style.cssText = 'display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; padding: 1rem;';
+      container.classList.add('kr-filer-items', 'kr-filer-grid');
 
       sortedItems.forEach(item => {
+        const isFolder = item.type === 'folder';
+
         const itemEl = document.createElement('div');
-        itemEl.style.cssText = 'display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 1rem; border-radius: 8px; transition: background-color 0.2s; text-align: center;';
+        itemEl.className = 'kr-filer-tile';
+        // Reachable and activatable without a mouse — the tile is the control.
+        itemEl.tabIndex = 0;
+        itemEl.setAttribute('role', 'button');
+        itemEl.title = item.name;
 
-        // Add hover effect
-        itemEl.addEventListener('mouseenter', () => {
-          itemEl.style.backgroundColor = '#f0f0f0';
-        });
-        itemEl.addEventListener('mouseleave', () => {
-          itemEl.style.backgroundColor = 'transparent';
-        });
-
-        // Icon
         const iconEl = document.createElement('div');
-        iconEl.style.cssText = 'font-size: 3rem; margin-bottom: 0.75rem; color: ' +
-          (item.type === 'folder' ? '#000000' : '#999') + ';';
+        iconEl.className = `kr-filer-tile-icon ${isFolder ? 'kr-is-folder' : 'kr-is-file'}`;
+        iconEl.innerHTML = isFolder
+          ? '<i class="bi bi-folder-fill"></i>'
+          : `<i class="bi ${this.fileIconClass(item.name)}"></i>`;
 
-        if (item.type === 'folder') {
-          iconEl.innerHTML = '<i class="bi bi-folder-fill"></i>';
-        } else {
-          // Determine file icon based on extension
-          const ext = item.name.split('.').pop().toLowerCase();
-          const iconMap = {
-            'pdf': 'bi-file-pdf',
-            'doc': 'bi-file-word',
-            'docx': 'bi-file-word',
-            'xls': 'bi-file-excel',
-            'xlsx': 'bi-file-excel',
-            'ppt': 'bi-file-powerpoint',
-            'pptx': 'bi-file-powerpoint',
-            'zip': 'bi-file-zip',
-            'jpg': 'bi-file-image',
-            'jpeg': 'bi-file-image',
-            'png': 'bi-file-image',
-            'gif': 'bi-file-image',
-            'mp3': 'bi-file-earmark-music',
-            'mp4': 'bi-file-earmark-play',
-            'txt': 'bi-file-text',
-            'md': 'bi-file-text',
-            'json': 'bi-file-code',
-            'js': 'bi-file-code',
-            'css': 'bi-file-code',
-            'html': 'bi-file-code',
-          };
-          const icon = iconMap[ext] || 'bi-file-earmark';
-          iconEl.innerHTML = `<i class="bi ${icon}"></i>`;
-        }
-
-        // Name
         const nameEl = document.createElement('div');
-        nameEl.style.cssText = 'font-size: 0.9rem; color: #333; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; max-width: 100%;';
-        nameEl.title = item.name;
+        nameEl.className = 'kr-filer-tile-name';
         nameEl.textContent = item.name;
 
         itemEl.appendChild(iconEl);
         itemEl.appendChild(nameEl);
 
-        itemEl.addEventListener('click', () => {
-          if (item.type === 'folder') {
+        const activate = () => {
+          if (isFolder) {
             this.handleFolderItemClick(item);
           } else {
             this.handleFileItemClick(item);
+          }
+        };
+
+        itemEl.addEventListener('click', activate);
+        itemEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activate();
           }
         });
 
@@ -658,7 +1054,10 @@
      * Render card view - Shows file previews with icon/preview and name
      */
     renderCardView(container, sortedItems, path) {
-      container.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem;';
+      // kr-filer-items carries the grid-column/width reset that keeps the
+      // listing full-width when the host styles its content container as a grid.
+      container.classList.add('kr-filer-items');
+      container.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem; grid-column: 1 / -1; width: 100%; box-sizing: border-box;';
 
       sortedItems.forEach(item => {
         const itemEl = document.createElement('div');
@@ -677,9 +1076,11 @@
         const previewContainer = document.createElement('div');
         previewContainer.style.cssText = 'position: relative; overflow: hidden; background: #f5f5f5; display: flex; align-items: center; justify-content: center; min-height: 150px;';
 
-        // For folders, show folder icon
+        // For folders, show folder icon. Themed like every other folder glyph
+        // in the panel rather than solid black, which read as a rendering fault
+        // beside the teal folders in the navigation tree.
         if (item.type === 'folder') {
-          previewContainer.innerHTML = '<i class="bi bi-folder-fill" style="font-size: 3rem; color: #000000;"></i>';
+          previewContainer.innerHTML = '<i class="bi bi-folder-fill" style="font-size: 2.75rem; color: var(--kr-filer-folder, #0f7d80);"></i>';
         } else {
           // For files, load preview
           const fileName = item.name.toLowerCase();
@@ -1183,7 +1584,7 @@
 
       const viewFullBtn = document.createElement('button');
       viewFullBtn.className = 'btn btn-sm btn-primary'; 
-      viewFullBtn.style = 'background-color: #02797d; color: white; border: none;';
+      viewFullBtn.style = 'background-color: #4B5563; color: white; border: none;';
       viewFullBtn.title = 'View in fullscreen modal';
       viewFullBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
       viewFullBtn.addEventListener('click', () => {
@@ -1379,9 +1780,50 @@
       let inList = false;
       let listType = null;
 
+      // Matches a GFM table separator row, e.g. "| --- | :--: |" or "--|--".
+      const isTableSeparator = (s) =>
+        /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$/.test(s);
+      // Splits a "| a | b |" row into trimmed cell values.
+      const parseTableRow = (row) => {
+        let r = row.trim();
+        if (r.startsWith('|')) r = r.slice(1);
+        if (r.endsWith('|')) r = r.slice(0, -1);
+        return r.split('|').map((c) => c.trim());
+      };
+
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmed = line.trim();
+
+        // GFM table: a header row immediately followed by a separator row.
+        if (
+          trimmed.includes('|') &&
+          i + 1 < lines.length &&
+          isTableSeparator(lines[i + 1].trim())
+        ) {
+          if (inList) {
+            processedLines.push(`</${listType}>`);
+            inList = false;
+            listType = null;
+          }
+
+          const headers = parseTableRow(trimmed);
+          let table = '<table><thead><tr>' +
+            headers.map((h) => `<th>${h}</th>`).join('') +
+            '</tr></thead><tbody>';
+
+          let j = i + 2;
+          while (j < lines.length && lines[j].trim() !== '' && lines[j].includes('|')) {
+            const cells = parseTableRow(lines[j]);
+            table += '<tr>' + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
+            j++;
+          }
+          table += '</tbody></table>';
+
+          processedLines.push(table);
+          i = j - 1; // resume after the consumed table rows
+          continue;
+        }
 
         // Unordered list
         if (trimmed.match(/^[\*\-] /)) {
@@ -1464,13 +1906,10 @@
             const pathSnapshot = currentPath;
             link.addEventListener('click', (e) => {
               e.preventDefault();
-              const treeItem = this.navContainer.querySelector(`[data-path="${this.escapeSelector(pathSnapshot)}"]`);
-              if (treeItem) {
-                treeItem.click();
-              } else {
-                this.currentPath = pathSnapshot;
-                this.displayFolderContents(pathSnapshot);
-              }
+              this.currentPath = pathSnapshot;
+              this.displayFolderContents(pathSnapshot);
+              this.updateBreadcrumb(pathSnapshot);
+              this.expandAndHighlight(pathSnapshot);
             });
             li.appendChild(link);
           }
@@ -1487,6 +1926,7 @@
           this.currentPath = '';
           this.displayFolderContents('');
           this.updateBreadcrumb('');
+          this.expandAndHighlight('');
         }
       });
     }

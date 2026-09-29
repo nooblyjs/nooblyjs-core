@@ -3,12 +3,14 @@
  * Implements HTTP fetching using Node.js native fetch API (or node-fetch polyfill)
  * Follows NextJS fetch specification with caching and deduplication support.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
 
 'use strict';
+
+const { assertUrlAllowed } = require('../modules/ssrfGuard');
 
 /**
  * A class that implements HTTP fetching using Node.js native fetch API.
@@ -39,6 +41,9 @@ class FetchingNode {
     this.eventEmitter_ = eventEmitter;
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 1000;
+
+    // SSRF guard configuration (fails closed by default).
+    this.ssrfOptions_ = options.ssrf || {};
 
     // Determine if we have native fetch
     this.hasFetch = typeof fetch !== 'undefined';
@@ -77,6 +82,9 @@ class FetchingNode {
    * @return {Promise<Response>} Response object
    */
   async fetch(url, options = {}) {
+    // SSRF guard: validate the destination before any network/cache activity.
+    await assertUrlAllowed(url, this.ssrfOptions_);
+
     const cacheKey = this.getCacheKey_(url, options);
     const startTime = Date.now();
 

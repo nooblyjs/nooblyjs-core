@@ -5,7 +5,7 @@
  * to its injected dependencies, mounts the HTTP routes and views, and exposes
  * a stable accessor for the rest of the framework.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 2.0.0
  * @since 1.0.0
  */

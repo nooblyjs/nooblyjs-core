@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core - Data Layer Base Class
- * Base class for implementing custom data layer logic in Noobly JS Core.
+ * @fileoverview NooblyJS Core - Data Layer Base Class
+ * Base class for implementing custom data layer logic in NooblyJS Core.
  * Provides integration with the dataservice for persistent storage operations.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

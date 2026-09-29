@@ -1,7 +1,7 @@
 /**
  * @fileoverview Local Working Store for draft file management
  * Handles local file operations for the sync filing provider
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.15
  */
 
@@ -9,6 +9,7 @@
 
 const fs = require('node:fs').promises;
 const path = require('node:path');
+const { resolveWithin } = require('../modules/pathSafety');
 
 /**
  * Local working store for managing draft files and user workspace
@@ -40,12 +41,16 @@ class LocalWorkingStore {
   }
 
   /**
-   * Gets the full path for a file
+   * Gets the full path for a file, guarding against path traversal.
+   * Resolves the requested path against the working directory and verifies
+   * the result stays within the working directory boundary. Uses the shared
+   * resolveWithin helper (same containment logic as the local filing provider).
    * @param {string} filePath - Relative file path
    * @returns {string} Full file path
+   * @throws {Error} If the resolved path escapes the working directory
    */
   _getFullPath(filePath) {
-    return path.join(this.workingDir, filePath);
+    return resolveWithin(this.workingDir, filePath);
   }
 
   /**
@@ -107,11 +112,47 @@ class LocalWorkingStore {
    */
   async list(dirPath = '.') {
     const fullPath = this._getFullPath(dirPath);
-    
+
     try {
-      const files = await fs.readdir(fullPath);
-      this.eventEmitter_?.emit('file:local:listed', { path: dirPath, count: files.length });
-      return files;
+      const entries = await fs.readdir(fullPath, { withFileTypes: true });
+
+      // Return metadata-bearing objects (name/type/size/created/modified),
+      // mirroring the local filing provider (providers/filingLocal.js list()).
+      // The folder tree and document-header rely on per-entry created/modified
+      // timestamps; returning bare filename strings here left synced spaces
+      // showing "0 Bytes" / "N/A" in the list/card/grid views.
+      const items = await Promise.all(entries.map(async entry => {
+        const isSymlink = entry.isSymbolicLink();
+        const item = {
+          name: entry.name,
+          type: entry.isDirectory() ? 'folder' : 'file',
+          isDirectory: entry.isDirectory(),
+          isFile: entry.isFile(),
+          isSymbolicLink: isSymlink
+        };
+
+        try {
+          const entryPath = path.join(fullPath, entry.name);
+          // fs.stat follows symlinks; a Dirent reports the link itself, so
+          // reclassify symlinks by their target (matches filingLocal).
+          const stats = await fs.stat(entryPath);
+          if (isSymlink) {
+            item.isDirectory = stats.isDirectory();
+            item.isFile = stats.isFile();
+            item.type = stats.isDirectory() ? 'folder' : 'file';
+          }
+          item.size = stats.size;
+          item.created = stats.birthtime.toISOString();
+          item.modified = stats.mtime.toISOString();
+        } catch {
+          // Broken symlink or stat failure - keep the dirent classification.
+        }
+
+        return item;
+      }));
+
+      this.eventEmitter_?.emit('file:local:listed', { path: dirPath, count: items.length });
+      return items;
     } catch (error) {
       if (error.code === 'ENOENT') {
         return [];

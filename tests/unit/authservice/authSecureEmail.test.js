@@ -56,14 +56,14 @@ describe('AuthSecureEmail Provider', () => {
       const user = await auth.addSecureEmailUser(
         'user@example.com',
         'secure_key_123',
-        'user@example.com',
+        'User Example',
         'user'
       );
 
       expect(user).toBeDefined();
       expect(user.email).toBe('user@example.com');
-      expect(user.username).toBe('user@example.com');
-      expect(user.role).toBe('user');
+      expect(user.fullName).toBe('User Example');
+      expect(user.roles).toContain('user');
       expect(user.isActive).toBe(true);
       expect(user.id).toBeDefined();
       expect(user.secureKey).toBeUndefined(); // Should not be returned
@@ -86,13 +86,13 @@ describe('AuthSecureEmail Provider', () => {
     });
 
     it('should emit user-added event', async () => {
-      await auth.addSecureEmailUser('user@example.com', 'key_123', 'user@example.com', 'user');
+      await auth.addSecureEmailUser('user@example.com', 'key_123', 'User Example', 'user');
 
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'auth:secure-email-user-added',
         expect.objectContaining({
           email: 'user@example.com',
-          username: 'user@example.com'
+          fullName: 'User Example'
         })
       );
     });
@@ -105,7 +105,7 @@ describe('AuthSecureEmail Provider', () => {
 
   describe('Authenticating with Secure Email', () => {
     beforeEach(async () => {
-      await auth.addSecureEmailUser('user@example.com', 'correct_key_123', 'testuser', 'user');
+      await auth.addSecureEmailUser('user@example.com', 'correct_key_123', 'Test User', 'user');
     });
 
     it('should authenticate with valid email and secure key', async () => {
@@ -114,8 +114,8 @@ describe('AuthSecureEmail Provider', () => {
       expect(result).toBeDefined();
       expect(result.user).toBeDefined();
       expect(result.user.email).toBe('user@example.com');
-      expect(result.user.username).toBe('testuser');
-      expect(result.user.role).toBe('user');
+      expect(result.user.fullName).toBe('Test User');
+      expect(result.user.roles).toContain('user');
       expect(result.session).toBeDefined();
       expect(result.session.token).toBeDefined();
       expect(result.session.expiresAt).toBeDefined();
@@ -149,8 +149,7 @@ describe('AuthSecureEmail Provider', () => {
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'auth:secure-email-auth',
         expect.objectContaining({
-          email: 'user@example.com',
-          username: 'testuser'
+          email: 'user@example.com'
         })
       );
     });
@@ -175,7 +174,7 @@ describe('AuthSecureEmail Provider', () => {
       // Verify token is stored in sessions map
       const session = auth.sessions_.get(result.session.token);
       expect(session).toBeDefined();
-      expect(session.username).toBe('testuser');
+      expect(session.fullName).toBe('Test User');
       expect(session.userId).toBeDefined();
       expect(session.expiresAt > new Date()).toBe(true);
     });
@@ -253,7 +252,7 @@ describe('AuthSecureEmail Provider', () => {
       expect(user.secureKey).toBeUndefined();
       expect(user.id).toBeDefined();
       expect(user.email).toBeDefined();
-      expect(user.username).toBeDefined();
+      expect(user.fullName).toBeDefined();
     });
   });
 
@@ -284,8 +283,8 @@ describe('AuthSecureEmail Provider', () => {
         mockEventEmitter
       );
 
-      // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for async initialization to complete deterministically.
+      await newAuth.ready;
 
       const users = await newAuth.listSecureEmailUsers();
       expect(users.length).toBe(2);
@@ -352,7 +351,7 @@ describe('AuthSecureEmail Provider', () => {
       const validated = await auth.validateSession(result.session.token);
 
       expect(validated).toBeDefined();
-      expect(validated.username).toBe('user@example.com');
+      expect(validated.email).toBe('user@example.com');
     });
   });
 });

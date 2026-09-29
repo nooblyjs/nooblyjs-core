@@ -1,7 +1,7 @@
 /**
  * @fileoverview FTP filing provider for remote file operations over FTP protocol
  * with automatic connection management and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -9,6 +9,7 @@
 'use strict';
 
 const Client = require('ftp');
+const { assertSafeRelativePath } = require('../modules/pathSafety');
 
 /**
  * A class that implements an FTP-based file storage provider.
@@ -133,6 +134,7 @@ class FtpFilingProvider {
    * @throws {Error} When file creation fails.
    */
   async create(filePath, content) {
+    assertSafeRelativePath(filePath);
     return this._withConnection(() => {
       return new Promise((resolve, reject) => {
         let dataToUpload;
@@ -176,6 +178,7 @@ class FtpFilingProvider {
    * @throws {Error} When file reading fails.
    */
   async read(filePath, encoding) {
+    assertSafeRelativePath(filePath);
     return this._withConnection(() => {
       return new Promise((resolve, reject) => {
         const chunks = [];
@@ -220,6 +223,7 @@ class FtpFilingProvider {
    * @throws {Error} When file deletion fails.
    */
   async delete(filePath) {
+    assertSafeRelativePath(filePath);
     return this._withConnection(() => {
       return new Promise((resolve, reject) => {
         this.client.delete(filePath, (err) => {
@@ -246,6 +250,7 @@ class FtpFilingProvider {
    * @throws {Error} When directory listing fails.
    */
   async list(dirPath) {
+    assertSafeRelativePath(dirPath);
     return this._withConnection(() => {
       return new Promise((resolve, reject) => {
         this.client.list(dirPath, (err, list) => {
@@ -274,6 +279,7 @@ class FtpFilingProvider {
    * @throws {Error} When file update fails.
    */
   async update(filePath, content) {
+    assertSafeRelativePath(filePath);
     return this._withConnection(() => {
       return new Promise((resolve, reject) => {
         let dataToUpload;

@@ -1,7 +1,7 @@
 /**
  * @fileoverview A Redis-backed queue implementation providing distributed queue
  * functionality with FIFO (First-In-First-Out) behavior and analytics tracking.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

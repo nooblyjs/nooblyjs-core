@@ -5,7 +5,7 @@
  * capabilities within workflow execution. Used for testing error propagation,
  * recovery mechanisms, and failure reporting in workflow systems.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

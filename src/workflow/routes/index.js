@@ -3,8 +3,8 @@
  * Provides RESTful endpoints for workflow definition, execution management,
  * and service status monitoring with event-driven completion callbacks.
  *
- * @author Noobly JS Core Team
- * @version 1.0.15
+ * @author NooblyJS Core Team
+ * @version 1.0.14
  * @since 1.0.0
  */
 
@@ -12,11 +12,8 @@
 
 const path = require('node:path');
 const express = require('express');
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const registerManagerRoutes = require('./manager');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers workflow routes with the Express application.
@@ -32,9 +29,18 @@ const { HealthCheck } = require('../../appservice/utils/healthCheck');
 module.exports = (options, eventEmitter, workflow, analytics) => {
   if (options['express-app'] && workflow) {
     const app = options['express-app'];
-    const authMiddleware = options.authMiddleware;
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('workflow', { dependencies: [] });
+
+    // Per-route authorization middleware (API key / personal access token),
+    // consistent with the other service route modules (e.g. dataservice).
+    // Falls back to a pass-through when no API-key auth is configured; the
+    // global /services login gate still applies in that case.
+    const auth = typeof options.authMiddleware === 'function'
+      ? options.authMiddleware
+      : (req, res, next) => next();
+
+    // Manager endpoints (workflows, runs, schedules, state) - registered first
+    // so the legacy wildcard routes below can never shadow them.
+    registerManagerRoutes(app, eventEmitter, workflow, options.authMiddleware);
 
     /**
      * POST /services/workflow/api/defineworkflow
@@ -46,17 +52,17 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/defineworkflow', async (req, res) => {
+    app.post('/services/workflow/api/defineworkflow', auth, async (req, res) => {
       const {name, steps} = req.body;
-      if (!name) {
-        return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Workflow name is required');
-      }
-
-      try {
-        const workflowId = await workflow.defineWorkflow(name, steps);
-        sendSuccess(res, { workflowId }, 'Workflow defined successfully', 201);
-      } catch (err) {
-        handleError(res, err, 'defineWorkflow');
+      if (name) {
+        try {
+          const workflowId = await workflow.defineWorkflow(name, steps);
+          res.status(200).json({workflowId});
+        } catch (err) {
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
+        }
+      } else {
+        res.status(400).send('Bad Request: Missing workflow name');
       }
     });
 
@@ -70,19 +76,19 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/start', async (req, res) => {
+    app.post('/services/workflow/api/start', auth, async (req, res) => {
       const {name, data} = req.body;
-      if (!name) {
-        return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Workflow name is required');
-      }
-
-      try {
-        const workflowId = await workflow.runWorkflow(name, data, (data) => {
-          eventEmitter.emit('workflow-complete', data);
-        });
-        sendSuccess(res, { workflowId }, 'Workflow started', 202);
-      } catch (err) {
-        handleError(res, err, 'runWorkflow');
+      if (name) {
+        try {
+          const workflowId = await workflow.runWorkflow(name, data, (data) => {
+            eventEmitter.emit('workflow-complete', data);
+          });
+          res.status(200).json({workflowId});
+        } catch (err) {
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
+        }
+      } else {
+        res.status(400).send('Bad Request: Missing workflow name');
       }
     });
 
@@ -94,9 +100,9 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/status', (req, res) => {
+    app.get('/services/workflow/api/status', auth, (req, res) => {
       eventEmitter.emit('api-workflow-status', 'workflow api running');
-      sendStatus(res, 'workflow api running', { provider: 'memory' });
+      res.status(200).json('workflow api running');
     });
 
     /**
@@ -107,7 +113,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/stats', (req, res) => {
+    app.get('/services/workflow/api/stats', auth, (req, res) => {
       if (!analytics) {
         return res.status(503).json({
           error: 'Analytics module not available'
@@ -118,10 +124,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
         const stats = analytics.getStats();
         res.status(200).json(stats);
       } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve statistics',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve statistics' });
       }
     });
 
@@ -133,7 +136,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/analytics', (req, res) => {
+    app.get('/services/workflow/api/analytics', auth, (req, res) => {
       if (!analytics) {
         return res.status(503).json({
           error: 'Analytics module not available'
@@ -147,10 +150,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           workflows: workflowAnalytics
         });
       } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve workflow analytics',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve workflow analytics' });
       }
     });
 
@@ -162,7 +162,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/analytics/:workflowName(*)', (req, res) => {
+    app.get('/services/workflow/api/analytics/:workflowName(*)', auth, (req, res) => {
       if (!analytics) {
         return res.status(503).json({
           error: 'Analytics module not available'
@@ -182,10 +182,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           });
         }
       } catch (err) {
-        res.status(500).json({
-          error: 'Failed to retrieve workflow analytics',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve workflow analytics' });
       }
     });
 
@@ -197,16 +194,13 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/settings', async (req, res) => {
+    app.get('/services/workflow/api/settings', auth, async (req, res) => {
       try {
         const settings = await workflow.getSettings();
         res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-workflow-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve settings' });
       }
     });
 
@@ -218,14 +212,14 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/workflow/api/settings', async (req, res) => {
+    app.post('/services/workflow/api/settings', auth, async (req, res) => {
       const message = req.body;
       if (message) {
         try {
           await workflow.saveSettings(message);
           res.status(200).send('OK');
         } catch (err) {
-          res.status(500).send(err.message);
+          sendSafeError(res, err, { status: 500, eventEmitter, format: 'send' });
         }
       } else {
         res.status(400).send('Bad Request: Missing settings');
@@ -242,7 +236,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/definitions', (req, res) => {
+    app.get('/services/workflow/api/definitions', auth, (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -254,7 +248,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           definitions
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -266,7 +260,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/definitions/:workflowName(*)', (req, res) => {
+    app.get('/services/workflow/api/definitions/:workflowName(*)', auth, (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -284,7 +278,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
 
         res.status(200).json(definition);
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -297,7 +291,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.put('/services/workflow/api/definitions/:workflowName(*)', async (req, res) => {
+    app.put('/services/workflow/api/definitions/:workflowName(*)', auth, async (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -326,7 +320,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
 
         res.status(200).json(definition || workflow.definitionContainer.get(workflowName));
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -338,7 +332,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/workflow/api/definitions/:workflowName(*)', (req, res) => {
+    app.delete('/services/workflow/api/definitions/:workflowName(*)', auth, async (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -353,8 +347,13 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           });
         }
 
-        workflow.definitionContainer.delete(workflowName);
-        workflow.workflows.delete(workflowName);
+        if (typeof workflow.deleteWorkflow === 'function') {
+          // Also removes the workflow's schedules and history.
+          await workflow.deleteWorkflow(workflowName);
+        } else {
+          workflow.definitionContainer.delete(workflowName);
+          workflow.workflows.delete(workflowName);
+        }
 
         res.status(200).json({
           success: true,
@@ -362,7 +361,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           workflowName
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -379,7 +378,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)', (req, res) => {
+    app.get('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -401,7 +400,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           ...result
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -413,7 +412,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)/execution/:executionId(*)', (req, res) => {
+    app.get('/services/workflow/api/executions/:workflowName(*)/execution/:executionId(*)', auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -433,7 +432,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
 
         res.status(200).json(execution);
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -445,7 +444,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)/stats', (req, res) => {
+    app.get('/services/workflow/api/executions/:workflowName(*)/stats', auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -460,7 +459,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           ...stats
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -474,7 +473,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/workflow/api/executions/:workflowName(*)', (req, res) => {
+    app.delete('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -497,135 +496,12 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
           deleted
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
     // Serve static files from the views directory for caching service
     app.use('/services/workflow/api/swagger', express.static(path.join(__dirname,'swagger')));
 
-    /**
-     * GET /services/workflow/api/health
-     * Returns the health status of the workflow service.
-     */
-    app.get('/services/workflow/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: workflow });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
-     * GET /services/workflow/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/workflow/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'workflow', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'workflow-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/workflow/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/workflow/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'workflow', limit: 10000 });
-
-    /**
-     * POST /services/workflow/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/workflow/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'workflow-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'workflow-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/workflow/api/export
-     * Exports service data
-     */
-    app.get('/services/workflow/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('workflow-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'workflow-export' });
-      }
-    });
   }
 };

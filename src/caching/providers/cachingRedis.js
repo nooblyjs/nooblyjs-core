@@ -1,7 +1,7 @@
 /**
  * @fileoverview A Redis-backed cache implementation providing distributed caching
  * functionality with analytics tracking for cache operations.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

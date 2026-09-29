@@ -1,7 +1,7 @@
 /**
  * @fileoverview MongoDB DataService provider for storing and searching JSON objects
  * with container-based organization using MongoDB collections and event emission support.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -21,7 +21,7 @@ class MongoDBDataServiceProvider extends MongoBaseProvider {
    * Initializes the MongoDB data storage provider.
    * @param {Object=} options Configuration options for MongoDB connection.
    * @param {string=} options.connectionString MongoDB connection string (defaults to local MongoDB).
-   * @param {string=} options.database Database name to use (defaults to digitaltechnologies).
+   * @param {string=} options.database Database name to use (defaults to nooblyjs).
    * @param {EventEmitter=} eventEmitter Optional event emitter for data operations.
    */
   constructor(options = {}, eventEmitter) {
@@ -31,7 +31,7 @@ class MongoDBDataServiceProvider extends MongoBaseProvider {
     this.connectionString_ = options.connectionString || 'mongodb://127.0.0.1:27017';
     
     /** @private @const {string} */
-    this.databaseName_ = options.database || 'digitaltechnologies';
+    this.databaseName_ = options.database || 'nooblyjs';
     
     // Initialize connection
     this.initializeConnection_();

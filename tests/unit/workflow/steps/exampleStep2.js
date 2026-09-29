@@ -5,7 +5,7 @@
  * It processes the enriched data from the previous step and adds additional
  * step-specific information. Used for testing multi-step workflow execution.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

@@ -5,7 +5,7 @@
  * including validation, various authentication methods, path exclusions, and
  * proper error handling.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.2.1
  * @since 1.2.1
  */
@@ -99,7 +99,7 @@ describe('API Key Authentication Middleware', () => {
       expect(mockRes.status).toHaveBeenCalledWith(401);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Unauthorized',
-        message: 'API key is required. Provide it via x-api-key header, Authorization header, or api_key query parameter.',
+        message: 'API key is required. Provide it via the x-api-key header or an Authorization header.',
         code: 'MISSING_API_KEY'
       });
       expect(mockNext).not.toHaveBeenCalled();
@@ -190,18 +190,25 @@ describe('API Key Authentication Middleware', () => {
       expect(mockReq.apiKey).toBe(validApiKey);
     });
     
-    it('should accept valid API key in query parameter', () => {
+    it('should NOT accept API key via query parameter (rejected for security)', () => {
+      // Security hardening (P1-5): credentials in the api_key query parameter are
+      // no longer honoured because they leak into access logs, browser history
+      // and Referer headers. A key presented only via query string must be
+      // treated as missing.
       const middleware = createApiKeyAuthMiddleware({
         apiKeys: [validApiKey]
       }, eventEmitter);
-      
+
       mockReq.query.api_key = validApiKey;
-      
+
       middleware(mockReq, mockRes, mockNext);
-      
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
-      expect(mockReq.apiKey).toBe(validApiKey);
+
+      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockReq.apiKey).toBeUndefined();
+      expect(eventEmitter.emit).toHaveBeenCalledWith('api-auth-failure', expect.objectContaining({
+        reason: 'missing-api-key'
+      }));
     });
     
     it('should work without event emitter', () => {

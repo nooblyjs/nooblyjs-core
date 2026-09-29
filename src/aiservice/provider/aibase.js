@@ -1,7 +1,7 @@
 /**
  * @fileoverview Base AI Service Provider
  * Base class for AI service providers with token tracking and cost estimation.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -28,7 +28,11 @@ class AIServiceBase {
   constructor(options = {}, eventEmitter) {
     this.options_ = options;
     this.eventEmitter_ = eventEmitter;
-    this.tokensStorePath_ = options.dataDir;
+    this.instanceName_ = options.instanceName || 'default';
+    this.tokensStorePath_ = options.tokensStorePath
+      || (options.dataDir
+        ? path.join(options.dataDir, 'ai-tokens.json')
+        : path.join(process.cwd(), '.application', 'data', 'ai-tokens.json'));
     this.analytics_ = new Map();
     this.maxAnalyticsEntries_ = 1000;
 
@@ -54,6 +58,31 @@ class AIServiceBase {
    */
   async prompt(prompt, options = {}) {
     throw new Error('prompt method must be implemented by subclass');
+  }
+
+  /**
+   * Emits the standard 'ai:prompt:complete' analytics event for this instance.
+   * The payload is tagged with this provider's instance name so that
+   * per-instance Analytics modules only record prompts for their own instance.
+   *
+   * @param {string} prompt The prompt that was sent.
+   * @param {Object} result The provider response ({ content, usage, model, provider }).
+   * @param {Object} [options] Prompt options; options.username is included when present.
+   * @protected
+   */
+  emitPromptComplete_(prompt, result = {}, options = {}) {
+    if (!this.eventEmitter_) {
+      return;
+    }
+    this.eventEmitter_.emit('ai:prompt:complete', {
+      prompt,
+      username: options.username,
+      instanceName: this.instanceName_,
+      usage: result.usage,
+      model: result.model,
+      provider: result.provider,
+      response: result
+    });
   }
 
   /**
@@ -103,6 +132,7 @@ class AIServiceBase {
     const costPerToken = {
       claude: { input: 0.000003, output: 0.000015 },
       chatgpt: { input: 0.0000005, output: 0.0000015 },
+      gemini: { input: 0.0000003, output: 0.0000025 },
       ollama: { input: 0, output: 0 }
     };
 

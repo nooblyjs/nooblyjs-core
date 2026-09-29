@@ -1,5 +1,5 @@
 ###
-### Noobly JS Core - DataService API Tests
+### NooblyJS Core - DataService API Tests
 ### 
 ### These tests demonstrate the DataService service API endpoints with API key authentication.
 ### DataService provides persistent key-value storage with various backend options.

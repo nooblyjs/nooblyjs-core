@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @fileoverview Task queue API routes for Express.js application.
  * Provides RESTful endpoints for FIFO task queue operations including
  * enqueue, dequeue, size monitoring, and service status reporting.
@@ -6,7 +6,7 @@
  * Supports multiple named instances of queueing service through optional
  * instance parameter in URL paths.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.15
  * @since 1.0.0
  */
@@ -16,12 +16,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const BulkOperations = require('../../appservice/utils/bulkOperations');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers queueing routes with the Express application.
@@ -44,9 +39,13 @@ module.exports = (options, eventEmitter, queue) => {
     const ServiceRegistry = options.ServiceRegistry;
     const providerType = options.providerType || 'memory';
 
-    // Initialize audit logging for queueing service
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('queueing', { dependencies: [] });
+    // Enforce authentication on every queueing API endpoint via a single
+    // path-mounted guard. Closes gaps where analytics/settings/instances routes
+    // were unguarded while only queue operations carried an inline guard. The
+    // /services/queueing/scripts client asset lives outside /api and stays
+    // public. Falls back to a pass-through only when no auth is configured.
+    const requireApiAuth = authMiddleware || ((req, res, next) => next());
+    app.use('/services/queueing/api', requireApiAuth);
 
     /**
      * GET /services/queueing/scripts
@@ -66,11 +65,7 @@ module.exports = (options, eventEmitter, queue) => {
         eventEmitter.emit('api-queueing-scripts-served', 'Queueing script library served');
       } catch (error) {
         eventEmitter.emit('api-queueing-scripts-error', error.message);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to load script library',
-          message: error.message
-        });
+        res.status(500).json({ success: false, error: 'Failed to load script library' });
       }
     });
 
@@ -92,11 +87,7 @@ module.exports = (options, eventEmitter, queue) => {
         eventEmitter.emit('api-queueing-swagger-docs-served', 'Queueing Swagger documentation served');
       } catch (error) {
         eventEmitter.emit('api-queueing-swagger-docs-error', error.message);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to load Swagger documentation',
-          message: error.message
-        });
+        res.status(500).json({ success: false, error: 'Failed to load Swagger documentation' });
       }
     });
 
@@ -119,7 +110,7 @@ module.exports = (options, eventEmitter, queue) => {
             res.status(200).json({ success: true });
           } catch (err) {
             eventEmitter.emit('api-queueing-enqueue-error', { error: err.message });
-            res.status(500).json({ error: err.message });
+            sendSafeError(res, err, { status: 500, eventEmitter });
           }
         } else {
           res.status(400).json({ error: 'Bad Request: Missing task' });
@@ -139,7 +130,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.post(
       '/services/queueing/api/enqueue/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       createEnqueueHandler(queue)
     );
 
@@ -156,7 +146,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.post(
       '/services/queueing/api/:instanceName/enqueue/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
@@ -181,7 +170,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(task);
         } catch (err) {
           eventEmitter.emit('api-queueing-dequeue-error', { error: err.message });
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       };
     };
@@ -197,7 +186,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/dequeue/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       createDequeueHandler(queue)
     );
 
@@ -213,7 +201,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/:instanceName/dequeue/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
@@ -238,7 +225,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(size);
         } catch (err) {
           eventEmitter.emit('api-queueing-size-error', { error: err.message });
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       };
     };
@@ -254,7 +241,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/size/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       createSizeHandler(queue)
     );
 
@@ -270,7 +256,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/:instanceName/size/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
@@ -291,7 +276,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json(queues);
         } catch (err) {
           eventEmitter.emit('api-queueing-list-error', { error: err.message });
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       };
     };
@@ -306,7 +291,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/queues',
-      authMiddleware || ((req, res, next) => next()),
       createListHandler(queue)
     );
 
@@ -321,7 +305,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get(
       '/services/queueing/api/:instanceName/queues',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
@@ -346,7 +329,7 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json({ success: true });
         } catch (err) {
           eventEmitter.emit('api-queueing-purge-error', { error: err.message });
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       };
     };
@@ -362,7 +345,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.delete(
       '/services/queueing/api/purge/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       createPurgeHandler(queue)
     );
 
@@ -378,7 +360,6 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.delete(
       '/services/queueing/api/:instanceName/purge/:queueName',
-      authMiddleware || ((req, res, next) => next()),
       (req, res) => {
         const instanceName = req.params.instanceName;
         const queueInstance = getServiceInstance('queueing', instanceName, queue, options, providerType);
@@ -396,7 +377,7 @@ module.exports = (options, eventEmitter, queue) => {
      */
     app.get('/services/queueing/api/status', (req, res) => {
       eventEmitter.emit('api-queueing-status', 'queueing api running');
-      sendStatus(res, 'queueing api running', { provider: providerType, instance: currentInstanceName });
+      res.status(200).json('queueing api running');
     });
 
     /**
@@ -470,7 +451,7 @@ module.exports = (options, eventEmitter, queue) => {
             queueList: queueList
           });
         } catch (error) {
-          res.status(500).json({ error: error.message });
+          sendSafeError(res, error, { status: 500, eventEmitter });
         }
       };
     };
@@ -517,10 +498,7 @@ module.exports = (options, eventEmitter, queue) => {
         res.status(200).json(settings);
       } catch (err) {
         eventEmitter.emit('api-queueing-settings-error', err.message);
-        res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
-        });
+        res.status(500).json({ error: 'Failed to retrieve settings' });
       }
     });
 
@@ -541,134 +519,10 @@ module.exports = (options, eventEmitter, queue) => {
           res.status(200).json({ success: true });
         } catch (err) {
           eventEmitter.emit('api-queueing-settings-save-error', err.message);
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       } else {
         res.status(400).json({ error: 'Bad Request: Missing settings' });
-      }
-    });
-
-    /**
-     * GET /services/queueing/api/health
-     * Returns health status of the queueing service.
-     */
-    app.get('/services/queueing/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: queue });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    /**
-     * GET /services/queueing/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/queueing/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'queueing', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'queueing-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/queueing/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/queueing/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'queueing', limit: 10000 });
-
-    /**
-     * POST /services/queueing/api/import
-     * Imports data from specified format
-     *
-     * @param {{express.Request}} req - Express request object
-     * @param {{string}} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {{string|Array}} req.body.data - Data to import
-     * @param {{string}} req.query.dryRun - Dry-run mode (true/false)
-     * @param {{string}} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {{express.Response}} res - Express response object
-     * @return {{void}}
-     */
-    app.post('/services/queueing/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'queueing-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'queueing-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/queueing/api/export
-     * Exports queue statistics
-     */
-    app.get('/services/queueing/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = queue.getStats ? await queue.getStats() : { note: 'Stats not available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('queue-stats', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'queueing-export' });
       }
     });
   }

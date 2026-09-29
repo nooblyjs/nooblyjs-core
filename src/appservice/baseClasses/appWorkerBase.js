@@ -1,9 +1,9 @@
 /**
- * @fileoverview Noobly JS Core - Worker/Activity Base Class
- * Base class for implementing background workers and activities in Noobly JS Core.
+ * @fileoverview NooblyJS Core - Worker/Activity Base Class
+ * Base class for implementing background workers and activities in NooblyJS Core.
  * Provides integration with the working service for asynchronous task execution.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

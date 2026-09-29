@@ -4,7 +4,7 @@
  * - container (left/right sections)
  * - hero-banner (title, subtitle, hero-image, hero-image-align properties)
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 
@@ -887,7 +887,7 @@ class MarkdownParser {
     // Left side content
     html += '<div class="col-lg-6">\n';
     if (title) {
-      html += `<h2 class="display-5 fw-bold mb-3" style="color: #059da2;">${this.escapeHtml(title)}</h2>\n`;
+      html += `<h2 class="display-5 fw-bold mb-3" style="color: #6B7280;">${this.escapeHtml(title)}</h2>\n`;
     }
     if (subtitle) {
       html += `<p class="lead text-muted mb-4">${this.escapeHtml(subtitle)}</p>\n`;
@@ -897,7 +897,7 @@ class MarkdownParser {
     // Right side image
     if (heroImage) {
       html += '<div class="col-lg-6 text-center">\n';
-      html += `<img src="${this.escapeHtml(heroImage)}" alt="Hero Image" class="img-fluid robot-hero-img" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(104, 168, 196, 0.2));">\n`;
+      html += `<img src="${this.escapeHtml(heroImage)}" alt="Hero Image" class="img-fluid robot-hero-img" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(191, 59, 70, 0.2));">\n`;
       html += '</div>\n';
     }
 

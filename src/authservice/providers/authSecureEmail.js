@@ -2,7 +2,7 @@
  * @fileoverview Secure Email Authentication Provider
  * Authentication provider for Teams/Edge extensions using email + secure key.
  * Extends AuthPassport to authenticate users with email and a pre-shared secure key.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -37,7 +37,7 @@ class AuthSecureEmail extends AuthPassport {
     this.secureEmailsFile = path.join(this.dataDir, 'secure-emails.json');
 
     // In-memory map of allowed secure email users
-    // Key: email (lowercase), Value: { email, secureKey, username, role, isActive, ... }
+    // Key: email (lowercase), Value: { email, secureKey, fullName, role, isActive, ... }
     this.secureUsers_ = new Map();
 
     this.settings = {
@@ -47,8 +47,10 @@ class AuthSecureEmail extends AuthPassport {
       ]
     };
 
-    // Initialize secure emails from file
-    this.initializeSecureEmailsFile_().catch(error => {
+    // Initialize secure emails from file. The promise is exposed as `this.ready`
+    // so callers (and tests) can deterministically await the initial load
+    // instead of relying on arbitrary timeouts.
+    this.ready = this.initializeSecureEmailsFile_().catch(error => {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:secure-email-init-error', {
           error: error.message
@@ -109,7 +111,7 @@ class AuthSecureEmail extends AuthPassport {
    *
    * @example
    * const result = await authSecureEmail.authenticateWithSecureEmail('user@example.com', 'their_key_123');
-   * // Returns: { user: { username, email, role }, session: { token, expiresAt } }
+   * // Returns: { user: { id, email, fullName, roles }, session: { token, expiresAt } }
    */
   async authenticateWithSecureEmail(email, secureKey) {
     // Validate inputs
@@ -191,11 +193,14 @@ class AuthSecureEmail extends AuthPassport {
 
     // Create session token
     const sessionToken = this.generateSessionToken_();
+    const userRoles = Array.isArray(user.roles) ? user.roles : [user.role || 'user'];
+    const fullName = user.fullName || user.email;
     const session = {
       token: sessionToken,
       userId: user.id || this.generateId_(),
-      username: user.username || user.email,
-      role: user.role || 'user',
+      email: user.email,
+      fullName,
+      roles: userRoles,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + (24 * 60 * 60 * 1000)) // 24 hours
     };
@@ -204,17 +209,16 @@ class AuthSecureEmail extends AuthPassport {
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:secure-email-auth', {
-        email: emailLower,
-        username: session.username
+        email: emailLower
       });
     }
 
     return {
       user: {
         id: session.userId,
-        username: session.username,
         email: user.email,
-        role: session.role
+        fullName,
+        roles: userRoles
       },
       session: { token: sessionToken, expiresAt: session.expiresAt }
     };
@@ -226,7 +230,7 @@ class AuthSecureEmail extends AuthPassport {
    *
    * @param {string} email User email address
    * @param {string} secureKey The secure key for authentication
-   * @param {string} username Username (optional, defaults to email)
+   * @param {string} fullName Full display name (optional, defaults to email)
    * @param {string} role User role (optional, defaults to 'user')
    * @return {Promise<Object>} Promise resolving to user object (without key hash)
    * @throws {Error} When user already exists or parameters are invalid
@@ -235,11 +239,11 @@ class AuthSecureEmail extends AuthPassport {
    * const user = await authSecureEmail.addSecureEmailUser(
    *   'newuser@example.com',
    *   'their_secure_key_123',
-   *   'newuser@example.com',
+   *   'New User',
    *   'user'
    * );
    */
-  async addSecureEmailUser(email, secureKey, username, role = 'user') {
+  async addSecureEmailUser(email, secureKey, fullName, role = 'user') {
     // Validate inputs
     if (!email || typeof email !== 'string' || email.trim() === '') {
       const error = new Error('Email is required');
@@ -273,12 +277,13 @@ class AuthSecureEmail extends AuthPassport {
     const secureKeyHash = await this.hashSecureKey_(secureKey);
 
     // Create user object
+    const userRoles = Array.isArray(role) ? role : [role || 'user'];
     const user = {
       id: this.generateId_(),
       email: emailLower,
       secureKey: secureKeyHash,
-      username: username || email,
-      role: role || 'user',
+      fullName: fullName || email,
+      roles: userRoles,
       isActive: true,
       createdAt: new Date(),
       lastLogin: null
@@ -290,8 +295,8 @@ class AuthSecureEmail extends AuthPassport {
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:secure-email-user-added', {
         email: emailLower,
-        username: user.username,
-        role: user.role
+        fullName: user.fullName,
+        roles: userRoles
       });
     }
 
@@ -299,8 +304,8 @@ class AuthSecureEmail extends AuthPassport {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
-      role: user.role,
+      fullName: user.fullName,
+      roles: userRoles,
       isActive: user.isActive,
       createdAt: user.createdAt
     };
@@ -356,8 +361,8 @@ class AuthSecureEmail extends AuthPassport {
     return Array.from(this.secureUsers_.values()).map(user => ({
       id: user.id,
       email: user.email,
-      username: user.username,
-      role: user.role,
+      fullName: user.fullName,
+      roles: Array.isArray(user.roles) ? user.roles : [user.role || 'user'],
       isActive: user.isActive,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin
@@ -463,7 +468,7 @@ class AuthSecureEmail extends AuthPassport {
    * @private
    */
   generateSessionToken_() {
-    return Math.random().toString(36).substr(2, 15) + Date.now().toString(36);
+    return crypto.randomBytes(32).toString('hex');
   }
 
   /**

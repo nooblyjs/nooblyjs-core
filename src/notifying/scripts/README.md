@@ -18,7 +18,7 @@ The library uses local client-side pub/sub by default when no `instanceName` is 
 
 ```javascript
 // Create a local notifying instance
-const notifying = new digitaltechnologiesNotifying();  // No instanceName = local service
+const notifying = new nooblyjsNotifying();  // No instanceName = local service
 
 // Create a topic (stored locally in memory)
 await notifying.createTopic('user-events');
@@ -48,7 +48,7 @@ Specify an `instanceName` to use the remote server-based notifying service:
 
 ```javascript
 // Create a remote notifying instance
-const notifying = new digitaltechnologiesNotifying({
+const notifying = new nooblyjsNotifying({
   instanceName: 'production'  // Connects to remote server
 });
 
@@ -77,15 +77,15 @@ await notifying.notify('server-events', {
 
 ```javascript
 // Local service (default)
-const localNotifying = new digitaltechnologiesNotifying();
+const localNotifying = new nooblyjsNotifying();
 
 // Remote service with instance name
-const remoteNotifying = new digitaltechnologiesNotifying({
+const remoteNotifying = new nooblyjsNotifying({
   instanceName: 'production'
 });
 
 // Force local service even if needed
-const forced = new digitaltechnologiesNotifying({
+const forced = new nooblyjsNotifying({
   useLocal: true
 });
 ```
@@ -148,7 +148,7 @@ await notifying.unsubscribe('user-events', subscriptionId);
 
   <script>
     // Create local notifying service (no server needed)
-    const notifying = new digitaltechnologiesNotifying();
+    const notifying = new nooblyjsNotifying();
 
     async function runExample() {
       try {
@@ -197,7 +197,7 @@ await notifying.unsubscribe('user-events', subscriptionId);
 
   <script>
     // Create remote notifying service (connects to server)
-    const notifying = new digitaltechnologiesNotifying({ instanceName: 'default' });
+    const notifying = new nooblyjsNotifying({ instanceName: 'default' });
 
     async function runExample() {
       try {
@@ -235,7 +235,7 @@ await notifying.unsubscribe('user-events', subscriptionId);
 
 ```javascript
 // Local component communication
-const local = new digitaltechnologiesNotifying();
+const local = new nooblyjsNotifying();
 
 // Create a local event bus for component communication
 await local.createTopic('app-events');
@@ -250,7 +250,7 @@ await local.notify('app-events', {
 });
 
 // Remote server messaging
-const remote = new digitaltechnologiesNotifying({ instanceName: 'production' });
+const remote = new nooblyjsNotifying({ instanceName: 'production' });
 
 // Create a server topic for distributed messaging
 await remote.createTopic('user-events');
@@ -270,7 +270,7 @@ await remote.notify('user-events', {
 ### Constructor
 
 ```javascript
-new digitaltechnologiesNotifying(config)
+new nooblyjsNotifying(config)
 ```
 
 **Parameters:**
@@ -450,7 +450,7 @@ Manually trigger a notification to all subscribers (for testing, local service o
 
 **Example:**
 ```javascript
-const notifying = new digitaltechnologiesNotifying();
+const notifying = new nooblyjsNotifying();
 notifying.emitToSubscribers('user-events', { test: true });
 ```
 
@@ -463,7 +463,7 @@ Get all topics (local service only).
 
 **Example:**
 ```javascript
-const local = new digitaltechnologiesNotifying();
+const local = new nooblyjsNotifying();
 const topics = await local.getTopics();
 console.log(topics); // ['topic1', 'topic2', ...]
 ```
@@ -477,10 +477,10 @@ Check if this is a local or remote service instance.
 
 **Example:**
 ```javascript
-const local = new digitaltechnologiesNotifying();
+const local = new nooblyjsNotifying();
 console.log(local.isLocalService()); // true
 
-const remote = new digitaltechnologiesNotifying({ instanceName: 'production' });
+const remote = new nooblyjsNotifying({ instanceName: 'production' });
 console.log(remote.isLocalService()); // false
 ```
 

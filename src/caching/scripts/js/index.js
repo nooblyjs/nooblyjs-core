@@ -1,10 +1,10 @@
 /**
- * @fileoverview Noobly JS Core Caching Client Library
- * A client-side JavaScript library for interacting with the Noobly JS Core caching service.
+ * @fileoverview NooblyJS Core Caching Client Library
+ * A client-side JavaScript library for interacting with the NooblyJS Core caching service.
  * This library provides a simple, intuitive API for caching operations from web applications.
  * Includes both remote (server-side) and local (client-side) cache implementations.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.15
  *
@@ -13,10 +13,10 @@
  * <script src="/services/caching/scripts"></script>
  *
  * // Create a local cache instance (client-side only)
- * const localCache = new digitalTechnologiesCaching();
+ * const localCache = new nooblyjsCaching();
  *
  * // Create a remote cache instance (server-side)
- * const remoteCache = new digitalTechnologiesCaching({ instanceName: 'default' });
+ * const remoteCache = new nooblyjsCaching({ instanceName: 'default' });
  *
  * // Store data in cache
  * localCache.put('user:123', { name: 'John', age: 30 });
@@ -139,14 +139,14 @@
    * NooblyJS Caching Client Library
    * Provides client-side access to both local and remote caching service APIs
    *
-   * @class digitalTechnologiesCaching
+   * @class nooblyjsCaching
    * @param {Object} options - Configuration options
    * @param {string} options.instanceName - Optional cache instance name. If not provided, uses local client-side cache
    * @param {string} options.baseUrl - Optional base URL for API calls (default: window.location.origin)
    * @param {boolean} options.debug - Enable debug logging (default: false)
    * @param {number} options.timeout - Request timeout in milliseconds (default: 5000)
    */
-  function digitalTechnologiesCaching(options = {}) {
+  function nooblyjsCaching(options = {}) {
     // If no instanceName is provided, use local client-side cache
     if (!options.instanceName) {
       this.isLocal = true;
@@ -168,7 +168,7 @@
    * @private
    * @returns {string} The base API URL
    */
-  digitalTechnologiesCaching.prototype.buildApiBase = function() {
+  nooblyjsCaching.prototype.buildApiBase = function() {
     if (this.isLocal) {
       return null; // Local cache doesn't use API URLs
     }
@@ -184,12 +184,12 @@
    * @param {string} message - The message to log
    * @param {*} data - Optional data to log
    */
-  digitalTechnologiesCaching.prototype.log = function(message, data) {
+  nooblyjsCaching.prototype.log = function(message, data) {
     if (this.debug) {
       if (data !== undefined) {
-        console.log(`[digitalTechnologiesCaching:${this.instanceName}] ${message}`, data);
+        console.log(`[nooblyjsCaching:${this.instanceName}] ${message}`, data);
       } else {
-        console.log(`[digitalTechnologiesCaching:${this.instanceName}] ${message}`);
+        console.log(`[nooblyjsCaching:${this.instanceName}] ${message}`);
       }
     }
   };
@@ -201,7 +201,7 @@
    * @param {Object} options - Fetch options
    * @returns {Promise<Response>} The fetch response
    */
-  digitalTechnologiesCaching.prototype.fetchWithTimeout = function(url, options = {}) {
+  nooblyjsCaching.prototype.fetchWithTimeout = function(url, options = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -237,7 +237,7 @@
    *   .then(() => console.log('Stored successfully'))
    *   .catch(err => console.error('Failed to store:', err));
    */
-  digitalTechnologiesCaching.prototype.put = function(key, value) {
+  nooblyjsCaching.prototype.put = function(key, value) {
     if (!key || typeof key !== 'string') {
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
@@ -292,7 +292,7 @@
    *   })
    *   .catch(err => console.error('Failed to retrieve:', err));
    */
-  digitalTechnologiesCaching.prototype.get = function(key) {
+  nooblyjsCaching.prototype.get = function(key) {
     if (!key || typeof key !== 'string') {
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
@@ -345,7 +345,7 @@
    *   .then(() => console.log('Deleted successfully'))
    *   .catch(err => console.error('Failed to delete:', err));
    */
-  digitalTechnologiesCaching.prototype.delete = function(key) {
+  nooblyjsCaching.prototype.delete = function(key) {
     if (!key || typeof key !== 'string') {
       return Promise.reject(new Error('Key must be a non-empty string'));
     }
@@ -396,7 +396,7 @@
    *     console.log(exists ? 'Key exists' : 'Key does not exist');
    *   });
    */
-  digitalTechnologiesCaching.prototype.exists = function(key) {
+  nooblyjsCaching.prototype.exists = function(key) {
     // Use local cache if no instanceName was provided
     if (this.isLocal) {
       return Promise.resolve(this.localCache.exists(key));
@@ -420,7 +420,7 @@
    *   .then(status => console.log('Status:', status))
    *   .catch(err => console.error('Failed to get status:', err));
    */
-  digitalTechnologiesCaching.prototype.status = function() {
+  nooblyjsCaching.prototype.status = function() {
     this.log('Checking cache service status');
 
     // Return local cache status
@@ -469,7 +469,7 @@
    *     // [{ name: 'default', provider: 'memory', status: 'active' }, ...]
    *   });
    */
-  digitalTechnologiesCaching.prototype.listInstances = function() {
+  nooblyjsCaching.prototype.listInstances = function() {
     this.log('Listing available cache instances');
 
     // Return local instance info
@@ -520,7 +520,7 @@
    *   console.log('All items stored');
    * });
    */
-  digitalTechnologiesCaching.prototype.putBatch = function(items) {
+  nooblyjsCaching.prototype.putBatch = function(items) {
     if (typeof items !== 'object' || items === null) {
       return Promise.reject(new Error('Items must be an object'));
     }
@@ -551,7 +551,7 @@
    *     // { 'user:123': {...}, 'user:456': {...}, 'config:app': {...} }
    *   });
    */
-  digitalTechnologiesCaching.prototype.getBatch = function(keys) {
+  nooblyjsCaching.prototype.getBatch = function(keys) {
     if (!Array.isArray(keys)) {
       return Promise.reject(new Error('Keys must be an array'));
     }
@@ -587,7 +587,7 @@
    * cache.clear(['user:123', 'user:456', 'config:app'])
    *   .then(results => console.log('Cleared items'));
    */
-  digitalTechnologiesCaching.prototype.clear = function(keys) {
+  nooblyjsCaching.prototype.clear = function(keys) {
     if (!Array.isArray(keys)) {
       return Promise.reject(new Error('Keys must be an array'));
     }
@@ -613,7 +613,7 @@
    * cache.keys()
    *   .then(keys => console.log('All keys:', keys));
    */
-  digitalTechnologiesCaching.prototype.keys = function() {
+  nooblyjsCaching.prototype.keys = function() {
     if (this.isLocal) {
       return Promise.resolve(this.localCache.keys());
     }
@@ -630,7 +630,7 @@
    * cache.size()
    *   .then(size => console.log('Cache size:', size));
    */
-  digitalTechnologiesCaching.prototype.size = function() {
+  nooblyjsCaching.prototype.size = function() {
     if (this.isLocal) {
       return Promise.resolve(this.localCache.size());
     }
@@ -647,7 +647,7 @@
    * cache.clearAll()
    *   .then(() => console.log('Cache cleared'));
    */
-  digitalTechnologiesCaching.prototype.clearAll = function() {
+  nooblyjsCaching.prototype.clearAll = function() {
     if (this.isLocal) {
       this.localCache.clear();
       this.log('Cleared all cache entries');
@@ -666,7 +666,7 @@
    * cache.getAnalytics()
    *   .then(analytics => console.log('Analytics:', analytics));
    */
-  digitalTechnologiesCaching.prototype.getAnalytics = function() {
+  nooblyjsCaching.prototype.getAnalytics = function() {
     if (this.isLocal) {
       return Promise.resolve(this.localCache.getAnalytics());
     }
@@ -674,11 +674,11 @@
   };
 
   // Expose the library globally
-  global.digitalTechnologiesCaching = digitalTechnologiesCaching;
+  global.nooblyjsCaching = nooblyjsCaching;
 
   // Also support AMD and CommonJS if running in those environments
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = digitalTechnologiesCaching;
+    module.exports = nooblyjsCaching;
   }
 
 })(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this);

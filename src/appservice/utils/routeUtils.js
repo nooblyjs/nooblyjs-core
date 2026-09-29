@@ -4,7 +4,7 @@
  * Centralizes the logic for resolving service instances by name while maintaining
  * fallback to default instances when named instances are not found.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.0
  */

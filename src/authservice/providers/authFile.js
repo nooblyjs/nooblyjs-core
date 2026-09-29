@@ -1,7 +1,7 @@
 /**
  * @fileoverview File-based Authentication Provider
  * File-based authentication provider with persistent storage and secure password handling.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -28,6 +28,13 @@ class AuthFile extends AuthBase {
    */
   constructor(options = {}, eventEmitter) {
     super(options, eventEmitter);
+
+    /**
+     * Optional logging service injected via dependencies; logging calls use
+     * optional chaining so the provider works when no logger is available.
+     * @protected {?Object}
+     */
+    this.logger = options.dependencies?.logging || null;
 
     this.settings = {};
     this.settings.desciption = "This provider exposes the NooblyJS file implementation settings"
@@ -162,21 +169,25 @@ class AuthFile extends AuthBase {
    * @private
    */
   async createDefaultAdmin_() {
-    const adminPassword = this.generateSecurePassword_(20);
+    // P2-3: Never log or emit the admin password. Prefer an operator-supplied
+    // password (DEFAULT_ADMIN_PASSWORD); otherwise generate one and write it to
+    // a 0600 bootstrap file, logging only the path so it never enters logs or
+    // the event bus.
+    const fromEnv = process.env.DEFAULT_ADMIN_PASSWORD;
+    const adminPassword = fromEnv || this.generateSecurePassword_(20);
+    // The default admin is identified by its email address.
+    const adminEmail = 'admin@localhost';
 
     if (this.eventEmitter_) {
-      this.eventEmitter_.emit('auth:default-admin-password', {
-        username: 'administrator',
-        email: 'admin@localhost',
-        password: adminPassword,
-        message: 'Default admin user created. Save this password immediately!'
+      this.eventEmitter_.emit('auth:default-admin-creating', {
+        email: adminEmail
       });
     }
 
     try {
       await this.createUser({
-        username: 'administrator',
-        email: 'admin@localhost',
+        email: adminEmail,
+        fullName: 'Administrator',
         password: adminPassword,
         role: 'admin'
       });
@@ -184,8 +195,36 @@ class AuthFile extends AuthBase {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:default-admin-created', {
           message: 'Default admin user created with secure password',
-          username: 'admin'
+          email: adminEmail
         });
+      }
+
+      if (fromEnv) {
+        this.logger?.warn(
+          `[${this.constructor.name}] Default admin user created using DEFAULT_ADMIN_PASSWORD`,
+          { email: adminEmail }
+        );
+      } else {
+        // Write the generated password to a restricted bootstrap file so an
+        // operator can retrieve it once, then delete the file. The secret is
+        // never written to the application logs or the event bus.
+        const secretFile = path.join(this.settings.datadir, 'INITIAL_ADMIN_PASSWORD.txt');
+        try {
+          await fs.writeFile(
+            secretFile,
+            `email: ${adminEmail}\npassword: ${adminPassword}\n`,
+            { encoding: 'utf8', mode: 0o600 }
+          );
+          this.logger?.warn(
+            `[${this.constructor.name}] Default admin user created — initial password written to a restricted file. Retrieve it, log in, then delete the file.`,
+            { email: adminEmail, credentialsFile: secretFile }
+          );
+        } catch (writeErr) {
+          this.logger?.error(
+            `[${this.constructor.name}] Default admin created but the initial-password file could not be written. Set DEFAULT_ADMIN_PASSWORD and recreate.`,
+            { email: adminEmail, error: writeErr?.message }
+          );
+        }
       }
     } catch (error) {
       if (this.eventEmitter_) {
@@ -193,6 +232,11 @@ class AuthFile extends AuthBase {
           error: error.message
         });
       }
+
+      this.logger?.error(
+        `[${this.constructor.name}] Failed to create default admin user`,
+        { error: error.message }
+      );
       throw error;
     }
   }
@@ -205,7 +249,66 @@ class AuthFile extends AuthBase {
     try {
       const data = await fs.readFile(this.usersFile_, 'utf8');
       const users = JSON.parse(data);
-      this.users_ = new Map(Object.entries(users));
+
+      // Migrate legacy records to the current schema while loading. Two
+      // migrations run here:
+      //   1. role (string) -> roles (array)
+      //   2. map key (legacy username) -> email, the current account identity.
+      //
+      // Pre-refactor data keyed users by their username; all current code keys
+      // and looks the in-memory map up by email. An un-migrated record therefore
+      // still appears in listUsers() (which reports user.email) but every
+      // users_.get(email) misses, surfacing to operators as "User not found"
+      // when resetting a password, changing roles, or deleting the account.
+      let needsSave = false;
+      const migrated = new Map();
+
+      for (const [key, user] of Object.entries(users)) {
+        if (user.role && !user.roles) {
+          // Convert single role to roles array
+          user.roles = [user.role];
+          delete user.role;
+          needsSave = true;
+        } else if (!user.roles) {
+          // Ensure roles array exists
+          user.roles = ['user'];
+          needsSave = true;
+        }
+
+        // Ensure the record carries an email (the identity). Legacy records
+        // without one fall back to their original key so the account stays usable.
+        if (!user.email) {
+          user.email = key;
+          needsSave = true;
+        }
+
+        // Backfill a display name so migrated records match createUser() output
+        // (the dashboard otherwise renders the full name as "—").
+        if (!user.fullName) {
+          user.fullName = user.username || user.email;
+          needsSave = true;
+        }
+
+        // Drop the obsolete username field; email is now the sole identity.
+        if (user.username !== undefined) {
+          delete user.username;
+          needsSave = true;
+        }
+
+        // Re-key by email so lookups (reset/role/delete) resolve correctly.
+        if (key !== user.email) {
+          needsSave = true;
+        }
+
+        migrated.set(user.email, user);
+      }
+
+      this.users_ = migrated;
+
+      // Save migrated format
+      if (needsSave) {
+        await this.saveUsersToFile_();
+      }
     } catch (error) {
       if (error.code !== 'ENOENT') {
         throw error;
@@ -316,37 +419,37 @@ class AuthFile extends AuthBase {
 
   /**
    * Updates user information and persists to file.
-   * @param {string} username Username to update.
+   * @param {string} email Email of the user to update.
    * @param {Object} updateData Data to update.
    * @return {Promise<Object>} Promise resolving to updated user object.
    * @override
    */
-  async updateUser(username, updateData) {
-    const user = await super.updateUser(username, updateData);
+  async updateUser(email, updateData) {
+    const user = await super.updateUser(email, updateData);
     await this.saveUsersToFile_();
     return user;
   }
 
   /**
    * Deletes a user account and persists changes to file.
-   * @param {string} username Username to delete.
+   * @param {string} email Email of the user to delete.
    * @return {Promise<void>} Promise resolving when user is deleted.
    * @override
    */
-  async deleteUser(username) {
-    await super.deleteUser(username);
+  async deleteUser(email) {
+    await super.deleteUser(email);
     await this.saveUsersToFile_();
   }
 
   /**
    * Authenticates a user and creates a session, persisting to file.
-   * @param {string} username Username.
+   * @param {string} email User email address.
    * @param {string} password Password.
    * @return {Promise<Object>} Promise resolving to auth result.
    * @override
    */
-  async authenticateUser(username, password) {
-    const result = await super.authenticateUser(username, password);
+  async authenticateUser(email, password) {
+    const result = await super.authenticateUser(email, password);
     await this.saveSessionsToFile_();
     return result;
   }

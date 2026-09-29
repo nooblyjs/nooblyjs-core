@@ -1,7 +1,7 @@
 /**
  * @fileoverview Ollama Provider
  * Ollama implementation providing local LLM services with token tracking.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -12,6 +12,43 @@ const AIServiceBase = require('./aibase');
 const fetch = globalThis.fetch || require('node-fetch');
 
 /**
+ * Resolve the fetch implementation + dispatcher used for the (potentially very
+ * long) /api/generate call. Node's global fetch (undici) defaults headersTimeout
+ * and bodyTimeout to 300s each; with `stream: false` Ollama only responds once
+ * generation has finished, so a local model that takes longer than 5 minutes
+ * would otherwise be aborted with UND_ERR_HEADERS_TIMEOUT.
+ *
+ * A dispatcher must come from the SAME undici instance as the fetch that uses it
+ * (passing a userland-undici Agent to the built-in global fetch throws
+ * UND_ERR_INVALID_ARG), so when undici is requireable we use ITS fetch together
+ * with an Agent whose header/body timeouts are disabled (0). When undici is not
+ * available we fall back to the global / node-fetch impl with no dispatcher
+ * (node-fetch has no default timeout; built-in fetch keeps its 300s default).
+ * connectTimeout is left at its default so a server that is down still fails fast.
+ *
+ * @return {{fetchImpl: Function, dispatcher: (Object|undefined)}}
+ * @private
+ */
+let ollamaFetchResolved_ = false;
+let ollamaFetchImpl_;
+let ollamaDispatcher_;
+function getOllamaFetch_() {
+  if (ollamaFetchResolved_) return { fetchImpl: ollamaFetchImpl_, dispatcher: ollamaDispatcher_ };
+  ollamaFetchResolved_ = true;
+  try {
+    const undici = require('undici');
+    if (undici && typeof undici.fetch === 'function' && typeof undici.Agent === 'function') {
+      ollamaFetchImpl_ = undici.fetch;
+      ollamaDispatcher_ = new undici.Agent({ headersTimeout: 0, bodyTimeout: 0 });
+      return { fetchImpl: ollamaFetchImpl_, dispatcher: ollamaDispatcher_ };
+    }
+  } catch (_) { /* undici unavailable — fall back below */ }
+  ollamaFetchImpl_ = fetch;
+  ollamaDispatcher_ = undefined;
+  return { fetchImpl: ollamaFetchImpl_, dispatcher: ollamaDispatcher_ };
+}
+
+/**
  * Ollama provider implementation for local LLM services.
  * @class
  * @extends {AIServiceBase}
@@ -20,7 +57,7 @@ class AIOllama extends AIServiceBase {
   /**
    * Initializes the Ollama service.
    * @param {Object} options Configuration options.
-   * @param {string} options.baseUrl Ollama base URL (default: http://localhost:11434).
+   * @param {string} options.endpoint Ollama endpoint (default: http://localhost:11434).
    * @param {string} options.model Model to use (default: llama3.2).
    * @param {EventEmitter} eventEmitter Optional event emitter for AI service events.
    */
@@ -31,12 +68,12 @@ class AIOllama extends AIServiceBase {
     this.settings.desciption = "This provider exposes the ollama settings"
     this.settings.list = [
       {setting: "model", type: "string", values : ['llama3.2']} ,
-      {setting: "baseurl", type: "string", values : ['http://localhost:11434']} ,
+      {setting: "endpoint", type: "string", values : ['http://localhost:11434']} ,
       {setting: "temperature", type: "number", values : ['0.7']} 
     ]
     
-    this.baseUrl_ = options.baseUrl || this.settings.baseurl || 'http://localhost:11434';
-    this.model_ = options.model || this.settings.model || 'llama3.2';
+    this.endpoint = options.endpoint || 'http://localhost:11434';
+    this.model = options.model || 'llama3.2';
   }
 
     /**
@@ -71,19 +108,23 @@ class AIOllama extends AIServiceBase {
    */
   async prompt(prompt, options = {}) {
     try {
-      const response = await fetch(`${this.baseUrl_}/api/generate`, {
+      // Use an undici fetch + Agent with header/body timeouts disabled so a slow
+      // local generation is never aborted mid-stream (see getOllamaFetch_).
+      const { fetchImpl, dispatcher } = getOllamaFetch_();
+      const response = await fetchImpl(`${this.endpoint}/api/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: this.model_,
+          model: this.model,
           prompt: prompt,
           stream: options.stream || false,
           options: {
             temperature: options.temperature || this.settings.temperature || 0.7
           }
-        })
+        }),
+        ...(dispatcher ? { dispatcher } : {})
       });
 
       if (!response.ok) {
@@ -104,20 +145,18 @@ class AIOllama extends AIServiceBase {
       };
 
       // Track usage (Ollama is free, so cost is 0)
-      await this.trackUsage_(usage, this.model_, 'ollama');
+      await this.trackUsage_(usage, this.model, 'ollama');
 
       const result = {
         content: data.response,
         usage,
-        model: this.model_,
+        model: this.model,
         provider: 'ollama',
         done: data.done,
         context: data.context
       };
 
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('ai:prompt', { prompt, response: result });
-      }
+      this.emitPromptComplete_(prompt, result, options);
 
       return result;
     } catch (error) {
@@ -134,7 +173,7 @@ class AIOllama extends AIServiceBase {
    */
   async listModels() {
     try {
-      const response = await fetch(`${this.baseUrl_}/api/tags`);
+      const response = await fetch(`${this.endpoint}/api/tags`);
       if (!response.ok) {
         throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
       }
@@ -166,7 +205,7 @@ class AIOllama extends AIServiceBase {
    */
   async isRunning() {
     try {
-      const response = await fetch(`${this.baseUrl_}/api/version`);
+      const response = await fetch(`${this.endpoint}/api/version`);
       return response.ok;
     } catch (error) {
       return false;

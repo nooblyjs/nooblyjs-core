@@ -1,4 +1,4 @@
-# Noobly JS Core
+# NooblyJS Core
 
 A powerful set of modular Node.js backend services built with the singleton pattern. This framework provides a comprehensive suite of enterprise-grade services for caching, logging, data persistence, file operations, workflow orchestration, AI integration, and more.
 
@@ -17,7 +17,7 @@ A powerful set of modular Node.js backend services built with the singleton patt
 
 ## Services Overview
 
-Noobly JS Core organizes services into 4 distinct classifications based on their usage patterns and dependencies:
+NooblyJS Core organizes services into 4 distinct classifications based on their usage patterns and dependencies:
 
 ### 🔧 Infrastructure Services (Foundation)
 Core foundational services that power all other services. These services have no dependencies on other services and are the building blocks for the framework.
@@ -67,7 +67,7 @@ Sophisticated services that leverage most underlying services and are almost ful
 
 ```bash
 # Clone the repository
-git clone https://github.com/nooblyjs/nooblyjs-core
+git clone https://github.com/nooblyjs/nooblyjs-core.git
 cd nooblyjs-core
 
 # Install dependencies
@@ -113,7 +113,7 @@ app.listen(3001, () => {
 
 ```bash
 # Development mode (with auto-reload)
-npm run dev:web
+npm run dev
 
 # Production mode
 npm start
@@ -419,20 +419,19 @@ describe('Cache Service', () => {
     cache = createService('memory', {}, mockEventEmitter);
   });
 
-  it('should set and get values', async () => {
-    await cache.set('test-key', 'test-value');
+  it('should put and get values', async () => {
+    await cache.put('test-key', 'test-value');
     const value = await cache.get('test-key');
     expect(value).toBe('test-value');
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:set', expect.any(Object));
+    // The cache provider emits instance-namespaced events, e.g. `cache:put:default`.
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('cache:put:default', expect.any(Object));
   });
 });
 ```
 
 ### Load Testing
 
-```bash
-npm run test-load
-```
+Load tests live under `tests/load/`. There is no dedicated npm script; run them directly with Node (or your load-testing tool of choice) as described in `tests/load/README.md`.
 
 See `tests/load/README.md` for detailed load testing information.
 
@@ -487,9 +486,10 @@ eventEmitter.on('service:created', (data) => {
   console.log(`Service created: ${data.serviceName}:${data.providerType}`);
 });
 
-// Listen for cache operations
-eventEmitter.on('cache:set', (data) => {
-  console.log(`Cache set: ${data.key}`);
+// Listen for cache operations. Cache events are namespaced by instance name,
+// e.g. `cache:put:default` / `cache:get:default` / `cache:delete:default`.
+eventEmitter.on('cache:put:default', (data) => {
+  console.log(`Cache put: ${data.key}`);
 });
 
 // Listen for log events
@@ -695,8 +695,8 @@ CMD ["npm", "start"]
 ```
 
 ```bash
-docker build -t nooblyjs-core .
-docker run -p 3001:3001 -e PORT=3001 nooblyjs-core
+docker build -t digital-tech-core .
+docker run -p 3001:3001 -e PORT=3001 digital-tech-core
 ```
 
 ### Environment Variables
@@ -740,7 +740,7 @@ ISC
 
 ## Support
 
-For issues, questions, or contributions, please contact the Noobly JS Team or open an issue in the repository.
+For issues, questions, or contributions, please contact the NooblyJS Team or open an issue in the repository.
 
 ## Version
 

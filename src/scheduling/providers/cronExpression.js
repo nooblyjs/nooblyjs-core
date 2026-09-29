@@ -23,7 +23,7 @@
  * are restricted (i.e. neither is `*`), the cron fires when EITHER matches,
  * matching the behaviour of Vixie cron.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.0
  * @since 1.0.15
  */
@@ -205,4 +205,66 @@ function isValid(expression) {
   }
 }
 
-module.exports = { parseCron, matches, isValid };
+/** @const {number} Default search horizon for {@link nextMatch}: five years. */
+const NEXT_MATCH_HORIZON_MS = 5 * 366 * 24 * 60 * 60 * 1000;
+
+/**
+ * Tests the day-of-month / day-of-week fields with cron's OR semantics.
+ * @param {!Object} parsed A cron descriptor returned from {@link parseCron}.
+ * @param {!Date} date The candidate date.
+ * @return {boolean} True if the day matches.
+ * @private
+ */
+function dayMatches(parsed, date) {
+  const dom = parsed.dayOfMonth.has(date.getDate());
+  const dow = parsed.dayOfWeek.has(date.getDay());
+  if (parsed.dayOfMonthRestricted && parsed.dayOfWeekRestricted) return dom || dow;
+  if (parsed.dayOfMonthRestricted) return dom;
+  if (parsed.dayOfWeekRestricted) return dow;
+  return true;
+}
+
+/**
+ * Finds the first minute strictly after `from` that a cron expression
+ * matches. Whole months, days and hours that cannot match are skipped, so a
+ * rare expression (e.g. 29 February) resolves quickly and an impossible one
+ * (e.g. 31 February) returns null instead of looping.
+ *
+ * @param {string|!Object} cron A cron expression or a parsed descriptor.
+ * @param {!Date=} from Search start, exclusive (default: now).
+ * @param {number=} horizonMs How far ahead to search (default: five years).
+ * @return {?Date} The next matching minute, or null if none within the horizon.
+ * @throws {Error} If the expression is malformed.
+ *
+ * @example
+ * nextMatch('0 9 * * 1-5'); // next weekday at 09:00
+ */
+function nextMatch(cron, from = new Date(), horizonMs = NEXT_MATCH_HORIZON_MS) {
+  const parsed = typeof cron === 'string' ? parseCron(cron) : cron;
+  const candidate = new Date(from.getTime());
+  candidate.setSeconds(0, 0);
+  candidate.setMinutes(candidate.getMinutes() + 1);
+  const limit = from.getTime() + horizonMs;
+
+  while (candidate.getTime() <= limit) {
+    if (!parsed.month.has(candidate.getMonth() + 1)) {
+      candidate.setMonth(candidate.getMonth() + 1, 1);
+      candidate.setHours(0, 0, 0, 0);
+      continue;
+    }
+    if (!dayMatches(parsed, candidate)) {
+      candidate.setDate(candidate.getDate() + 1);
+      candidate.setHours(0, 0, 0, 0);
+      continue;
+    }
+    if (!parsed.hour.has(candidate.getHours())) {
+      candidate.setHours(candidate.getHours() + 1, 0, 0, 0);
+      continue;
+    }
+    if (matches(parsed, candidate)) return candidate;
+    candidate.setMinutes(candidate.getMinutes() + 1);
+  }
+  return null;
+}
+
+module.exports = { parseCron, matches, isValid, nextMatch };

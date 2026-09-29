@@ -1,7 +1,7 @@
 /**
  * @fileoverview Base class for MongoDB-compatible DataService providers.
  * Provides shared logic for CRUD operations, search, and connection management.
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.0
  */
 

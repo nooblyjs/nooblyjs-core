@@ -3,7 +3,7 @@
  * Factory module for creating queue service instances.
  * Provides message queuing, task scheduling, and job management capabilities.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */
@@ -13,6 +13,7 @@
 const Queueing = require('./providers/queueing');
 const QueueingRedis = require('./providers/queueingRedis');
 const QueueingRabbitMQ = require('./providers/queueingRabbitMQ');
+const QueueingActiveMQ = require('./providers/queueingActiveMQ');
 const QueueingApi = require('./providers/queueingApi');
 const QueueAnalytics = require('./modules/analytics');
 const Routes = require('./routes');
@@ -21,7 +22,7 @@ const Views = require('./views');
 /**
  * Creates a queue service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the queue service.
- * @param {string} type - The queue provider type ('memory', 'redis', 'rabbitmq', 'api', 'aws', 'azure', 'gcp')
+ * @param {string} type - The queue provider type ('memory', 'redis', 'rabbitmq', 'activemq', 'api', 'aws', 'azure', 'gcp')
  * @param {Object} options - Configuration options for the queue service
  * @param {string} [options.instanceName='default'] - Unique identifier for this queue instance
  * @param {string} [options.host] - Redis/RabbitMQ host (for redis/rabbitmq providers)
@@ -31,7 +32,7 @@ const Views = require('./views');
  * @param {Object} options.dependencies.caching - Caching service instance
  * @param {Object} options.dependencies.dataservice - DataService service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {Queueing|QueueingRedis|QueueingRabbitMQ|QueueingApi} Queue service instance with specified provider
+ * @return {Queueing|QueueingRedis|QueueingRabbitMQ|QueueingActiveMQ|QueueingApi} Queue service instance with specified provider
  * @throws {Error} When unsupported queue type is provided
  * @example
  * const queueService = createQueue('memory', {
@@ -65,6 +66,9 @@ function createQueue(type, options, eventEmitter) {
   switch (type) {
     case 'rabbitmq':
       queue = new QueueingRabbitMQ(providerOptions, eventEmitter);
+      break;
+    case 'activemq':
+      queue = new QueueingActiveMQ(providerOptions, eventEmitter);
       break;
     case 'redis':
       queue = new QueueingRedis(providerOptions, eventEmitter);

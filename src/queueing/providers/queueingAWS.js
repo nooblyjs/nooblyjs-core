@@ -1,9 +1,9 @@
 /**
- * @fileoverview AWS SQS (Simple Queue Service) provider for Noobly JS Core queueing service.
+ * @fileoverview AWS SQS (Simple Queue Service) provider for NooblyJS Core queueing service.
  * Leverages AWS SQS for distributed, managed queue operations with high availability and durability.
  * Supports both Standard and FIFO queue types with automatic detection.
  *
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.15
  */
@@ -25,7 +25,7 @@ class QueueingAWS {
    * Initializes AWS SQS client with connection options and queue management
    *
    * @param {Object=} options Configuration options
-   * @param {string} options.region - AWS region (default: from AWS_REGION env var or 'us-east-1')
+   * @param {string} options.region - AWS region (default: from AWS_REGION env let or 'us-east-1')
    * @param {string} options.accessKeyId - AWS access key (default: from AWS_ACCESS_KEY_ID env var)
    * @param {string} options.secretAccessKey - AWS secret key (default: from AWS_SECRET_ACCESS_KEY env var)
    * @param {string} options.accountId - AWS account ID (default: from AWS_ACCOUNT_ID env var)

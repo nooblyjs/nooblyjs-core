@@ -3,7 +3,7 @@
  * Factory module for creating logging service instances with multiple provider support.
  * Supports console and file-based logging with configurable levels and formatting.
  * 
- * @author Noobly JS Team
+ * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
  */

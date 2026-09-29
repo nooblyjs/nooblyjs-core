@@ -3,18 +3,14 @@
  * Provides RESTful endpoints for metric collection, data aggregation,
  * and statistical analysis with time-based filtering capabilities.
  *
- * @author Noobly JS Core Team
+ * @author NooblyJS Core Team
  * @version 1.0.14
  * @since 1.0.0
  */
 
 'use strict';
 
-const { sendSuccess, sendError, sendStatus, ERROR_CODES, handleError } = require('../../appservice/utils/responseUtils');
-const AuditLog = require('../../appservice/modules/auditLog');
-const DataExporter = require('../../appservice/utils/exportUtils');
-const DataImporter = require('../../appservice/utils/importUtils');
-const { HealthCheck } = require('../../appservice/utils/healthCheck');
+const { sendSafeError } = require('../../shared/utils/safeError');
 
 /**
  * Configures and registers measurement routes with the Express application.
@@ -30,9 +26,13 @@ const { HealthCheck } = require('../../appservice/utils/healthCheck');
 module.exports = (options, eventEmitter, measuring, analytics) => {
   if (options['express-app'] && measuring) {
     const app = options['express-app'];
-    const authMiddleware = options.authMiddleware;
-    const auditLog = new AuditLog({ maxEntries: 5000, retention: { days: 90 } });
-    const healthCheck = new HealthCheck('measuring', { dependencies: [] });
+
+    // Enforce authentication on every measuring API endpoint. Mounting the
+    // shared API-key/session middleware on the /api prefix protects all routes
+    // below regardless of how each handler is registered. Falls back to a
+    // pass-through only when no auth is configured.
+    const requireApiAuth = options.authMiddleware || ((req, res, next) => next());
+    app.use('/services/measuring/api', requireApiAuth);
 
     /**
      * POST /services/measuring/api/add
@@ -59,7 +59,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
         await Promise.resolve(measuring.add(metric, Number(value)));
         res.status(200).json({ success: true });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        sendSafeError(res, err, { status: 500, eventEmitter });
       }
     });
 
@@ -87,7 +87,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(measures);
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       }
     );
@@ -116,7 +116,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(total);
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       }
     );
@@ -145,7 +145,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           );
           res.status(200).json(average);
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       }
     );
@@ -160,7 +160,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
      */
     app.get('/services/measuring/api/status', (req, res) => {
       eventEmitter.emit('api-measuring-status', 'measuring api running');
-      sendStatus(res, 'measuring api running');
+      res.status(200).json('measuring api running');
     });
 
     /**
@@ -199,9 +199,10 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           )
         });
       } catch (err) {
-        res.status(500).json({
-          error: 'Failed to generate analytics summary',
-          message: err.message
+        sendSafeError(res, err, {
+          status: 500,
+          eventEmitter,
+          clientMessage: 'Failed to generate analytics summary'
         });
       }
     });
@@ -221,8 +222,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
       } catch (err) {
         eventEmitter.emit('api-measuring-settings-error', err.message);
         res.status(500).json({
-          error: 'Failed to retrieve settings',
-          message: err.message
+          error: 'Failed to retrieve settings'
         });
       }
     });
@@ -242,7 +242,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
           await measuring.saveSettings(message);
           res.status(200).json({ success: true });
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          sendSafeError(res, err, { status: 500, eventEmitter });
         }
       } else {
         res.status(400).json({ error: 'Missing settings' });
@@ -260,16 +260,43 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
      */
     app.get('/services/measuring/api/metrics', async (req, res) => {
       try {
-        const metrics = [];
+        const metricsSet = new Set();
         const values = [];
-        const startDate = new Date(0);
-        const endDate = new Date();
 
-        // Get all metric names from the measuring service
-        if (measuring.metrics && measuring.metrics instanceof Map) {
-          // For Map-based providers (default MeasuringService)
+        // The dashboard's analytics module is the shared source of truth: it
+        // captures every measuring event (add/increment/gauge/timing/histogram)
+        // regardless of which provider or instance emitted it. Sourcing the UI
+        // from it keeps the Metrics Explorer consistent with the Dashboard,
+        // rather than only reflecting this one provider's in-memory Map.
+        const analyticsMetricNames = new Set();
+        if (analytics) {
+          // Metric names - includes metrics whose history has rolled off.
+          if (typeof analytics.getTopMetricsByRecency === 'function') {
+            analytics.getTopMetricsByRecency(1000).forEach(stat => {
+              metricsSet.add(stat.metric);
+              analyticsMetricNames.add(stat.metric);
+            });
+          }
+          // Individual values with timestamps from the rolling history.
+          if (typeof analytics.getRecentHistory === 'function') {
+            analytics.getRecentHistory(1000).forEach(entry => {
+              metricsSet.add(entry.metric);
+              values.push({
+                metric: entry.metric,
+                value: entry.value,
+                timestamp: entry.capturedAt
+              });
+            });
+          }
+        }
+
+        // Also include values held directly on a provider instance (e.g. the
+        // default Map-based provider). Skip metrics already represented by the
+        // analytics history above to avoid double-counting.
+        if (measuring.metrics instanceof Map) {
           for (const [metricName, measures] of measuring.metrics) {
-            metrics.push(metricName);
+            metricsSet.add(metricName);
+            if (analyticsMetricNames.has(metricName)) continue;
             if (Array.isArray(measures)) {
               measures.forEach(measure => {
                 values.push({
@@ -280,36 +307,10 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
               });
             }
           }
-        } else {
-          // Fallback: try to get all metrics by calling list for each known metric
-          // This is less efficient but supports other provider types
-          const allMetrics = new Set();
-
-          // Try to infer metrics from values if available
-          if (measuring.allValues && Array.isArray(measuring.allValues)) {
-            measuring.allValues.forEach(val => {
-              if (val.metric) allMetrics.add(val.metric);
-            });
-          }
-
-          // For each metric, fetch its values
-          for (const metricName of allMetrics) {
-            const measures = await Promise.resolve(measuring.list(metricName, startDate, endDate));
-            if (Array.isArray(measures)) {
-              measures.forEach(measure => {
-                values.push({
-                  metric: metricName,
-                  value: measure.value,
-                  timestamp: measure.timestamp || measure.date || new Date()
-                });
-              });
-              metrics.push(metricName);
-            }
-          }
         }
 
         // Sort results
-        const uniqueMetrics = [...new Set(metrics)].sort();
+        const uniqueMetrics = [...metricsSet].sort();
         const sortedValues = values.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         res.status(200).json({
@@ -321,131 +322,10 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
         eventEmitter.emit('api-measuring-metrics-error', { error: err.message, endpoint: '/metrics' });
         res.status(500).json({
           success: false,
-          error: err.message,
+          error: 'Failed to retrieve metrics',
           metrics: [],
           values: []
         });
-      }
-    });
-
-
-    /**
-     * GET /services/measuring/api/audit
-     * Retrieves audit log entries
-     */
-    app.get('/services/measuring/api/health', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const result = await healthCheck.check({ service: measuring });
-        const statusCode = result.status === 'healthy' ? 200 : 503;
-        res.status(statusCode).json(result);
-      } catch (err) {
-        handleError(res, err, { operation: 'health-check' });
-      }
-    });
-
-    app.get('/services/measuring/api/audit', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const filters = { service: 'measuring', limit: parseInt(req.query.limit) || 100 };
-        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
-        const logs = auditLog.query(filters);
-        const stats = auditLog.getStats(filters);
-        sendSuccess(res, { logs, stats, total: logs.length }, 'Audit logs retrieved');
-      } catch (error) {
-        handleError(res, error, { operation: 'measuring-audit-query' });
-      }
-    });
-
-    /**
-     * POST /services/measuring/api/audit/export
-     * Exports audit logs
-     */
-    app.post('/services/measuring/api/audit/export', authMiddleware || ((req, res, next) => next()), (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const exported = auditLog.export(format, { service: 'measuring', limit: 10000 });
-
-    /**
-     * POST /services/measuring/api/import
-     * Imports data from specified format
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.body.format - Import format (json, csv, xml, jsonl)
-     * @param {string|Array} req.body.data - Data to import
-     * @param {string} req.query.dryRun - Dry-run mode (true/false)
-     * @param {string} req.query.conflictStrategy - Conflict handling (error, skip, update)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/measuring/api/import', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const { data: rawData, format = 'json' } = req.body;
-        const dryRun = req.query.dryRun === 'true';
-        const conflictStrategy = req.query.conflictStrategy || 'error';
-
-        if (!rawData) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Missing data to import');
-        }
-
-        // Parse data based on format
-        let parsedData = Array.isArray(rawData) ? rawData : rawData;
-        if (typeof rawData === 'string') {
-          parsedData = DataImporter.parse(rawData, format);
-        }
-
-        if (!Array.isArray(parsedData)) {
-          return sendError(res, ERROR_CODES.INVALID_REQUEST, 'Parsed data must be an array');
-        }
-
-        // Dry-run mode
-        if (dryRun) {
-          const dryRunResult = DataImporter.dryRun(parsedData, { conflictStrategy });
-          return sendSuccess(res, dryRunResult, 'Dry-run completed successfully');
-        }
-
-        // Perform actual import
-        const importHandler = async (item) => {
-          try {
-            // Service-specific import logic would go here
-            return { success: true, type: 'new' };
-          } catch (error) {
-            throw error;
-          }
-        };
-
-        const result = await DataImporter.import(parsedData, importHandler, { conflictStrategy });
-        sendSuccess(res, result, 'Data imported successfully', 201);
-      } catch (error) {
-        handleError(res, error, { operation: 'measuring-import' });
-      }
-    });
-
-
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('audit-logs', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'measuring-audit-export' });
-      }
-    });
-
-    /**
-     * GET /services/measuring/api/export
-     * Exports service data
-     */
-    app.get('/services/measuring/api/export', authMiddleware || ((req, res, next) => next()), async (req, res) => {
-      try {
-        const format = req.query.format || 'json';
-        const data = { note: 'Data export available' };
-        const exported = DataExporter[`to${format.charAt(0).toUpperCase() + format.slice(1)}`]?.(data) || DataExporter.toJSON(data);
-        const mimeType = DataExporter.getMimeType(format);
-        const filename = DataExporter.getFilename('measuring-export', format);
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(exported);
-      } catch (error) {
-        handleError(res, error, { operation: 'measuring-export' });
       }
     });
   }
