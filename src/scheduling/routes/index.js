@@ -25,7 +25,8 @@ const registerManagerRoutes = require('./manager');
  */
 function parsePositiveInt(value, fallback) {
   const n = parseInt(value, 10);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+  // P2-7: cap page sizes so a huge ?limit= cannot build an unbounded response.
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 1000) : fallback;
 }
 
 /**

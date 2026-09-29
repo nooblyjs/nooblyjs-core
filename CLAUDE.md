@@ -11,7 +11,7 @@ NooblyJS Core is a modular Node.js backend framework: a set of services (logging
 - `npm run dev` — dev server with nodemon (watches `./src`, runs `app.js`, port `11000` or `$PORT`)
 - `npm run dev:noauth` — same, using `app-noauth.js` (no login required; handy for UI work)
 - `npm start` — `node ./app.js`
-- `npm test` (alias `npm run tests`) — all Jest tests
+- `npm test` (alias `npm run tests`) — all Jest tests; `npm run coverage` adds coverage with the enforced threshold (as CI does)
 - `npm test -- tests/unit/caching/cache.test.js` — a single file; `npm test -- -t "name"` for a single test
 - `npm run test:ui` — Playwright UI tests in `tests/ui/` (desktop + mobile Chromium); `npm run test:ui -- --project=chromium tests/ui/smoke.spec.js` for one file/project, `npm run test:ui:headed` to watch, `npm run test:ui:report` to open the HTML report
 - `npm run kill` / `npm run kill-test` — free port 11000 / 3101 when a server hangs
@@ -49,7 +49,7 @@ The dependency graph is hard-coded in `initializeServiceDependencies()` (the sou
 
 Each `src/{service}/index.js` is a factory `(providerType, options, eventEmitter)` that `switch`es on provider type, instantiates from `providers/` (`provider/` in aiservice and partly measuring), then registers `routes/index.js` (Express, with a Swagger doc under `routes/swagger/`) and `views/` (dashboard). Most services include a `modules/analytics.js` and an `*Api.js` provider that proxies to a remote instance of the same service. Check the factory's `case` labels for valid provider names — e.g. fetching is `node`/`axios`, measuring/notifying/working use `default`, settings is `file`/`encrypted`, filing adds `gcp`/`api`/`sync`, queueing adds `activemq`, aiservice includes `gemini`/`openai-kv`/`tensorflow`, authservice includes `azure`/`secure-email`.
 
-Other shared code: `src/appservice/baseClasses/` (base classes for custom app services), `src/middleware/` (error handler, health checks), `src/shared/utils/` (`createServer`, `safeError`, `trustSystemCa`), `src/views/` (the top-level services dashboard and `modules/monitoring.js`), `public/` (static site).
+Other shared code: `src/appservice/baseClasses/` (base classes for custom app services), `src/middleware/` (error handler, health checks), `src/shared/utils/` (`createServer`, `safeError`, `trustSystemCa`, plus `httpErrors`, `validation`, `sessionStore`, `contentSecurityPolicy` described under Conventions), `src/views/` (the top-level services dashboard and `modules/monitoring.js`), `public/` (static site).
 
 ### Services with notable internals
 
@@ -65,6 +65,10 @@ The workflow, scheduling and settings client UIs inject their own namespaced sty
 
 ## Conventions
 
+- **Errors to clients:** never send `err.message` for server faults. Throw `ClientError(status, message)` (`src/shared/utils/httpErrors.js`) for client-safe 4xx errors and respond with `sendSafeError(res, err, { status: 500, eventEmitter })` or `toClientResponse(err)`. `sendSafeError` lets a `ClientError` override the default status and maps ENOENT/NoSuchKey to 404. The SSRF guard and filing `pathSafety` throw `ClientError(400)`.
+- **Input:** validate route input with `validate({ body, query, params })` and cap list sizes with `parseLimit` / `capLimit` / `parseOffset` (`src/shared/utils/validation.js`). Filing uploads go through `createUploadMiddleware` / `limitStream` (`src/filing/modules/uploadLimits.js`), which enforce `maxFileSize` / `allowedTypes`.
+- **Listeners:** a factory whose analytics subscribes to the shared emitter must set `service.analytics = analytics`, so `ServiceRegistry` can call `analytics.destroy()` on reset/shutdown (`tests/unit/registryListenerLeak.test.js` guards this).
+- **CSP:** `app.js` / `app-noauth.js` enforce the policy in `src/shared/utils/contentSecurityPolicy.js`. A new external script/style/font origin must be added there, or the Playwright smoke test fails on the CSP violation.
 - Server-side logging goes through the injected logger with optional chaining and structured metadata: `this.logger?.info(\`[${this.constructor.name}] ...\`, { ... })`. The migration off `console.*` is incomplete (some cloud providers, `*Api.js` providers, `createServer.js`, `errorHandler.js` still use it); browser scripts under `src/*/scripts/` and `src/*/views/` use `console` by design.
 - `const`/`let`, `async/await`, and JSDoc (`@param`, `@return`, `@throws`, `@example`) on public methods and route factories, matching existing files.
 - Services emit events on the shared EventEmitter for major operations; tests verify with `jest.spyOn(eventEmitter, 'emit')` and inject mock dependencies via `options.dependencies`.
@@ -72,4 +76,6 @@ The workflow, scheduling and settings client UIs inject their own namespaced sty
 
 ## Configuration
 
-`.env` (not tracked): `PORT`, `API_KEYS` or `KNOWLEDGEREPOSITORY_API_KEYS` (comma-separated; in development one is generated and logged if none are set), `SESSION_SECRET`, `SETTINGS_SECRET`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`. Runtime data and logs go to `./.application/` (created automatically). `app.js` wires every service with file-based providers and is the reference for service setup.
+`.env` (not tracked): `PORT`, `API_KEYS` or `NOOBLYJS_API_KEYS` (comma-separated; in development one is generated and logged if none are set), `SESSION_SECRET`, `SETTINGS_SECRET`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`. Runtime data and logs go to `./.application/` (created automatically); filing uploads go to `FILING_BASE_DIR` (default `./.application/files`, never the app root). Production settings: `TRUST_PROXY` (behind a TLS-terminating proxy, otherwise Secure session cookies are never sent), `SESSION_REDIS_URL` / `REDIS_URL` (shared session store; otherwise a pruning in-process store), `CSP_MODE` (`enforce` / `report-only` / `off`), `CORS_ORIGINS`, `BODY_LIMIT`. `.env.example` lists every variable. `app.js` wires every service with file-based providers and is the reference for service setup.
+
+**Deployment and CI:** `Dockerfile` builds a `node:24-alpine` image with `NODE_ENV=production`, a `HEALTHCHECK` on `/health/live`, a non-root user and a `.application` volume. It refuses to start without `SESSION_SECRET` and API keys. `.github/workflows/ci.yml` runs `npm run coverage` (Jest with a ratcheting `coverageThreshold`; reports in `.temp/coverage`) on Node 22 and 24, then `npm run test:ui`, `npm audit --omit=dev --audit-level=high` and a Docker build and boot check. Production-readiness reviews and the remediation tracker live in `.claude/specs/go-to-market/`.

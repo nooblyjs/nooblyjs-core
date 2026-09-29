@@ -11,6 +11,7 @@
 'use strict';
 
 const analytics = require('../modules/analytics');
+const { parseLimit } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers data service routes with the Express application.
@@ -329,7 +330,7 @@ module.exports = (options, eventEmitter, dataservice) => {
      */
     app.get('/services/dataservice/api/analytics/containers', (req, res) => {
       try {
-        const limit = parseInt(req.query.limit) || 100;
+        const limit = parseLimit(req.query.limit, { defaultValue: 100 });
         const containers = analytics.getContainerAnalytics(limit);
         res.status(200).json(containers);
       } catch (error) {

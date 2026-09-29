@@ -11,6 +11,7 @@
 'use strict';
 
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { capLimit } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers measurement routes with the Express application.
@@ -179,7 +180,7 @@ module.exports = (options, eventEmitter, measuring, analytics) => {
       }
 
       const countLimit = Number.parseInt(req.query.topLimit, 10);
-      const recentLimit = Number.parseInt(req.query.recentLimit, 10);
+      const recentLimit = capLimit(Number.parseInt(req.query.recentLimit, 10));
       const historyLimit = Number.parseInt(req.query.historyLimit, 10);
 
       try {

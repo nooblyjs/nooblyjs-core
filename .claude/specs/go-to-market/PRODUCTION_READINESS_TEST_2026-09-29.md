@@ -6,6 +6,8 @@
 **Previous review:** [PRODUCTION_READINESS_REVIEW.md](./PRODUCTION_READINESS_REVIEW.md) (2026-05-29) · tracker: [REMEDIATION_TODO.md](./REMEDIATION_TODO.md)
 **Tester:** Claude Code
 
+> **Update, same day:** all blockers and findings below were remediated and the test was re-run: **70/70 live checks pass**. See [Re-test after remediation](#re-test-after-remediation) at the end and the log in [REMEDIATION_TODO.md](./REMEDIATION_TODO.md).
+
 ---
 
 ## Verdict
@@ -222,3 +224,54 @@ npm test -- --coverage && npm run test:ui && npm audit --omit=dev
 ```
 
 Note: the probe ends with a brute-force check that locks `admin@localhost` for 15 minutes.
+
+---
+
+## Re-test after remediation
+
+**Date:** 2026-09-29 (same day) · **Verdict: ready for production**, subject to the operational follow-ups below.
+
+Same method as above: `app.js` with `NODE_ENV=production` from a sandbox copy, this time with a decoy `.env` in the app root. The probe was tightened to expect the corrected behaviour (400 for blocked requests, 401 JSON for API clients, 413 for oversized uploads, CSP present) and gained checks for the new findings.
+
+### Scorecard after remediation
+
+| Dimension | Before | After | Evidence |
+|---|---|---|---|
+| Security | 🟠 | 🟢 | 70/70 probe checks: auth, SSRF (400), traversal (400/404), uploads (413), open redirect (400), app root unreadable via filing, enforced CSP |
+| Stability / error handling | 🟢 | 🟢 | No 5xx under load; 5xx bodies generic; missing files → 404 |
+| Testing | 🟠 | 🟢 | 1,813 Jest tests pass (+46 new); coverage threshold enforced; 32/32 UI checks with CSP-violation detection; CI workflow added |
+| Performance | 🟢 | 🟢 | See below |
+| Dependencies | 🟠 | 🟢 | `npm audit`: **0 vulnerabilities** (production and dev); dev tools out of the production install |
+| Deployment | 🔴 | 🟢 | Node 24 LTS image with `NODE_ENV`, `HEALTHCHECK`, non-root user; `TRUST_PROXY`; Redis-capable session store |
+| Config / secrets | 🟢 | 🟢 | Unchanged safeguards, plus `.env.example` and `SECURITY.md` |
+
+### Blockers
+
+| # | Status | Verified |
+|---|---|---|
+| B1 No CI | ✅ `.github/workflows/ci.yml`: unit (Node 22/24 + coverage), UI, audit, Docker | Each step run locally; needs a first run on GitHub and branch protection |
+| B2 Node 20 / no `NODE_ENV` | ✅ `node:24-alpine`, `NODE_ENV=production`, `HEALTHCHECK` | Image built; refuses to start without secrets; `healthy` with them; runs as `appuser` |
+| B3 Proxy / sessions | ✅ `TRUST_PROXY`; Redis session store via `SESSION_REDIS_URL`; pruning memory fallback with a production warning | Unit tests (ioredis-mock); startup warnings seen in logs |
+| B4 Unlimited uploads | ✅ 413 over `maxFileSize` (multipart, streamed, named instances); 415 for disallowed types | Unit tests; probe 15 MB upload → 413 |
+| B5 `Math.random()` passwords | ✅ `crypto.randomInt` / `randomBytes` | Unit test asserts `Math.random` is never called; source scan clean |
+| **N-15 (found during remediation)** | ✅ Filing store moved out of the app root (`FILING_BASE_DIR`, default `.application/files`) | Probe: `.env`, `package.json`, `app.js` and the users file all return 404 via the filing API |
+
+### Performance and resilience (re-test)
+
+| Scenario | Requests | Throughput | p50 | p95 | p99 | Errors |
+|---|---|---|---|---|---|---|
+| `/health` (c=50) | 5,000 | 1,772 req/s | 23.4 ms | 50.9 ms | 92.3 ms | 0 |
+| Authenticated API read (c=50) | 3,000 | 2,423 req/s | 17.8 ms | 39.7 ms | 46.0 ms | 0 |
+| Cache status (c=100) | 3,000 | 2,045 req/s | 34.7 ms | 134.8 ms | 195.9 ms | 0 |
+| Soak: 6 × 4,000 mixed (c=50) | 24,000 | — | — | — | — | 0 |
+
+- **Memory:** flat through the soak at 303–305 MB RSS (no growth between rounds).
+- **Startup:** healthy **1.7 s** after launch. `/health` returns 503 `starting` until then, so load balancers should use a start period (the Docker `HEALTHCHECK` allows 30 s).
+- **Shutdown:** SIGTERM → exit 0 in **103 ms**.
+
+### Operational follow-ups
+
+1. Enable branch protection on `main` requiring the four CI jobs.
+2. In production set `TRUST_PROXY` (behind a load balancer) and `SESSION_REDIS_URL` (for more than one replica). The app warns at startup when they're missing.
+3. Mount a volume at `/usr/src/app/.application` so users, settings and uploaded files survive container restarts.
+4. Hardening backlog (not blockers): drop `'unsafe-inline'` from the CSP by moving inline scripts into files; make auth-provider validation errors `ClientError`s; raise coverage; replace `ftp`/`stompit`; `express` 5 and other major upgrades. Tracked in [REMEDIATION_TODO.md](./REMEDIATION_TODO.md).

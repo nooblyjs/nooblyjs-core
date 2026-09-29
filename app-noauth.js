@@ -30,6 +30,7 @@ const path = require('node:path');
 const express = require('express');
 require('express-async-errors');
 const helmet = require('helmet');
+const { helmetCspOption } = require('./src/shared/utils/contentSecurityPolicy');
 const bodyParser = require('body-parser');
 const { EventEmitter } = require('events');
 
@@ -38,7 +39,7 @@ const BODY_LIMIT = process.env.BODY_LIMIT || '1mb';
 const serviceRegistry = require('.');
 
 const app = express();
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ contentSecurityPolicy: helmetCspOption() }));
 app.use(bodyParser.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 

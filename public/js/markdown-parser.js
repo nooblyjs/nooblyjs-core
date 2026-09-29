@@ -284,7 +284,7 @@ class MarkdownParser {
     const properties = this.parseBlockProperties(content);
 
     const icon = properties.icon || '';
-    const title = properties.title || 'Knowledge Platform';
+    const title = properties.title || 'NooblyJs Platform';
     const linksStr = properties.links || '';
 
     // Parse links in markdown format [text](url)
@@ -509,7 +509,7 @@ class MarkdownParser {
     const properties = this.parseBlockProperties(content);
 
     const icon = properties.icon || '';
-    const title = properties.title || 'NooblyJS Knowledge Platform';
+    const title = properties.title || 'NooblyJS Platform';
     const subtitle = properties.subtitle || '';
     const linksStr = properties.links || '';
 

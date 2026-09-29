@@ -15,6 +15,7 @@
 const path = require('node:path');
 const express = require('express');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { capLimit } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers AI service routes with the Express application.
@@ -187,8 +188,8 @@ module.exports = (options, eventEmitter, aiService, analytics) => {
    */
   const createAnalyticsHandler = (svc) => (req, res) => {
     try {
-      const limit = parseInt(req.query.limit, 10);
-      const recentLimit = parseInt(req.query.recentLimit, 10);
+      const limit = capLimit(parseInt(req.query.limit, 10));
+      const recentLimit = capLimit(parseInt(req.query.recentLimit, 10));
       const svcAnalytics = analyticsFor(svc);
       let payload;
 

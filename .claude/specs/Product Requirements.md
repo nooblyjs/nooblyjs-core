@@ -1275,7 +1275,7 @@ NODE_ENV=production
 
 # Authentication
 API_KEYS=key1,key2,key3
-KNOWLEDGEREPOSITORY_API_KEYS=key1,key2,key3
+NOOBLYJS_API_KEYS=key1,key2,key3
 SESSION_SECRET=very-long-random-string-min-32-chars
 
 # AI Services

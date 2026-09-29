@@ -14,6 +14,7 @@
 const crypto = require('crypto');
 const analytics = require('../modules/analytics');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { capLimit, parseLimit, validate } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers search routes with the Express application.
@@ -102,7 +103,9 @@ module.exports = (options, eventEmitter, search) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/searching/api/search/:term', async (req, res) => {
+    app.get('/services/searching/api/search/:term',
+      validate({ params: { term: { type: 'string', required: true, maxLength: 1000 } } }),
+      async (req, res) => {
       const term = req.params.term;
       const searchContainer = req.query.searchContainer;
 
@@ -239,7 +242,7 @@ module.exports = (options, eventEmitter, search) => {
     app.get('/services/searching/api/analytics', async (req, res) => {
       try {
         const searchContainer = req.query.searchContainer;
-        const limit = parseInt(req.query.limit, 10);
+        const limit = capLimit(parseInt(req.query.limit, 10));
         const [stats, analyticsData] = await Promise.all([
           search.getStats(searchContainer),
           Promise.resolve(
@@ -287,7 +290,7 @@ module.exports = (options, eventEmitter, search) => {
      */
     app.get('/services/searching/api/analytics/terms', (req, res) => {
       try {
-        const limit = parseInt(req.query.limit, 10) || 100;
+        const limit = parseLimit(req.query.limit, { defaultValue: 100 });
         const searchContainer = req.query.searchContainer;
         const terms = analytics.getSearchTermAnalytics(limit, searchContainer);
         res.status(200).json(terms);
@@ -374,7 +377,7 @@ module.exports = (options, eventEmitter, search) => {
 
         const term = req.params.term;
         const searchContainer = req.query.searchContainer || 'default';
-        const limit = parseInt(req.query.limit, 10) || 10;
+        const limit = parseLimit(req.query.limit, { defaultValue: 10, max: 100 });
 
         if (!term) {
           return res.status(400).json({ error: 'Missing search term' });
@@ -431,7 +434,7 @@ module.exports = (options, eventEmitter, search) => {
         const term = req.params.term;
         if (!term) return res.status(400).json({ error: 'Missing search term' });
 
-        const limit = parseInt(req.query.limit, 10) || 10;
+        const limit = parseLimit(req.query.limit, { defaultValue: 10, max: 100 });
         const containerName = req.query.searchContainer || 'default';
         const fuzzy = req.query.fuzzy != null ? Number(req.query.fuzzy) : undefined;
 
@@ -452,7 +455,9 @@ module.exports = (options, eventEmitter, search) => {
      * fuzzy, combineWith, maxResults. The GET /search/:term route remains for
      * simple term queries; this POST variant exposes the field-aware options.
      */
-    app.post('/services/searching/api/search/:searchContainer?', async (req, res) => {
+    app.post('/services/searching/api/search/:searchContainer?',
+      validate({ body: { query: { type: 'string', required: true, maxLength: 1000 } } }),
+      async (req, res) => {
       try {
         const body = req.body && typeof req.body === 'object' ? req.body : {};
         const { query, ...searchOpts } = body;
@@ -481,6 +486,11 @@ module.exports = (options, eventEmitter, search) => {
         const documents = Array.isArray(body) ? body : body.documents;
         if (!Array.isArray(documents)) {
           return res.status(400).json({ error: 'Expected an array or { documents: [...] }' });
+        }
+        // P2-7: bound batch size so one request cannot index an unbounded array.
+        const MAX_BULK_DOCUMENTS = Number(process.env.SEARCH_MAX_BULK_DOCUMENTS) || 1000;
+        if (documents.length > MAX_BULK_DOCUMENTS) {
+          return res.status(413).json({ error: `At most ${MAX_BULK_DOCUMENTS} documents per request` });
         }
         const containerName = (body && body.searchContainer) || req.query.searchContainer || 'default';
         const result = await search.addAll(documents, containerName);

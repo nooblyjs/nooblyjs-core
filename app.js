@@ -30,6 +30,7 @@ const config = require('dotenv').config({quiet: true });
 // Generate development certificates with: npm run certs
 const { createServer, createHttpRedirectServer } = require('./src/shared/utils/createServer');
 const { createSessionStore } = require('./src/shared/utils/sessionStore');
+const { helmetCspOption } = require('./src/shared/utils/contentSecurityPolicy');
 
 /** Maximum accepted request body size (P2-2). Override via BODY_LIMIT. */
 const BODY_LIMIT = process.env.BODY_LIMIT || '1mb';
@@ -58,9 +59,9 @@ if (process.env.TRUST_PROXY) {
   app.set('trust proxy', trustProxy === 'true' ? true : (/^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy));
 }
 
-// Security headers (P2-1). CSP is left disabled here because the service
-// dashboards use inline styles/scripts; enable a tuned CSP per deployment.
-app.use(helmet({ contentSecurityPolicy: false }));
+// Security headers (P2-1) including a Content-Security-Policy (N-7) that
+// pins the dashboards' external origins. CSP_MODE=report-only|off to relax.
+app.use(helmet({ contentSecurityPolicy: helmetCspOption() }));
 
 // CORS (P2-1): same-origin only unless explicit origins are configured.
 app.use(cors({
@@ -126,7 +127,7 @@ const serviceRegistry = require('./index');
  * Configure API keys for authentication
  *
  * Environment Variables (in order of precedence):
- * - KNOWLEDGEREPOSITORY_API_KEYS: Comma-separated API keys (legacy name)
+ * - NOOBLYJS_API_KEYS: Comma-separated API keys (legacy name)
  * - API_KEYS: Comma-separated API keys
  * - API_KEY: Single API key
  *
@@ -139,7 +140,7 @@ const serviceRegistry = require('./index');
  * - Never commit API keys to version control
  */
 const configuredApiKeys = parseCommaSeparated(
-  process.env.KNOWLEDGEREPOSITORY_API_KEYS || process.env.API_KEYS || process.env.API_KEY || ''
+  process.env.NOOBLYJS_API_KEYS || process.env.API_KEYS || process.env.API_KEY || ''
 );
 
 // Enforce strict security in production

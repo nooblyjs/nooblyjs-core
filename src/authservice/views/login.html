@@ -190,6 +190,16 @@
     </div>
 
     <script>
+        /**
+         * Only same-site paths may be used as a post-login redirect (blocks
+         * open redirects via //host, /\\host, https://host, javascript:).
+         * @param {?string} value - Raw returnUrl
+         * @return {?string} The path, or null if unsafe
+         */
+        function safeReturnUrl(value) {
+            return typeof value === 'string' && /^\/(?![\/\\])/.test(value) ? value : null;
+        }
+
         // Mark page as loading to hide content until branding is applied
         document.body.classList.add('loading');
 
@@ -303,7 +313,7 @@
 
             const formData = new FormData(loginForm);
             const urlParams = new URLSearchParams(window.location.search);
-            const returnUrl = urlParams.get('returnUrl');
+            const returnUrl = safeReturnUrl(urlParams.get('returnUrl'));
 
             const loginData = {
                 email: formData.get('email'),
@@ -389,7 +399,7 @@
                             .then(sessionResult => {
                                 if (sessionResult.authenticated) {
                                     const urlParams = new URLSearchParams(window.location.search);
-                                    const returnUrl = urlParams.get('returnUrl') || '/services';
+                                    const returnUrl = safeReturnUrl(urlParams.get('returnUrl')) || '/services';
 
                                     showSuccess('Already logged in! Redirecting...');
                                     setTimeout(() => {
@@ -433,7 +443,7 @@
         (function decideEntry() {
             const params = new URLSearchParams(window.location.search);
             const forceLocal = params.get('local') === '1';
-            const returnUrl = params.get('returnUrl') || '';
+            const returnUrl = safeReturnUrl(params.get('returnUrl')) || '';
 
             function startLocalLogin() {
                 loadBranding();

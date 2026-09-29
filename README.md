@@ -133,7 +133,7 @@ PORT=3001
 API_KEYS=key1,key2,key3
 
 # Or use legacy variable name
-KNOWLEDGEREPOSITORY_API_KEYS=key1,key2,key3
+NOOBLYJS_API_KEYS=key1,key2,key3
 
 # Session secret for authentication
 SESSION_SECRET=your-secret-key

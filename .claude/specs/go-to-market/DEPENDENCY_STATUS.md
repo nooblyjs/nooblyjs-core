@@ -1,5 +1,7 @@
 # Dependency Vulnerability Status (P2-8)
 
+> **Update 2026-09-29:** `npm audit` reports **0 vulnerabilities** in both the production and full trees. The `qs` (via `stompit`) and `uuid` (via `@google-cloud/storage`) advisories below no longer apply. `multer` was upgraded to 2.4.0 (DoS on aborted uploads), `smol-toml` (dev-only, via `knip`) was fixed with `npm audit fix`, and `nodemon`, `rimraf`, `supertest` and `ioredis-mock` moved to `devDependencies`. CI now fails on any high/critical production advisory. The abandoned-package notes (`ftp`, `stompit`, `pdf-parse`) still apply.
+
 **Date:** 2026-05-29
 **Branch:** `development`
 

@@ -11,6 +11,7 @@
 'use strict';
 
 const { toClientResponse } = require('../../shared/utils/httpErrors');
+const { validate } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers fetching routes with the Express application.
@@ -51,6 +52,12 @@ module.exports = (options, eventEmitter, fetching) => {
      */
     app.post(
       '/services/fetching/api/fetch',
+      validate({
+        body: {
+          url: { type: 'string', required: true, maxLength: 2048 },
+          options: { type: 'object' }
+        }
+      }),
       async (req, res) => {
         try {
           const { url, options = {} } = req.body;

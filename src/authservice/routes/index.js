@@ -12,6 +12,7 @@
 
 const rateLimit = require('express-rate-limit');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { capLimit, validate } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers authentication routes with the Express application.
@@ -114,6 +115,15 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     app.post(
       '/services/authservice/api/login',
       loginRateLimiter,
+      // P2-7: bound credential sizes; returnUrl must be a same-site path
+      // (blocks open redirects such as https://evil.example or //evil.example).
+      validate({
+        body: {
+          email: { type: 'string', required: true, maxLength: 254 },
+          password: { type: 'string', required: true, maxLength: 1024 },
+          returnUrl: { type: 'string', maxLength: 2048, pattern: /^\/(?![\/\\])/ }
+        }
+      }),
       asyncHandler(async (req, res) => {
         const { email, password, returnUrl } = req.body;
 
@@ -1332,8 +1342,8 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         '/services/authservice/api/analytics',
         requireAuthenticatedSession,
         asyncHandler(async (req, res) => {
-          const limit = parseInt(req.query.limit, 10);
-          const recentLimit = parseInt(req.query.recentLimit, 10);
+          const limit = capLimit(parseInt(req.query.limit, 10));
+          const recentLimit = capLimit(parseInt(req.query.recentLimit, 10));
           res.status(200).json({
             overview: analytics.getOverview(),
             topUsers: analytics.getTopUsers(Number.isNaN(limit) ? 10 : limit),
@@ -1350,9 +1360,18 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         path: req.path
       });
 
-      res.status(error.status || 400).json({
+      // P1-2: provider validation errors ("User not found", "Invalid
+      // credentials") are client-safe 4xx. System errors (fs/network: they
+      // carry `syscall` or an E* `code`) and explicit 5xx are server faults
+      // whose messages may contain paths, so they get a generic 500.
+      const explicitStatus = Number(error.statusCode || error.status) || 0;
+      const isSystemError = Boolean(error.syscall || /^E[A-Z]+$/.test(String(error.code || '')));
+      const status = explicitStatus >= 400
+        ? explicitStatus
+        : (isSystemError ? 500 : 400);
+      res.status(status).json({
         success: false,
-        error: error.message || 'Authentication error'
+        error: status >= 500 ? 'Internal Server Error' : (error.message || 'Authentication error')
       });
     });
 

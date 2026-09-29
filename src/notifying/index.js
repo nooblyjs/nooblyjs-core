@@ -83,6 +83,9 @@ function createNotificationService(type, options, eventEmitter) {
   service.getSettings = providerGetSettings;
   service.saveSettings = providerSaveSettings;
 
+  // Expose analytics so the registry can remove its listeners on shutdown/reset
+  // (P2-6); the notifying routes also read it per instance.
+  service.analytics = analytics;
   return service;
 }
 

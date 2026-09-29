@@ -18,6 +18,7 @@ const express = require('express');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSafeError } = require('../../shared/utils/safeError');
 const { toClientResponse } = require('../../shared/utils/httpErrors');
+const { validate } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers caching routes with the Express application.
@@ -70,6 +71,7 @@ module.exports = (options, eventEmitter, cache) => {
      */
     app.post(
       '/services/caching/api/put/:key',
+      validate({ params: { key: { type: 'string', required: true, maxLength: 512 } } }),
       authMiddleware || ((req, res, next) => next()),
       createPutHandler(cache)
     );

@@ -123,6 +123,8 @@ function createAuth(type, options, eventEmitter) {
     return passportConfigurator(resolvedFactory);
   };
 
+  // Expose analytics so the registry can remove its listeners on shutdown/reset (P2-6).
+  auth.analytics = analytics;
   return auth;
 }
 

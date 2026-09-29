@@ -14,6 +14,7 @@ const path = require('node:path');
 const express = require('express');
 const registerManagerRoutes = require('./manager');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { parseLimit, parseOffset } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers workflow routes with the Express application.
@@ -389,8 +390,8 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
 
         const options = {
           status: status || undefined,
-          limit: parseInt(limit, 10) || 50,
-          offset: parseInt(offset, 10) || 0
+          limit: parseLimit(limit, { defaultValue: 50 }),
+          offset: parseOffset(offset)
         };
 
         const result = workflow.executionContainer.getExecutions(workflowName, options);

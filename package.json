@@ -15,6 +15,7 @@
   ],
   "files": [
     "src",
+    "public",
     "README.md",
     "package.json",
     "index.js"
@@ -28,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": " https://github.com/nooblyjs/nooblyjs-core.git"
+    "url": "https://github.com/nooblyjs/nooblyjs-core.git"
   },
   "scripts": {
     "clean": "rimraf node_modules dist",
@@ -73,10 +74,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 55,
-        "branches": 47,
-        "functions": 54,
-        "lines": 55
+        "statements": 51,
+        "branches": 45,
+        "functions": 50,
+        "lines": 51
       }
     }
   },

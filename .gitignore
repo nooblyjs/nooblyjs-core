@@ -19,6 +19,7 @@ dist/
 #env
 .env
 *.env.*
+!.env.example
 
 #tls certificates (dev self-signed; never commit private keys)
 certs/

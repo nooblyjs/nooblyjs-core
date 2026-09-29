@@ -133,6 +133,8 @@ function createAIService(type, options, eventEmitter) {
   Routes(options, eventEmitter, aiservice, analytics);
   Views(options, eventEmitter, aiservice);
 
+  // Expose analytics so the registry can remove its listeners on shutdown/reset (P2-6).
+  aiservice.analytics = analytics;
   return aiservice;
 }
 

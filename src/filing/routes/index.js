@@ -18,6 +18,7 @@ const express = require('express');
 const { createUploadMiddleware, limitStream, resolveUploadLimits } = require('../modules/uploadLimits');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
+const { parseLimit, parseOffset } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers file management routes with the Express application.
@@ -453,7 +454,7 @@ module.exports = (options, eventEmitter, filing) => {
     app.get('/services/filing/api/:instanceName/analytics', (req, res) => {
       const instanceName = req.params.instanceName;
       const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);
-      const limit = parseInt(req.query.limit) || 250;
+      const limit = parseLimit(req.query.limit, { defaultValue: 250 });
 
       try {
         const analyticsData = analytics.getAnalytics(limit);
@@ -1154,7 +1155,7 @@ module.exports = (options, eventEmitter, filing) => {
      */
     app.get('/services/filing/api/analytics', (req, res) => {
       try {
-        const limit = parseInt(req.query.limit) || 250;
+        const limit = parseLimit(req.query.limit, { defaultValue: 250 });
         const analyticsData = analytics.getAnalytics(limit);
         const stats = analytics.getStats();
 
@@ -1463,7 +1464,7 @@ module.exports = (options, eventEmitter, filing) => {
     app.get('/services/filing/api/pdf-preview/:key', async (req, res) => {
       try {
         const key = req.params.key;
-        const page = parseInt(req.query.page) || 1;
+        const page = parseOffset(req.query.page, { defaultValue: 1, min: 1, max: 100000 });
 
         if (!key) {
           return res.status(400).json({ error: 'File key is required' });

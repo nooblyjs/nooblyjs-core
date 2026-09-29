@@ -1,7 +1,7 @@
 /**
  * @fileoverview UI smoke tests: the services dashboard and every service
  * dashboard page load, render their heading, and raise no uncaught
- * JavaScript errors.
+ * JavaScript errors or Content-Security-Policy violations.
  *
  * Run with: npm run test:ui
  *
@@ -30,6 +30,12 @@ const SERVICE_PATHS = [
 function trackPageErrors(page) {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  // Content-Security-Policy violations (N-7) surface as console errors.
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && /Content Security Policy/i.test(msg.text())) {
+      errors.push(`CSP: ${msg.text()}`);
+    }
+  });
   return errors;
 }
 
@@ -38,6 +44,7 @@ test('services dashboard loads', async ({ page }) => {
   const response = await page.goto('/services/');
 
   expect(response.status()).toBe(200);
+  expect(response.headers()['content-security-policy']).toContain("object-src 'none'");
   await expect(page.locator('body')).toContainText(/NooblyJS/i);
   expect(errors).toEqual([]);
 });

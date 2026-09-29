@@ -90,6 +90,8 @@ function createMeasuringService(type, options, eventEmitter) {
   service.getSettings = providerGetSettings;
   service.saveSettings = providerSaveSettings;
 
+  // Expose analytics so the registry can remove its listeners on shutdown/reset (P2-6).
+  service.analytics = analytics;
   return service;
 }
 

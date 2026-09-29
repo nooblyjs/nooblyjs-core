@@ -569,7 +569,7 @@ npm run docker:publish   # Build and push Docker image
 footer
 
   icon: /images/nooblyjs-logo.png
-  title: NooblyJS Knowledge Platform
+  title: NooblyJS Platform
   subtitle: © 2026 NooblyJS. All rights reserved.
   links: [GitHub](https://github.com/nooblyjs/nooblyjs-core) [Documentation](/) [Issues](https://github.com/nooblyjs/nooblyjs-core/issues)
 

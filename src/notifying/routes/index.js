@@ -15,6 +15,7 @@
 
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { capLimit } = require('../../shared/utils/validation');
 
 /**
  * Configures and registers notification routes with the Express application.
@@ -375,7 +376,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
 
       app.get('/services/notifying/api/analytics/top-topics', (req, res) => {
         try {
-          const limit = parseInt(req.query.limit, 10);
+          const limit = capLimit(parseInt(req.query.limit, 10));
           const topics = analytics.getTopTopics(Number.isNaN(limit) ? undefined : limit);
           res.status(200).json({
             topics,
@@ -389,7 +390,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const instanceName = req.params.instanceName;
           const analyticsInstance = getAnalyticsInstance(instanceName);
-          const limit = parseInt(req.query.limit, 10);
+          const limit = capLimit(parseInt(req.query.limit, 10));
           const topics = analyticsInstance.getTopTopics(Number.isNaN(limit) ? undefined : limit);
           res.status(200).json({
             topics,
@@ -401,7 +402,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
 
       app.get('/services/notifying/api/analytics/topics', (req, res) => {
         try {
-          const limit = parseInt(req.query.limit, 10);
+          const limit = capLimit(parseInt(req.query.limit, 10));
           const topics = analytics.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
           res.status(200).json({
             topics,
@@ -415,7 +416,7 @@ module.exports = (options, eventEmitter, notifier, analytics) => {
         try {
           const instanceName = req.params.instanceName;
           const analyticsInstance = getAnalyticsInstance(instanceName);
-          const limit = parseInt(req.query.limit, 10);
+          const limit = capLimit(parseInt(req.query.limit, 10));
           const topics = analyticsInstance.getTopicDetails(Number.isNaN(limit) ? undefined : limit);
           res.status(200).json({
             topics,
