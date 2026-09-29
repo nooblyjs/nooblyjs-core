@@ -5,6 +5,8 @@
 **Branch:** `development`
 **Created:** 2026-05-29
 
+> **Re-tested 2026-09-29:** see [PRODUCTION_READINESS_TEST_2026-09-29.md](./PRODUCTION_READINESS_TEST_2026-09-29.md). P0-3 and P2-2 are only partly done, and there are 6 new blockers (N-1…N-6).
+
 > Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
 > Each task lists **Files**, **What to do**, and **Acceptance criteria (AC)**.
 
@@ -16,7 +18,7 @@
 |----|-------|----------|--------|--------|
 | P0-1 | Authenticate the Filing API | Critical | M | [x] |
 | P0-2 | Strong password hashing (bcrypt/argon2) | Critical | S | [x] |
-| P0-3 | Cryptographically secure tokens/IDs/keys | Critical | S | [x] |
+| P0-3 | Cryptographically secure tokens/IDs/keys | Critical | S | [~] |
 | P0-4 | SSRF protection in fetching service | Critical | M | [x] |
 | P0-5 | Process crash handlers + async route wrapper | Critical | M | [x] |
 | P0-6 | Fix failing tests + CI test gate | Critical | L | [ ] |
@@ -27,7 +29,7 @@
 | P1-5 | API key scoping + timing-safe compare + header-only | High | S | [x] |
 | P1-6 | Correct Node engine declaration | High | XS | [x] |
 | P2-1 | Add helmet + CORS | Medium | S | [x] |
-| P2-2 | Body + upload size/type limits | Medium | S | [x] |
+| P2-2 | Body + upload size/type limits | Medium | S | [~] |
 | P2-3 | Stop logging secrets | Medium | XS | [x] |
 | P2-4 | Remove `eval()` in notifying UI | Medium | S | [x] |
 | P2-5 | Complete graceful shutdown | Medium | M | [x] |

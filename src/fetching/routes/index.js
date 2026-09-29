@@ -10,6 +10,8 @@
 
 'use strict';
 
+const { toClientResponse } = require('../../shared/utils/httpErrors');
+
 /**
  * Configures and registers fetching routes with the Express application.
  * Sets up endpoints for fetch operations and monitoring.
@@ -71,9 +73,10 @@ module.exports = (options, eventEmitter, fetching) => {
           });
         } catch (error) {
           eventEmitter.emit('api-fetching-error', error.message);
-          res.status(500).json({
+          const { status, message } = toClientResponse(error);
+          res.status(status).json({
             success: false,
-            error: error.message
+            error: message
           });
         }
       }
@@ -106,9 +109,10 @@ module.exports = (options, eventEmitter, fetching) => {
           });
         } catch (error) {
           eventEmitter.emit('api-fetching-error', error.message);
-          res.status(500).json({
+          const { status, message } = toClientResponse(error);
+          res.status(status).json({
             success: false,
-            error: error.message
+            error: message
           });
         }
       }
@@ -160,9 +164,10 @@ module.exports = (options, eventEmitter, fetching) => {
           topErrors: topErrors
         });
       } catch (error) {
-        res.status(500).json({
+        const { status, message } = toClientResponse(error);
+        res.status(status).json({
           success: false,
-          error: error.message
+          error: message
         });
       }
     });
@@ -194,9 +199,10 @@ module.exports = (options, eventEmitter, fetching) => {
         });
       } catch (err) {
         eventEmitter.emit('api-fetching-list-error', err.message);
-        res.status(500).json({
+        const { status, message } = toClientResponse(err);
+        res.status(status).json({
           success: false,
-          error: err.message
+          error: message
         });
       }
     });
@@ -240,9 +246,10 @@ module.exports = (options, eventEmitter, fetching) => {
             message: 'Settings saved successfully'
           });
         } catch (err) {
-          res.status(500).json({
+          const { status, message } = toClientResponse(err);
+          res.status(status).json({
             success: false,
-            error: err.message
+            error: message
           });
         }
       } else {
@@ -276,9 +283,10 @@ module.exports = (options, eventEmitter, fetching) => {
           });
         }
       } catch (err) {
-        res.status(500).json({
+        const { status, message } = toClientResponse(err);
+        res.status(status).json({
           success: false,
-          error: err.message
+          error: message
         });
       }
     });

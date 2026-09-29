@@ -17,6 +17,7 @@ const path = require('node:path');
 const express = require('express');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { toClientResponse } = require('../../shared/utils/httpErrors');
 
 /**
  * Configures and registers caching routes with the Express application.
@@ -255,9 +256,10 @@ module.exports = (options, eventEmitter, cache) => {
         });
       } catch (error) {
         eventEmitter.emit('api-cache-instances-error', error.message);
-        res.status(500).json({
+        const { status, message } = toClientResponse(error);
+        res.status(status).json({
           success: false,
-          error: error.message
+          error: message
         });
       }
     });
@@ -276,9 +278,10 @@ module.exports = (options, eventEmitter, cache) => {
           });
         } catch (err) {
           eventEmitter.emit('api-cache-list-error', err.message);
-          res.status(500).json({
+          const { status, message } = toClientResponse(err);
+          res.status(status).json({
             success: false,
-            error: err.message,
+            error: message
           });
         }
       };

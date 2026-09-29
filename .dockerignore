@@ -1,0 +1,22 @@
+# Keep the build context small and free of secrets/runtime data.
+.git
+.gitignore
+node_modules
+.env
+.env.*
+.application
+.temp
+.test
+.logs
+.claude
+certs
+coverage
+tests
+playwright.config.js
+app-noauth.js
+activities
+scripts
+Dockerfile
+.dockerignore
+*.log
+*.md

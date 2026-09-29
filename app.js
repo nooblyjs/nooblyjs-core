@@ -29,6 +29,7 @@ const config = require('dotenv').config({quiet: true });
 // See src/shared/utils/createServer.js for the supported HTTPS_* variables.
 // Generate development certificates with: npm run certs
 const { createServer, createHttpRedirectServer } = require('./src/shared/utils/createServer');
+const { createSessionStore } = require('./src/shared/utils/sessionStore');
 
 /** Maximum accepted request body size (P2-2). Override via BODY_LIMIT. */
 const BODY_LIMIT = process.env.BODY_LIMIT || '1mb';
@@ -47,6 +48,15 @@ const parseCommaSeparated = (value = '') =>
 
 // Create the Express application
 const app = express();
+
+// N-3: Behind a TLS-terminating proxy/load balancer, Express must trust
+// X-Forwarded-Proto so secure session cookies are issued. Only enable this
+// when a proxy really sits in front (it also makes req.ip use X-Forwarded-For).
+// TRUST_PROXY accepts "true", a hop count ("1") or a subnet list.
+if (process.env.TRUST_PROXY) {
+  const trustProxy = process.env.TRUST_PROXY;
+  app.set('trust proxy', trustProxy === 'true' ? true : (/^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy));
+}
 
 // Security headers (P2-1). CSP is left disabled here because the service
 // dashboards use inline styles/scripts; enable a tuned CSP per deployment.
@@ -81,7 +91,21 @@ if (!sessionSecret && !isProduction) {
   console.warn('   For production, set SESSION_SECRET to a secure random value.');
 }
 
+if (isProduction && !process.env.TRUST_PROXY && process.env.HTTPS_ENABLED !== 'true') {
+  console.warn('⚠️  WARNING: Session cookies are marked Secure in production but this server is plain HTTP.');
+  console.warn('   Behind an HTTPS load balancer set TRUST_PROXY=1, or enable HTTPS_ENABLED; otherwise logins will not persist.');
+}
+
+// N-4: Shared Redis session store when SESSION_REDIS_URL/REDIS_URL is set,
+// otherwise a single-process memory store that evicts expired sessions.
+const sessionStore = createSessionStore(session);
+if (isProduction && sessionStore.type === 'memory') {
+  console.warn('⚠️  WARNING: Using the in-process session store. Sessions are lost on restart and not shared');
+  console.warn('   between replicas. Set SESSION_REDIS_URL (or REDIS_URL) for multi-instance deployments.');
+}
+
 app.use(session({
+  store: sessionStore.store,
   secret: sessionSecret || 'dev-only-insecure-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
@@ -167,7 +191,12 @@ const log = serviceRegistry.logger('file');
 app.set('logger', log); // Make logger available to app
 const cache = serviceRegistry.cache('inmemory');
 const dataService = serviceRegistry.dataService('file');
-const filing = serviceRegistry.filing('local');
+// N-15: Keep uploaded files in a dedicated directory. The local provider's
+// default base directory is the process working directory, which would expose
+// .env, .application/data (users, sessions) and the source tree via the API.
+const filingBaseDir = process.env.FILING_BASE_DIR || path.join(__dirname, '.application', 'files');
+require('node:fs').mkdirSync(filingBaseDir, { recursive: true });
+const filing = serviceRegistry.filing('local', { baseDir: filingBaseDir });
 const queue = serviceRegistry.queue('memory');
 const scheduling = serviceRegistry.scheduling('memory');
 const searching = serviceRegistry.searching('memory');
@@ -313,6 +342,7 @@ const gracefulShutdown = async (signal) => {
       log.info('HTTP→HTTPS redirect server closed.');
     }
     await serviceRegistry.shutdown();
+    await sessionStore.close();
     log.info('All services shut down successfully.');
     clearTimeout(forceTimer);
     process.exit(0);

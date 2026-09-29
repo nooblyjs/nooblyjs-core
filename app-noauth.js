@@ -81,7 +81,10 @@ const cacheSessions = serviceRegistry.getService('caching', 'memory', { instance
 const cacheMetrics = serviceRegistry.getService('caching', 'memory', { instanceName: 'metrics' });
 const fetching = serviceRegistry.fetching('node');
 const dataservice = serviceRegistry.dataService('file');
-const filing = serviceRegistry.filing('local');
+// Keep uploads out of the app root (N-15); see app.js.
+const filingBaseDir = process.env.FILING_BASE_DIR || path.join(__dirname, '.application', 'files');
+require('node:fs').mkdirSync(filingBaseDir, { recursive: true });
+const filing = serviceRegistry.filing('local', { baseDir: filingBaseDir });
 const queue = serviceRegistry.queue('memory');
 const scheduling = serviceRegistry.scheduling('memory');
 const searching = serviceRegistry.searching('memory');

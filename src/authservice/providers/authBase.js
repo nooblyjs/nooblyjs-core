@@ -1361,20 +1361,24 @@ class AuthBase {
     let password = '';
 
     // Ensure at least one of each required type
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += digits[Math.floor(Math.random() * digits.length)];
-    password += special[Math.floor(Math.random() * special.length)];
+    // crypto.randomInt is a CSPRNG with no modulo bias (P0-3).
+    const pick = (chars) => chars[crypto.randomInt(chars.length)];
+
+    // Ensure at least one of each required type
+    password += pick(uppercase);
+    password += pick(lowercase);
+    password += pick(digits);
+    password += pick(special);
 
     // Fill remaining 12 characters randomly
     for (let i = 0; i < 12; i++) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
+      password += pick(allChars);
     }
 
-    // Shuffle the password
+    // Shuffle the password (Fisher-Yates with a CSPRNG)
     const passwordArray = password.split('');
     for (let i = passwordArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = crypto.randomInt(i + 1);
       [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
     }
 

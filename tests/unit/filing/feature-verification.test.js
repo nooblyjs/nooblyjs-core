@@ -21,11 +21,12 @@
 const createFilingService = require('../../../src/filing');
 const EventEmitter = require('events');
 const path = require('node:path');
+const { testDataDir } = require('../../helpers/testData');
 
 describe('Filing Service - Feature Verification', () => {
   let filing;
   let mockEventEmitter;
-  const testDir = path.join(__dirname, '../../../.test-files');
+  const testDir = testDataDir('filing-feature-verification');
 
   beforeEach(() => {
     mockEventEmitter = new EventEmitter();

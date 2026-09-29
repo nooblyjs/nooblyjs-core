@@ -18,6 +18,7 @@
  */
 
 const dns = require('node:dns').promises;
+const { ClientError } = require('../../shared/utils/httpErrors');
 const net = require('node:net');
 
 /**
@@ -102,18 +103,18 @@ async function assertUrlAllowed(rawUrl, options = {}) {
   } = options;
 
   if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
-    throw new Error('Blocked request: a URL string is required');
+    throw new ClientError(400, 'Blocked request: a URL string is required');
   }
 
   let parsed;
   try {
     parsed = new URL(rawUrl);
   } catch (err) {
-    throw new Error('Blocked request: malformed URL');
+    throw new ClientError(400, 'Blocked request: malformed URL');
   }
 
   if (!allowedProtocols.includes(parsed.protocol)) {
-    throw new Error(`Blocked request: protocol "${parsed.protocol}" is not allowed`);
+    throw new ClientError(400, `Blocked request: protocol "${parsed.protocol}" is not allowed`);
   }
 
   const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
@@ -121,7 +122,7 @@ async function assertUrlAllowed(rawUrl, options = {}) {
   if (Array.isArray(allowedHosts) && allowedHosts.length > 0) {
     const allowed = allowedHosts.map((h) => h.toLowerCase());
     if (!allowed.includes(hostname)) {
-      throw new Error(`Blocked request: host "${hostname}" is not on the allow-list`);
+      throw new ClientError(400, `Blocked request: host "${hostname}" is not on the allow-list`);
     }
     return parsed; // Explicit allow-list overrides IP-range checks.
   }
@@ -140,17 +141,17 @@ async function assertUrlAllowed(rawUrl, options = {}) {
       const records = await dns.lookup(hostname, { all: true });
       addresses = records.map((r) => r.address);
     } catch (err) {
-      throw new Error(`Blocked request: could not resolve host "${hostname}"`);
+      throw new ClientError(400, `Blocked request: could not resolve host "${hostname}"`);
     }
   }
 
   if (addresses.length === 0) {
-    throw new Error(`Blocked request: host "${hostname}" did not resolve`);
+    throw new ClientError(400, `Blocked request: host "${hostname}" did not resolve`);
   }
 
   for (const address of addresses) {
     if (isPrivateAddress(address)) {
-      throw new Error(
+      throw new ClientError(400,
         `Blocked request: host "${hostname}" resolves to a private/reserved address (${address})`
       );
     }

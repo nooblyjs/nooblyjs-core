@@ -15,8 +15,7 @@ const { sendSafeError } = require('../../shared/utils/safeError');
 
 const path = require('node:path');
 const express = require('express');
-const multer = require('multer');
-const upload = multer();
+const { createUploadMiddleware, limitStream, resolveUploadLimits } = require('../modules/uploadLimits');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 
@@ -61,7 +60,7 @@ module.exports = (options, eventEmitter, filing) => {
      */
     app.post(
       '/services/filing/api/upload/*',
-      upload.single('file'),
+      createUploadMiddleware(() => filing, { eventEmitter }),
       async (req, res) => {
         const key = req.params[0];
         let fileData;
@@ -310,7 +309,9 @@ module.exports = (options, eventEmitter, filing) => {
       const key = req.params[0];
 
       try {
-        await filing.upload(key, req);
+        // Enforce maxFileSize while streaming (P2-2).
+        const { maxFileSize } = resolveUploadLimits(filing);
+        await filing.upload(key, limitStream(req, maxFileSize));
         analytics.trackWrite(key);
         res
           .status(200)
@@ -334,7 +335,10 @@ module.exports = (options, eventEmitter, filing) => {
      */
     app.post(
       '/services/filing/api/:instanceName/upload/*',
-      upload.single('file'),
+      createUploadMiddleware(
+        (req) => getServiceInstance('filing', req.params.instanceName, filing, options, providerType),
+        { eventEmitter }
+      ),
       async (req, res) => {
         const instanceName = req.params.instanceName;
         const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);

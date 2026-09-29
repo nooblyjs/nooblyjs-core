@@ -1147,7 +1147,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
           eventEmitter.emit('auth:sso-error', { email: decodedEmail, error: error.message });
           return res.status(401).json({
             success: false,
-            error: error.message
+            error: 'SSO authentication failed'
           });
         }
       })

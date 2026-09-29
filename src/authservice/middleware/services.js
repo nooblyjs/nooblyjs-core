@@ -361,10 +361,21 @@ function redirectToInvalid(req, res) {
 
 /**
  * Redirects user to login page with return URL.
+ * API/non-HTML requests get a 401 JSON response instead of an HTML redirect
+ * (N-8), mirroring redirectToInvalid.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 function redirectToLogin(req, res) {
+  const accept = req.headers.accept || '';
+  if (!accept.includes('text/html')) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+      message: 'Log in or supply a valid API key to access the services API'
+    });
+  }
+
   const returnUrl = encodeURIComponent(req.originalUrl);
   res.redirect(`/services/authservice/views/login.html?returnUrl=${returnUrl}`);
 }

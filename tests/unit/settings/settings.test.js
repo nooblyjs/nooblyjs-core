@@ -12,11 +12,11 @@
 'use strict';
 
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const EventEmitter = require('events');
 
 const createSettings = require('../../../src/settings');
+const { testDataDir } = require('../../helpers/testData');
 
 describe('Settings', () => {
   /** @type {string} Temporary directory holding the encrypted file */
@@ -41,7 +41,7 @@ describe('Settings', () => {
   }, mockEventEmitter);
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nooblyjs-settings-'));
+    tempDir = fs.mkdtempSync(path.join(testDataDir('settings'), 'nooblyjs-settings-'));
     filepath = path.join(tempDir, 'settings.enc.json');
     mockEventEmitter = new EventEmitter();
     jest.spyOn(mockEventEmitter, 'emit');

@@ -18,7 +18,7 @@ NooblyJS Core is a modular Node.js backend framework: a set of services (logging
 - `npm run certs` / `npm run certs:force` — generate self-signed TLS certs for local HTTPS
 - `npm run build` — `scripts/build.js`
 
-There is no linter. Jest runs with `forceExit` and `detectOpenHandles`; tests must clean up timers/handles in `afterEach`/`afterAll`.
+There is no linter. Jest runs with `forceExit` and `detectOpenHandles`; tests must clean up timers/handles in `afterEach`/`afterAll`. Tests that write to disk get their directory from `tests/helpers/testData.js` (`testDataDir()` → `.temp/tests/data/`); the file logger defaults to `.temp/logs/`. Nothing a test run creates should appear outside `.temp/` (see `.claude/rules/output-locations.md`).
 
 Skipped by default: MongoDB/DocumentDB suites (need `RUN_MONGODB_TESTS=1` / `RUN_DOCUMENTDB_TESTS=1` and a live DB), TensorFlow (needs optional `@tensorflow/tfjs-node`), SimpleDB (needs optional `aws-sdk` v2). Files named `*.disabled.js` / `*.disable.js` (Redis, Memcached, S3, filing, API-key integration) are not picked up by Jest.
 

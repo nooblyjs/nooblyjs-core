@@ -176,7 +176,8 @@ class AuthGoogle extends AuthBase {
       user = await this.createUser({
         email,
         fullName,
-        password: Math.random().toString(36), // Random password for OAuth users
+        // OAuth users never sign in with a password; store an unguessable one (P0-3).
+        password: require('node:crypto').randomBytes(32).toString('hex'),
         role: 'user'
       });
     }

@@ -40,6 +40,7 @@ const fs = require('node:fs').promises;
 const path = require('node:path');
 const EventEmitter = require('events');
 const createDataServiceService = require('../../../src/dataservice');
+const { testDataDir } = require('../../helpers/testData');
 
 describe('DataService', () => {
   // Test InMemoryDataServiceProvider
@@ -164,7 +165,7 @@ describe('DataService', () => {
 
   // Test FileDataRingProvider
   describe('FileDataRingProvider', () => {
-    const testBaseDir = path.join(__dirname, 'test_dataservice_data');
+    const testBaseDir = path.join(testDataDir('dataservice'), 'test_dataservice_data');
     let dataService;
     let mockEventEmitter;
 

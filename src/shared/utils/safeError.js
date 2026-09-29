@@ -27,6 +27,18 @@
 
 /** @const {string} Default message returned to clients on unexpected errors. */
 const DEFAULT_CLIENT_MESSAGE = 'Internal Server Error';
+const { isClientError } = require('./httpErrors');
+
+/**
+ * Returns true for "resource does not exist" errors from the filesystem or
+ * object stores (Node ENOENT, S3 NoSuchKey).
+ *
+ * @param {*} err - Any thrown value
+ * @return {boolean} Whether the error means "not found"
+ */
+function isNotFoundError(err) {
+  return Boolean(err && (err.code === 'ENOENT' || err.code === 'NoSuchKey' || err.name === 'NoSuchKey'));
+}
 
 /**
  * Logs an error server-side and sends a sanitized response to the client.
@@ -61,11 +73,19 @@ function sendSafeError(res, err, opts = {}) {
     format = 'json'
   } = opts;
 
-  const resolvedStatus = Number.isInteger(status) && status >= 400
-    ? status
-    : (Number.isInteger(err && err.statusCode) && err.statusCode >= 400
-      ? err.statusCode
-      : 500);
+  // A ClientError (4xx, expose=true) always wins: its status and message are
+  // safe to return, even when the caller passed a default status such as 500.
+  const clientError = isClientError(err);
+  // A missing file/object is the caller's problem (404), not a server fault.
+  const notFound = !clientError && isNotFoundError(err);
+  const resolvedStatus = clientError
+    ? err.statusCode
+    : notFound ? 404 : (Number.isInteger(status) && status >= 400
+      ? status
+      : (Number.isInteger(err && err.statusCode) && err.statusCode >= 400
+        ? err.statusCode
+        : 500));
+  const resolvedMessage = clientError ? err.message : (notFound ? 'Not found' : clientMessage);
 
   // Server-side diagnostics: retain the real error details out of band.
   const detail = {
@@ -90,9 +110,9 @@ function sendSafeError(res, err, opts = {}) {
   }
 
   if (format === 'send') {
-    return res.status(resolvedStatus).send(clientMessage);
+    return res.status(resolvedStatus).send(resolvedMessage);
   }
-  return res.status(resolvedStatus).json({ error: clientMessage });
+  return res.status(resolvedStatus).json({ error: resolvedMessage });
 }
 
 module.exports = { sendSafeError, DEFAULT_CLIENT_MESSAGE };

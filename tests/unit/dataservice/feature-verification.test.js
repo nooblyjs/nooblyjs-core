@@ -12,6 +12,7 @@
 const EventEmitter = require('events');
 const createDataService = require('../../../src/dataservice');
 const analytics = require('../../../src/dataservice/modules/analytics');
+const { testDataDir } = require('../../helpers/testData');
 
 describe('DataService Feature Verification', () => {
   let service;
@@ -43,7 +44,7 @@ describe('DataService Feature Verification', () => {
 
     it('should create file provider instance', () => {
       service = createDataService('file', {
-        dataDir: './.test-data'
+        dataDir: testDataDir('dataservice/feature-verification')
       }, eventEmitter);
       expect(service).toBeDefined();
       expect(service.provider).toBeDefined();
@@ -728,7 +729,7 @@ describe('DataService Feature Verification', () => {
 
     it('should create file provider', () => {
       const fileService = createDataService('file', {
-        dataDir: './.test-data'
+        dataDir: testDataDir('dataservice/feature-verification')
       }, new EventEmitter());
       expect(fileService).toBeDefined();
       expect(fileService.provider).toBeDefined();
@@ -739,7 +740,7 @@ describe('DataService Feature Verification', () => {
 
       for (const provider of providers) {
         const svc = createDataService(provider, {
-          dataDir: './.test-data'
+          dataDir: testDataDir('dataservice/feature-verification')
         }, new EventEmitter());
 
         // All should have these methods
@@ -910,7 +911,7 @@ describe('DataService Feature Verification', () => {
 
     it('should pass options to provider', async () => {
       service = createDataService('file', {
-        dataDir: './.custom-data'
+        dataDir: testDataDir('dataservice/custom-data')
       }, new EventEmitter());
 
       const settings = await service.getSettings();

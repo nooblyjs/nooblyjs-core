@@ -7,11 +7,12 @@ const AuthSecureEmail = require('../../../src/authservice/providers/authSecureEm
 const EventEmitter = require('events');
 const fs = require('node:fs').promises;
 const path = require('node:path');
+const { testDataDir: getTestDataDir } = require('../../helpers/testData');
 
 describe('AuthSecureEmail Provider', () => {
   let auth;
   let mockEventEmitter;
-  const testDataDir = path.join(__dirname, '../../..', '.test-secure-email-data');
+  const testDataDir = getTestDataDir('auth-secure-email');
 
   beforeEach(() => {
     mockEventEmitter = new EventEmitter();

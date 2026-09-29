@@ -17,6 +17,7 @@ const EventEmitter = require('events');
 const fs = require('node:fs').promises;
 const path = require('node:path');
 const os = require('os');
+const { testDataDir } = require('../../helpers/testData');
 
 /**
  * Test suite for file-based cache operations.
@@ -41,7 +42,7 @@ describe('CacheFile', () => {
     jest.spyOn(mockEventEmitter, 'emit');
     
     // Create a unique temporary directory for each test
-    tempCacheDir = path.join(os.tmpdir(), `cache-test-${Date.now()}-${Math.random()}`);
+    tempCacheDir = path.join(testDataDir('caching'), `cache-test-${Date.now()}-${Math.random()}`);
     
     cache = createCache('file', { cacheDir: tempCacheDir }, mockEventEmitter);
     

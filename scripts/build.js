@@ -57,7 +57,6 @@ const EXCLUDE_DIRS = new Set([
   '.cache',
   '.data',
   '.test',
-  '.test-files',
   'coverage',
   '__tests__',
 ]);

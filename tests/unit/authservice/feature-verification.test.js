@@ -11,6 +11,7 @@ process.env.BCRYPT_COST = process.env.BCRYPT_COST || '6';
 
 const createAuth = require('../../../src/authservice');
 const EventEmitter = require('events');
+const { testDataDir } = require('../../helpers/testData');
 
 // A password that satisfies the strength policy (>=10 chars, upper, lower, digit, special).
 const STRONG_PASSWORD = 'Password123!';
@@ -63,7 +64,7 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should create file provider instance', () => {
       const auth = createAuth('file', {
-        dataDir: './.test/auth'
+        dataDir: testDataDir('auth')
       }, eventEmitter);
       expect(auth).toBeDefined();
     });
@@ -738,7 +739,7 @@ describe('Auth Service - Feature Verification', () => {
 
     it('should accept dataservice dependency', () => {
       const auth = createAuth('file', {
-        dataDir: './.test/auth',
+        dataDir: testDataDir('auth'),
         dependencies: {
           dataservice: {}
         }
@@ -871,7 +872,7 @@ describe('Auth Service - Feature Verification', () => {
           memory: { createDefaultAdmin: false },
           passport: { createDefaultAdmin: false },
           google: { clientID: 'test', clientSecret: 'test', createDefaultAdmin: false },
-          file: { dataDir: './.test', createDefaultAdmin: false }
+          file: { dataDir: testDataDir('auth-default'), createDefaultAdmin: false }
         };
 
         const auth = createAuth(provider, options[provider], eventEmitter);

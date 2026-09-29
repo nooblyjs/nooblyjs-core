@@ -116,18 +116,18 @@ describe('loggingFile', () => {
   /**
    * Test default date-based filename generation and directory creation.
    */
-  it('should use default date-based filename and create .logs directory', async () => {
+  it('should use default date-based filename and create .temp/logs directory', async () => {
     const loggerDefault = createLogger('file', {}, new EventEmitter());
     const message = 'Default test message';
     await loggerDefault.log(message);
 
-    // Should attempt to create .logs directory
-    expect(fs.mkdirSync).toHaveBeenCalledWith('.logs', { recursive: true });
+    // Should attempt to create .temp/logs directory
+    expect(fs.mkdirSync).toHaveBeenCalledWith('.temp/logs', { recursive: true });
 
     // Should use date-based filename pattern
     const calls = fs.promises.appendFile.mock.calls;
     const lastCall = calls[calls.length - 1];
-    expect(lastCall[0]).toMatch(/^\.logs[\\/]app\.\d{4}-\d{2}-\d{2}\.log$/);
+    expect(lastCall[0]).toMatch(/^\.temp\/logs[\\/]app\.\d{4}-\d{2}-\d{2}\.log$/);
     // Log format is now: timestamp - LOG - device - message\n
     expect(lastCall[1]).toMatch(/^\d{4}-\d{2}-\d{2}T.*- LOG - .* - Default test message\n$/);
   });

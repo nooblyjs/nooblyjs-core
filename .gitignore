@@ -28,7 +28,6 @@ certs/
 
 #tests
 .test/
-.test-files/
 
 #screenshots
 screenshots/

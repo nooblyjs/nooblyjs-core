@@ -24,7 +24,7 @@ class loggingFile {
    * Initializes the file logger with async I/O and rolling log support.
    * @param {Object=} options Configuration options for the file logger.
    * @param {string=} options.filename The name of the file to log to (defaults to 'app.YYYY-MM-DD.log').
-   * @param {string=} options.logDir Directory to store log files (defaults to '.logs').
+   * @param {string=} options.logDir Directory to store log files (defaults to '.temp/logs').
    * @param {string=} options.instanceName Instance name suffix for event emission (defaults to 'default').
    * @param {Object=} options.log Logging level configuration.
    * @param {string=} options.log.level Minimum log level ('error', 'warn', 'info', 'log').
@@ -38,13 +38,13 @@ class loggingFile {
     this.settings.description = 'File logger with rolling log support. Settings: minLogLevel, logDir, maxSize, maxFiles, rotatePeriod';
     this.settings.list = [
       { setting: 'minLogLevel', type: 'list', values: ['error', 'warn', 'info', 'log'] },
-      { setting: 'logDir', type: 'string', values: ['.logs'] },
+      { setting: 'logDir', type: 'string', values: ['.temp/logs'] },
       { setting: 'maxSize', type: 'number', values: [10485760] },
       { setting: 'maxFiles', type: 'number', values: [5] },
       { setting: 'rotatePeriod', type: 'list', values: ['daily', 'hourly', 'none'] }
     ];
 
-    this.settings.logDir = options.logDir || '.logs';
+    this.settings.logDir = options.logDir || '.temp/logs';
     this.settings.maxSize = (options.maxSize !== undefined) ? options.maxSize : 10 * 1024 * 1024;
     this.settings.maxFiles = (options.maxFiles !== undefined) ? options.maxFiles : 5;
     this.settings.rotatePeriod = options.rotatePeriod || 'daily';

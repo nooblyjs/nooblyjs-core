@@ -8,9 +8,9 @@
 
 const path = require('node:path');
 const fs = require('node:fs').promises;
-const os = require('node:os');
 const EventEmitter = require('events');
 const createSearchService = require('../../../src/searching');
+const { testDataDir } = require('../../helpers/testData');
 
 const documents = [
   { id: 1, title: 'Moby Dick', text: 'Call me Ishmael. Some years ago...', category: 'fiction' },
@@ -373,7 +373,7 @@ describe('SearchTokenService — pluggable tokenize / processTerm', () => {
 describe('SearchTokenService — disk persistence', () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'search-tokens-'));
+    tmpDir = await fs.mkdtemp(path.join(testDataDir('searching'), 'search-tokens-'));
   });
   afterEach(async () => {
     if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });

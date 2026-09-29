@@ -48,7 +48,7 @@ describe('{Service} ({provider})', () => {
 - Create services through the factory (not `new Provider`) unless testing a provider in isolation; with no `express-app` option the factory skips route/view registration.
 - Inject dependencies as mocks via `options.dependencies`. Don't go through the `ServiceRegistry` singleton unless testing the registry itself; if you do, call `serviceRegistry.reset()` in `afterEach`.
 - Mock external SDKs/clients with `jest.mock()`; never require a real Redis/Mongo/cloud service. Gate real-backend tests behind an env var (see `RUN_MONGODB_TESTS`).
-- Use temp dirs (`fs.mkdtempSync(path.join(os.tmpdir(), 'nooblyjs-...'))`) for file providers and remove them in `afterEach`.
+- File providers and other tests that write to disk use `testDataDir()` from `tests/helpers/testData.js`, which places data under `.temp/tests/data/` (e.g. `fs.mkdtempSync(path.join(testDataDir(), 'nooblyjs-...'))`; see `.claude/rules/output-locations.md`). Remove temp dirs in `afterEach`/`afterAll`, and always pass a `logDir`/`dataDir`/`baseDir` so nothing lands in the repo root.
 - Use `jest.useFakeTimers()` for schedulers, TTLs and polling; restore real timers afterwards.
 - Jest runs with `detectOpenHandles` and `forceExit`: clear intervals, close servers and connections so tests don't hang or leak.
 

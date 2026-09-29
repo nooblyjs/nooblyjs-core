@@ -13,6 +13,7 @@
  */
 
 const path = require('node:path');
+const { ClientError } = require('../../shared/utils/httpErrors');
 
 /**
  * Resolves `userPath` within `baseDir`, throwing if it escapes.
@@ -28,7 +29,7 @@ const path = require('node:path');
  */
 function resolveWithin(baseDir, userPath) {
   if (typeof userPath !== 'string') {
-    throw new Error('Invalid path: must be a string');
+    throw new ClientError(400, 'Invalid path: must be a string');
   }
 
   const resolvedBase = path.resolve(baseDir);
@@ -37,7 +38,7 @@ function resolveWithin(baseDir, userPath) {
     : path.resolve(resolvedBase, userPath);
 
   if (resolved !== resolvedBase && !resolved.startsWith(resolvedBase + path.sep)) {
-    throw new Error('Path traversal detected: path is outside the base directory');
+    throw new ClientError(400, 'Path traversal detected: path is outside the base directory');
   }
 
   return resolved;
@@ -58,15 +59,15 @@ function resolveWithin(baseDir, userPath) {
  */
 function assertSafeRelativePath(filePath) {
   if (typeof filePath !== 'string') {
-    throw new Error('Invalid path: must be a string');
+    throw new ClientError(400, 'Invalid path: must be a string');
   }
   const normalized = filePath.replace(/\\/g, '/');
   if (normalized.startsWith('/')) {
-    throw new Error('Path traversal detected: absolute paths are not allowed');
+    throw new ClientError(400, 'Path traversal detected: absolute paths are not allowed');
   }
   const segments = normalized.split('/');
   if (segments.includes('..')) {
-    throw new Error('Path traversal detected: ".." is not allowed in the path');
+    throw new ClientError(400, 'Path traversal detected: ".." is not allowed in the path');
   }
   return filePath;
 }

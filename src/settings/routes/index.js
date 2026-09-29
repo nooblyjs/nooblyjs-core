@@ -77,9 +77,11 @@ module.exports = (options, eventEmitter, settings) => {
         operation,
         error: error.message
       });
-      res.status(statusForError(error)).json({
+      // 4xx messages are service-crafted and safe; never echo 5xx internals (P1-2).
+      const status = statusForError(error);
+      res.status(status).json({
         success: false,
-        error: error.message
+        error: status >= 500 ? 'Internal Server Error' : error.message
       });
     }
   };

@@ -18,12 +18,12 @@
 'use strict';
 
 const fs = require('node:fs').promises;
-const os = require('node:os');
 const path = require('node:path');
 const EventEmitter = require('events');
 
 const VectorSearchService = require('../../../src/searching/providers/vectorsearching');
 const createSearchService = require('../../../src/searching');
+const { testDataDir } = require('../../helpers/testData');
 
 const DIMENSIONS = 8;
 
@@ -726,7 +726,7 @@ describe('VectorSearchService — disk persistence', () => {
   let indexDir;
 
   beforeEach(async () => {
-    indexDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vectorsearch-test-'));
+    indexDir = await fs.mkdtemp(path.join(testDataDir('searching'), 'vectorsearch-test-'));
   });
   afterEach(async () => {
     await fs.rm(indexDir, { recursive: true, force: true });

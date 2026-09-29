@@ -13,13 +13,13 @@
 'use strict';
 
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const express = require('express');
 const request = require('supertest');
 const EventEmitter = require('events');
 
 const createSettings = require('../../../src/settings');
+const { testDataDir } = require('../../helpers/testData');
 
 describe('Settings routes', () => {
   /** @type {express.Application} Express app with the settings service mounted */
@@ -28,7 +28,7 @@ describe('Settings routes', () => {
   let tempDir;
 
   beforeAll(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nooblyjs-settings-routes-'));
+    tempDir = fs.mkdtempSync(path.join(testDataDir('settings'), 'nooblyjs-settings-routes-'));
     app = express();
     app.use(express.json());
 

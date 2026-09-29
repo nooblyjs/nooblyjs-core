@@ -17,6 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { toClientResponse } = require('../../shared/utils/httpErrors');
 
 /**
  * Configures and registers logging routes with the Express application.
@@ -274,9 +275,10 @@ module.exports = (options, eventEmitter, logger, analytics) => {
         });
       } catch (error) {
         eventEmitter.emit('api-logging-instances-error', error.message);
-        res.status(500).json({
+        const { status, message } = toClientResponse(error);
+        res.status(status).json({
           success: false,
-          error: error.message
+          error: message
         });
       }
     });
