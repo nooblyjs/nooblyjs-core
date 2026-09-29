@@ -442,17 +442,18 @@ class WorkflowExecutionContainer {
     }
 
     const beforeLength = executions.length;
+    // Filters combine (AND); with no filter nothing is deleted.
     let toDelete = [];
 
-    if (options.older_than) {
-      const threshold = new Date(options.older_than).getTime();
-      toDelete = executions.filter(e => new Date(e.startedAt).getTime() < threshold);
-    }
-
-    if (options.status) {
-      toDelete = toDelete.length > 0
-        ? toDelete.filter(e => e.status === options.status)
-        : executions.filter(e => e.status === options.status);
+    if (options.older_than || options.status) {
+      toDelete = executions;
+      if (options.older_than) {
+        const threshold = new Date(options.older_than).getTime();
+        toDelete = toDelete.filter(e => new Date(e.startedAt).getTime() < threshold);
+      }
+      if (options.status) {
+        toDelete = toDelete.filter(e => e.status === options.status);
+      }
     }
 
     // Remove deleted executions

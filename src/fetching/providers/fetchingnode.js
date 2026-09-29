@@ -97,7 +97,9 @@ class FetchingNode {
         if (this.eventEmitter_) {
           this.eventEmitter_.emit('fetch:dedup-hit', { url, cacheKey });
         }
-        return response;
+        // A Response body can only be read once, so every caller of a shared
+        // (de-duplicated or cached) response gets its own clone.
+        return response.clone();
       }
 
       // Check request cache
@@ -130,7 +132,7 @@ class FetchingNode {
           this.eventEmitter_.emit('fetch:success', { url, cacheKey, status: response.status });
         }
 
-        return response;
+        return response.clone();
       } finally {
         // Remove from deduplication cache
         this.requestDedup_.delete(cacheKey);
@@ -203,7 +205,8 @@ class FetchingNode {
    * @return {boolean} Whether to cache
    */
   shouldCache_(response, options) {
-    if (options.cache === 'no-store' || options.method !== 'GET') {
+    const method = (options.method || 'GET').toUpperCase();
+    if (options.cache === 'no-store' || method !== 'GET') {
       return false;
     }
     return response.ok;
@@ -249,7 +252,7 @@ class FetchingNode {
       return null;
     }
 
-    return cached.response;
+    return cached.response.clone();
   }
 
   /**

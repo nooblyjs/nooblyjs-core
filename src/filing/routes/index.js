@@ -21,6 +21,29 @@ const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { parseLimit, parseOffset } = require('../../shared/utils/validation');
 
 /**
+ * Extracts the uploaded bytes from a request: the multipart file, or a raw
+ * Buffer/string body. Parsed bodies (e.g. JSON objects from express.json())
+ * and empty bodies are not file data and yield null, so the caller can answer
+ * 400 instead of throwing from Buffer.from() outside its try/catch — an
+ * unhandled rejection that would shut the server down.
+ *
+ * @param {express.Request} req - Express request object
+ * @return {?Buffer} The file bytes, or null when none were sent
+ */
+function getUploadData(req) {
+  if (req.file) {
+    return req.file.buffer;
+  }
+  if (Buffer.isBuffer(req.body)) {
+    return req.body;
+  }
+  if (typeof req.body === 'string' && req.body.length > 0) {
+    return Buffer.from(req.body);
+  }
+  return null;
+}
+
+/**
  * Configures and registers file management routes with the Express application.
  * Sets up endpoints for file storage operations across different providers.
  *
@@ -64,15 +87,8 @@ module.exports = (options, eventEmitter, filing) => {
       createUploadMiddleware(() => filing, { eventEmitter }),
       async (req, res) => {
         const key = req.params[0];
-        let fileData;
-        if (req.file) {
-          fileData = req.file.buffer;
-        } else if (req.body) {
-          // Handle raw body data
-          fileData = Buffer.isBuffer(req.body)
-            ? req.body
-            : Buffer.from(req.body);
-        } else {
+        const fileData = getUploadData(req);
+        if (!fileData) {
           return res.status(400).send('No file data provided');
         }
 
@@ -344,15 +360,8 @@ module.exports = (options, eventEmitter, filing) => {
         const instanceName = req.params.instanceName;
         const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);
         const key = req.params[0];
-        let fileData;
-
-        if (req.file) {
-          fileData = req.file.buffer;
-        } else if (req.body) {
-          fileData = Buffer.isBuffer(req.body)
-            ? req.body
-            : Buffer.from(req.body);
-        } else {
+        const fileData = getUploadData(req);
+        if (!fileData) {
           return res.status(400).send('No file data provided');
         }
 

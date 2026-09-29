@@ -17,6 +17,7 @@ const {
 
 // Implement monitoring
 const systemMonitoring = require('./src/views/modules/monitoring');
+const { sendSafeError } = require('./src/shared/utils/safeError');
 
 const ensureArray = (value) => {
   if (Array.isArray(value)) {
@@ -250,7 +251,7 @@ class ServiceRegistry {
         const metrics = systemMonitoring.getMetrics();
         res.status(200).json(metrics);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter: this.eventEmitter });
       }
     });
 
@@ -259,7 +260,7 @@ class ServiceRegistry {
         const snapshot = systemMonitoring.getCurrentSnapshot();
         res.status(200).json(snapshot);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendSafeError(res, error, { status: 500, eventEmitter: this.eventEmitter });
       }
     });
 
@@ -815,8 +816,8 @@ class ServiceRegistry {
         logger.error(`[ServiceRegistry] Error shutting down service ${key}`, {
           error: error?.message
         });
-      } else if (this.eventEmitter_) {
-        this.eventEmitter_.emit('registry:shutdown-error', {
+      } else if (this.eventEmitter) {
+        this.eventEmitter.emit('registry:shutdown-error', {
           service: key,
           error: error?.message
         });
@@ -861,8 +862,8 @@ class ServiceRegistry {
     this.services.clear();
     this.initialized = false;
 
-    if (this.eventEmitter_) {
-      this.eventEmitter_.emit('registry:shutdown', {
+    if (this.eventEmitter) {
+      this.eventEmitter.emit('registry:shutdown', {
         message: 'Service Registry shut down successfully',
         servicesCount: shutdownPromises.length
       });
@@ -888,8 +889,8 @@ class ServiceRegistry {
         service.dispose();
       }
     } catch (error) {
-      if (this.eventEmitter_) {
-        this.eventEmitter_.emit('registry:dispose-error', { error: error?.message });
+      if (this.eventEmitter) {
+        this.eventEmitter.emit('registry:dispose-error', { error: error?.message });
       }
     }
   }

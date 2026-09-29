@@ -51,6 +51,132 @@ module.exports = (options, eventEmitter, dataservice) => {
       res.status(status).json({ error: clientMessage });
     };
 
+    // Fixed paths (status, analytics, settings) must be registered before the
+    // generic /:container and /:container/:uuid routes, which would otherwise
+    // capture them.
+
+    /**
+     * GET /services/dataservice/api/status
+     * Returns the operational status of the data service.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/status', (req, res) => {
+      eventEmitter.emit('api-dataservice-status', 'dataservice api running');
+      res.status(200).json('dataservice api running');
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics
+     * Returns analytics data including total stats and container statistics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics', (req, res) => {
+      try {
+        const data = analytics.getAllAnalytics();
+        res.status(200).json(data);
+      } catch (error) {
+        sendError(res, 500, 'Failed to retrieve analytics', error, 'analytics');
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics/totals
+     * Returns total operation statistics only.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics/totals', (req, res) => {
+      try {
+        const stats = analytics.getTotalStats();
+        res.status(200).json(stats);
+      } catch (error) {
+        sendError(res, 500, 'Failed to retrieve analytics totals', error, 'analyticsTotals');
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/analytics/containers
+     * Returns container analytics.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/analytics/containers', (req, res) => {
+      try {
+        const limit = parseLimit(req.query.limit, { defaultValue: 100 });
+        const containers = analytics.getContainerAnalytics(limit);
+        res.status(200).json(containers);
+      } catch (error) {
+        sendError(res, 500, 'Failed to retrieve container analytics', error, 'analyticsContainers');
+      }
+    });
+
+    /**
+     * DELETE /services/dataservice/api/analytics
+     * Clears all analytics data.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.delete('/services/dataservice/api/analytics', (req, res) => {
+      try {
+        analytics.clear();
+        res.status(200).json({ message: 'Analytics data cleared successfully' });
+      } catch (error) {
+        sendError(res, 500, 'Failed to clear analytics', error, 'analyticsClear');
+      }
+    });
+
+    /**
+     * GET /services/dataservice/api/settings
+     * Retrieves the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/dataservice/api/settings', async (req, res) => {
+      try {
+        const settings = await dataservice.getSettings();
+        res.status(200).json(settings);
+      } catch (err) {
+        eventEmitter.emit('api-dataservice-settings-error', err.message);
+        sendError(res, 500, 'Failed to retrieve settings', err, 'getSettings');
+      }
+    });
+
+    /**
+     * POST /services/dataservice/api/settings
+     * Updates the settings
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post('/services/dataservice/api/settings', async (req, res) => {
+      const message = req.body;
+      if (message) {
+        try {
+          await dataservice.saveSettings(message);
+          res.status(200).json({ updated: true });
+        } catch (err) {
+          sendError(res, 500, 'Failed to save settings', err, 'saveSettings');
+        }
+      } else {
+        res.status(400).json({ error: 'Bad Request: Missing settings' });
+      }
+    });
+
     /**
      * POST /services/dataservice/api/:container
      * Adds data to a container and returns the generated UUID.
@@ -270,128 +396,6 @@ module.exports = (options, eventEmitter, dataservice) => {
         res.status(200).json(results);
       } catch (err) {
         sendError(res, 500, 'Search failed', err, 'jsonFindByCriteria');
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/status
-     * Returns the operational status of the data service.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/status', (req, res) => {
-      eventEmitter.emit('api-dataservice-status', 'dataservice api running');
-      res.status(200).json('dataservice api running');
-    });
-
-    /**
-     * GET /services/dataservice/api/analytics
-     * Returns analytics data including total stats and container statistics.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/analytics', (req, res) => {
-      try {
-        const data = analytics.getAllAnalytics();
-        res.status(200).json(data);
-      } catch (error) {
-        sendError(res, 500, 'Failed to retrieve analytics', error, 'analytics');
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/analytics/totals
-     * Returns total operation statistics only.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/analytics/totals', (req, res) => {
-      try {
-        const stats = analytics.getTotalStats();
-        res.status(200).json(stats);
-      } catch (error) {
-        sendError(res, 500, 'Failed to retrieve analytics totals', error, 'analyticsTotals');
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/analytics/containers
-     * Returns container analytics.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/analytics/containers', (req, res) => {
-      try {
-        const limit = parseLimit(req.query.limit, { defaultValue: 100 });
-        const containers = analytics.getContainerAnalytics(limit);
-        res.status(200).json(containers);
-      } catch (error) {
-        sendError(res, 500, 'Failed to retrieve container analytics', error, 'analyticsContainers');
-      }
-    });
-
-    /**
-     * DELETE /services/dataservice/api/analytics
-     * Clears all analytics data.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.delete('/services/dataservice/api/analytics', (req, res) => {
-      try {
-        analytics.clear();
-        res.status(200).json({ message: 'Analytics data cleared successfully' });
-      } catch (error) {
-        sendError(res, 500, 'Failed to clear analytics', error, 'analyticsClear');
-      }
-    });
-
-    /**
-     * GET /services/dataservice/api/settings
-     * Retrieves the settings
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/dataservice/api/settings', async (req, res) => {
-      try {
-        const settings = await dataservice.getSettings();
-        res.status(200).json(settings);
-      } catch (err) {
-        eventEmitter.emit('api-dataservice-settings-error', err.message);
-        sendError(res, 500, 'Failed to retrieve settings', err, 'getSettings');
-      }
-    });
-
-    /**
-     * POST /services/dataservice/api/settings
-     * Updates the settings
-     *
-     * @param {express.Request} req - Express request object
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.post('/services/dataservice/api/settings', async (req, res) => {
-      const message = req.body;
-      if (message) {
-        try {
-          await dataservice.saveSettings(message);
-          res.status(200).json({ updated: true });
-        } catch (err) {
-          sendError(res, 500, 'Failed to save settings', err, 'saveSettings');
-        }
-      } else {
-        res.status(400).json({ error: 'Bad Request: Missing settings' });
       }
     });
   }

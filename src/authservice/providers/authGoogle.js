@@ -177,7 +177,7 @@ class AuthGoogle extends AuthBase {
         email,
         fullName,
         // OAuth users never sign in with a password; store an unguessable one (P0-3).
-        password: require('node:crypto').randomBytes(32).toString('hex'),
+        password: this.generateStrongPassword(), // Random strong password for OAuth users
         role: 'user'
       });
     }

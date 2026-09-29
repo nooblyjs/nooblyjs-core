@@ -133,10 +133,13 @@ class CacheRedis {
       throw new Error('Invalid value: cannot be undefined');
     }
     await this.ensureConnection_();
+    // Redis stores strings; without this, objects would be stored as
+    // "[object Object]". Mirrors the memcached provider.
+    const stored = value !== null && typeof value === 'object' ? JSON.stringify(value) : value;
     if (ttl) {
-      await this.client_.setex(key, ttl, value);
+      await this.client_.setex(key, ttl, stored);
     } else {
-      await this.client_.set(key, value);
+      await this.client_.set(key, stored);
     }
     this.trackOperation_(key);
     if (this.eventEmitter_)
@@ -151,11 +154,29 @@ class CacheRedis {
   async get(key) {
     this.validateKey_(key, 'get');
     await this.ensureConnection_();
-    const value = await this.client_.get(key);
+    const value = CacheRedis.decode_(await this.client_.get(key));
     this.trackOperation_(key);
     if (this.eventEmitter_)
       this.eventEmitter_.emit(`cache:get:${this.instanceName_}`, { key, value, instance: this.instanceName_ });
     return value;
+  }
+
+  /**
+   * Restores objects and arrays that put() stored as JSON. Other strings
+   * (including numeric or boolean text) are returned unchanged.
+   * @param {?string} raw The stored value.
+   * @return {*} The decoded value.
+   * @private
+   */
+  static decode_(raw) {
+    if (typeof raw !== 'string' || !/^\s*[[{]/.test(raw)) {
+      return raw;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return raw;
+    }
   }
 
   /**

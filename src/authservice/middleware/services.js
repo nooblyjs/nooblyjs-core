@@ -260,12 +260,18 @@ function isPathPublic(path, method) {
   // These serve JS libraries used by the dashboard UI - safe to expose
   if (/^\/[a-z]+\/scripts(\/.*)?$/.test(path)) return true;
 
+  // Status endpoints and static assets are only public for reads. Matching on
+  // the path alone let any method through, e.g. a non-admin session could
+  // PUT /workflow/api/definitions/x.js or DELETE /caching/api/delete/k.css
+  // past the admin guard.
+  const isRead = method === 'GET' || method === 'HEAD';
+
   // Health check endpoints
-  if (path.endsWith('/status')) return true;
+  if (isRead && path.endsWith('/status')) return true;
 
   // Static assets (CSS, JS, images, fonts)
   const staticAssetRegex = /\.(css|js|png|svg|ico|jpg|jpeg|gif|woff|woff2|ttf|eot)$/;
-  if (staticAssetRegex.test(path)) return true;
+  if (isRead && staticAssetRegex.test(path)) return true;
 
   return false;
 }

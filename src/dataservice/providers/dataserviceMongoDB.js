@@ -33,8 +33,10 @@ class MongoDBDataServiceProvider extends MongoBaseProvider {
     /** @private @const {string} */
     this.databaseName_ = options.database || 'nooblyjs';
     
-    // Initialize connection
-    this.initializeConnection_();
+    // Connect eagerly, but don't let a failed startup connection become an
+    // unhandled rejection: the failure is emitted as an error event and
+    // ensureConnection_() retries on the next operation.
+    this.initializeConnection_().catch(() => {});
   }
 
   /**

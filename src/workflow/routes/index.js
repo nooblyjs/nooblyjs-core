@@ -367,43 +367,8 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
     });
 
     // ========== Workflow Execution Endpoints ==========
-
-    /**
-     * GET /services/workflow/api/executions/:workflowName
-     * Retrieves execution history for a specific workflow.
-     *
-     * @param {express.Request} req - Express request object
-     * @param {string} req.query.status - Filter by status (completed, running, error)
-     * @param {number} req.query.limit - Max results (default: 50)
-     * @param {number} req.query.offset - Pagination offset (default: 0)
-     * @param {express.Response} res - Express response object
-     * @return {void}
-     */
-    app.get('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
-      try {
-        if (!workflow.executionContainer) {
-          return res.status(503).json({ error: 'Execution container not available' });
-        }
-
-        const { workflowName } = req.params;
-        const { status, limit, offset } = req.query;
-
-        const options = {
-          status: status || undefined,
-          limit: parseLimit(limit, { defaultValue: 50 }),
-          offset: parseOffset(offset)
-        };
-
-        const result = workflow.executionContainer.getExecutions(workflowName, options);
-
-        res.status(200).json({
-          workflowName,
-          ...result
-        });
-      } catch (err) {
-        sendSafeError(res, err, { status: 500, eventEmitter });
-      }
-    });
+    // The more specific /stats and /execution/:id routes are registered before
+    // the greedy /executions/:workflowName(*) list route, which would capture them.
 
     /**
      * GET /services/workflow/api/executions/:workflowName/:executionId
@@ -458,6 +423,43 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
         res.status(200).json({
           workflowName,
           ...stats
+        });
+      } catch (err) {
+        sendSafeError(res, err, { status: 500, eventEmitter });
+      }
+    });
+
+    /**
+     * GET /services/workflow/api/executions/:workflowName
+     * Retrieves execution history for a specific workflow.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.query.status - Filter by status (completed, running, error)
+     * @param {number} req.query.limit - Max results (default: 50)
+     * @param {number} req.query.offset - Pagination offset (default: 0)
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
+      try {
+        if (!workflow.executionContainer) {
+          return res.status(503).json({ error: 'Execution container not available' });
+        }
+
+        const { workflowName } = req.params;
+        const { status, limit, offset } = req.query;
+
+        const options = {
+          status: status || undefined,
+          limit: parseLimit(limit, { defaultValue: 50 }),
+          offset: parseOffset(offset)
+        };
+
+        const result = workflow.executionContainer.getExecutions(workflowName, options);
+
+        res.status(200).json({
+          workflowName,
+          ...result
         });
       } catch (err) {
         sendSafeError(res, err, { status: 500, eventEmitter });

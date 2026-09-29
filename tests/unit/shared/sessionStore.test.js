@@ -100,3 +100,59 @@ describe('createSessionStore', () => {
     });
   });
 });
+
+describe('session store edge cases', () => {
+  const { defineStores, ttlFor } = require('../../../src/shared/utils/sessionStore');
+  const { PruningMemoryStore, RedisSessionStore } = defineStores(session);
+
+  it('derives TTLs from expires, originalMaxAge or the one-day default', () => {
+    expect(ttlFor({ cookie: { expires: new Date(Date.now() - 1000) } })).toBe(1);
+    expect(ttlFor({ cookie: { originalMaxAge: 5000 } })).toBe(5000);
+    expect(ttlFor({ cookie: { originalMaxAge: -1 } })).toBe(24 * 60 * 60 * 1000);
+    expect(ttlFor(null)).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it('drops expired entries on read, touches and counts live sessions', async () => {
+    const store = new PruningMemoryStore({ pruneIntervalMs: 60000 });
+    try {
+      await call(store, 'set', 'a', sess(60000));
+      await call(store, 'set', 'b', sess(60000));
+      store.sessions_.get('b').expiresAt = Date.now() - 1;
+      expect(await call(store, 'get', 'b')).toBeNull();
+      expect(await call(store, 'get', 'missing')).toBeNull();
+
+      const before = store.sessions_.get('a').expiresAt;
+      await call(store, 'touch', 'a', sess(120000));
+      expect(store.sessions_.get('a').expiresAt).toBeGreaterThan(before);
+      await call(store, 'touch', 'missing', sess(1000));
+      expect(await call(store, 'length')).toBe(1);
+
+      store.set('c', sess(1000));
+      store.destroy('c');
+      store.touch('a', sess(1000));
+    } finally {
+      store.close();
+    }
+  });
+
+  it('surfaces Redis errors through the callback', async () => {
+    const client = { get: jest.fn().mockRejectedValue(new Error('redis down')) };
+    const store = new RedisSessionStore({ client });
+    await expect(call(store, 'get', 'x')).rejects.toThrow('redis down');
+    store.get('x');
+  });
+
+  it('creates and quits its own Redis client from a URL', async () => {
+    jest.resetModules();
+    const quit = jest.fn(() => Promise.reject(new Error('already closed')));
+    const disconnect = jest.fn();
+    jest.doMock('ioredis', () => jest.fn().mockImplementation(() => ({ on: jest.fn(), quit, disconnect })));
+    const { createSessionStore: create } = require('../../../src/shared/utils/sessionStore');
+    const result = create(session, { redisUrl: 'redis://cache.test:6379', logger: { error: jest.fn() } });
+    expect(result.type).toBe('redis');
+    await result.close();
+    expect(quit).toHaveBeenCalled();
+    expect(disconnect).toHaveBeenCalled();
+    jest.dontMock('ioredis');
+  });
+});

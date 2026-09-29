@@ -32,6 +32,9 @@ class FileDataRingProvider {
     this.dataDir = path.resolve(options.dataDir || options.baseDir || './dataservice_data');
 
     this.containers = new Map(); 
+    // Per-container tail of the write queue: add/update/remove read the whole
+    // container file, change it and write it back, so they must not overlap.
+    this.writeLocks_ = new Map();
     this.eventEmitter_ = eventEmitter;
 
     // Settings for dataservice file provider
@@ -139,6 +142,29 @@ class FileDataRingProvider {
    * @throws {Error} When file write fails.
    * @private
    */
+  /**
+   * Runs a read-modify-write of a container file after any in-flight one for
+   * the same container has finished. Without this, concurrent adds each read
+   * the same snapshot and all but the last write were lost.
+   * @param {string} containerName The container being modified.
+   * @param {function(): Promise<*>} fn The read-modify-write to run.
+   * @return {Promise<*>} The result of fn.
+   * @private
+   */
+  async _withContainerLock(containerName, fn) {
+    const previous = this.writeLocks_.get(containerName) || Promise.resolve();
+    const run = previous.then(fn, fn);
+    const tail = run.catch(() => {});
+    this.writeLocks_.set(containerName, tail);
+    try {
+      return await run;
+    } finally {
+      if (this.writeLocks_.get(containerName) === tail) {
+        this.writeLocks_.delete(containerName);
+      }
+    }
+  }
+
   async _writeContainerData(containerName, data) {
     const containerFilePath = await this._getContainerFilePath(containerName);
     await fs.mkdir(path.dirname(containerFilePath), { recursive: true });
@@ -214,10 +240,12 @@ class FileDataRingProvider {
       throw error;
     }
 
-    const data = await this._readContainerData(containerName);
     const objectKey = uuidv4();
-    data[objectKey] = jsonObject;
-    await this._writeContainerData(containerName, data);
+    await this._withContainerLock(containerName, async () => {
+      const data = await this._readContainerData(containerName);
+      data[objectKey] = jsonObject;
+      await this._writeContainerData(containerName, data);
+    });
     if (this.eventEmitter_)
       this.eventEmitter_.emit('api-dataservice-add', {
         containerName,
@@ -257,10 +285,16 @@ class FileDataRingProvider {
       throw error;
     }
 
-    const data = await this._readContainerData(containerName);
-    if (Object.prototype.hasOwnProperty.call(data, objectKey)) {
+    const removed = await this._withContainerLock(containerName, async () => {
+      const data = await this._readContainerData(containerName);
+      if (!Object.prototype.hasOwnProperty.call(data, objectKey)) {
+        return false;
+      }
       delete data[objectKey];
       await this._writeContainerData(containerName, data);
+      return true;
+    });
+    if (removed) {
       if (this.eventEmitter_)
         this.eventEmitter_.emit('api-dataservice-remove', {
           containerName,
@@ -454,14 +488,18 @@ class FileDataRingProvider {
   async update(containerName, objectKey, jsonObject) {
     try {
       this._assertSafeKey(objectKey);
-      const data = await this._readContainerData(containerName);
-
-      if (!Object.prototype.hasOwnProperty.call(data, objectKey)) {
+      const updated = await this._withContainerLock(containerName, async () => {
+        const data = await this._readContainerData(containerName);
+        if (!Object.prototype.hasOwnProperty.call(data, objectKey)) {
+          return false;
+        }
+        data[objectKey] = jsonObject;
+        await this._writeContainerData(containerName, data);
+        return true;
+      });
+      if (!updated) {
         return false;
       }
-
-      data[objectKey] = jsonObject;
-      await this._writeContainerData(containerName, data);
 
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('api-dataservice-update', {
