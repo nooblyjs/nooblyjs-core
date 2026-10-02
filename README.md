@@ -126,7 +126,7 @@ The application will be available at `http://localhost:3001` (or specified PORT)
 ### Environment Variables
 
 ```bash
-# Server port (default: 11000)
+# Server port (default: 9000)
 PORT=3001
 
 # API Keys (comma-separated)

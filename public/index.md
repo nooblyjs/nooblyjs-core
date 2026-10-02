@@ -136,14 +136,14 @@ Build complex automation:
 ### Installation & Setup
 ```bash
 npm install
-npm run dev:web          # Start with auth (port 11000)
+npm run dev:web          # Start with auth (port 9000)
 npm run dev:web:noauth   # Start without auth (testing)
 ```
 
 ### Configuration
 Create a `.env` file for local development:
 ```
-PORT=11000
+PORT=9000
 NODE_ENV=development
 API_KEYS=dev-key-1,dev-key-2
 SESSION_SECRET=your-session-secret
@@ -177,7 +177,7 @@ npm run docker:run           # Run container
 npm run docker:publish       # Push to Docker Hub
 
 # Utilities
-npm run kill                 # Kill port 11000
+npm run kill                 # Kill port 9000
 npm run analyze-tokens       # Analyze token usage
 ```
 
@@ -498,7 +498,7 @@ console.log('Cache stats:', stats);
 
 ### Port Already in Use
 ```bash
-npm run kill              # Kill port 11000
+npm run kill              # Kill port 9000
 npm run kill-test        # Kill port 3101
 ```
 

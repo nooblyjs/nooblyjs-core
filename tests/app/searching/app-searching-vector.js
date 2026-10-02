@@ -4,7 +4,7 @@
  * Boots the searching service with the `vector` provider, indexes a small
  * knowledge base and demonstrates the three search modes side by side, then
  * leaves the service dashboard running at
- * http://localhost:11000/services/searching/
+ * http://localhost:9000/services/searching/
  *
  * Run it:
  *   node tests/app/searching/app-searching-vector.js
@@ -303,7 +303,7 @@ async function compareModes(query) {
   }
 }
 
-const PORT = process.env.PORT || 11000;
+const PORT = process.env.PORT || 9000;
 
 app.get('/', (req, res) => res.redirect('/services/searching/'));
 

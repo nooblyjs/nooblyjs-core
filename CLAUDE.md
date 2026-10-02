@@ -8,13 +8,13 @@ NooblyJS Core is a modular Node.js backend framework: a set of services (logging
 
 ## Commands
 
-- `npm run dev` — dev server with nodemon (watches `./src`, runs `app.js`, port `11000` or `$PORT`)
+- `npm run dev` — dev server with nodemon (watches `./src`, runs `app.js`, port `9000` or `$PORT`)
 - `npm run dev:noauth` — same, using `app-noauth.js` (no login required; handy for UI work)
 - `npm start` — `node ./app.js`
 - `npm test` (alias `npm run tests`) — all Jest tests; `npm run coverage` adds coverage with the enforced threshold (as CI does)
 - `npm test -- tests/unit/caching/cache.test.js` — a single file; `npm test -- -t "name"` for a single test
 - `npm run test:ui` — Playwright UI tests in `tests/ui/` (desktop + mobile Chromium); `npm run test:ui -- --project=chromium tests/ui/smoke.spec.js` for one file/project, `npm run test:ui:headed` to watch, `npm run test:ui:report` to open the HTML report
-- `npm run kill` / `npm run kill-test` — free port 11000 / 3101 when a server hangs
+- `npm run kill` / `npm run kill-test` — free port 9000 / 3101 when a server hangs
 - `npm run certs` / `npm run certs:force` — generate self-signed TLS certs for local HTTPS
 - `npm run build` — `scripts/build.js`
 

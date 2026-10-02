@@ -16,7 +16,7 @@ COPY public/ ./public/
 FROM node:24-alpine
 
 ENV NODE_ENV=production \
-    PORT=11000
+    PORT=9000
 
 # Security: run as non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -32,7 +32,7 @@ VOLUME ["/usr/src/app/.application"]
 
 USER appuser
 
-EXPOSE 11000
+EXPOSE 9000
 
 # Liveness check against the built-in health endpoint (busybox wget).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

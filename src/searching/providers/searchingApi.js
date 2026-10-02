@@ -20,7 +20,7 @@ class SearchingApi {
   /**
    * @param {Object} options
    * @param {string} [options.apiRoot] Base URL of the remote searching service
-   *   (e.g. 'http://search.internal:11000'). Falls back to options.api or
+   *   (e.g. 'http://search.internal:9000'). Falls back to options.api or
    *   localhost:3000.
    * @param {string} [options.apiKey] Optional API key. Sent as X-API-Key.
    * @param {number} [options.timeout=10000] Request timeout in milliseconds.

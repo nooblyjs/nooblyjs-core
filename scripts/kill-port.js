@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @fileoverview Kills any process listening on the development port (11000).
+ * @fileoverview Kills any process listening on the development port (9000).
  * Cross-platform: parses `netstat -ano` on Windows, uses `lsof` on macOS/Linux.
  */
 

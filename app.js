@@ -265,14 +265,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Expose the public folder
-app.use('/', express.static(__dirname + '/public', {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
+// Redirect to services
+app.get('/', (req, res) => {
+  res.redirect('/services');
+});
 
 // ... (docs/ui route definitions)
 

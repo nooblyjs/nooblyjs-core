@@ -10,7 +10,7 @@ cd nooblyjs-core
 npm install
 npx playwright install --with-deps chromium   # for UI tests
 cp .env.example .env
-npm run dev          # http://localhost:11000
+npm run dev          # http://localhost:9000
 ```
 
 ## Before opening a pull request

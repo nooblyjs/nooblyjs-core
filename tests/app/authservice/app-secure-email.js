@@ -7,17 +7,17 @@
  *
  * Then test with curl:
  *   # Add a user
- *   curl -X POST http://localhost:11000/services/authservice/api/secure-email/users \
+ *   curl -X POST http://localhost:9000/services/authservice/api/secure-email/users \
  *     -H "Content-Type: application/json" \
  *     -d '{"email":"user@example.com","secureKey":"their_key_123","username":"user","role":"user"}'
  *
  *   # Authenticate
- *   curl -X POST http://localhost:11000/services/authservice/api/secure-email/login \
+ *   curl -X POST http://localhost:9000/services/authservice/api/secure-email/login \
  *     -H "Content-Type: application/json" \
  *     -d '{"email":"user@example.com","secureKey":"their_key_123"}'
  *
  *   # List users
- *   curl -X GET http://localhost:11000/services/authservice/api/secure-email/users \
+ *   curl -X GET http://localhost:9000/services/authservice/api/secure-email/users \
  *     -H "Authorization: Bearer YOUR_API_KEY"
  */
 
@@ -100,7 +100,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 11000;
+const PORT = process.env.PORT || 9000;
 
 app.listen(PORT, async () => {
   console.log(`\n╔════════════════════════════════════════════════════╗`);
