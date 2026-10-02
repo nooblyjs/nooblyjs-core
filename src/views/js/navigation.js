@@ -210,10 +210,10 @@ const NooblyJSNavigation = {
         // Check all service statuses first
         await this.checkAllStatuses();
 
-        // Build navigation HTML using KI-UI classes
+        // Build navigation HTML (core-sidebar-* classes from /services/css/core.css)
         let navHTML = `
-            <div class="kr-side-section">
-                <a href="/services" class="kr-nav-item ${activeService === 'home' ? 'active' : ''}">
+            <div class="core-sidebar-section">
+                <a href="/services" class="core-sidebar-item ${activeService === 'home' ? 'active' : ''}">
                     <i class="bi bi-house-door"></i> Home
                 </a>
             </div>
@@ -239,10 +239,10 @@ const NooblyJSNavigation = {
             const onlineCount = services.filter(s => this.serviceStatus[s.name] === true).length;
 
             navHTML += `
-                <div class="kr-side-section">
-                    <div class="kr-side-head" style="cursor: pointer;" onclick="NooblyJSNavigation.toggleClassificationNav('${classification}')">
+                <div class="core-sidebar-section">
+                    <div class="core-sidebar-title" role="button" style="cursor: pointer;" onclick="NooblyJSNavigation.toggleClassificationNav('${classification}')">
                         <span><i class="bi ${classConfig.icon}"></i> ${classConfig.label}</span>
-                        <span id="toggle-icon-${classification}" style="margin-left: auto;">▼</span>
+                        <span class="toggle" id="toggle-icon-${classification}">▼</span>
                     </div>
                     <div id="nav-services-${classification}" style="display: block;">
             `;
@@ -250,14 +250,11 @@ const NooblyJSNavigation = {
             services.forEach(service => {
                 const isOnline = this.serviceStatus[service.name] === true;
                 const isActive = activeService === service.name ? 'active' : '';
-                const statusClass = isOnline ? 'ok' : 'muted';
 
                 navHTML += `
-                    <a href="/services/${service.path}/" class="kr-nav-item ${isActive}">
+                    <a href="/services/${service.path}/" class="core-sidebar-item ${isActive}">
                         <i class="bi ${service.icon}"></i> ${service.title}
-                        <span class="kr-chip ${statusClass}" style="margin-left: auto; font-size: 10px;">
-                            <i class="bi ${isOnline ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
-                        </span>
+                        <span class="core-status-indicator ${isOnline ? '' : 'offline'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
                     </a>
                 `;
             });

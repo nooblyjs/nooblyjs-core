@@ -880,14 +880,14 @@ class MarkdownParser {
     const heroImageAlign = properties['hero-image-align'] || properties['hero_image_align'] || 'right';
 
     // Build HTML based on image alignment
-    let html = '<section class="hero-banner-section py-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); margin-top: -1rem;">\n';
+    let html = '<section class="hero-banner-section py-4" style="background: var(--surface-sunken); margin-top: -1rem;">\n';
     html += '<div class="container">\n';
     html += '<div class="row align-items-center g-4">\n';
 
     // Left side content
     html += '<div class="col-lg-6">\n';
     if (title) {
-      html += `<h2 class="display-5 fw-bold mb-3" style="color: #6B7280;">${this.escapeHtml(title)}</h2>\n`;
+      html += `<h2 class="display-5 fw-bold mb-3" style="color: var(--ink);">${this.escapeHtml(title)}</h2>\n`;
     }
     if (subtitle) {
       html += `<p class="lead text-muted mb-4">${this.escapeHtml(subtitle)}</p>\n`;

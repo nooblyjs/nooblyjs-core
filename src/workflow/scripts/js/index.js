@@ -8,8 +8,9 @@
  * The panel is self-contained: it injects its own namespaced styles, has no
  * framework dependency, and renders sub-views (editor, run detail, schedule
  * form) inline rather than in overlay modals, so it cannot interfere with the
- * host page's stacking context. Colours resolve against the host's `--kr-*`
- * custom properties where they exist, so it follows the host theme.
+ * host page's stacking context. Colours resolve against the host's NooblyJS
+ * design tokens (`--ink`, `--accent`, ...) where they exist, so it follows the
+ * host theme.
  *
  * @author NooblyJS Core Team
  * @version 1.1.0
@@ -79,23 +80,23 @@
    */
   const STYLES = `
 .njwf-root {
-  --njwf-ink: var(--kr-ink-900, #0d1c1c);
-  --njwf-ink-2: var(--kr-ink-700, #2b3a3a);
-  --njwf-muted: var(--kr-ink-500, #5a6b6b);
-  --njwf-faint: var(--kr-ink-400, #7d8e8e);
-  --njwf-line: var(--kr-border, #e3eaea);
-  --njwf-line-2: var(--kr-border-2, #eef2f2);
-  --njwf-surface: var(--kr-surface, #ffffff);
-  --njwf-surface-2: var(--kr-surface-2, #fbfcfc);
-  --njwf-bg: var(--kr-bg, #f4f7f7);
-  --njwf-accent: var(--kr-teal-600, #4b5563);
-  --njwf-accent-ink: var(--kr-surface, #ffffff);
-  --njwf-success: var(--kr-success, #1f8a5b);
-  --njwf-warn: var(--kr-warning, #c98019);
-  --njwf-danger: var(--kr-danger, #c2484a);
-  --njwf-info: var(--kr-info, #2a6fdb);
-  --njwf-radius: var(--kr-radius, 10px);
-  --njwf-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --njwf-ink: var(--ink, #241C1A);
+  --njwf-ink-2: var(--ink-2, #4A3F3A);
+  --njwf-muted: var(--muted, #6B605A);
+  --njwf-faint: var(--neutral-dot, #8F837C);
+  --njwf-line: var(--border, #E6DED8);
+  --njwf-line-2: var(--divider, #F0E9E4);
+  --njwf-surface: var(--surface, #ffffff);
+  --njwf-surface-2: var(--surface-sunken, #FBF8F6);
+  --njwf-bg: var(--bg, #F5F1EE);
+  --njwf-accent: var(--accent, #C2471F);
+  --njwf-accent-ink: var(--surface, #ffffff);
+  --njwf-success: var(--core-success, #1F7A4D);
+  --njwf-warn: var(--warn-dot, #8A6500);
+  --njwf-danger: var(--danger, #B42335);
+  --njwf-info: var(--core-info, #2F5F9E);
+  --njwf-radius: var(--radius-md, 12px);
+  --njwf-mono: var(--mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
   font-family: inherit;
   color: var(--njwf-ink);
   font-size: 13px;

@@ -12,15 +12,15 @@
             
             try {
                 JSON.parse(value);
-                element.classList.remove('kr-form-input-error');
-                element.classList.add('kr-form-input-success');
+                element.classList.remove('is-invalid');
+                element.classList.add('is-valid');
                 validation.textContent = '✓ Valid JSON';
                 validation.className = 'form-text text-success';
                 validation.style.display = 'block';
                 return true;
             } catch (e) {
-                element.classList.remove('kr-form-input-success');
-                element.classList.add('kr-form-input-error');
+                element.classList.remove('is-valid');
+                element.classList.add('is-invalid');
                 validation.textContent = '✗ Invalid JSON: ' + e.message;
                 validation.className = 'form-text text-danger';
                 validation.style.display = 'block';
@@ -303,16 +303,16 @@
                             stats.counts.LOG
                         ],
                         backgroundColor: [
-                            'rgba(13, 110, 253, 0.8)',   // Bootstrap primary (blue)
-                            'rgba(255, 193, 7, 0.8)',    // Bootstrap warning (yellow)
-                            'rgba(220, 53, 69, 0.8)',    // Bootstrap danger (red)
-                            'rgba(108, 117, 125, 0.8)'   // Bootstrap secondary (gray)
+                            'rgba(47, 95, 158, 0.8)',   // info
+                            'rgba(228, 184, 92, 0.8)',    // warning
+                            'rgba(180, 35, 53, 0.8)',    // danger
+                            'rgba(143, 131, 124, 0.8)'   // neutral
                         ],
                         borderColor: [
-                            'rgba(13, 110, 253, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(108, 117, 125, 1)'
+                            'rgba(47, 95, 158, 1)',
+                            'rgba(228, 184, 92, 1)',
+                            'rgba(180, 35, 53, 1)',
+                            'rgba(143, 131, 124, 1)'
                         ],
                         borderWidth: 2
                     }]
@@ -367,8 +367,8 @@
                         {
                             label: 'INFO',
                             data: timeline.datasets.INFO,
-                            borderColor: 'rgba(13, 110, 253, 1)',
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderColor: 'rgba(47, 95, 158, 1)',
+                            backgroundColor: 'rgba(47, 95, 158, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
@@ -378,8 +378,8 @@
                         {
                             label: 'WARN',
                             data: timeline.datasets.WARN,
-                            borderColor: 'rgba(255, 193, 7, 1)',
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            borderColor: 'rgba(228, 184, 92, 1)',
+                            backgroundColor: 'rgba(228, 184, 92, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
@@ -389,8 +389,8 @@
                         {
                             label: 'ERROR',
                             data: timeline.datasets.ERROR,
-                            borderColor: 'rgba(220, 53, 69, 1)',
-                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderColor: 'rgba(180, 35, 53, 1)',
+                            backgroundColor: 'rgba(180, 35, 53, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
@@ -400,8 +400,8 @@
                         {
                             label: 'LOG',
                             data: timeline.datasets.LOG,
-                            borderColor: 'rgba(108, 117, 125, 1)',
-                            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                            borderColor: 'rgba(143, 131, 124, 1)',
+                            backgroundColor: 'rgba(143, 131, 124, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
@@ -578,10 +578,10 @@
             const rows = logs.map((log, index) => {
                 // Determine badge color based on level (theme-proof classes so
                 // INFO/LOG don't render red and clash with ERROR).
-                let badgeClass = 'kr-loglevel-log';
-                if (log.level === 'INFO') badgeClass = 'kr-loglevel-info';
-                else if (log.level === 'WARN') badgeClass = 'kr-loglevel-warn';
-                else if (log.level === 'ERROR') badgeClass = 'kr-loglevel-error';
+                let badgeClass = 'core-loglevel-log';
+                if (log.level === 'INFO') badgeClass = 'core-loglevel-info';
+                else if (log.level === 'WARN') badgeClass = 'core-loglevel-warn';
+                else if (log.level === 'ERROR') badgeClass = 'core-loglevel-error';
 
                 // Format timestamp
                 const date = new Date(log.timestamp);
@@ -792,11 +792,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'kr-form-group';
+            formGroup.className = 'mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'kr-form-label';
+            label.className = 'form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -810,7 +810,7 @@
                 case 'string':
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'kr-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -822,7 +822,7 @@
                 case 'integer':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'kr-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -832,7 +832,7 @@
                 case 'number':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'kr-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -842,7 +842,7 @@
                 case 'date':
                     input = document.createElement('input');
                     input.type = 'date';
-                    input.className = 'kr-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -851,7 +851,7 @@
                 case 'list':
                 case 'options':
                     input = document.createElement('select');
-                    input.className = 'kr-form-input';
+                    input.className = 'form-select';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
 
@@ -872,7 +872,7 @@
                 default:
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'kr-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;

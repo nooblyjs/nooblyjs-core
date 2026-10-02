@@ -6,24 +6,22 @@
     <title>Cache Management - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Core</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
@@ -37,31 +35,31 @@
 
 
         <!-- LEFT SIDEBAR NAVIGATION -->
-        <aside class="kr-sidebar" id="navigation-sidebar">
+        <aside class="core-sidebar" id="navigation-sidebar">
             <!-- Navigation will be loaded here by navigation.js -->
         </aside>
 
         <!-- MAIN CONTENT AREA -->
-        <main class="kr-main">
+        <main class="core-main">
             <!-- PAGE HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="core-page-header">
                 <div>
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">Cache Management</h1>
-                    <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px; font-weight: 500;">Monitor performance and manage cache entries</p>
+                    <h1 class="core-page-title">Cache Management</h1>
+                    <p class="core-page-subtitle">Monitor performance and manage cache entries</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; white-space: nowrap; background: var(--kr-surface); padding: 8px 12px; border: 1px solid var(--kr-border); border-radius: var(--kr-radius); box-shadow: var(--kr-shadow-sm);">
-                        <label for="instanceSelector" style="font-weight: 600; font-size: 12px; color: var(--kr-ink-500); text-transform: uppercase; letter-spacing: 0.05em;">Instance:</label>
-                        <select id="instanceSelector" class="kr-form-input" style="width: 160px; height: 32px; padding: 0 8px; font-size: 12px; font-weight: 600;">
+                <div class="core-instance-selector">
+                        <label for="instanceSelector">Instance:</label>
+                        <select id="instanceSelector" class="form-select form-select-sm">
                             <option value="default">default</option>
                         </select>
-                        <button id="refreshInstanceBtn" class="kr-btn secondary sm" style="height: 32px; width: 32px; padding: 0; justify-content: center;" title="Refresh instances list">
-                            <i class="bi bi-arrow-clockwise" style="margin: 0;"></i>
+                        <button id="refreshInstanceBtn" class="btn btn-sm btn-outline-secondary core-icon-only" title="Refresh instances list">
+                            <i class="bi bi-arrow-clockwise"></i>
                         </button>
                 </div>
             </div>
 
             <!-- CONTENT WRAPPER -->
-            <div class="kr-page-content">
+            <div class="core-page-content">
 
             <!-- Alerts -->
             <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert">
@@ -100,31 +98,31 @@
                     <!-- Stats Cards -->
                     <div class="row g-4 mb-4">
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Keys</div>
                                 <div class="fs-4 fw-bold" id="totalKeys">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Hits</div>
                                 <div class="fs-4 fw-bold text-success" id="totalHits">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Misses</div>
                                 <div class="fs-4 fw-bold text-danger" id="totalMisses">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Reads</div>
                                 <div class="fs-4 fw-bold" id="totalReads">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Writes</div>
                                 <div class="fs-4 fw-bold" id="totalWrites">0</div>
                             </div>
@@ -133,23 +131,23 @@
 
                     <!-- Refresh Button -->
                     <div class="d-flex justify-content-end mb-4">
-                        <button class="kr-btn solid" onclick="loadDashboardAnalytics()" id="refreshBtn">
+                        <button class="btn btn-primary" onclick="loadDashboardAnalytics()" id="refreshBtn">
                             <i class="bi bi-arrow-clockwise"></i> Refresh
                         </button>
                     </div>
 
                     <!-- Top 50 Keys by Hits Pie Chart -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top 50 Cache Keys by Hits</h2>
-                                <p class="kr-card-subtitle">Distribution of cache hits across top keys</p>
+                                <h2 class="card-title">Top 50 Cache Keys by Hits</h2>
+                                <p class="card-subtitle">Distribution of cache hits across top keys</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="chart-container" style="height: 300px;">
                                 <canvas id="hitDistributionChart"></canvas>
-                                <div id="hitDistributionEmpty" class="kr-empty-state" style="display: none;">
+                                <div id="hitDistributionEmpty" class="core-empty-state" style="display: none;">
                                     <i class="bi bi-inbox"></i>
                                     <h3>No cache hit data available</h3>
                                     <p>Cache hit distribution will appear here once data is collected</p>
@@ -159,17 +157,17 @@
                     </div>
 
                     <!-- Activity Timeline -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top 10 Keys Activity</h2>
-                                <p class="kr-card-subtitle">Activity over time (operations per minute)</p>
+                                <h2 class="card-title">Top 10 Keys Activity</h2>
+                                <p class="card-subtitle">Activity over time (operations per minute)</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="chart-container" style="height: 400px;">
                                 <canvas id="activityChart"></canvas>
-                                <div id="activityEmpty" class="kr-empty-state" style="display: none;">
+                                <div id="activityEmpty" class="core-empty-state" style="display: none;">
                                     <i class="bi bi-graph-up"></i>
                                     <h3>No activity data available</h3>
                                     <p>Activity timeline will appear here once cache operations are recorded</p>
@@ -179,16 +177,16 @@
                     </div>
 
                     <!-- Cache Key List Table -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Cache Key Details</h2>
-                                <p class="kr-card-subtitle">Top 100 cache keys with read/write counts</p>
+                                <h2 class="card-title">Cache Key Details</h2>
+                                <p class="card-subtitle">Top 100 cache keys with read/write counts</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive" id="keyListTableContainer">
-                                <table class="kr-table" id="keyListTable">
+                                <table class="table table-hover" id="keyListTable">
                                     <thead>
                                         <tr>
                                             <th style="width: 40%;" class="sortable" onclick="sortDashboardTable('keyList', 'name')">Cache Key<span id="sort-keyList-name"></span></th>
@@ -209,7 +207,7 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div id="keyListEmpty" class="kr-empty-state" style="display: none; min-height: 200px;">
+                                <div id="keyListEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
                                     <i class="bi bi-key"></i>
                                     <h3>No cache keys found</h3>
                                     <p>Cache keys will appear here once they are stored</p>
@@ -224,16 +222,16 @@
                     </div>
 
                     <!-- Top 50 Cache Misses Table -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top 50 Cache Misses</h2>
-                                <p class="kr-card-subtitle">Keys with the highest miss counts</p>
+                                <h2 class="card-title">Top 50 Cache Misses</h2>
+                                <p class="card-subtitle">Keys with the highest miss counts</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive" id="missesTableContainer">
-                                <table class="kr-table" id="missesTable">
+                                <table class="table table-hover" id="missesTable">
                                     <thead>
                                         <tr>
                                             <th style="width: 50%;" class="sortable" onclick="sortDashboardTable('misses', 'key')">Cache Key<span id="sort-misses-key"></span></th>
@@ -252,7 +250,7 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div id="missesEmpty" class="kr-empty-state" style="display: none; min-height: 200px;">
+                                <div id="missesEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
                                     <i class="bi bi-exclamation-circle"></i>
                                     <h3>No cache misses recorded</h3>
                                     <p>Cache misses will appear here once requested keys are not found</p>
@@ -267,19 +265,19 @@
                     </div>
 
                     <!-- Cache Analytics -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
+                    <div class="card">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Cache Hits</h2>
-                                <p class="kr-card-subtitle">View cache usage statistics and most accessed keys</p>
+                                <h2 class="card-title">Cache Hits</h2>
+                                <p class="card-subtitle">View cache usage statistics and most accessed keys</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="text-muted small"><span id="analyticsCount">Loading...</span> entries tracked</div>
-                                <button class="kr-btn secondary sm" onclick="loadDataAnalytics()">Refresh Data</button>
+                                <button class="btn btn-secondary btn-sm" onclick="loadDataAnalytics()">Refresh Data</button>
                             </div>
-                            <table class="kr-table">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th class="sortable" data-column="key" onclick="sortDataTable('key')">Cache Key</th>
@@ -300,119 +298,119 @@
                 <!-- Data  Tab -->
                 <div class="tab-pane fade" id="data" role="tabpanel">
                     <!-- Store/Update Cache Form -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Store / Update Cache</h2>
-                                <p class="kr-card-subtitle">Add or update a cache entry</p>
+                                <h2 class="card-title">Store / Update Cache</h2>
+                                <p class="card-subtitle">Add or update a cache entry</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="putForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="putKey">Key</label>
-                                    <input type="text" id="putKey" class="kr-form-input" placeholder="Enter cache key" required>
+                                <div class="mb-3">
+                                    <label class="form-label" for="putKey">Key</label>
+                                    <input type="text" id="putKey" class="form-control" placeholder="Enter cache key" required>
                                     <div class="form-text">Unique identifier for the cache entry</div>
                                 </div>
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="putValue">Value (JSON)</label>
-                                    <textarea id="putValue" class="kr-form-input kr-form-textarea" placeholder='{"message": "Hello World", "timestamp": "2024-01-01"}' required></textarea>
+                                <div class="mb-3">
+                                    <label class="form-label" for="putValue">Value (JSON)</label>
+                                    <textarea id="putValue" class="form-control" placeholder='{"message": "Hello World", "timestamp": "2024-01-01"}' required></textarea>
                                     <div id="putValidation" class="form-text" style="display: none;"></div>
                                     <div class="form-text">Enter valid JSON data</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Store Cache</button>
-                                    <button type="button" class="kr-btn secondary" onclick="formatJSON('putValue')">Format JSON</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadExample('putValue')">Load Example</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Store Cache</button>
+                                    <button type="button" class="btn btn-secondary" onclick="formatJSON('putValue')">Format JSON</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadExample('putValue')">Load Example</button>
                                 </div>
                             </form>
-                            <div id="putResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Response:</div>
-                                <div id="putResponseContent" class="kr-response-content"></div>
+                            <div id="putResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="putResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Retrieve Cache Form -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Retrieve Cache</h2>
-                                <p class="kr-card-subtitle">Get a cache entry by key</p>
+                                <h2 class="card-title">Retrieve Cache</h2>
+                                <p class="card-subtitle">Get a cache entry by key</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="getForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="getKey">Key</label>
-                                    <input type="text" id="getKey" class="kr-form-input" placeholder="Enter cache key to retrieve" required>
+                                <div class="mb-3">
+                                    <label class="form-label" for="getKey">Key</label>
+                                    <input type="text" id="getKey" class="form-control" placeholder="Enter cache key to retrieve" required>
                                     <div class="form-text">Key of the cache entry to retrieve</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Retrieve Cache</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Retrieve Cache</button>
                                 </div>
                             </form>
-                            <div id="getResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Retrieved Data:</div>
-                                <div id="getResponseContent" class="kr-response-content"></div>
+                            <div id="getResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Retrieved Data:</div>
+                                <div id="getResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Delete Cache Form -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Delete Cache</h2>
-                                <p class="kr-card-subtitle">Remove a cache entry</p>
+                                <h2 class="card-title">Delete Cache</h2>
+                                <p class="card-subtitle">Remove a cache entry</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="deleteForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="deleteKey">Key</label>
-                                    <input type="text" id="deleteKey" class="kr-form-input" placeholder="Enter cache key to delete" required>
+                                <div class="mb-3">
+                                    <label class="form-label" for="deleteKey">Key</label>
+                                    <input type="text" id="deleteKey" class="form-control" placeholder="Enter cache key to delete" required>
                                     <div class="form-text">Key of the cache entry to remove</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary" style="background: var(--kr-red-600);">Delete Cache</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary" style="background: var(--danger);">Delete Cache</button>
                                 </div>
                             </form>
-                            <div id="deleteResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Response:</div>
-                                <div id="deleteResponseContent" class="kr-response-content"></div>
+                            <div id="deleteResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="deleteResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Status Check -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Service Status</h2>
-                                <p class="kr-card-subtitle">Check cache service status</p>
+                                <h2 class="card-title">Service Status</h2>
+                                <p class="card-subtitle">Check cache service status</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-btn-group">
-                                <button type="button" class="kr-btn secondary" onclick="checkStatus()">Check Status</button>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
                             </div>
-                            <div id="statusResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="kr-response-content"></div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- API Documentation -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
+                    <div class="card">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">API Documentation</h2>
-                                <p class="kr-card-subtitle">Interactive API documentation for Cache service</p>
+                                <h2 class="card-title">API Documentation</h2>
+                                <p class="card-subtitle">Interactive API documentation for Cache service</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="swagger-ui"></div>
                         </div>
                     </div>
@@ -422,25 +420,25 @@
                 <div class="tab-pane fade" id="settings" role="tabpanel" style="min-height:1000px">
 
                     <!-- Settings Card -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
+                    <div class="card">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Cache Service Settings</h2>
-                                <p class="kr-card-subtitle">Configure the cache service parameters</p>
+                                <h2 class="card-title">Cache Service Settings</h2>
+                                <p class="card-subtitle">Configure the cache service parameters</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="settingsInfo" class="alert alert-info" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Save Settings</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadSettings()">Reload</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="kr-response-content"></div>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -537,10 +535,9 @@
 
         // Color palette for charts
         const chartColors = [
-            '#6B7280', '#198754', '#dc3545', '#ffc107', '#6610f2',
-            '#fd7e14', '#20c997', '#0dcaf0', '#d63384', '#6c757d',
-            '#6B7280', '#198754', '#ffc107', '#dc3545', '#0dcaf0',
-            '#6f42c1', '#e83e8c', '#17a2b8', '#28a745', '#ffc107'
+            // NooblyJS palette: accent, teal, then the design system's deep avatar tones
+            '#C2471F', '#2B7F86', '#4B2E83', '#E4B85C', '#1F4A8A',
+            '#8A2440', '#3D5A1E', '#F2A27E', '#6B605A', '#1E5E63'
         ];
 
         // Instance management functions
@@ -1231,11 +1228,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'core-form-group';
+            formGroup.className = 'mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'core-form-label';
+            label.className = 'form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -1249,7 +1246,7 @@
                 case 'string':
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1261,7 +1258,7 @@
                 case 'integer':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1271,7 +1268,7 @@
                 case 'number':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1281,7 +1278,7 @@
                 case 'date':
                     input = document.createElement('input');
                     input.type = 'date';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1311,7 +1308,7 @@
                 default:
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1322,7 +1319,7 @@
             // Add description helper text if available
             if (setting.desciption) {
                 const helperText = document.createElement('div');
-                helperText.className = 'core-helper-text';
+                helperText.className = 'form-text';
                 helperText.textContent = setting.desciption;
                 formGroup.appendChild(helperText);
             }

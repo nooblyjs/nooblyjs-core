@@ -7,23 +7,21 @@
     <title>Workflow Management - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Core</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
@@ -36,17 +34,19 @@
     </header>
 
 
-        <aside class="kr-sidebar" id="navigation-sidebar">
+        <aside class="core-sidebar" id="navigation-sidebar">
             <!-- Navigation will be loaded here by navigation.js -->
         </aside>
 
-        <main class="kr-main">
-            <div style="margin-bottom: 1.5rem;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 800;">Workflow Management</h1>
-                <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px;">Define and start workflows</p>
+        <main class="core-main">
+            <div class="core-page-header">
+                <div>
+                <h1 class="core-page-title">Workflow Management</h1>
+                <p class="core-page-subtitle">Define and start workflows</p>
+                </div>
             </div>
 
-            <div class="kr-page-content">
+            <div class="core-page-content">
 
             <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert">
                 <strong>Success!</strong> <span id="successMessage"></span>
@@ -87,23 +87,23 @@
                 <!-- Settings Tab -->
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" style="min-height:1000px">
                     <!-- Settings Card -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head w-100">
-                            <h2 class="kr-card-title">Workflow Service Settings</h2>
-                            <p class="kr-card-subtitle">Configure the workflow service parameters</p>
+                    <div class="card">
+                        <div class="card-header w-100">
+                            <h2 class="card-title">Workflow Service Settings</h2>
+                            <p class="card-subtitle">Configure the workflow service parameters</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="kr-btn-group">
+                                <div class="d-flex flex-wrap gap-2">
                                     <button type="submit" class="btn btn-secondary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="kr-response-container" style="display: none; margin-top: 1rem;">
-                                <div class="kr-response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="kr-response-content"></div>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -114,14 +114,14 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
 
                     <!-- Statistics Card with Pie Chart -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head w-100">
+                    <div class="card mb-4">
+                        <div class="card-header w-100">
                             <div>
-                                <h2 class="kr-card-title">Workflow Status Distribution</h2>
-                                <p class="kr-card-subtitle">Visual breakdown of workflow execution status</p>
+                                <h2 class="card-title">Workflow Status Distribution</h2>
+                                <p class="card-subtitle">Visual breakdown of workflow execution status</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div style="position: relative; height: 300px;">
@@ -129,9 +129,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="kr-stats-summary">
+                                    <div class="core-stats-summary">
                                         <h5 class="mb-3">Statistics Summary</h5>
-                                        <div class="kr-stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-success">COMPLETED</span></span>
                                                 <strong id="statCompletedCount">0</strong>
@@ -142,7 +142,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="kr-stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-danger">ERRORS</span></span>
                                                 <strong id="statErrorsCount">0</strong>
@@ -153,7 +153,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="kr-stat-item mb-3">
+                                        <div class="core-stat-item mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span><span class="badge bg-secondary">ACTIVE</span></span>
                                                 <strong id="statActiveCount">0</strong>
@@ -181,22 +181,22 @@
 
                     <!-- Refresh Button -->
                     <div class="d-flex justify-content-end mb-4">
-                        <button type="button" class="kr-btn solid" onclick="refreshDashboard()" id="refreshBtn">
+                        <button type="button" class="btn btn-primary" onclick="refreshDashboard()" id="refreshBtn">
                             <i class="bi bi-arrow-clockwise"></i> Refresh
                         </button>
                     </div>
 
                     <!-- Workflow Analytics Table Card -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head w-100">
+                    <div class="card">
+                        <div class="card-header w-100">
                             <div>
-                                <h2 class="kr-card-title">Workflow Analytics</h2>
-                                <p class="kr-card-subtitle">Detailed analytics for each workflow (ordered by last run)</p>
+                                <h2 class="card-title">Workflow Analytics</h2>
+                                <p class="card-subtitle">Detailed analytics for each workflow (ordered by last run)</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive">
-                                <table class="kr-table">
+                                <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>Workflow Name</th>
@@ -233,172 +233,172 @@
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
 
             <!-- Define Workflow Form -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">Define Workflow</h2>
-                    <p class="kr-card-subtitle">Define a new workflow with a series of steps</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Define Workflow</h2>
+                    <p class="card-subtitle">Define a new workflow with a series of steps</p>
                 </div>
-                <div class="kr-surface-body">
+                <div class="card-body">
                     <form id="defineForm">
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="defineName">Workflow Name</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="defineName">Workflow Name</label>
                             <input type="text" id="defineName" class="form-control" placeholder="Enter workflow name" required>
                             <div class="form-text">A unique name for the workflow</div>
                         </div>
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="defineSteps">Steps (JSON Array)</label>
-                            <textarea id="defineSteps" class="kr-form-input kr-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
-                            <div id="defineValidation" class="kr-validation-message" style="display: none;"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="defineSteps">Steps (JSON Array)</label>
+                            <textarea id="defineSteps" class="form-control" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="defineValidation" class="core-validation-message" style="display: none;"></div>
                             <div class="form-text">Enter a valid JSON array of step names</div>
                         </div>
-                        <div class="kr-btn-group">
+                        <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="btn btn-secondary">Define Workflow</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('defineSteps')">Format JSON</button>
                             <button type="button" class="btn btn-secondary" onclick="loadExample('defineSteps')">Load Example</button>
                         </div>
                     </form>
-                    <div id="defineResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Response:</div>
-                        <div id="defineResponseContent" class="kr-response-content"></div>
+                    <div id="defineResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="defineResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Start Workflow Form -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">Start Workflow</h2>
-                    <p class="kr-card-subtitle">Start a defined workflow with initial data</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Start Workflow</h2>
+                    <p class="card-subtitle">Start a defined workflow with initial data</p>
                 </div>
-                <div class="kr-surface-body">
+                <div class="card-body">
                     <form id="startForm">
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="startName">Workflow Name</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="startName">Workflow Name</label>
                             <input type="text" id="startName" class="form-control" placeholder="Enter workflow name" required>
                             <div class="form-text">The name of the workflow to start</div>
                         </div>
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="startData">Initial Data (JSON)</label>
-                            <textarea id="startData" class="kr-form-input kr-form-textarea" placeholder='{"userId": 123, "orderId": 456}'></textarea>
-                            <div id="startValidation" class="kr-validation-message" style="display: none;"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="startData">Initial Data (JSON)</label>
+                            <textarea id="startData" class="form-control" placeholder='{"userId": 123, "orderId": 456}'></textarea>
+                            <div id="startValidation" class="core-validation-message" style="display: none;"></div>
                             <div class="form-text">Optional JSON data to pass to the workflow</div>
                         </div>
-                        <div class="kr-btn-group">
+                        <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="btn btn-secondary">Start Workflow</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('startData')">Format JSON</button>
                             <button type="button" class="btn btn-secondary" onclick="loadExample('startData')">Load Example</button>
                         </div>
                     </form>
-                    <div id="startResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Response:</div>
-                        <div id="startResponseContent" class="kr-response-content"></div>
+                    <div id="startResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Response:</div>
+                        <div id="startResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Retrieve Workflow Form -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">Retrieve Workflow</h2>
-                    <p class="kr-card-subtitle">Get a workflow definition by name</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Retrieve Workflow</h2>
+                    <p class="card-subtitle">Get a workflow definition by name</p>
                 </div>
-                <div class="kr-surface-body">
+                <div class="card-body">
                     <form id="retrieveForm">
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="retrieveName">Workflow Name</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="retrieveName">Workflow Name</label>
                             <input type="text" id="retrieveName" class="form-control" placeholder="Enter workflow name" required>
                             <div class="form-text">The name of the workflow to retrieve</div>
                         </div>
-                        <div class="kr-btn-group">
+                        <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="btn btn-secondary">Retrieve Workflow</button>
                         </div>
                     </form>
-                    <div id="retrieveResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Workflow Definition:</div>
-                        <div id="retrieveResponseContent" class="kr-response-content"></div>
+                    <div id="retrieveResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflow Definition:</div>
+                        <div id="retrieveResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Update Workflow Form -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">Update Workflow</h2>
-                    <p class="kr-card-subtitle">Update an existing workflow definition</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Update Workflow</h2>
+                    <p class="card-subtitle">Update an existing workflow definition</p>
                 </div>
-                <div class="kr-surface-body">
+                <div class="card-body">
                     <form id="updateForm">
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="updateName">Workflow Name</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="updateName">Workflow Name</label>
                             <input type="text" id="updateName" class="form-control" placeholder="Enter workflow name" required>
                             <div class="form-text">The name of the workflow to update</div>
                         </div>
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="updateSteps">Steps (JSON Array)</label>
-                            <textarea id="updateSteps" class="kr-form-input kr-form-textarea" placeholder='["step1", "step2", "step3"]' required></textarea>
-                            <div id="updateValidation" class="kr-validation-message" style="display: none;"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="updateSteps">Steps (JSON Array)</label>
+                            <textarea id="updateSteps" class="form-control" placeholder='["step1", "step2", "step3"]' required></textarea>
+                            <div id="updateValidation" class="core-validation-message" style="display: none;"></div>
                             <div class="form-text">Enter a valid JSON array of step names</div>
                         </div>
-                        <div class="kr-form-group">
-                            <label class="kr-form-label" for="updateMetadata">Metadata (JSON)</label>
-                            <textarea id="updateMetadata" class="kr-form-input kr-form-textarea" placeholder='{"description": "Updated description", "tags": ["tag1"]}'></textarea>
-                            <div id="updateMetadataValidation" class="kr-validation-message" style="display: none;"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="updateMetadata">Metadata (JSON)</label>
+                            <textarea id="updateMetadata" class="form-control" placeholder='{"description": "Updated description", "tags": ["tag1"]}'></textarea>
+                            <div id="updateMetadataValidation" class="core-validation-message" style="display: none;"></div>
                             <div class="form-text">Optional JSON metadata (description and tags)</div>
                         </div>
-                        <div class="kr-btn-group">
+                        <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="btn btn-secondary">Update Workflow</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('updateSteps')">Format Steps JSON</button>
                             <button type="button" class="btn btn-secondary" onclick="formatJSON('updateMetadata')">Format Metadata JSON</button>
                         </div>
                     </form>
-                    <div id="updateResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Updated Workflow:</div>
-                        <div id="updateResponseContent" class="kr-response-content"></div>
+                    <div id="updateResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Updated Workflow:</div>
+                        <div id="updateResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- List All Workflows Form -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">List All Workflows</h2>
-                    <p class="kr-card-subtitle">Get a list of all defined workflows</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">List All Workflows</h2>
+                    <p class="card-subtitle">Get a list of all defined workflows</p>
                 </div>
-                <div class="kr-surface-body">
-                    <div class="kr-btn-group">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-secondary" onclick="listWorkflows()">List Workflows</button>
                     </div>
-                    <div id="listResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Workflows:</div>
-                        <div id="listResponseContent" class="kr-response-content"></div>
+                    <div id="listResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Workflows:</div>
+                        <div id="listResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Status Check -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">Service Status</h2>
-                    <p class="kr-card-subtitle">Check workflow service status</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Service Status</h2>
+                    <p class="card-subtitle">Check workflow service status</p>
                 </div>
-                <div class="kr-surface-body">
-                    <div class="kr-btn-group">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
                     </div>
-                    <div id="statusResponse" class="kr-response-container" style="display: none;">
-                        <div class="kr-response-title">Service Status:</div>
-                        <div id="statusResponseContent" class="kr-response-content"></div>
+                    <div id="statusResponse" class="core-response-container" style="display: none;">
+                        <div class="core-response-title">Service Status:</div>
+                        <div id="statusResponseContent" class="core-response-content"></div>
                     </div>
                 </div>
             </div>
 
             <!-- API Documentation -->
-            <div class="kr-surface">
-                <div class="kr-surface-head">
-                    <h2 class="kr-card-title">API Documentation</h2>
-                    <p class="kr-card-subtitle">Interactive API documentation for Workflow service</p>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">API Documentation</h2>
+                    <p class="card-subtitle">Interactive API documentation for Workflow service</p>
                 </div>
-                <div class="kr-surface-body">
+                <div class="card-body">
                     <div id="swagger-ui"></div>
                 </div>
             </div>
@@ -796,14 +796,14 @@
                             stats.counts.active
                         ],
                         backgroundColor: [
-                            'rgba(25, 135, 84, 0.8)',    // Bootstrap success (green)
-                            'rgba(220, 53, 69, 0.8)',    // Bootstrap danger (red)
-                            'rgba(13, 110, 253, 0.8)'    // Bootstrap primary (blue)
+                            'rgba(31, 122, 77, 0.8)',    // success
+                            'rgba(180, 35, 53, 0.8)',    // danger
+                            'rgba(47, 95, 158, 0.8)'    // info
                         ],
                         borderColor: [
-                            'rgba(25, 135, 84, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(13, 110, 253, 1)'
+                            'rgba(31, 122, 77, 1)',
+                            'rgba(180, 35, 53, 1)',
+                            'rgba(47, 95, 158, 1)'
                         ],
                         borderWidth: 2
                     }]
@@ -1012,11 +1012,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'core-form-group mb-3';
+            formGroup.className = 'mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'core-form-label';
+            label.className = 'form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);

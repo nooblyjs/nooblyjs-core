@@ -6,49 +6,47 @@
     <title>Settings Management - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Core</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
         </div>
     </header>
 
-    <aside class="kr-sidebar" id="navigation-sidebar">
+    <aside class="core-sidebar" id="navigation-sidebar">
         <!-- Navigation will be loaded here by navigation.js -->
     </aside>
 
-    <main class="kr-main">
+    <main class="core-main">
         <!-- PAGE HEADER -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div class="core-page-header">
             <div>
-                <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">Settings Management</h1>
-                <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px; font-weight: 500;">
+                <h1 class="core-page-title">Settings Management</h1>
+                <p class="core-page-subtitle">
                     Grouped key/value settings, encrypted at rest with AES-256-GCM
                 </p>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span class="kr-chip ok" id="encryptionChip"><i class="bi bi-shield-lock-fill"></i> Encrypted</span>
-                <button class="kr-btn secondary sm" id="reloadStoreBtn" title="Re-read the encrypted file from disk" style="height: 32px;">
+            <div class="d-flex align-items-center gap-2">
+                <span class="core-chip ok" id="encryptionChip"><i class="bi bi-shield-lock-fill"></i> Encrypted</span>
+                <button class="btn btn-sm btn-outline-secondary core-icon-only" id="reloadStoreBtn" title="Re-read the encrypted file from disk">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </div>
         </div>
 
-        <div class="kr-page-content">
+        <div class="core-page-content">
             <!-- Alerts -->
             <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert" style="display: none;">
                 <strong>Success!</strong> <span id="successMessage"></span>
@@ -85,28 +83,28 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top"><div class="ico t"><i class="bi bi-collection"></i></div></div>
                                 <div class="num" id="statGroups">0</div>
                                 <div class="lbl">Groups</div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top"><div class="ico b"><i class="bi bi-key"></i></div></div>
                                 <div class="num" id="statKeys">0</div>
                                 <div class="lbl">Settings</div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top"><div class="ico o"><i class="bi bi-eye-slash"></i></div></div>
                                 <div class="num" id="statSecrets">0</div>
                                 <div class="lbl">Secret values</div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top"><div class="ico g"><i class="bi bi-file-earmark-lock"></i></div></div>
                                 <div class="num" id="statFileSize">0 B</div>
                                 <div class="lbl">Encrypted file</div>
@@ -114,15 +112,15 @@
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head"><h3><i class="bi bi-shield-lock"></i> Store</h3></div>
-                        <div class="kr-surface-body">
+                    <div class="card">
+                        <div class="card-header"><h3><i class="bi bi-shield-lock"></i> Store</h3></div>
+                        <div class="card-body">
                             <div id="secretWarning" class="alert alert-warning" style="display: none;">
                                 <i class="bi bi-exclamation-triangle-fill"></i>
                                 Settings are encrypted with the built-in development secret.
                                 Set <code>SETTINGS_SECRET</code> before storing production values.
                             </div>
-                            <table class="kr-table">
+                            <table class="table table-hover">
                                 <tbody>
                                     <tr><td style="width: 200px; font-weight: 600;">Cipher</td><td id="infoAlgorithm">-</td></tr>
                                     <tr><td style="font-weight: 600;">File</td><td id="infoFilepath" style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">-</td></tr>
@@ -139,14 +137,14 @@
                     <div class="row g-3">
                         <!-- Groups -->
                         <div class="col-lg-4">
-                            <div class="kr-surface">
-                                <div class="kr-surface-head" style="display: flex; align-items: center; justify-content: space-between;">
+                            <div class="card">
+                                <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
                                     <h3><i class="bi bi-collection"></i> Groups</h3>
-                                    <button class="kr-btn solid sm" id="newGroupBtn" style="height: 30px;">
+                                    <button class="btn btn-primary btn-sm" id="newGroupBtn" style="height: 30px;">
                                         <i class="bi bi-plus-lg"></i> New
                                     </button>
                                 </div>
-                                <div class="kr-surface-body" style="padding: 8px;">
+                                <div class="card-body" style="padding: 8px;">
                                     <div id="groupList"></div>
                                 </div>
                             </div>
@@ -154,24 +152,24 @@
 
                         <!-- Key / values -->
                         <div class="col-lg-8">
-                            <div class="kr-surface">
-                                <div class="kr-surface-head" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                            <div class="card">
+                                <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                                     <h3><i class="bi bi-sliders"></i> <span id="currentGroupName">Select a group</span></h3>
                                     <div style="display: flex; gap: 8px;">
-                                        <button class="kr-btn secondary sm" id="toggleRevealBtn" style="height: 30px;" disabled>
+                                        <button class="btn btn-secondary btn-sm" id="toggleRevealBtn" style="height: 30px;" disabled>
                                             <i class="bi bi-eye"></i> Reveal
                                         </button>
-                                        <button class="kr-btn solid sm" id="newSettingBtn" style="height: 30px;" disabled>
+                                        <button class="btn btn-primary btn-sm" id="newSettingBtn" style="height: 30px;" disabled>
                                             <i class="bi bi-plus-lg"></i> Add setting
                                         </button>
-                                        <button class="kr-btn secondary sm" id="deleteGroupBtn" style="height: 30px;" disabled title="Delete this group">
+                                        <button class="btn btn-secondary btn-sm" id="deleteGroupBtn" style="height: 30px;" disabled title="Delete this group">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="kr-surface-body" style="padding: 0;">
-                                    <p id="groupDescription" style="display: none; margin: 0; padding: 12px 16px; font-size: 13px; color: var(--kr-ink-500); border-bottom: 1px solid var(--kr-border-2);"></p>
-                                    <table class="kr-table">
+                                <div class="card-body" style="padding: 0;">
+                                    <p id="groupDescription" style="display: none; margin: 0; padding: 12px 16px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--divider);"></p>
+                                    <table class="table table-hover">
                                         <thead>
                                             <tr>
                                                 <th>Key</th>
@@ -181,7 +179,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="settingsTableBody">
-                                            <tr><td colspan="4" style="text-align: center; color: var(--kr-ink-400);">Select a group to view its settings</td></tr>
+                                            <tr><td colspan="4" style="text-align: center; color: var(--neutral-dot);">Select a group to view its settings</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -192,14 +190,14 @@
 
                 <!-- ============================ CONFIGURATION ============================ -->
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-                    <div class="kr-surface">
-                        <div class="kr-surface-head"><h3><i class="bi bi-gear"></i> Service Configuration</h3></div>
-                        <div class="kr-surface-body">
+                    <div class="card">
+                        <div class="card-header"><h3><i class="bi bi-gear"></i> Service Configuration</h3></div>
+                        <div class="card-body">
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
                                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                                    <button type="submit" class="kr-btn solid">Save Configuration</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadProviderSettings()">Reload</button>
+                                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadProviderSettings()">Reload</button>
                                 </div>
                             </form>
                         </div>
@@ -220,19 +218,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="groupNameInput">Group name</label>
-                        <input class="kr-form-input" id="groupNameInput" required placeholder="database">
-                        <div class="kr-helper-text">Letters, digits, spaces, dots, dashes and underscores.</div>
+                    <div class="mb-3">
+                        <label class="form-label" for="groupNameInput">Group name</label>
+                        <input class="form-control" id="groupNameInput" required placeholder="database">
+                        <div class="form-text">Letters, digits, spaces, dots, dashes and underscores.</div>
                     </div>
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="groupDescriptionInput">Description</label>
-                        <input class="kr-form-input" id="groupDescriptionInput" placeholder="Connection details for the primary database">
+                    <div class="mb-3">
+                        <label class="form-label" for="groupDescriptionInput">Description</label>
+                        <input class="form-control" id="groupDescriptionInput" placeholder="Connection details for the primary database">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="kr-btn secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="kr-btn solid">Create group</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create group</button>
                 </div>
             </form>
         </div>
@@ -248,26 +246,26 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="settingKeyInput">Key</label>
-                        <input class="kr-form-input" id="settingKeyInput" required placeholder="host">
+                    <div class="mb-3">
+                        <label class="form-label" for="settingKeyInput">Key</label>
+                        <input class="form-control" id="settingKeyInput" required placeholder="host">
                     </div>
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="settingTypeInput">Type</label>
-                        <select class="kr-form-input" id="settingTypeInput">
+                    <div class="mb-3">
+                        <label class="form-label" for="settingTypeInput">Type</label>
+                        <select class="form-select" id="settingTypeInput">
                             <option value="string">string</option>
                             <option value="number">number</option>
                             <option value="boolean">boolean</option>
                             <option value="json">json</option>
                         </select>
                     </div>
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="settingValueInput">Value</label>
-                        <textarea class="kr-form-textarea" id="settingValueInput" rows="3" placeholder="localhost"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label" for="settingValueInput">Value</label>
+                        <textarea class="form-control" id="settingValueInput" rows="3" placeholder="localhost"></textarea>
                     </div>
-                    <div class="kr-form-group">
-                        <label class="kr-form-label" for="settingDescriptionInput">Description</label>
-                        <input class="kr-form-input" id="settingDescriptionInput" placeholder="Database hostname">
+                    <div class="mb-3">
+                        <label class="form-label" for="settingDescriptionInput">Description</label>
+                        <input class="form-control" id="settingDescriptionInput" placeholder="Database hostname">
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="settingSecretInput">
@@ -277,8 +275,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="kr-btn secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="kr-btn solid">Save setting</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save setting</button>
                 </div>
             </form>
         </div>
@@ -409,16 +407,16 @@
             const container = document.getElementById('groupList');
 
             if (!groups.length) {
-                container.innerHTML = '<div class="kr-empty-state">No groups yet</div>';
+                container.innerHTML = '<div class="core-empty-state">No groups yet</div>';
                 return;
             }
 
             container.innerHTML = groups.map((group) => `
-                <a href="#" class="kr-nav-item ${group.name === currentGroup ? 'active' : ''}"
+                <a href="#" class="core-sidebar-item ${group.name === currentGroup ? 'active' : ''}"
                    data-group="${escapeHtml(group.name)}">
                     <i class="bi bi-folder2"></i>
                     <span style="overflow: hidden; text-overflow: ellipsis;">${escapeHtml(group.name)}</span>
-                    <span class="kr-chip" style="margin-left: auto; font-size: 10px;">${group.count}</span>
+                    <span class="core-chip" style="margin-left: auto; font-size: 10px;">${group.count}</span>
                 </a>
             `).join('');
 
@@ -458,7 +456,7 @@
         const description = document.getElementById('groupDescription');
 
         if (!currentGroup) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--kr-ink-400);">Select a group to view its settings</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--neutral-dot);">Select a group to view its settings</td></tr>';
             description.style.display = 'none';
             return;
         }
@@ -475,7 +473,7 @@
             }
 
             if (!group.entries.length) {
-                body.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--kr-ink-400);">No settings in this group</td></tr>';
+                body.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--neutral-dot);">No settings in this group</td></tr>';
                 return;
             }
 
@@ -484,20 +482,20 @@
                     <td style="font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
                         ${escapeHtml(entry.key)}
                         ${entry.description
-                            ? `<div style="font-family: inherit; font-weight: 400; font-size: 11px; color: var(--kr-ink-400);">${escapeHtml(entry.description)}</div>`
+                            ? `<div style="font-family: inherit; font-weight: 400; font-size: 11px; color: var(--neutral-dot);">${escapeHtml(entry.description)}</div>`
                             : ''}
                     </td>
                     <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; word-break: break-all;">
                         ${escapeHtml(displayValue(entry.value))}
                     </td>
                     <td>${entry.secret
-                        ? '<span class="kr-chip warn"><i class="bi bi-shield-lock"></i> Secret</span>'
-                        : '<span style="color: var(--kr-ink-400);">-</span>'}</td>
+                        ? '<span class="core-chip warn"><i class="bi bi-shield-lock"></i> Secret</span>'
+                        : '<span style="color: var(--neutral-dot);">-</span>'}</td>
                     <td>
-                        <button class="kr-btn secondary sm" data-edit="${escapeHtml(entry.key)}" style="height: 28px;" title="Edit">
+                        <button class="btn btn-secondary btn-sm" data-edit="${escapeHtml(entry.key)}" style="height: 28px;" title="Edit">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="kr-btn secondary sm" data-delete="${escapeHtml(entry.key)}" style="height: 28px;" title="Delete">
+                        <button class="btn btn-secondary btn-sm" data-delete="${escapeHtml(entry.key)}" style="height: 28px;" title="Delete">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
@@ -690,10 +688,10 @@
 
             (data.list || []).forEach((setting) => {
                 const group = document.createElement('div');
-                group.className = 'kr-form-group';
+                group.className = 'mb-3';
 
                 const label = document.createElement('label');
-                label.className = 'kr-form-label';
+                label.className = 'form-label';
                 label.htmlFor = 'setting_' + setting.setting;
                 label.textContent = setting.setting;
                 group.appendChild(label);
@@ -716,14 +714,14 @@
                     input.value = current;
                 }
 
-                input.className = 'kr-form-input';
+                input.className = 'form-control';
                 input.id = 'setting_' + setting.setting;
                 input.name = setting.setting;
                 group.appendChild(input);
 
                 if (setting.description) {
                     const helper = document.createElement('div');
-                    helper.className = 'kr-helper-text';
+                    helper.className = 'form-text';
                     helper.textContent = setting.description;
                     group.appendChild(helper);
                 }

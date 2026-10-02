@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Request Invitation - NooblyJS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
     <style>
         /* Restore 12px base font: this page is sized in rem against a 12px root
            (previously provided by public/styles.css before the CSS consolidation). */
         html { font-size: 12px; }
         :root {
-            --custom-primary: #059DA2;
-            --custom-secondary: #6c757d;
-            --custom-warning: #ffc107;
+            --custom-primary: var(--accent);
+            --custom-secondary: var(--muted);
+            --custom-warning: var(--warn-border);
         }
 
         body {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -31,26 +31,13 @@
             padding: 1rem;
         }
 
-        .auth-card {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: none;
-            border-radius: 1rem;
-        }
-
         .auth-card .card-body {
             padding: 2.5rem 2rem;
         }
 
-        .auth-logo {
-            color: var(--custom-primary);
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
         .auth-card .text-center p {
             font-size: 1.2rem;
-            color: #666;
+            color: var(--muted);
             margin-bottom: 0;
         }
 
@@ -70,43 +57,8 @@
             padding: 0.5rem 1rem;
         }
 
-        .form-control:focus {
-            border-color: var(--custom-primary);
-            box-shadow: 0 0 0 0.2rem rgba(2, 121, 125, 0.25);
-        }
-
-        .btn-secondary {
-            background-color: var(--custom-primary);
-            border-color: var(--custom-primary);
-        }
-
-        .btn-secondary:hover {
-            background-color: #025a5d;
-            border-color: #025a5d;
-        }
-
-        .auth-link {
-            color: var(--custom-primary);
-            text-decoration: none;
-        }
-
-        .auth-link:hover {
-            color: #025a5d;
-            text-decoration: underline;
-        }
-
-        .success-message {
-            text-align: center;
-        }
-
-        .success-message i {
-            font-size: 4rem;
-            color: var(--custom-primary);
-            margin-bottom: 1rem;
-        }
-
         .invitation-code {
-            background: #f8f9fa;
+            background: var(--surface-sunken);
             border: 2px dashed var(--custom-primary);
             border-radius: 8px;
             padding: 1.5rem;
@@ -116,7 +68,7 @@
 
         .invitation-code-label {
             font-size: 1.2rem;
-            color: #666;
+            color: var(--muted);
             margin-bottom: 0.5rem;
         }
 
@@ -130,21 +82,6 @@
 
         .copy-btn {
             margin-top: 1rem;
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
         }
     </style>
 </head>
@@ -178,7 +115,7 @@
                             <input type="tel" class="form-control" id="mobile" name="mobile" placeholder="+1 (555) 123-4567">
                         </div>
 
-                        <button type="submit" class="btn btn-secondary w-100 py-2 mb-3" id="submitBtn">
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="submitBtn">
                             Request Invitation
                         </button>
                     </form>
@@ -203,7 +140,7 @@
                             </button>
                         </div>
 
-                        <a href="#" id="redeemNowBtn" class="btn btn-secondary w-100 mt-2">
+                        <a href="#" id="redeemNowBtn" class="btn btn-primary w-100 mt-2">
                             Redeem Now
                         </a>
 
@@ -216,7 +153,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const invitationForm = document.getElementById('invitationForm');
         const submitBtn = document.getElementById('submitBtn');

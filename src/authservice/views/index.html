@@ -6,24 +6,22 @@
     <title>Authentication Management - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Core</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
@@ -36,18 +34,18 @@
     </header>
 
 
-        <aside class="kr-sidebar" id="navigation-sidebar"></aside>
+        <aside class="core-sidebar" id="navigation-sidebar"></aside>
 
-        <main class="kr-main">
+        <main class="core-main">
             <!-- PAGE HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="core-page-header">
                 <div>
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">Authentication Management</h1>
-                    <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px; font-weight: 500;">Manage users, sessions, and view login analytics</p>
+                    <h1 class="core-page-title">Authentication Management</h1>
+                    <p class="core-page-subtitle">Manage users, sessions, and view login analytics</p>
                 </div>
             </div>
 
-            <div class="kr-page-content">
+            <div class="core-page-content">
                 <!-- Alerts -->
                 <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert">
                     <strong>Success!</strong> <span id="successMessage"></span>
@@ -102,19 +100,19 @@
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                     <div class="row g-4 mb-4">
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Users Tracked</div>
                                 <div class="fs-4 fw-bold" id="totalUsers">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Logins</div>
                                 <div class="fs-4 fw-bold" id="totalLogins">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Failed Logins</div>
                                 <div class="fs-4 fw-bold text-danger" id="totalFailures">0</div>
                             </div>
@@ -126,21 +124,21 @@
                         <div class="spinner-border spinner-border-sm text-secondary d-none me-2" id="analyticsSpinner" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <button type="button" class="kr-btn solid" id="analyticsRefreshButton">
+                        <button type="button" class="btn btn-primary" id="analyticsRefreshButton">
                             <i class="bi bi-arrow-clockwise"></i> Refresh
                         </button>
                     </div>
 
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h2 class="kr-card-title">Top Users by Activity</h2>
-                                    <p class="kr-card-subtitle">Most active users ranked by successful logins</p>
+                                    <h2 class="card-title">Top Users by Activity</h2>
+                                    <p class="card-subtitle">Most active users ranked by successful logins</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="list-group list-group-flush" id="topUsersList">
                                 <div class="list-group-item text-center text-muted py-3">
                                     <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -152,16 +150,16 @@
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
+                    <div class="card">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Recent User Activity</h2>
-                                <p class="kr-card-subtitle">Top 100 users ordered by last login time</p>
+                                <h2 class="card-title">Recent User Activity</h2>
+                                <p class="card-subtitle">Top 100 users ordered by last login time</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive">
-                                <table class="kr-table">
+                                <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th class="sortable" onclick="sortTable('email')"><span id="sort-email">Email</span></th>
@@ -183,26 +181,26 @@
 
                 <!-- Users Tab -->
                 <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">
-                    <div class="kr-surface mb-4">
-                        <div class="kr-card-header d-flex justify-content-between align-items-center w-100">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center w-100">
                             <div>
-                                <h2 class="kr-card-title">User Management</h2>
-                                <p class="kr-card-subtitle">View, create, and manage user accounts</p>
+                                <h2 class="card-title">User Management</h2>
+                                <p class="card-subtitle">View, create, and manage user accounts</p>
                             </div>
                             <button type="button" class="btn btn-secondary btn-sm" id="createUserBtn">
                                 <i class="bi bi-person-plus"></i> New User
                             </button>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="createUserForm" class="bg-light p-3 mb-3 d-none" style="border-radius: 4px;">
                                 <h5 class="mb-3">Create New User</h5>
                                 <form id="userCreateForm" class="needs-validation">
                                     <div class="row g-2 align-items-stretch">
                                         <div class="col-md-3">
-                                            <input type="text" class="form-input" id="newFullName" placeholder="Full Name" required minlength="2">
+                                            <input type="text" class="form-control" id="newFullName" placeholder="Full Name" required minlength="2">
                                         </div>
                                         <div class="col-md-3">
-                                            <input type="email" class="form-input" id="newEmail" placeholder="Email" required>
+                                            <input type="email" class="form-control" id="newEmail" placeholder="Email" required>
                                         </div>
                                         <div class="col-md-2">
                                             <select class="form-select" id="newRole">
@@ -212,11 +210,11 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 d-flex gap-2">
-                                            <button type="button" class="kr-btn outline flex-grow-1" id="generateNewPassword">
+                                            <button type="button" class="btn btn-outline-primary flex-grow-1" id="generateNewPassword">
                                                 <i class="bi bi-lightning"></i> Generate Password
                                             </button>
-                                            <button type="submit" class="kr-btn primary">Create</button>
-                                            <button type="button" class="kr-btn ghost" id="cancelCreateUser">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Create</button>
+                                            <button type="button" class="btn btn-outline-secondary" id="cancelCreateUser">Cancel</button>
                                         </div>
                                     </div>
                                     <div id="generatedPasswordDisplay" class="mt-2 p-2 bg-white border rounded d-none">
@@ -226,7 +224,7 @@
                             </div>
 
                             <div class="table-responsive">
-                                <table class="kr-table">
+                                <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>Full Name</th>
@@ -253,22 +251,22 @@
 
                 <!-- CSV Import Tab -->
                 <div class="tab-pane fade" id="csv" role="tabpanel" aria-labelledby="csv-tab">
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Bulk Invite via CSV</h2>
-                            <p class="kr-card-subtitle">Upload a CSV to create invitations for multiple users at once</p>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="card-title">Bulk Invite via CSV</h2>
+                            <p class="card-subtitle">Upload a CSV to create invitations for multiple users at once</p>
                         </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-form-group">
-                                <label for="csvFile" class="kr-form-label">CSV File <span style="font-weight: 500; color: var(--kr-ink-500);">(columns: name, email)</span></label>
-                                <input type="file" class="form-input" id="csvFile" accept=".csv" />
-                                <p class="kr-helper-text">Example: Jane Smith,jane@example.com</p>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="csvFile" class="form-label">CSV File <span style="font-weight: 500; color: var(--muted);">(columns: name, email)</span></label>
+                                <input type="file" class="form-control" id="csvFile" accept=".csv" />
+                                <p class="form-text">Example: Jane Smith,jane@example.com</p>
                             </div>
 
                             <div id="csvPreview" class="d-none mb-3">
                                 <h5>Preview</h5>
                                 <div class="table-responsive">
-                                    <table class="kr-table">
+                                    <table class="table table-hover">
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
@@ -281,10 +279,10 @@
                             </div>
 
                             <div class="d-flex gap-2">
-                                <button type="button" class="kr-btn primary" id="importCsvBtn" disabled>
+                                <button type="button" class="btn btn-primary" id="importCsvBtn" disabled>
                                     <i class="bi bi-envelope-plus"></i> Send Invitations
                                 </button>
-                                <button type="button" class="kr-btn ghost" id="clearCsvBtn" disabled>
+                                <button type="button" class="btn btn-outline-secondary" id="clearCsvBtn" disabled>
                                     <i class="bi bi-x"></i> Clear
                                 </button>
                             </div>
@@ -306,23 +304,23 @@
 
                 <!-- Roles Tab -->
                 <div class="tab-pane fade" id="roles" role="tabpanel" aria-labelledby="roles-tab">
-                    <div class="kr-surface mb-4">
-                        <div class="kr-card-header d-flex justify-content-between align-items-center w-100">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center w-100">
                             <div>
-                                <h2 class="kr-card-title">Role Management</h2>
-                                <p class="kr-card-subtitle">Create and manage user roles</p>
+                                <h2 class="card-title">Role Management</h2>
+                                <p class="card-subtitle">Create and manage user roles</p>
                             </div>
                             <button type="button" class="btn btn-secondary btn-sm" id="createRoleBtn">
                                 <i class="bi bi-shield-plus"></i> New Role
                             </button>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="createRoleForm" class="bg-light p-3 mb-3 d-none" style="border-radius: 4px;">
                                 <h5 class="mb-3">Create New Role</h5>
                                 <form id="roleCreateForm" class="d-flex gap-2 align-items-center">
-                                    <input type="text" class="form-input flex-grow-1" id="newRoleName" placeholder="Role name" required minlength="3">
-                                    <button type="submit" class="kr-btn primary">Create</button>
-                                    <button type="button" class="kr-btn ghost" id="cancelCreateRole">Cancel</button>
+                                    <input type="text" class="form-control flex-grow-1" id="newRoleName" placeholder="Role name" required minlength="3">
+                                    <button type="submit" class="btn btn-primary">Create</button>
+                                    <button type="button" class="btn btn-outline-secondary" id="cancelCreateRole">Cancel</button>
                                 </form>
                             </div>
 
@@ -339,23 +337,23 @@
                 <!-- Invitations Tab -->
                 <div class="tab-pane fade" id="invitations" role="tabpanel" aria-labelledby="invitations-tab">
                     <!-- Create Invitation Form -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Create Invitation</h2>
-                            <p class="kr-card-subtitle">Generate an invitation link to send to a new user</p>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="card-title">Create Invitation</h2>
+                            <p class="card-subtitle">Generate an invitation link to send to a new user</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="createInvitationForm" class="row g-3 align-items-end">
                                 <div class="col-sm-4">
-                                    <label for="inviteeName" class="kr-form-label">Full Name</label>
-                                    <input type="text" id="inviteeName" class="form-input" placeholder="Jane Smith" required>
+                                    <label for="inviteeName" class="form-label">Full Name</label>
+                                    <input type="text" id="inviteeName" class="form-control" placeholder="Jane Smith" required>
                                 </div>
                                 <div class="col-sm-4">
-                                    <label for="inviteeEmail" class="kr-form-label">Email Address</label>
-                                    <input type="email" id="inviteeEmail" class="form-input" placeholder="jane@example.com" required>
+                                    <label for="inviteeEmail" class="form-label">Email Address</label>
+                                    <input type="email" id="inviteeEmail" class="form-control" placeholder="jane@example.com" required>
                                 </div>
                                 <div class="col-sm-4 d-flex gap-2">
-                                    <button type="submit" class="kr-btn primary">
+                                    <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-envelope-plus"></i> Create Invitation
                                     </button>
                                 </div>
@@ -379,14 +377,14 @@
                     </div>
 
                     <!-- Invitations Table -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Sent Invitations</h2>
-                            <p class="kr-card-subtitle">View, copy, and manage all invitations</p>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="card-title">Sent Invitations</h2>
+                            <p class="card-subtitle">View, copy, and manage all invitations</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive">
-                                <table class="kr-table">
+                                <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>Name</th>
@@ -412,12 +410,12 @@
                 </div>
 
                 <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
-                    <div class="kr-surface" id="userOperationsCard">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title mb-0">User Data</h2>
-                            <p class="kr-card-subtitle">Create, edit, and remove users inline</p>
+                    <div class="card" id="userOperationsCard">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">User Data</h2>
+                            <p class="card-subtitle">Create, edit, and remove users inline</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="user-operations-toolbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <div class="spinner-border spinner-border-sm text-secondary d-none" id="userTableSpinner" role="status">
@@ -435,19 +433,19 @@
                                 <form id="dataCreateUserForm" class="user-create-form">
                                     <div class="row g-3">
                                     <div class="col-md-4">
-                                            <label for="createUserFullName" class="kr-form-label mb-1">Full Name</label>
+                                            <label for="createUserFullName" class="form-label mb-1">Full Name</label>
                                             <input type="text" class="form-control form-control-sm" id="createUserFullName" placeholder="Full Name" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="createUserEmail" class="kr-form-label mb-1">Email</label>
+                                            <label for="createUserEmail" class="form-label mb-1">Email</label>
                                             <input type="email" class="form-control form-control-sm" id="createUserEmail" placeholder="Email" required>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="createUserRole" class="kr-form-label mb-1">Role</label>
+                                            <label for="createUserRole" class="form-label mb-1">Role</label>
                                             <select class="form-select form-select-sm" id="createUserRole"></select>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="createUserStatus" class="kr-form-label mb-1">Status</label>
+                                            <label for="createUserStatus" class="form-label mb-1">Status</label>
                                             <select class="form-select form-select-sm" id="createUserStatus">
                                                 <option value="true" selected>Active</option>
                                                 <option value="false">Inactive</option>
@@ -456,7 +454,7 @@
                                     </div>
                                     <div class="row g-3 align-items-end mt-0">
                                         <div class="col-md-4">
-                                            <label for="createUserPassword" class="kr-form-label mb-1">Password</label>
+                                            <label for="createUserPassword" class="form-label mb-1">Password</label>
                                             <div class="input-group input-group-sm">
                                                 <input type="text" class="form-control" id="createUserPassword" placeholder="Password">
                                                 <button type="button" class="btn btn-outline-secondary" id="generateCreatePasswordButton" title="Generate secure password">
@@ -483,124 +481,124 @@
                                     No users found.
                                 </div>
                             </div>
-                            <div class="kr-response-container mt-3" id="userTableResponse" style="display: none;">
-                                <div class="kr-response-title">Operation Result:</div>
-                                <pre class="kr-response-content" id="userTableResponseContent"></pre>
+                            <div class="core-response-container mt-3" id="userTableResponse" style="display: none;">
+                                <div class="core-response-title">Operation Result:</div>
+                                <pre class="core-response-content" id="userTableResponseContent"></pre>
                             </div>
                             <div class="small text-muted mt-3 d-none text-end" id="userPasswordFeedback"></div>
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">User Login</h2>
-                            <p class="kr-card-subtitle">Authenticate user and create session</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Login</h2>
+                            <p class="card-subtitle">Authenticate user and create session</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="loginForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="loginEmail">Email</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="loginEmail">Email</label>
                                     <input type="email" id="loginEmail" class="form-control" placeholder="Enter email" required>
                                     <div class="form-text">Email to authenticate</div>
                                 </div>
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="loginPassword">Password</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="loginPassword">Password</label>
                                     <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required>
                                     <div class="form-text">User password</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Login</button>
-                                    <button type="button" class="kr-btn secondary" onclick="fillDefaultAdmin()">Use Admin</button>
-                                    <button type="button" class="kr-btn secondary" onclick="fillDefaultUser()">Use User</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Login</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultAdmin()">Use Admin</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fillDefaultUser()">Use User</button>
                                 </div>
                             </form>
-                            <div id="loginResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Authentication Result:</div>
-                                <div id="loginResponseContent" class="kr-response-content"></div>
+                            <div id="loginResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Authentication Result:</div>
+                                <div id="loginResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Session Management</h2>
-                            <p class="kr-card-subtitle">Validate or invalidate user sessions</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Session Management</h2>
+                            <p class="card-subtitle">Validate or invalidate user sessions</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="sessionForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="sessionToken">Session Token</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="sessionToken">Session Token</label>
                                     <input type="text" id="sessionToken" class="form-control" placeholder="Enter session token">
                                     <div class="form-text">Session token from login response</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="button" class="kr-btn secondary" onclick="validateSession()">Validate Session</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-secondary" onclick="validateSession()">Validate Session</button>
                                     <button type="button" class="btn btn-error" onclick="logoutSession()">Logout Session</button>
-                                    <button type="button" class="kr-btn secondary" onclick="clearSessionToken()">Clear Token</button>
+                                    <button type="button" class="btn btn-secondary" onclick="clearSessionToken()">Clear Token</button>
                                 </div>
                             </form>
-                            <div id="sessionResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Session Status:</div>
-                                <div id="sessionResponseContent" class="kr-response-content"></div>
+                            <div id="sessionResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Session Status:</div>
+                                <div id="sessionResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Role Management</h2>
-                            <p class="kr-card-subtitle">Assign roles and view role memberships</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Role Management</h2>
+                            <p class="card-subtitle">Assign roles and view role memberships</p>
                         </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-form-group">
-                                <label class="kr-form-label" for="roleEmail">Email</label>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label" for="roleEmail">Email</label>
                                 <input type="email" id="roleEmail" class="form-control" placeholder="Enter email">
                                 <div class="form-text">Email of the user to assign role to</div>
                             </div>
-                            <div class="kr-form-group">
-                                <label class="kr-form-label" for="assignRole">Role</label>
-                                <select id="assignRole" class="form-control">
+                            <div class="mb-3">
+                                <label class="form-label" for="assignRole">Role</label>
+                                <select id="assignRole" class="form-select">
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>
                                     <option value="guest">Guest</option>
                                 </select>
                                 <div class="form-text">Role to assign to the user</div>
                             </div>
-                            <div class="kr-btn-group">
-                                <button type="button" class="kr-btn secondary" onclick="assignRole()">Assign Role</button>
-                                <button type="button" class="kr-btn secondary" onclick="listRoles()">List All Roles</button>
-                                <button type="button" class="kr-btn secondary" onclick="getUsersInRole()">Users in Role</button>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-secondary" onclick="assignRole()">Assign Role</button>
+                                <button type="button" class="btn btn-secondary" onclick="listRoles()">List All Roles</button>
+                                <button type="button" class="btn btn-secondary" onclick="getUsersInRole()">Users in Role</button>
                             </div>
-                            <div id="roleResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Role Management:</div>
-                                <div id="roleResponseContent" class="kr-response-content"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Service Status</h2>
-                            <p class="kr-card-subtitle">Check authentication service status and statistics</p>
-                        </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-btn-group">
-                                <button type="button" class="kr-btn primary" onclick="checkStatus()">Check Status</button>
-                                <button type="button" class="kr-btn secondary" onclick="refreshAll()">Refresh All Data</button>
-                            </div>
-                            <div id="statusResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="kr-response-content"></div>
+                            <div id="roleResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Role Management:</div>
+                                <div id="roleResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">API Documentation</h2>
-                            <p class="kr-card-subtitle">Interactive API documentation for Authentication service</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check authentication service status and statistics</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-primary" onclick="checkStatus()">Check Status</button>
+                                <button type="button" class="btn btn-secondary" onclick="refreshAll()">Refresh All Data</button>
+                            </div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">API Documentation</h2>
+                            <p class="card-subtitle">Interactive API documentation for Authentication service</p>
+                        </div>
+                        <div class="card-body">
                             <div id="swagger-ui"></div>
                         </div>
                     </div>
@@ -610,23 +608,23 @@
                 <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" style="min-height:1000px">
 
                     <!-- Settings Card -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Authentication Service Settings</h2>
-                            <p class="kr-card-subtitle">Configure the authentication service parameters</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Authentication Service Settings</h2>
+                            <p class="card-subtitle">Configure the authentication service parameters</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div id="settingsInfo" class="alert alert-info mb-4" style="display: none;"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Save Settings</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadSettings()">Reload</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="kr-response-container" style="display: none; margin-top: 1rem;">
-                                <div class="kr-response-title">Save Response:</div>
-                                <pre class="kr-response-content" id="settingsSaveResponseContent"></pre>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <pre class="core-response-content" id="settingsSaveResponseContent"></pre>
                             </div>
                         </div>
                     </div>
@@ -867,7 +865,7 @@
             row.classList.add('editing');
             row.innerHTML = `
                 <td>
-                    <input type="text" class="form-input user-edit-fullname" value="${escapeAttribute(user.fullName || '')}" placeholder="Full Name">
+                    <input type="text" class="form-control user-edit-fullname" value="${escapeAttribute(user.fullName || '')}" placeholder="Full Name">
                 </td>
                 <td>${escapeHtml(user.email || '')}</td>
                 <td>
@@ -883,10 +881,10 @@
                 <td>${lastLogin}</td>
                 <td class="text-end">
                     <div class="user-action-buttons">
-                        <button type="button" class="kr-btn primary sm js-user-save">
+                        <button type="button" class="btn btn-primary btn-sm js-user-save">
                             <i class="bi bi-check2"></i> Save
                         </button>
-                        <button type="button" class="kr-btn ghost sm js-user-cancel">
+                        <button type="button" class="btn btn-outline-secondary btn-sm js-user-cancel">
                             <i class="bi bi-x"></i> Cancel
                         </button>
                     </div>
@@ -1771,11 +1769,11 @@
         // Create form field based on setting type
         function createFormField(setting, settingsData) {
             const formGroup = document.createElement('div');
-            formGroup.className = 'core-form-group';
+            formGroup.className = 'mb-3';
 
             // Create label
             const label = document.createElement('label');
-            label.className = 'core-form-label';
+            label.className = 'form-label';
             label.htmlFor = 'setting_' + setting.setting;
             label.textContent = setting.setting;
             formGroup.appendChild(label);
@@ -1789,7 +1787,7 @@
                 case 'string':
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1801,7 +1799,7 @@
                 case 'integer':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1811,7 +1809,7 @@
                 case 'number':
                     input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1821,7 +1819,7 @@
                 case 'date':
                     input = document.createElement('input');
                     input.type = 'date';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1830,7 +1828,7 @@
                 case 'list':
                 case 'options':
                     input = document.createElement('select');
-                    input.className = 'core-form-input';
+                    input.className = 'form-select';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
 
@@ -1851,7 +1849,7 @@
                 default:
                     input = document.createElement('input');
                     input.type = 'text';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = currentValue;
@@ -1862,7 +1860,7 @@
             // Add description helper text if available
             if (setting.desciption) {
                 const helperText = document.createElement('div');
-                helperText.className = 'core-helper-text';
+                helperText.className = 'form-text';
                 helperText.textContent = setting.desciption;
                 formGroup.appendChild(helperText);
             }
@@ -2307,7 +2305,7 @@
                     listDiv.classList.remove('d-none');
                     listDiv.innerHTML = `
                         <p class="mb-2 small fw-semibold">Copy links to send to each invitee:</p>
-                        <table class="kr-table">
+                        <table class="table table-hover">
                             <thead><tr><th>Name</th><th>Email</th><th>Invitation Link</th></tr></thead>
                             <tbody>
                                 ${created.map(inv => {
@@ -2515,7 +2513,7 @@
                     if (icon) icon.className = originalClass;
                     btn.title = originalTitle;
                     btn.classList.remove('btn-success');
-                    btn.classList.add(originalTitle === 'Copy invitation link' ? 'btn-outline-primary' : 'btn-outline-secondary');
+                    btn.classList.add(originalTitle === 'Copy', 'invitation', 'link' ? 'btn-outline-primary' : 'btn-outline-secondary');
                 }, 1500);
             }).catch(() => {
                 showAlert('Could not copy to clipboard', 'error');

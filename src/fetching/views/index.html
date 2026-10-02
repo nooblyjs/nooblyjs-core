@@ -6,23 +6,21 @@
     <title>Fetching Service - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="height: 40px; width: auto; background: white; border-radius: 6px; padding: 4px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Core</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
@@ -35,20 +33,20 @@
     </header>
 
 
-        <aside class="kr-sidebar" id="navigation-sidebar">
+        <aside class="core-sidebar" id="navigation-sidebar">
             <!-- Navigation will be loaded here by navigation.js -->
         </aside>
 
-        <main class="kr-main">
+        <main class="core-main">
             <!-- PAGE HEADER -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="core-page-header">
                 <div>
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">Fetching Service</h1>
-                    <p style="margin: 4px 0 0 0; color: var(--kr-ink-500); font-size: 14px; font-weight: 500;">Test URLs, monitor performance, and manage fetch operations</p>
+                    <h1 class="core-page-title">Fetching Service</h1>
+                    <p class="core-page-subtitle">Test URLs, monitor performance, and manage fetch operations</p>
                 </div>
             </div>
 
-            <div class="kr-page-content">
+            <div class="core-page-content">
 
             <!-- Alerts -->
             <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert">
@@ -87,31 +85,31 @@
                     <!-- Stats Cards -->
                     <div class="row g-4 mb-4">
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total URLs</div>
                                 <div class="fs-4 fw-bold" id="totalUrls">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Requests</div>
                                 <div class="fs-4 fw-bold" id="totalRequests">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Cache Hit Rate</div>
                                 <div class="fs-4 fw-bold text-success" id="cacheHitRate">0%</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Errors</div>
                                 <div class="fs-4 fw-bold text-danger" id="totalErrors">0</div>
                             </div>
                         </div>
                         <div class="col-md">
-                            <div class="kr-surface p-3 text-center">
+                            <div class="card p-3 text-center">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Success Rate</div>
                                 <div class="fs-4 fw-bold text-primary" id="successRate">0%</div>
                             </div>
@@ -120,23 +118,23 @@
 
                     <!-- Refresh Button -->
                     <div class="d-flex justify-content-end mb-4">
-                        <button class="kr-btn solid" onclick="loadDashboardAnalytics()" id="refreshBtn">
+                        <button class="btn btn-primary" onclick="loadDashboardAnalytics()" id="refreshBtn">
                             <i class="bi bi-arrow-clockwise"></i> Refresh
                         </button>
                     </div>
 
                     <!-- URL Distribution Chart -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top 50 URLs by Requests</h2>
-                                <p class="kr-card-subtitle">Distribution of fetch requests across top URLs</p>
+                                <h2 class="card-title">Top 50 URLs by Requests</h2>
+                                <p class="card-subtitle">Distribution of fetch requests across top URLs</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="chart-container" style="height: 300px;">
                                 <canvas id="urlDistributionChart"></canvas>
-                                <div id="urlDistributionEmpty" class="kr-empty-state" style="display: none;">
+                                <div id="urlDistributionEmpty" class="core-empty-state" style="display: none;">
                                     <i class="bi bi-pie-chart"></i>
                                     <h3>No distribution data available</h3>
                                     <p>URL distribution chart will appear here once fetch operations are recorded</p>
@@ -146,17 +144,17 @@
                     </div>
 
                     <!-- Activity Timeline -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top 10 URLs Activity</h2>
-                                <p class="kr-card-subtitle">Activity over time (requests per minute)</p>
+                                <h2 class="card-title">Top 10 URLs Activity</h2>
+                                <p class="card-subtitle">Activity over time (requests per minute)</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="chart-container" style="height: 400px;">
                                 <canvas id="activityChart"></canvas>
-                                <div id="activityEmpty" class="kr-empty-state" style="display: none;">
+                                <div id="activityEmpty" class="core-empty-state" style="display: none;">
                                     <i class="bi bi-graph-up"></i>
                                     <h3>No activity data available</h3>
                                     <p>Activity timeline will appear here once fetch operations are recorded</p>
@@ -166,16 +164,16 @@
                     </div>
 
                     <!-- URL List Table -->
-                    <div class="kr-surface mb-4">
-                        <div class="kr-surface-head">
+                    <div class="card mb-4">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">URL Statistics</h2>
-                                <p class="kr-card-subtitle">Top 100 URLs with fetch statistics</p>
+                                <h2 class="card-title">URL Statistics</h2>
+                                <p class="card-subtitle">Top 100 URLs with fetch statistics</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive" id="urlListTableContainer">
-                                <table class="kr-table" id="urlListTable">
+                                <table class="table table-hover" id="urlListTable">
                                     <thead>
                                         <tr>
                                             <th class="sortable" onclick="sortTable('url')">URL<span id="sort-url"></span></th>
@@ -191,7 +189,7 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div id="urlListEmpty" class="kr-empty-state" style="display: none; min-height: 200px;">
+                                <div id="urlListEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
                                     <i class="bi bi-link"></i>
                                     <h3>No URL data found</h3>
                                     <p>URL statistics will appear here once requests are made</p>
@@ -201,16 +199,16 @@
                     </div>
 
                     <!-- Top Errors Table -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
+                    <div class="card">
+                        <div class="card-header">
                             <div>
-                                <h2 class="kr-card-title">Top Error URLs</h2>
-                                <p class="kr-card-subtitle">URLs with the highest error counts</p>
+                                <h2 class="card-title">Top Error URLs</h2>
+                                <p class="card-subtitle">URLs with the highest error counts</p>
                             </div>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <div class="table-responsive" id="errorsTableContainer">
-                                <table class="kr-table" id="errorsTable">
+                                <table class="table table-hover" id="errorsTable">
                                     <thead>
                                         <tr>
                                             <th>URL</th>
@@ -224,7 +222,7 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div id="errorsEmpty" class="kr-empty-state" style="display: none; min-height: 200px;">
+                                <div id="errorsEmpty" class="core-empty-state" style="display: none; min-height: 200px;">
                                     <i class="bi bi-check-circle"></i>
                                     <h3>No errors recorded</h3>
                                     <p>Error details will appear here once requests fail</p>
@@ -237,30 +235,30 @@
                 <!-- Test Fetching Tab -->
                 <div class="tab-pane fade" id="test" role="tabpanel">
                     <!-- Fetch URL Form -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Test Fetch URL</h2>
-                            <p class="kr-card-subtitle">Make test requests to URLs and observe caching behavior</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Test Fetch URL</h2>
+                            <p class="card-subtitle">Make test requests to URLs and observe caching behavior</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="fetchForm">
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="fetchUrl">URL</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="fetchUrl">URL</label>
                                     <input type="url" id="fetchUrl" class="form-control" placeholder="https://jsonplaceholder.typicode.com/posts/1" required>
                                     <div class="form-text">Full URL to fetch</div>
                                 </div>
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="fetchMethod">HTTP Method</label>
-                                    <select id="fetchMethod" class="form-control">
+                                <div class="mb-3">
+                                    <label class="form-label" for="fetchMethod">HTTP Method</label>
+                                    <select id="fetchMethod" class="form-select">
                                         <option value="GET">GET</option>
                                         <option value="POST">POST</option>
                                         <option value="PUT">PUT</option>
                                         <option value="DELETE">DELETE</option>
                                     </select>
                                 </div>
-                                <div class="kr-form-group">
-                                    <label class="kr-form-label" for="cacheControl">Cache Control</label>
-                                    <select id="cacheControl" class="form-control">
+                                <div class="mb-3">
+                                    <label class="form-label" for="cacheControl">Cache Control</label>
+                                    <select id="cacheControl" class="form-select">
                                         <option value="default">Default (60s)</option>
                                         <option value="force-cache">Force Cache</option>
                                         <option value="no-cache">No Cache</option>
@@ -268,49 +266,49 @@
                                     </select>
                                     <div class="form-text">How to handle caching for this request</div>
                                 </div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Make Request</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadExample()">Load Example</button>
-                                    <button type="button" class="kr-btn secondary" onclick="clearCache()">Clear Cache</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Make Request</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadExample()">Load Example</button>
+                                    <button type="button" class="btn btn-secondary" onclick="clearCache()">Clear Cache</button>
                                 </div>
                             </form>
-                            <div id="fetchResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Response:</div>
-                                <div id="fetchResponseContent" class="kr-response-content"></div>
+                            <div id="fetchResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Response:</div>
+                                <div id="fetchResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Preset Test URLs -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Preset Test URLs</h2>
-                            <p class="kr-card-subtitle">Quick test buttons for common endpoints</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Preset Test URLs</h2>
+                            <p class="card-subtitle">Quick test buttons for common endpoints</p>
                         </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-btn-group" style="flex-wrap: wrap; margin-top: 0;">
-                                <button type="button" class="kr-btn secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/posts/1')">Post #1</button>
-                                <button type="button" class="kr-btn secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/users/1')">User #1</button>
-                                <button type="button" class="kr-btn secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/comments/1')">Comment #1</button>
-                                <button type="button" class="kr-btn secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/todos/1')">Todo #1</button>
-                                <button type="button" class="kr-btn secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/posts/1')">Post #2</button>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2" style="flex-wrap: wrap; margin-top: 0;">
+                                <button type="button" class="btn btn-secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/posts/1')">Post #1</button>
+                                <button type="button" class="btn btn-secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/users/1')">User #1</button>
+                                <button type="button" class="btn btn-secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/comments/1')">Comment #1</button>
+                                <button type="button" class="btn btn-secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/todos/1')">Todo #1</button>
+                                <button type="button" class="btn btn-secondary" onclick="testUrl('https://jsonplaceholder.typicode.com/posts/1')">Post #2</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Status Check -->
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Service Status</h2>
-                            <p class="kr-card-subtitle">Check fetching service status</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Status</h2>
+                            <p class="card-subtitle">Check fetching service status</p>
                         </div>
-                        <div class="kr-surface-body">
-                            <div class="kr-btn-group">
-                                <button type="button" class="kr-btn primary" onclick="checkStatus()">Check Status</button>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-primary" onclick="checkStatus()">Check Status</button>
                             </div>
-                            <div id="statusResponse" class="kr-response-container" style="display: none;">
-                                <div class="kr-response-title">Service Status:</div>
-                                <div id="statusResponseContent" class="kr-response-content"></div>
+                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                                <div class="core-response-title">Service Status:</div>
+                                <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -318,22 +316,22 @@
 
                 <!-- Settings Tab -->
                 <div class="tab-pane fade" id="settings" role="tabpanel" style="min-height:1000px">
-                    <div class="kr-surface">
-                        <div class="kr-surface-head">
-                            <h2 class="kr-card-title">Fetching Service Settings</h2>
-                            <p class="kr-card-subtitle">Configure the fetching service parameters</p>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Fetching Service Settings</h2>
+                            <p class="card-subtitle">Configure the fetching service parameters</p>
                         </div>
-                        <div class="kr-surface-body">
+                        <div class="card-body">
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
-                                <div class="kr-btn-group">
-                                    <button type="submit" class="kr-btn primary">Save Settings</button>
-                                    <button type="button" class="kr-btn secondary" onclick="loadSettings()">Reload</button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                    <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="kr-response-container" style="display: none; margin-top: 1rem;">
-                                <div class="kr-response-title">Save Response:</div>
-                                <div id="settingsSaveResponseContent" class="kr-response-content"></div>
+                            <div id="settingsSaveResponse" class="core-response-container" style="display: none; margin-top: 1rem;">
+                                <div class="core-response-title">Save Response:</div>
+                                <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
                         </div>
                     </div>
@@ -366,10 +364,9 @@
         };
 
         const chartColors = [
-            '#007bff', '#198754', '#dc3545', '#ffc107', '#6610f2',
-            '#fd7e14', '#20c997', '#0dcaf0', '#d63384', '#6c757d',
-            '#6B7280', '#198754', '#ffc107', '#dc3545', '#0dcaf0',
-            '#6f42c1', '#e83e8c', '#17a2b8', '#28a745', '#ffc107'
+            // NooblyJS palette: accent, teal, then the design system's deep avatar tones
+            '#C2471F', '#2B7F86', '#4B2E83', '#E4B85C', '#1F4A8A',
+            '#8A2440', '#3D5A1E', '#F2A27E', '#6B605A', '#1E5E63'
         ];
 
         // Load dashboard analytics
@@ -728,17 +725,17 @@
             if (settings.list && Array.isArray(settings.list)) {
                 settings.list.forEach((setting) => {
                     const formGroup = document.createElement('div');
-                    formGroup.className = 'core-form-group';
+                    formGroup.className = 'mb-3';
 
                     const label = document.createElement('label');
-                    label.className = 'core-form-label';
+                    label.className = 'form-label';
                     label.htmlFor = 'setting_' + setting.setting;
                     label.textContent = setting.setting;
                     formGroup.appendChild(label);
 
                     const input = document.createElement('input');
                     input.type = 'number';
-                    input.className = 'core-form-input';
+                    input.className = 'form-control';
                     input.id = 'setting_' + setting.setting;
                     input.name = setting.setting;
                     input.value = settings[setting.setting] || '';
@@ -746,7 +743,7 @@
 
                     if (setting.description) {
                         const helper = document.createElement('div');
-                        helper.className = 'core-helper-text';
+                        helper.className = 'form-text';
                         helper.textContent = setting.description;
                         formGroup.appendChild(helper);
                     }

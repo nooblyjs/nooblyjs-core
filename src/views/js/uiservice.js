@@ -30,14 +30,14 @@ class UIService {
       onLogoutClick = null
     } = config;
 
-    // KR Modern shell — keep the legacy classes (.navbar / .core-app-header / .navbar-nav)
-    // alongside kr-* classes so callers that still query them continue to work.
+    // App shell (core.css) — keeps the legacy classes (.core-app-header / .navbar-nav)
+    // so callers that still query them continue to work.
     const header = document.createElement('header');
-    header.className = 'navbar navbar-expand-lg core-app-header kr-topbar';
+    header.className = 'navbar navbar-expand-lg core-app-header core-topbar';
 
     // Brand block (logo + title + optional subtitle)
     const brand = document.createElement('div');
-    brand.className = 'kr-brand navbar-brand d-flex align-items-center';
+    brand.className = 'core-brand navbar-brand d-flex align-items-center';
     brand.style.cssText = 'border-right: 0; white-space: nowrap; color: #FFF';
 
     if (brandIcon) {
@@ -60,10 +60,10 @@ class UIService {
     brand.appendChild(brandTextWrap);
     header.appendChild(brand);
 
-    // Search bar (kr-search slot)
+    // Search bar (core-search slot)
     if (showSearch) {
       const searchDiv = document.createElement('div');
-      searchDiv.className = 'kr-search';
+      searchDiv.className = 'core-search';
 
       const wrap = document.createElement('div');
       wrap.className = 'wrap';
@@ -91,7 +91,7 @@ class UIService {
 
     // Right-hand actions
     const navDiv = document.createElement('div');
-    navDiv.className = 'navbar-nav kr-topbar-actions';
+    navDiv.className = 'navbar-nav core-topbar-actions';
 
     // Create dropdown
     if (showCreateBtn) {
@@ -99,7 +99,7 @@ class UIService {
       createDropdown.className = 'dropdown';
 
       const createBtn = document.createElement('button');
-      createBtn.className = 'kr-btn-create dropdown-toggle';
+      createBtn.className = 'core-btn-create dropdown-toggle';
       createBtn.type = 'button';
       createBtn.setAttribute('data-bs-toggle', 'dropdown');
       createBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Create';
@@ -123,19 +123,19 @@ class UIService {
     // AI Chat toggle
     if (showAIChat) {
       const aiBtn = document.createElement('button');
-      aiBtn.className = 'kr-icon-btn';
+      aiBtn.className = 'core-icon-btn';
       aiBtn.title = 'Toggle AI Assistant';
       aiBtn.innerHTML = '<i class="bi bi-robot"></i>';
       navDiv.appendChild(aiBtn);
     }
 
-    // User profile (kr-avatar-pill)
+    // User profile (core-user)
     if (showUserProfile) {
       const profileDiv = document.createElement('div');
       profileDiv.className = 'nav-item dropdown';
 
       const pill = document.createElement('a');
-      pill.className = 'kr-avatar-pill dropdown-toggle';
+      pill.className = 'core-user dropdown-toggle';
       pill.href = '#';
       pill.style.textDecoration = 'none';
       pill.setAttribute('data-bs-toggle', 'dropdown');
@@ -193,16 +193,16 @@ class UIService {
 
     const aside = document.createElement('aside');
     aside.id = 'leftSidebar';
-    aside.className = 'core-app-sidebar kr-sidebar';
+    aside.className = 'core-app-sidebar core-sidebar';
 
     sections.forEach(section => {
       const sectionDiv = document.createElement('div');
-      sectionDiv.className = 'kr-side-section core-sidebar-section';
+      sectionDiv.className = 'core-sidebar-section';
 
-      // Section header (kr-side-head — small uppercase label)
+      // Section header (core-sidebar-title — small uppercase label)
       if (section.title) {
         const headDiv = document.createElement('div');
-        headDiv.className = 'kr-side-head';
+        headDiv.className = 'core-sidebar-title';
         if (section.collapsible) {
           headDiv.setAttribute('data-bs-toggle', 'collapse');
           headDiv.setAttribute('data-bs-target', `#${section.id}-content`);
@@ -217,14 +217,14 @@ class UIService {
         if (section.collapsible) {
           const chev = document.createElement('i');
           chev.className = 'bi bi-chevron-down';
-          chev.style.cssText = 'font-size: 9px; color: var(--kr-ink-400, #7d8e8e);';
+          chev.style.cssText = 'font-size: 9px; color: var(--neutral-dot, #8F837C);';
           headDiv.appendChild(chev);
         }
 
         sectionDiv.appendChild(headDiv);
       }
 
-      // Section content (kr-nav-item rows)
+      // Section content (core-sidebar-item rows)
       if (section.items) {
         const contentDiv = document.createElement('div');
         contentDiv.id = `${section.id}-content`;
@@ -234,7 +234,7 @@ class UIService {
 
         section.items.forEach(item => {
           const link = document.createElement('a');
-          link.className = 'kr-nav-item nav-link';
+          link.className = 'core-sidebar-item nav-link';
           if (item.active) link.classList.add('active');
           link.href = item.href || '#';
 
@@ -270,7 +270,7 @@ class UIService {
     if (resizable) {
       const handle = document.createElement('div');
       handle.id = 'sidebarResizeHandle';
-      handle.className = 'core-sidebar-resize-handle kr-sidebar-resize';
+      handle.className = 'core-sidebar-resize-handle core-sidebar-resize';
       aside.appendChild(handle);
     }
 
@@ -294,7 +294,7 @@ class UIService {
 
     const main = document.createElement('main');
     main.id = 'mainContent';
-    main.className = 'core-app-main kr-main';
+    main.className = 'core-app-main core-main';
 
     // Header
     const headerDiv = document.createElement('div');
@@ -355,7 +355,7 @@ class UIService {
         if (card.icon) {
           const icon = document.createElement('i');
           icon.className = `bi ${card.icon}`;
-          icon.style.cssText = `font-size: 2rem; color: ${card.iconColor || '#6c757d'}; opacity: 0.3;`;
+          icon.style.cssText = `font-size: 2rem; color: ${card.iconColor || 'var(--muted, #6B605A)'}; opacity: 0.3;`;
           cardBody.appendChild(icon);
         }
 
@@ -397,11 +397,11 @@ class UIService {
     } = config;
 
     const card = document.createElement('div');
-    card.className = 'card kr-surface h-100';
+    card.className = 'card h-100';
 
-    // Card Header (kr-surface-head)
+    // Card Header (card-header)
     const cardHeader = document.createElement('div');
-    cardHeader.className = 'card-header kr-surface-head';
+    cardHeader.className = 'card-header';
 
     const headerContent = document.createElement('h3');
     headerContent.style.cssText = 'font-size: 13px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;';
@@ -409,7 +409,7 @@ class UIService {
     if (config.icon) {
       const icon = document.createElement('i');
       icon.className = `bi ${config.icon}`;
-      icon.style.color = 'var(--kr-teal-600, #4B5563)';
+      icon.style.color = 'var(--accent, #C2471F)';
       headerContent.appendChild(icon);
     }
 
@@ -421,8 +421,8 @@ class UIService {
 
     if (showRefresh) {
       const refreshBtn = document.createElement('button');
-      refreshBtn.className = 'kr-icon-btn';
-      refreshBtn.style.cssText = 'color: var(--kr-ink-500, #5a6b6b); border: 1px solid var(--kr-border, #e3eaea);';
+      refreshBtn.className = 'core-icon-btn';
+      refreshBtn.style.cssText = 'color: var(--muted, #6B605A); border: 1px solid var(--border, #E6DED8);';
       refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
       if (onRefresh) refreshBtn.addEventListener('click', onRefresh);
       cardHeader.appendChild(refreshBtn);
@@ -430,15 +430,15 @@ class UIService {
 
     card.appendChild(cardHeader);
 
-    // Card Body (kr-surface-body)
+    // Card Body (card-body)
     const cardBody = document.createElement('div');
-    cardBody.className = 'card-body kr-surface-body p-0';
+    cardBody.className = 'card-body p-0';
 
     const tableDiv = document.createElement('div');
     tableDiv.className = 'table-responsive';
 
     const table = document.createElement('table');
-    table.className = 'table kr-table mb-0';
+    table.className = 'table table-hover mb-0';
 
     // Table Head
     const thead = document.createElement('thead');
@@ -509,12 +509,12 @@ class UIService {
     } = config;
 
     const card = document.createElement('div');
-    card.className = `card kr-surface ${className}`;
+    card.className = `card ${className}`;
     Object.assign(card.style, style);
 
     if (title || icon) {
       const header = document.createElement('div');
-      header.className = 'card-header kr-surface-head';
+      header.className = 'card-header';
 
       const titleWrap = document.createElement('h3');
       titleWrap.className = 'card-title';
@@ -523,7 +523,7 @@ class UIService {
       if (icon) {
         const iconEl = document.createElement('i');
         iconEl.className = `bi ${icon}`;
-        iconEl.style.color = 'var(--kr-teal-600, #4B5563)';
+        iconEl.style.color = 'var(--accent, #C2471F)';
         titleWrap.appendChild(iconEl);
       }
 
@@ -539,7 +539,7 @@ class UIService {
 
     if (content || subtitle) {
       const body = document.createElement('div');
-      body.className = 'card-body kr-surface-body';
+      body.className = 'card-body';
 
       if (subtitle) {
         const sub = document.createElement('p');
@@ -712,7 +712,7 @@ class UIService {
       colDiv.className = `col-${field.colSize || '12'}`;
 
       const label = document.createElement('label');
-      label.className = 'core-form-label';
+      label.className = 'form-label';
       label.htmlFor = field.id;
       label.textContent = field.label;
       colDiv.appendChild(label);
@@ -810,8 +810,8 @@ class UIService {
     container.innerHTML = '';
     // KR app shell: 100vh grid (topbar + body row), no AI panel by default.
     // Apps that need an AI panel can append it as a third grid item with
-    // class kr-ai. Each region scrolls its own content (kr-main, kr-sidebar).
-    container.classList.add('kr-app', 'no-ai');
+    // class core-ai. Each region scrolls its own content (core-main, core-sidebar).
+    container.classList.add('core-app', 'no-ai');
     container.style.display = 'grid';
     container.style.gridTemplateColumns = 'auto 1fr';
     container.style.gridTemplateRows = '60px 1fr';
@@ -911,7 +911,7 @@ class UIService {
     } = config;
 
     const card = document.createElement('div');
-    card.className = 'stat-card kr-stat-card';
+    card.className = 'stat-card core-stat-card';
 
     // .top — icon + delta
     const top = document.createElement('div');
@@ -927,7 +927,7 @@ class UIService {
       delta.className = 'delta';
       // Re-tint delta for negative trend
       if (changeType === 'decrease') {
-        delta.style.cssText = 'background: #fdebec; color: var(--kr-danger, #c2484a);';
+        delta.style.cssText = 'background: var(--danger-soft, #FADDE2); color: var(--danger, #B42335);';
       }
       delta.textContent = change;
       top.appendChild(delta);
@@ -971,7 +971,7 @@ class UIService {
 
     const conf = statusConfig[status] || statusConfig.pending;
     const badge = document.createElement('span');
-    badge.className = `kr-chip ${conf.variant}`;
+    badge.className = `core-chip ${conf.variant}`;
     badge.innerHTML = `<i class="bi ${conf.icon}"></i>${conf.text}`;
 
     return badge;

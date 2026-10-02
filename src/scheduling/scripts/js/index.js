@@ -7,7 +7,8 @@
  * It shares its look with the workflow manager (`/services/workflow/scripts/js/index.js`)
  * but has its own namespaced styles (`njsc-`), so both can load on one page.
  * Sub-views render inline rather than in overlay modals, and colours resolve
- * against the host's `--kr-*` custom properties.
+ * against the host's NooblyJS design tokens (`--ink`, `--accent`, ... from
+ * `/services/css/styles.css` and `core.css`).
  *
  * @author NooblyJS Core Team
  * @version 1.1.0
@@ -52,23 +53,23 @@
    */
   const STYLES = `
 .njsc-root {
-  --njsc-ink: var(--kr-ink-900, #0d1c1c);
-  --njsc-ink-2: var(--kr-ink-700, #2b3a3a);
-  --njsc-muted: var(--kr-ink-500, #5a6b6b);
-  --njsc-faint: var(--kr-ink-400, #7d8e8e);
-  --njsc-line: var(--kr-border, #e3eaea);
-  --njsc-line-2: var(--kr-border-2, #eef2f2);
-  --njsc-surface: var(--kr-surface, #ffffff);
-  --njsc-surface-2: var(--kr-surface-2, #fbfcfc);
-  --njsc-bg: var(--kr-bg, #f4f7f7);
-  --njsc-accent: var(--kr-teal-600, #4b5563);
-  --njsc-accent-ink: var(--kr-surface, #ffffff);
-  --njsc-success: var(--kr-success, #1f8a5b);
-  --njsc-warn: var(--kr-warning, #c98019);
-  --njsc-danger: var(--kr-danger, #c2484a);
-  --njsc-info: var(--kr-info, #2a6fdb);
-  --njsc-radius: var(--kr-radius, 10px);
-  --njsc-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --njsc-ink: var(--ink, #241C1A);
+  --njsc-ink-2: var(--ink-2, #4A3F3A);
+  --njsc-muted: var(--muted, #6B605A);
+  --njsc-faint: var(--neutral-dot, #8F837C);
+  --njsc-line: var(--border, #E6DED8);
+  --njsc-line-2: var(--divider, #F0E9E4);
+  --njsc-surface: var(--surface, #ffffff);
+  --njsc-surface-2: var(--surface-sunken, #FBF8F6);
+  --njsc-bg: var(--bg, #F5F1EE);
+  --njsc-accent: var(--accent, #C2471F);
+  --njsc-accent-ink: var(--surface, #ffffff);
+  --njsc-success: var(--core-success, #1F7A4D);
+  --njsc-warn: var(--warn-dot, #8A6500);
+  --njsc-danger: var(--danger, #B42335);
+  --njsc-info: var(--core-info, #2F5F9E);
+  --njsc-radius: var(--radius-md, 12px);
+  --njsc-mono: var(--mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
   font-family: inherit;
   color: var(--njsc-ink);
   font-size: 13px;

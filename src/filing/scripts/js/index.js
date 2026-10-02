@@ -73,15 +73,15 @@
      * are not required to load Bootstrap's CSS, and the component already
      * depends on Bootstrap Icons for glyphs only) and every colour comes from a
      * custom property with a fallback, so a host can theme the panel by setting
-     * `--kr-filer-*` anywhere above it.
+     * `--core-filer-*` anywhere above it.
      */
     injectContentStyles() {
-      if (document.getElementById('kr-filer-content-styles')) return;
+      if (document.getElementById('core-filer-content-styles')) return;
 
       const style = document.createElement('style');
-      style.id = 'kr-filer-content-styles';
+      style.id = 'core-filer-content-styles';
       style.textContent = `
-        .kr-filer-items {
+        .core-filer-items {
           /* The host may style the content container as a grid or a flex line
              (the datasources shell sets display:grid with 200px columns). This
              wrapper would then be laid out as ONE cell of that grid, squeezing
@@ -95,7 +95,7 @@
         }
 
         /* ── Grid view ─────────────────────────────────────────────────── */
-        .kr-filer-items.kr-filer-grid {
+        .core-filer-items.core-filer-grid {
           display: grid;
           /* Was a fixed 6 columns, which is unusably narrow in a side panel and
              sparse on a wide one. Tracks now size themselves to the container. */
@@ -105,7 +105,7 @@
           align-content: start;
         }
 
-        .kr-filer-tile {
+        .core-filer-tile {
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -119,16 +119,16 @@
           background: transparent;
           transition: background-color .12s ease, border-color .12s ease;
         }
-        .kr-filer-tile:hover {
-          background: var(--kr-filer-hover-bg, #f1f6f7);
-          border-color: var(--kr-filer-hover-border, #cfe3e5);
+        .core-filer-tile:hover {
+          background: var(--core-filer-hover-bg, var(--accent-tint, #FFF4EE));
+          border-color: var(--core-filer-hover-border, var(--accent-soft, #FCE3D6));
         }
-        .kr-filer-tile:focus-visible {
-          outline: 2px solid var(--kr-filer-accent, #02797d);
+        .core-filer-tile:focus-visible {
+          outline: 2px solid var(--core-filer-accent, var(--accent, #C2471F));
           outline-offset: 1px;
         }
 
-        .kr-filer-tile-icon {
+        .core-filer-tile-icon {
           /* 3rem icons left no room for the label, which is what forced the
              two-line mid-word truncation ("L2 Admi…"). */
           font-size: 1.9rem;
@@ -138,13 +138,13 @@
           justify-content: center;
           height: 34px;
         }
-        .kr-filer-tile-icon.kr-is-folder { color: var(--kr-filer-folder, #0f7d80); }
-        .kr-filer-tile-icon.kr-is-file   { color: var(--kr-filer-file, #94a3b8); }
+        .core-filer-tile-icon.core-is-folder { color: var(--core-filer-folder, var(--teal, #2B7F86)); }
+        .core-filer-tile-icon.core-is-file   { color: var(--core-filer-file, var(--neutral-dot, #8F837C)); }
 
-        .kr-filer-tile-name {
+        .core-filer-tile-name {
           font-size: 0.8125rem;
           line-height: 1.35;
-          color: var(--kr-filer-text, #1f2937);
+          color: var(--core-filer-text, var(--ink, #241C1A));
           /* overflow-wrap:anywhere breaks a word only when it genuinely does
              not fit, where word-break:break-word chopped every label. */
           overflow-wrap: anywhere;
@@ -154,60 +154,60 @@
           overflow: hidden;
           max-width: 100%;
         }
-        .kr-filer-tile-meta {
+        .core-filer-tile-meta {
           font-size: 0.6875rem;
-          color: var(--kr-filer-muted, #94a3b8);
+          color: var(--core-filer-muted, var(--muted, #6B605A));
         }
 
         /* ── List view ─────────────────────────────────────────────────── */
-        .kr-filer-items.kr-filer-list { display: block; padding: 0; }
-        .kr-filer-row {
+        .core-filer-items.core-filer-list { display: block; padding: 0; }
+        .core-filer-row {
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 9px 16px;
-          border-bottom: 1px solid var(--kr-filer-line, #f1f3f5);
+          border-bottom: 1px solid var(--core-filer-line, var(--divider, #F0E9E4));
           cursor: pointer;
           transition: background-color .12s ease;
         }
-        .kr-filer-row:hover { background: var(--kr-filer-hover-bg, #f1f6f7); }
-        .kr-filer-row-head {
+        .core-filer-row:hover { background: var(--core-filer-hover-bg, var(--accent-tint, #FFF4EE)); }
+        .core-filer-row-head {
           font-weight: 600;
           font-size: 0.75rem;
           letter-spacing: .04em;
           text-transform: uppercase;
-          color: var(--kr-filer-muted, #94a3b8);
-          background: var(--kr-filer-head-bg, #f8fafc);
+          color: var(--core-filer-muted, var(--muted, #6B605A));
+          background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6));
           cursor: default;
           position: sticky;
           top: 0;
           z-index: 1;
         }
-        .kr-filer-row-head:hover { background: var(--kr-filer-head-bg, #f8fafc); }
-        .kr-filer-row-icon {
+        .core-filer-row-head:hover { background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6)); }
+        .core-filer-row-icon {
           width: 20px;
           flex: 0 0 20px;
           display: flex;
           justify-content: center;
           font-size: 1rem;
         }
-        .kr-filer-row-icon.kr-is-folder { color: var(--kr-filer-folder, #0f7d80); }
-        .kr-filer-row-icon.kr-is-file   { color: var(--kr-filer-file, #94a3b8); }
-        .kr-filer-row-name {
+        .core-filer-row-icon.core-is-folder { color: var(--core-filer-folder, var(--teal, #2B7F86)); }
+        .core-filer-row-icon.core-is-file   { color: var(--core-filer-file, var(--neutral-dot, #8F837C)); }
+        .core-filer-row-name {
           flex: 1;
           min-width: 0;
           font-size: 0.8125rem;
-          color: var(--kr-filer-text, #1f2937);
+          color: var(--core-filer-text, var(--ink, #241C1A));
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .kr-filer-row-date {
+        .core-filer-row-date {
           width: 130px;
           flex: 0 0 130px;
           text-align: right;
           font-size: 0.75rem;
-          color: var(--kr-filer-muted, #94a3b8);
+          color: var(--core-filer-muted, var(--muted, #6B605A));
         }
 
         /* ── File viewer ───────────────────────────────────────────────── */
@@ -225,7 +225,7 @@
           display: flex;
           flex-direction: column;
           background: #fff;
-          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border: 1px solid var(--core-filer-line, var(--border, #E6DED8));
           border-radius: 10px;
           overflow: hidden;
         }
@@ -235,8 +235,8 @@
           align-items: center;
           gap: 12px;
           padding: 10px 14px;
-          border-bottom: 1px solid var(--kr-filer-line, #e6e9ec);
-          background: var(--kr-filer-head-bg, #f8fafc);
+          border-bottom: 1px solid var(--core-filer-line, var(--border, #E6DED8));
+          background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6));
           flex: 0 0 auto;
         }
         .core-file-preview-title {
@@ -247,12 +247,12 @@
           gap: 8px;
           font-size: 0.875rem;
           font-weight: 600;
-          color: var(--kr-filer-text, #1f2937);
+          color: var(--core-filer-text, var(--ink, #241C1A));
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .core-file-preview-title i { color: var(--kr-filer-file, #94a3b8); flex: 0 0 auto; }
+        .core-file-preview-title i { color: var(--core-filer-file, var(--neutral-dot, #8F837C)); flex: 0 0 auto; }
         .core-file-preview-actions { display: flex; gap: 6px; flex: 0 0 auto; }
 
         .core-file-preview-content {
@@ -262,7 +262,7 @@
           padding: 22px 26px;
           font-size: 0.875rem;
           line-height: 1.6;
-          color: var(--kr-filer-text, #1f2937);
+          color: var(--core-filer-text, var(--ink, #241C1A));
         }
 
         /* Rendered markdown. Capped to a readable measure and CENTRED, rather
@@ -274,34 +274,34 @@
         .core-markdown-content h3 {
           line-height: 1.25;
           margin: 1.6em 0 .6em;
-          color: var(--kr-filer-text, #1f2937);
+          color: var(--core-filer-text, var(--ink, #241C1A));
         }
-        .core-markdown-content h1 { font-size: 1.5rem; padding-bottom: .3em; border-bottom: 1px solid var(--kr-filer-line, #e6e9ec); }
+        .core-markdown-content h1 { font-size: 1.5rem; padding-bottom: .3em; border-bottom: 1px solid var(--core-filer-line, var(--border, #E6DED8)); }
         .core-markdown-content h2 { font-size: 1.2rem; }
         .core-markdown-content h3 { font-size: 1.02rem; }
         .core-markdown-content p { margin: 0 0 1em; }
         .core-markdown-content ul,
         .core-markdown-content ol { margin: 0 0 1em; padding-left: 1.4em; }
         .core-markdown-content li { margin: .25em 0; }
-        .core-markdown-content a { color: var(--kr-filer-accent, #02797d); }
+        .core-markdown-content a { color: var(--core-filer-accent, var(--accent, #C2471F)); }
         .core-markdown-content img { max-width: 100%; height: auto; border-radius: 6px; }
         .core-markdown-content blockquote {
           margin: 0 0 1em;
           padding: .2em 1em;
-          border-left: 3px solid var(--kr-filer-line, #e6e9ec);
-          color: var(--kr-filer-muted, #94a3b8);
+          border-left: 3px solid var(--core-filer-line, var(--border, #E6DED8));
+          color: var(--core-filer-muted, var(--muted, #6B605A));
         }
         .core-markdown-content code {
           font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           font-size: .875em;
-          background: var(--kr-filer-head-bg, #f8fafc);
-          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6));
+          border: 1px solid var(--core-filer-line, var(--border, #E6DED8));
           border-radius: 4px;
           padding: .1em .35em;
         }
         .core-markdown-content pre {
-          background: var(--kr-filer-head-bg, #f8fafc);
-          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6));
+          border: 1px solid var(--core-filer-line, var(--border, #E6DED8));
           border-radius: 8px;
           padding: 12px 14px;
           overflow-x: auto;
@@ -309,9 +309,9 @@
         .core-markdown-content pre code { background: none; border: 0; padding: 0; }
         .core-markdown-content table { border-collapse: collapse; width: 100%; margin: 0 0 1em; font-size: .8125rem; }
         .core-markdown-content th,
-        .core-markdown-content td { border: 1px solid var(--kr-filer-line, #e6e9ec); padding: 6px 10px; text-align: left; }
-        .core-markdown-content th { background: var(--kr-filer-head-bg, #f8fafc); font-weight: 600; }
-        .core-markdown-content hr { border: 0; border-top: 1px solid var(--kr-filer-line, #e6e9ec); margin: 1.6em 0; }
+        .core-markdown-content td { border: 1px solid var(--core-filer-line, var(--border, #E6DED8)); padding: 6px 10px; text-align: left; }
+        .core-markdown-content th { background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6)); font-weight: 600; }
+        .core-markdown-content hr { border: 0; border-top: 1px solid var(--core-filer-line, var(--border, #E6DED8)); margin: 1.6em 0; }
 
         /* Code / JSON / plain text */
         .core-file-preview-content.formatted-text,
@@ -331,17 +331,17 @@
           gap: 14px;
           margin: 22px;
           padding: 16px 18px;
-          border: 1px solid var(--kr-filer-line, #e6e9ec);
+          border: 1px solid var(--core-filer-line, var(--border, #E6DED8));
           border-radius: 10px;
-          background: var(--kr-filer-head-bg, #f8fafc);
-          color: var(--kr-filer-text, #1f2937);
+          background: var(--core-filer-head-bg, var(--surface-sunken, #FBF8F6));
+          color: var(--core-filer-text, var(--ink, #241C1A));
           font-size: .8125rem;
         }
-        .binary-file-notice i { font-size: 1.6rem; color: var(--kr-filer-file, #94a3b8); }
-        .binary-file-notice a { color: var(--kr-filer-accent, #02797d); }
+        .binary-file-notice i { font-size: 1.6rem; color: var(--core-filer-file, var(--neutral-dot, #8F837C)); }
+        .binary-file-notice a { color: var(--core-filer-accent, var(--accent, #C2471F)); }
 
         /* ── Empty state ───────────────────────────────────────────────── */
-        .kr-filer-empty {
+        .core-filer-empty {
           grid-column: 1 / -1;
           display: flex;
           flex-direction: column;
@@ -349,16 +349,16 @@
           justify-content: center;
           gap: 6px;
           padding: 56px 20px;
-          color: var(--kr-filer-muted, #94a3b8);
+          color: var(--core-filer-muted, var(--muted, #6B605A));
           text-align: center;
         }
-        .kr-filer-empty i { font-size: 1.75rem; opacity: .55; }
-        .kr-filer-empty-title { font-size: 0.875rem; font-weight: 600; color: var(--kr-filer-text, #1f2937); }
-        .kr-filer-empty-hint { font-size: 0.75rem; }
+        .core-filer-empty i { font-size: 1.75rem; opacity: .55; }
+        .core-filer-empty-title { font-size: 0.875rem; font-weight: 600; color: var(--core-filer-text, var(--ink, #241C1A)); }
+        .core-filer-empty-hint { font-size: 0.75rem; }
 
         @media (max-width: 720px) {
-          .kr-filer-items.kr-filer-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
-          .kr-filer-row-date { display: none; }
+          .core-filer-items.core-filer-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+          .core-filer-row-date { display: none; }
         }
       `;
       document.head.appendChild(style);
@@ -440,10 +440,8 @@
       }
 
       // View mode toggle buttons - scoped to this instance's parent content area.
-      // The markup uses the `kr-` prefixed classes (after the CSS-prefix
-      // migration), so query those rather than the legacy `core-` names.
-      const contentArea = this.contentContainer.closest('.kr-file-browser-content') || this.contentContainer.parentElement;
-      const viewModeButtons = contentArea.querySelectorAll('.kr-view-mode-btn');
+      const contentArea = this.contentContainer.closest('.core-file-browser-content') || this.contentContainer.parentElement;
+      const viewModeButtons = contentArea.querySelectorAll('.core-view-mode-btn');
       viewModeButtons.forEach(button => {
         button.addEventListener('click', (e) => {
           const viewMode = e.currentTarget.dataset.view;
@@ -461,9 +459,9 @@
       this.currentViewMode = viewMode === 'core-card' ? 'card' : viewMode;
 
       // Update button states - scoped to this instance's parent content area only
-      const contentArea = this.contentContainer.closest('.kr-file-browser-content') || this.contentContainer.parentElement;
+      const contentArea = this.contentContainer.closest('.core-file-browser-content') || this.contentContainer.parentElement;
       if (contentArea) {
-        contentArea.querySelectorAll('.kr-view-mode-btn').forEach(btn => {
+        contentArea.querySelectorAll('.core-view-mode-btn').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.view === viewMode);
         });
       }
@@ -734,10 +732,10 @@
           // utilities, and a host is not obliged to load Bootstrap's CSS — where
           // it does not, this rendered as an oversized unstyled glyph.
           this.contentContainer.innerHTML = `
-            <div class="kr-filer-empty">
+            <div class="core-filer-empty">
               <i class="bi bi-folder2-open"></i>
-              <div class="kr-filer-empty-title">This folder is empty</div>
-              <div class="kr-filer-empty-hint">Nothing has been added here yet.</div>
+              <div class="core-filer-empty-title">This folder is empty</div>
+              <div class="core-filer-empty-hint">Nothing has been added here yet.</div>
             </div>`;
           return;
         }
@@ -754,15 +752,15 @@
         } else if (this.currentViewMode === 'list') {
           // Create list view
           const listTable = document.createElement('div');
-          listTable.className = 'kr-filer-items kr-filer-list';
+          listTable.className = 'core-filer-items core-filer-list';
 
           // Column header. Sticky, so it survives a long folder.
           const headerRow = document.createElement('div');
-          headerRow.className = 'kr-filer-row kr-filer-row-head';
+          headerRow.className = 'core-filer-row core-filer-row-head';
           headerRow.innerHTML = `
-            <div class="kr-filer-row-icon"></div>
-            <div class="kr-filer-row-name">Name</div>
-            <div class="kr-filer-row-date">Modified</div>
+            <div class="core-filer-row-icon"></div>
+            <div class="core-filer-row-name">Name</div>
+            <div class="core-filer-row-date">Modified</div>
           `;
           listTable.appendChild(headerRow);
 
@@ -770,23 +768,23 @@
             const isFolder = item.type === 'folder';
 
             const itemEl = document.createElement('div');
-            itemEl.className = 'kr-filer-row';
+            itemEl.className = 'core-filer-row';
             itemEl.tabIndex = 0;
             itemEl.setAttribute('role', 'button');
 
             const iconDiv = document.createElement('div');
-            iconDiv.className = `kr-filer-row-icon ${isFolder ? 'kr-is-folder' : 'kr-is-file'}`;
+            iconDiv.className = `core-filer-row-icon ${isFolder ? 'core-is-folder' : 'core-is-file'}`;
             iconDiv.innerHTML = isFolder
               ? '<i class="bi bi-folder-fill"></i>'
               : `<i class="bi ${this.fileIconClass(item.name)}"></i>`;
 
             const nameDiv = document.createElement('div');
-            nameDiv.className = 'kr-filer-row-name';
+            nameDiv.className = 'core-filer-row-name';
             nameDiv.title = item.name;
             nameDiv.textContent = item.name;
 
             const dateDiv = document.createElement('div');
-            dateDiv.className = 'kr-filer-row-date';
+            dateDiv.className = 'core-filer-row-date';
             dateDiv.textContent = item.modified ? new Date(item.modified).toLocaleDateString() : '—';
 
             itemEl.appendChild(iconDiv);
@@ -986,26 +984,26 @@
      * single 200px cell once a host styled the content container as a grid.
      */
     renderGridView(container, sortedItems, path) {
-      container.classList.add('kr-filer-items', 'kr-filer-grid');
+      container.classList.add('core-filer-items', 'core-filer-grid');
 
       sortedItems.forEach(item => {
         const isFolder = item.type === 'folder';
 
         const itemEl = document.createElement('div');
-        itemEl.className = 'kr-filer-tile';
+        itemEl.className = 'core-filer-tile';
         // Reachable and activatable without a mouse — the tile is the control.
         itemEl.tabIndex = 0;
         itemEl.setAttribute('role', 'button');
         itemEl.title = item.name;
 
         const iconEl = document.createElement('div');
-        iconEl.className = `kr-filer-tile-icon ${isFolder ? 'kr-is-folder' : 'kr-is-file'}`;
+        iconEl.className = `core-filer-tile-icon ${isFolder ? 'core-is-folder' : 'core-is-file'}`;
         iconEl.innerHTML = isFolder
           ? '<i class="bi bi-folder-fill"></i>'
           : `<i class="bi ${this.fileIconClass(item.name)}"></i>`;
 
         const nameEl = document.createElement('div');
-        nameEl.className = 'kr-filer-tile-name';
+        nameEl.className = 'core-filer-tile-name';
         nameEl.textContent = item.name;
 
         itemEl.appendChild(iconEl);
@@ -1054,9 +1052,9 @@
      * Render card view - Shows file previews with icon/preview and name
      */
     renderCardView(container, sortedItems, path) {
-      // kr-filer-items carries the grid-column/width reset that keeps the
+      // core-filer-items carries the grid-column/width reset that keeps the
       // listing full-width when the host styles its content container as a grid.
-      container.classList.add('kr-filer-items');
+      container.classList.add('core-filer-items');
       container.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem; grid-column: 1 / -1; width: 100%; box-sizing: border-box;';
 
       sortedItems.forEach(item => {
@@ -1080,7 +1078,7 @@
         // in the panel rather than solid black, which read as a rendering fault
         // beside the teal folders in the navigation tree.
         if (item.type === 'folder') {
-          previewContainer.innerHTML = '<i class="bi bi-folder-fill" style="font-size: 2.75rem; color: var(--kr-filer-folder, #0f7d80);"></i>';
+          previewContainer.innerHTML = '<i class="bi bi-folder-fill" style="font-size: 2.75rem; color: var(--core-filer-folder, var(--teal, #2B7F86));"></i>';
         } else {
           // For files, load preview
           const fileName = item.name.toLowerCase();
@@ -1583,8 +1581,7 @@
       actions.appendChild(downloadBtn);
 
       const viewFullBtn = document.createElement('button');
-      viewFullBtn.className = 'btn btn-sm btn-primary'; 
-      viewFullBtn.style = 'background-color: #4B5563; color: white; border: none;';
+      viewFullBtn.className = 'btn btn-sm btn-primary';
       viewFullBtn.title = 'View in fullscreen modal';
       viewFullBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
       viewFullBtn.addEventListener('click', () => {

@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Access Denied - NooblyJS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
     <style>
         /* Restore 12px base font: this page is sized in rem against a 12px root
            (previously provided by public/styles.css before the CSS consolidation). */
         html { font-size: 12px; }
         :root {
-            --custom-primary: #059DA2;
-            --custom-secondary: #6c757d;
-            --custom-warning: #ffc107;
+            --custom-primary: var(--accent);
+            --custom-secondary: var(--muted);
+            --custom-warning: var(--warn-border);
         }
 
         body.loading {
@@ -28,13 +29,9 @@
 
         .auth-container {
             min-height: 100vh;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         }
 
         .auth-card {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: none;
-            border-radius: 1rem;
             max-width: 360px;
             width: 100%;
             aspect-ratio: 0.75;
@@ -53,13 +50,6 @@
             flex-direction: column;
         }
 
-        .auth-logo {
-            color: #059DA2;
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
         .auth-card .text-center {
             margin-bottom: 1rem !important;
         }
@@ -76,30 +66,18 @@
 
         .icon-lock {
             font-size: 3rem;
-            color: #dc3545;
+            color: var(--danger);
             margin-bottom: 0.75rem;
-        }
-
-        .btn-secondary {
-            background-color: #059DA2;
-            border-color: #059DA2;
-            font-size: 0.875rem;
-            padding: 0.5rem 1rem !important;
-        }
-
-        .btn-secondary:hover {
-            background-color: #016165;
-            border-color: #016165;
         }
 
         .alert-message {
             font-size: 0.875rem;
             margin-bottom: 1.5rem;
-            color: #6c757d;
+            color: var(--muted);
         }
 
         .alert-message strong {
-            color: #059DA2;
+            color: var(--accent);
             display: block;
             margin-bottom: 0.5rem;
             font-size: 1rem;
@@ -108,22 +86,6 @@
         .auth-card .btn {
             font-size: 0.875rem;
             padding: 0.5rem 1rem !important;
-        }
-
-        .form-control:focus {
-            border-color: #059DA2;
-            box-shadow: 0 0 0 0.2rem rgba(2, 121, 125, 0.25);
-        }
-
-        .auth-link {
-            color: #059DA2;
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
-
-        .auth-link:hover {
-            color: #016165;
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -152,7 +114,7 @@
                             </div>
 
                             <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+                                <button type="button" class="btn btn-primary" onclick="signOut()">Sign Out</button>
                                 <a href="/services/authservice/views/login.html" class="btn btn-outline-secondary mt-2">Return to Login</a>
                             </div>
                         </div>
@@ -206,7 +168,7 @@
             logoContainer.innerHTML = `<img src="${logoUrl}" alt="${brandingConfig.appName || 'Logo'}" style="max-height: 80px; width: auto; margin-bottom: 1rem;"><div class="auth-logo" id="app-name">${brandingConfig.appName || 'NooblyJS'}</div>`;
 
             // Apply custom colors to CSS variables.
-            // Note: the primary color is intentionally fixed (#059DA2) on this
+            // Note: the primary color is intentionally fixed (the NooblyJS accent) on this
             // shared auth screen for cross-site consistency, so any per-site
             // brandingConfig.primaryColor is deliberately ignored here.
             const root = document.documentElement;
@@ -260,6 +222,6 @@
         }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

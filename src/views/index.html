@@ -5,42 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Registry Dashboard - NooblyJS Core</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/services/css/styles.css">
+    <link rel="stylesheet" href="/services/css/core.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="kr-app no-ai">
+<div class="core-app">
     <!-- Topbar -->
-    <header class="kr-topbar">
-        <div class="kr-brand">
-            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo" style="width: 32px; height: 32px; border-radius: 7px; object-fit: contain; background: #fff; padding: 2px;">
+    <header class="navbar core-topbar">
+        <div class="core-brand">
+            <img src="/images/nooblyjs-logo.png" alt="NooblyJS Logo" class="logo">
             <div class="name">NooblyJS<small>Services</small></div>
         </div>
-        <div class="kr-topbar-actions">
-            <div class="kr-avatar-pill" style="margin-left: auto;">
+        <div class="core-topbar-actions">
+            <div class="core-user">
                 <span id="headerUserName">User</span>
                 <div class="av" id="headerUserAvatar">U</div>
             </div>
-            <a href="#" id="headerLogoutBtn" class="kr-icon-btn" title="Logout" style="margin-left: 4px;">
+            <a href="#" id="headerLogoutBtn" class="core-icon-btn" title="Logout" style="margin-left: 4px;">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
         </div>
     </header>
 
     <!-- Sidebar -->
-    <aside class="kr-sidebar" id="navigation-sidebar">
+    <aside class="core-sidebar" id="navigation-sidebar">
         <!-- Navigation will be loaded here by navigation.js -->
     </aside>
 
     <!-- Main Content -->
-    <main class="kr-main">
+    <main class="core-main">
 
         <!-- Page Title -->
-        <div class="kr-page-hero">
+        <div class="core-page-hero">
             <div class="eyebrow">System Overview</div>
             <h1>Service Registry Dashboard</h1>
             <p>Real-time monitoring of all available services and system performance metrics</p>
@@ -48,14 +46,14 @@
 
         <!-- System Monitoring Section -->
         <div class="mb-4">
-            <div class="kr-surface mb-3">
-                <div class="kr-surface-head">
+            <div class="card mb-3">
+                <div class="card-header">
                     <h3><i class="bi bi-memory"></i> System Monitoring</h3>
                 </div>
-                <div class="kr-surface-body p-3">
+                <div class="card-body p-3">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">RAM Usage</div>
@@ -65,13 +63,13 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="ramChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="ramStats"></small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">CPU Usage</div>
@@ -81,13 +79,13 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="cpuChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="cpuStats"></small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">Active Handles</div>
@@ -97,7 +95,7 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="threadsChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="threadsStats"></small>
                                 </div>
                             </div>
@@ -105,7 +103,7 @@
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">Event Loop Lag</div>
@@ -115,13 +113,13 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="eventLoopChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="eventLoopStats">Detecting event loop delay...</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">Garbage Collection</div>
@@ -131,13 +129,13 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="gcChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="gcStats">Tracking GC metrics...</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <div class="kr-stat-card">
+                            <div class="core-stat-card">
                                 <div class="top">
                                     <div>
                                         <div class="lbl">Heap Memory</div>
@@ -147,7 +145,7 @@
                                 <div style="height: 150px; position: relative;">
                                     <canvas id="heapChart"></canvas>
                                 </div>
-                                <div class="mt-2" style="text-align: center; font-size: 12px; color: var(--kr-ink-500);">
+                                <div class="mt-2" class="core-stat-caption">
                                     <small id="heapStats">Memory breakdown...</small>
                                 </div>
                             </div>
@@ -157,13 +155,13 @@
             </div>
 
             <!-- Performance Marks -->
-            <div class="kr-surface mb-3">
-                <div class="kr-surface-head">
+            <div class="card mb-3">
+                <div class="card-header">
                     <h3><i class="bi bi-speedometer2"></i> Operation Performance</h3>
                 </div>
-                <div class="kr-surface-body p-3">
+                <div class="card-body p-3">
                     <div id="performanceMarksContainer" style="max-height: 350px; overflow-y: auto;">
-                        <small style="color: var(--kr-ink-500);">No performance marks recorded yet...</small>
+                        <small style="color: var(--muted);">No performance marks recorded yet...</small>
                     </div>
                 </div>
             </div>
@@ -206,11 +204,11 @@
                 const offlineServices = classServices.filter(s => NooblyJSNavigation.serviceStatus[s.name] === false);
 
                 html += `
-                    <div class="kr-surface mb-3">
-                        <div class="kr-surface-head">
+                    <div class="card mb-3">
+                        <div class="card-header">
                             <h3><i class="bi ${classConfig.icon}"></i> ${classConfig.label} Services</h3>
                         </div>
-                        <div class="kr-surface-body p-3">
+                        <div class="card-body p-3">
                 `;
 
                 // Render online services in this classification
@@ -225,8 +223,8 @@
                 // Render offline services in this classification
                 if (offlineServices.length > 0) {
                     html += `
-                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--kr-border);">
-                            <p style="color: var(--kr-ink-400); font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-wifi-off"></i> Offline Services</p>
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                            <p style="color: var(--neutral-dot); font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-wifi-off"></i> Offline Services</p>
                             <div class="row">
                     `;
                     offlineServices.forEach(service => {
@@ -246,24 +244,24 @@
             const statusIcon = isOnline ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
             const statusId = `service-status-${service.path}`;
             return `
-                <div class="kr-stat-card" style="${isOnline ? '' : 'opacity: 0.6;'}">
+                <div class="core-stat-card" style="${isOnline ? '' : 'opacity: 0.6;'}">
                     <div class="top">
                         <div style="width: 100%;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: var(--kr-ink-700); font-size: 12px; font-weight: 500;" onclick="window.location.href='/services/${service.path}/'">
-                                <i class="bi ${service.icon}" style="font-size: 14px; color: var(--kr-ink-700);"></i>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: var(--ink-2); font-size: 12px; font-weight: 500;" onclick="window.location.href='/services/${service.path}/'">
+                                <i class="bi ${service.icon}" style="font-size: 14px; color: var(--ink-2);"></i>
                                 <span>${service.title}</span>
-                                <span class="kr-chip ${statusClass}" style="font-size: 10px;">
+                                <span class="core-chip ${statusClass}" style="font-size: 10px;">
                                     <i class="bi ${statusIcon}"></i>
                                 </span>
                             </div>
                             <button type="button"
                                 onclick="toggleServiceStatus('${service.path}', '${statusId}', this)"
-                                style="background: none; border: none; padding: 0; color: var(--kr-ink-500); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                style="background: none; border: none; padding: 0; color: var(--muted); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                                 <i class="bi bi-chevron-right" style="transition: transform 0.15s ease;"></i>
                                 <span>Show status</span>
                             </button>
                             <div id="${statusId}" style="display: none; margin-top: 8px;">
-                                <pre style="background: var(--kr-surface-2); border: 1px solid var(--kr-border); border-radius: var(--kr-radius-sm); padding: 8px; font-size: 11px; max-height: 200px; overflow: auto; margin: 0;">Loading...</pre>
+                                <pre style="background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font-size: 11px; max-height: 200px; overflow: auto; margin: 0;">Loading...</pre>
                             </div>
                         </div>
                         <div class="ico ${isOnline ? 't' : 'o'}" style="cursor: pointer;" onclick="window.location.href='/services/${service.path}/'"><i class="bi bi-gear"></i></div>
@@ -346,8 +344,8 @@
                     datasets: [{
                         label: 'RAM Usage (MB)',
                         data: [],
-                        borderColor: '#4B5563',
-                        backgroundColor: 'rgba(158, 49, 59, 0.1)',
+                        borderColor: '#C2471F',
+                        backgroundColor: 'rgba(194, 71, 31, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -376,8 +374,8 @@
                     datasets: [{
                         label: 'CPU Usage (%)',
                         data: [],
-                        borderColor: '#2a6fdb',
-                        backgroundColor: 'rgba(42, 111, 219, 0.1)',
+                        borderColor: '#2B7F86',
+                        backgroundColor: 'rgba(43, 127, 134, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -407,8 +405,8 @@
                     datasets: [{
                         label: 'Active Handles',
                         data: [],
-                        borderColor: '#c98019',
-                        backgroundColor: 'rgba(201, 128, 25, 0.1)',
+                        borderColor: '#8A6500',
+                        backgroundColor: 'rgba(138, 101, 0, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -437,8 +435,8 @@
                     datasets: [{
                         label: 'Event Loop Lag (ms)',
                         data: [],
-                        borderColor: '#4B5563',
-                        backgroundColor: 'rgba(158, 49, 59, 0.1)',
+                        borderColor: '#C2471F',
+                        backgroundColor: 'rgba(194, 71, 31, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -467,8 +465,8 @@
                     datasets: [{
                         label: 'GC Duration (ms)',
                         data: [],
-                        borderColor: '#1f8a5b',
-                        backgroundColor: 'rgba(31, 138, 91, 0.6)',
+                        borderColor: '#1F4A8A',
+                        backgroundColor: 'rgba(31, 74, 138, 0.6)',
                         fill: true
                     }]
                 },
@@ -496,8 +494,8 @@
                     datasets: [{
                         label: 'Heap Used (MB)',
                         data: [],
-                        borderColor: '#1f8a5b',
-                        backgroundColor: 'rgba(31, 138, 91, 0.1)',
+                        borderColor: '#4B2E83',
+                        backgroundColor: 'rgba(75, 46, 131, 0.1)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -638,10 +636,10 @@
 
                 // Update Performance Marks table
                 if (data.markStatistics && data.markStatistics.length > 0) {
-                    let marksHTML = '<table class="kr-table mb-0"><thead><tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead><tbody>';
+                    let marksHTML = '<table class="table table-hover mb-0"><thead><tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead><tbody>';
 
                     data.markStatistics.forEach(stat => {
-                        const statusColor = stat.avg > 100 ? 'var(--kr-danger)' : stat.avg > 50 ? 'var(--kr-warning)' : 'var(--kr-success)';
+                        const statusColor = stat.avg > 100 ? 'var(--danger)' : stat.avg > 50 ? 'var(--warn-dot)' : 'var(--core-success)';
                         marksHTML += `<tr>
                             <td><small>${stat.name}</small></td>
                             <td><small>${stat.count}</small></td>
@@ -655,7 +653,7 @@
                     document.getElementById('performanceMarksContainer').innerHTML = marksHTML;
                 } else {
                     document.getElementById('performanceMarksContainer').innerHTML =
-                        '<small style="color: var(--kr-ink-400);">No performance marks recorded yet. Services will populate this data as they track operations.</small>';
+                        '<small style="color: var(--neutral-dot);">No performance marks recorded yet. Services will populate this data as they track operations.</small>';
                 }
             } catch (error) {
                 console.error('Error fetching monitoring data:', error);
@@ -677,6 +675,6 @@
     </script>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

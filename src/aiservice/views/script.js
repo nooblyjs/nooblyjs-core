@@ -144,7 +144,7 @@ function toggleAdvanced() {
 }
 
 function handleExamplePrompts() {
-    document.querySelectorAll('.kr-example-btn').forEach((btn) => {
+    document.querySelectorAll('.core-example-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const textarea = document.getElementById('promptText');
             if (textarea) {
@@ -554,11 +554,11 @@ function renderSettingsForm(data) {
 // Create form field based on setting type
 function createFormField(setting, settingsData) {
     const formGroup = document.createElement('div');
-    formGroup.className = 'core-form-group';
+    formGroup.className = 'mb-3';
 
     // Create label
     const label = document.createElement('label');
-    label.className = 'core-form-label';
+    label.className = 'form-label';
     label.htmlFor = 'setting_' + setting.setting;
     label.textContent = setting.setting;
     formGroup.appendChild(label);
@@ -572,7 +572,7 @@ function createFormField(setting, settingsData) {
         case 'string':
             input = document.createElement('input');
             input.type = 'text';
-            input.className = 'form-input';
+            input.className = 'form-control';
             input.id = 'setting_' + setting.setting;
             input.name = setting.setting;
             input.value = currentValue;
@@ -584,7 +584,7 @@ function createFormField(setting, settingsData) {
         case 'integer':
             input = document.createElement('input');
             input.type = 'number';
-            input.className = 'form-input';
+            input.className = 'form-control';
             input.id = 'setting_' + setting.setting;
             input.name = setting.setting;
             input.value = currentValue;
@@ -594,7 +594,7 @@ function createFormField(setting, settingsData) {
         case 'number':
             input = document.createElement('input');
             input.type = 'number';
-            input.className = 'form-input';
+            input.className = 'form-control';
             input.id = 'setting_' + setting.setting;
             input.name = setting.setting;
             input.value = currentValue;
@@ -604,7 +604,7 @@ function createFormField(setting, settingsData) {
         case 'date':
             input = document.createElement('input');
             input.type = 'date';
-            input.className = 'form-input';
+            input.className = 'form-control';
             input.id = 'setting_' + setting.setting;
             input.name = setting.setting;
             input.value = currentValue;
@@ -634,7 +634,7 @@ function createFormField(setting, settingsData) {
         default:
             input = document.createElement('input');
             input.type = 'text';
-            input.className = 'form-input';
+            input.className = 'form-control';
             input.id = 'setting_' + setting.setting;
             input.name = setting.setting;
             input.value = currentValue;
@@ -645,7 +645,7 @@ function createFormField(setting, settingsData) {
     // Add description helper text if available
     if (setting.desciption) {
         const helperText = document.createElement('div');
-        helperText.className = 'core-helper-text';
+        helperText.className = 'form-text';
         helperText.textContent = setting.desciption;
         formGroup.appendChild(helperText);
     }
@@ -879,16 +879,16 @@ async function loadTrainDocs() {
         return `
         <tr>
             <td><code style="font-size:13px;">${safeKey}</code></td>
-            <td style="color:var(--kr-ink-600); font-size:13px;">${preview}</td>
+            <td style="color:var(--ink-2); font-size:13px;">${preview}</td>
             <td style="text-align:right; font-size:13px;">${formatNumber(text.length)}</td>
             <td style="text-align:center;">
                 <div class="d-flex gap-1 justify-content-center">
-                    <button class="kr-btn secondary sm"
+                    <button class="btn btn-secondary btn-sm"
                         onclick="editTrainDoc(${JSON.stringify(safeKey)}, ${JSON.stringify(safeText)})"
                         title="Edit">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="kr-btn sm" style="background:var(--kr-red-50,#fef2f2); color:#dc2626; border-color:#fca5a5;"
+                    <button class="btn btn-secondary btn-sm" style="background:var(--danger-soft,#fef2f2); color:#dc2626; border-color:#fca5a5;"
                         onclick="deleteTrainDoc(${JSON.stringify(safeKey)})"
                         title="Delete">
                         <i class="bi bi-trash"></i>
