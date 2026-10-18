@@ -10,6 +10,7 @@
 
 'use strict';
 
+const { postLoginRedirect, safeReturnUrl } = require('../modules/redirect');
 const AuthBase = require('./authBase');
 
 /**
@@ -190,7 +191,10 @@ class AuthAzure extends AuthBase {
           allowHttpForRedirectUrl,
           validateIssuer: false,
           passReqToCallback: false,
-          scope: ['openid', 'profile', 'email'],
+          // Sign-in only by default. A Microsoft Graph permission such as User.Read needs admin consent in some
+          // tenants, and asking for it stops every sign-in at "Approval required" until an admin grants it. A host
+          // that has that consent passes it in options.scope.
+          scope: this.options_.scope || ['openid', 'profile', 'email'],
           // Opt-in verbose diagnostics for local debugging. Set
           // AZURE_AD_LOG_LEVEL=info (and optionally AZURE_AD_LOG_PII=true) to
           // see why the strategy accepts/rejects a request. Defaults keep the
@@ -355,11 +359,9 @@ class AuthAzure extends AuthBase {
       });
     }
 
-    // Determine redirect URL: an explicit app-level override wins; otherwise leave
-    // it null so handleAzureCallback can prefer the per-request returnUrl (the page
-    // the user was originally heading to) over any static default. Baking '/services'
-    // in here is what previously made returnUrl dead code.
-    const redirectUrl = this.options_.loginSuccessRedirectUrl || returnUrl || null;
+    // Where to go next: the page they were heading to > the app's loginSuccessRedirectUrl. Left null
+    // when neither is set, so the caller picks its own default.
+    const redirectUrl = postLoginRedirect(returnUrl, this.options_, null);
 
     return {
       user: store.getSafeUser_(user),
@@ -378,13 +380,7 @@ class AuthAzure extends AuthBase {
    * @private
    */
   sanitizeReturnUrl_(url) {
-    if (typeof url !== 'string' || url.length === 0) {
-      return null;
-    }
-    if (url[0] !== '/' || url[1] === '/' || url[1] === '\\') {
-      return null;
-    }
-    return url;
+    return safeReturnUrl(url);
   }
 
   /**

@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "The NooblyJS UI kit: browser ES modules. This file only tells Node (tests) to read them as ES modules."
+}

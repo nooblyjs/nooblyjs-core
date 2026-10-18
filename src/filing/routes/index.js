@@ -12,6 +12,7 @@
 'use strict';
 
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { route } = require('../../shared/utils/routePattern');
 
 const path = require('node:path');
 const express = require('express');
@@ -83,7 +84,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @return {void}
      */
     app.post(
-      '/services/filing/api/upload/*',
+      ...route('/services/filing/api/upload/*'),
       createUploadMiddleware(() => filing, { eventEmitter }),
       async (req, res) => {
         const key = req.params[0];
@@ -116,7 +117,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/download/*', async (req, res) => {
+    app.get(...route('/services/filing/api/download/*'), async (req, res) => {
       const key = req.params[0];
       const encoding = req.query.encoding;
       const isAttachment = req.query.attachment === 'true' || req.query.download === 'true';
@@ -235,7 +236,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/filing/api/remove/*', async (req, res) => {
+    app.delete(...route('/services/filing/api/remove/*'), async (req, res) => {
       const key = req.params[0];
       try {
         await filing.remove(key);
@@ -322,7 +323,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.post('/services/filing/api/upload-stream/*', async (req, res) => {
+    app.post(...route('/services/filing/api/upload-stream/*'), async (req, res) => {
       const key = req.params[0];
 
       try {
@@ -351,7 +352,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @return {void}
      */
     app.post(
-      '/services/filing/api/:instanceName/upload/*',
+      ...route('/services/filing/api/:instanceName/upload/*'),
       createUploadMiddleware(
         (req) => getServiceInstance('filing', req.params.instanceName, filing, options, providerType),
         { eventEmitter }
@@ -385,7 +386,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/:instanceName/download/*', async (req, res) => {
+    app.get(...route('/services/filing/api/:instanceName/download/*'), async (req, res) => {
       const instanceName = req.params.instanceName;
       const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);
       const key = req.params[0];
@@ -436,7 +437,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/filing/api/:instanceName/remove/*', async (req, res) => {
+    app.delete(...route('/services/filing/api/:instanceName/remove/*'), async (req, res) => {
       const instanceName = req.params.instanceName;
       const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);
       const key = req.params[0];
@@ -489,7 +490,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/:instanceName/browse/*', async (req, res) => {
+    app.get(...route('/services/filing/api/:instanceName/browse/*'), async (req, res) => {
       const instanceName = req.params.instanceName;
       const filingInstance = getServiceInstance('filing', instanceName, filing, options, providerType);
       const path = req.params[0] || '';
@@ -1226,7 +1227,7 @@ module.exports = (options, eventEmitter, filing) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/filing/api/browse/*', async (req, res) => {
+    app.get(...route('/services/filing/api/browse/*'), async (req, res) => {
       try {
         const path = req.params[0] || '';
         let items;

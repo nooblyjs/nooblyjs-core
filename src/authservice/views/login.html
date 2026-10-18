@@ -293,7 +293,7 @@
                     loginBtn.disabled = true;
 
                     // Use redirectUrl from server response, fallback to returnUrl or default
-                    const redirectUrl = result.redirectUrl || returnUrl || '/services';
+                    const redirectUrl = result.redirectUrl || returnUrl || brandingConfig?.homeUrl || '/services';
 
                     setTimeout(() => {
                         window.location.href = redirectUrl;
@@ -342,7 +342,7 @@
                             .then(sessionResult => {
                                 if (sessionResult.authenticated) {
                                     const urlParams = new URLSearchParams(window.location.search);
-                                    const returnUrl = safeReturnUrl(urlParams.get('returnUrl')) || '/services';
+                                    const returnUrl = safeReturnUrl(urlParams.get('returnUrl')) || brandingConfig?.homeUrl || '/services';
 
                                     showSuccess('Already logged in! Redirecting...');
                                     setTimeout(() => {

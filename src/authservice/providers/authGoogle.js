@@ -8,6 +8,7 @@
 
 'use strict';
 
+const { postLoginRedirect, safeReturnUrl } = require('../modules/redirect');
 const AuthBase = require('./authBase');
 
 /**
@@ -214,8 +215,8 @@ class AuthGoogle extends AuthBase {
       });
     }
 
-    // Determine redirect URL: options override > returnUrl > default
-    const redirectUrl = this.options_.loginSuccessRedirectUrl || returnUrl || '/services';
+    // Where to go next: the page they were heading to > the app's loginSuccessRedirectUrl > /services
+    const redirectUrl = postLoginRedirect(returnUrl, this.options_);
 
     return {
       user: this.getSafeUser_(user),
@@ -235,10 +236,11 @@ class AuthGoogle extends AuthBase {
       throw new Error('Google OAuth not available');
     }
 
-    // Store returnUrl in session for use in callback
-    if (req.query.returnUrl) {
+    // Store returnUrl in session for use in callback (same-origin paths only: no open redirect)
+    const returnUrl = safeReturnUrl(req.query.returnUrl);
+    if (returnUrl) {
       req.session = req.session || {};
-      req.session.oauthReturnUrl = req.query.returnUrl;
+      req.session.oauthReturnUrl = returnUrl;
     }
 
     this.passport_.authenticate('google', {

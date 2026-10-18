@@ -10,6 +10,7 @@
 
 'use strict';
 
+const { postLoginRedirect } = require('../modules/redirect');
 const rateLimit = require('express-rate-limit');
 const { sendSafeError } = require('../../shared/utils/safeError');
 const { capLimit, validate } = require('../../shared/utils/validation');
@@ -164,8 +165,8 @@ module.exports = (options, eventEmitter, auth, analytics) => {
             }
           }
 
-          // Determine redirect URL: options override > request returnUrl > default
-          const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+          // Where to go next: the page they were heading to > the app's loginSuccessRedirectUrl > /services
+          const redirectUrl = postLoginRedirect(returnUrl, options);
 
           res.status(200).json({
             success: true,
@@ -1195,7 +1196,9 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         stylesheetUrl: options.brandingConfig?.stylesheetUrl || null,
         primaryColor: options.brandingConfig?.primaryColor || '#0066cc',
         secondaryColor: options.brandingConfig?.secondaryColor || '#6c757d',
-        warningColor: options.brandingConfig?.warningColor || '#ffc107'
+        warningColor: options.brandingConfig?.warningColor || '#ffc107',
+        // Where the login page sends someone with no returnUrl (e.g. when they are already signed in)
+        homeUrl: options.loginSuccessRedirectUrl || '/services'
       };
 
       res.status(200).json({
@@ -1237,9 +1240,9 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         asyncHandler(async (req, res, next) => {
           const result = await auth.authenticateWithPassport(req, res, next);
 
-          // Determine redirect URL: options override > request returnUrl > default
+          // Where to go next: the page they were heading to > the app's loginSuccessRedirectUrl > /services
           const { returnUrl } = req.body;
-          const redirectUrl = options.loginSuccessRedirectUrl || returnUrl || '/services';
+          const redirectUrl = postLoginRedirect(returnUrl, options);
 
           res.status(200).json({
             success: true,
@@ -1270,8 +1273,8 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         asyncHandler(async (req, res, next) => {
           const result = await auth.handleGoogleCallback(req, res, next);
 
-          // Determine redirect URL: options override > result redirectUrl > default
-          const redirectUrl = options.loginSuccessRedirectUrl || result.redirectUrl || '/services';
+          // result.redirectUrl is already the page they were heading to or the app's loginSuccessRedirectUrl
+          const redirectUrl = postLoginRedirect(result.redirectUrl, options);
 
           res.status(200).json({
             success: true,
@@ -1319,11 +1322,9 @@ module.exports = (options, eventEmitter, auth, analytics) => {
           );
         }
 
-        // Determine redirect URL. result.redirectUrl already folds in any explicit
-        // loginSuccessRedirectUrl override (set inside the provider); when no
-        // override is configured it carries the per-request returnUrl, which must
-        // win over the static default so the user lands where they were headed.
-        const redirectUrl = result.redirectUrl || options.loginSuccessRedirectUrl || '/services';
+        // result.redirectUrl is the page they were heading to (the sanitized returnUrl) or the app's
+        // loginSuccessRedirectUrl; /services only when neither is set.
+        const redirectUrl = postLoginRedirect(result.redirectUrl, options);
         res.redirect(redirectUrl);
       });
 

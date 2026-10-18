@@ -265,6 +265,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve public static files (logo, favicon, ...). index: false keeps '/' on
+// the redirect below instead of serving public/index.html.
+app.use('/', express.static(path.join(__dirname, 'public'), { index: false }));
+
 // Redirect to services
 app.get('/', (req, res) => {
   res.redirect('/services');

@@ -14,6 +14,7 @@ const path = require('node:path');
 const express = require('express');
 const registerManagerRoutes = require('./manager');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { route } = require('../../shared/utils/routePattern');
 const { parseLimit, parseOffset } = require('../../shared/utils/validation');
 
 /**
@@ -163,7 +164,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/analytics/:workflowName(*)', auth, (req, res) => {
+    app.get(...route('/services/workflow/api/analytics/:workflowName(*)'), auth, (req, res) => {
       if (!analytics) {
         return res.status(503).json({
           error: 'Analytics module not available'
@@ -261,7 +262,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/definitions/:workflowName(*)', auth, (req, res) => {
+    app.get(...route('/services/workflow/api/definitions/:workflowName(*)'), auth, (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -292,7 +293,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.put('/services/workflow/api/definitions/:workflowName(*)', auth, async (req, res) => {
+    app.put(...route('/services/workflow/api/definitions/:workflowName(*)'), auth, async (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -333,7 +334,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/workflow/api/definitions/:workflowName(*)', auth, async (req, res) => {
+    app.delete(...route('/services/workflow/api/definitions/:workflowName(*)'), auth, async (req, res) => {
       try {
         if (!workflow.definitionContainer) {
           return res.status(503).json({ error: 'Definition container not available' });
@@ -378,7 +379,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)/execution/:executionId(*)', auth, (req, res) => {
+    app.get(...route('/services/workflow/api/executions/:workflowName(*)/execution/:executionId(*)'), auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -410,7 +411,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)/stats', auth, (req, res) => {
+    app.get(...route('/services/workflow/api/executions/:workflowName(*)/stats'), auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -440,7 +441,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.get('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
+    app.get(...route('/services/workflow/api/executions/:workflowName(*)'), auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });
@@ -476,7 +477,7 @@ module.exports = (options, eventEmitter, workflow, analytics) => {
      * @param {express.Response} res - Express response object
      * @return {void}
      */
-    app.delete('/services/workflow/api/executions/:workflowName(*)', auth, (req, res) => {
+    app.delete(...route('/services/workflow/api/executions/:workflowName(*)'), auth, (req, res) => {
       try {
         if (!workflow.executionContainer) {
           return res.status(503).json({ error: 'Execution container not available' });

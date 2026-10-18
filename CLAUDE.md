@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Hosting NooblyJS AI apps
+
+nooblyjs-core is also the shared library under the NooblyJS AI host (`../nooblyjs-ai/nooblyjs-ai-host`). The parts it relies on:
+
+- `public/ui/`: the UI kit and the one frame every hosted app is drawn into (served at `/ui/` by the host): tokens, base, components and shell CSS, `frame.html`, and ES modules (`html`, `icons`, `api`, `router`, `sse`, `chat`, `components/`). Lexend and JetBrains Mono are self-hosted (SIL OFL, licences in `public/ui/fonts/`).
+- `src/shell/`: `createShell()` (rail, sidebar, status cards, the frame page handler) and `css-scope.js`; `scripts/scope-css.js` scopes an app's stylesheet under `[data-module="<name>"]`.
+- `src/store/fs-store.js`: FsStore, the files-only store (Markdown with YAML front matter, YAML config, atomic tmp+rename writes, per-path locks, path-segment validation).
+- `src/shared/utils/routePattern.js`: `route()` turns an Express 4 pattern (`*`, `:name(*)`, `:opt?`) into patterns Express 4 and 5 both accept. Use it for any route with a wildcard or optional parameter, so the registry can mount on an Express 5 app.
+- `src/authservice/modules/redirect.js`: `safeReturnUrl()` and `postLoginRedirect()`: after sign-in a person goes to the page they were heading to (same-origin paths only), then the app's `loginSuccessRedirectUrl`, then `/services`.
+
 ## Project Overview
 
 NooblyJS Core is a modular Node.js backend framework: a set of services (logging, caching, queueing, data, workflow, AI, auth, …) each with pluggable providers, created and wired together by a singleton `ServiceRegistry` exported from `index.js`. Each service also mounts a REST API and a dashboard UI under `/services/{serviceName}/`.

@@ -14,6 +14,7 @@
 const crypto = require('crypto');
 const analytics = require('../modules/analytics');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { route } = require('../../shared/utils/routePattern');
 const { capLimit, parseLimit, validate } = require('../../shared/utils/validation');
 
 /**
@@ -455,7 +456,7 @@ module.exports = (options, eventEmitter, search) => {
      * fuzzy, combineWith, maxResults. The GET /search/:term route remains for
      * simple term queries; this POST variant exposes the field-aware options.
      */
-    app.post('/services/searching/api/search/:searchContainer?',
+    app.post(...route('/services/searching/api/search/:searchContainer?'),
       validate({ body: { query: { type: 'string', required: true, maxLength: 1000 } } }),
       async (req, res) => {
       try {

@@ -1,0 +1,217 @@
+/* The NooblyJS frame: suite rail, module sidebar, content and the docked chat panel (build brief §7). */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-page);
+}
+
+/* ---- Suite rail ---- */
+.rail {
+  flex: 0 0 var(--rail-width);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 0;
+  background: var(--navy-900);
+}
+.rail__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: var(--control-min);
+  margin-bottom: 14px;
+  text-decoration: none;
+}
+.rail__logo span { width: 20px; height: 20px; border-radius: 50%; background: var(--text-on-navy); }
+.rail__logo span + span { background: var(--rail-dot); margin-left: -8px; }
+.rail__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 68px;
+  min-height: var(--control-min);
+  padding: 10px 0;
+  border-radius: var(--radius-rail-item);
+  color: var(--text-on-navy-muted);
+  text-decoration: none;
+  font-size: var(--text-rail);
+  line-height: 1.2;
+  text-align: center;
+}
+.rail__item:hover { color: var(--text-on-navy); }
+.rail__item[aria-current="page"] { background: var(--navy-800); color: var(--text-on-navy); }
+.rail__item:focus-visible { outline-color: var(--text-on-navy); }
+.rail__state { font-size: 10px; color: var(--text-on-navy-muted); }
+.rail__item[aria-current="page"] .rail__state { color: var(--text-on-navy); }
+
+/* ---- Module sidebar ---- */
+.sidebar {
+  flex: 0 0 var(--sidebar-width);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 28px 16px;
+  background: var(--surface-sidebar);
+  border-right: 1px solid var(--border-sidebar);
+}
+.sidebar__head { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.sidebar__title { font-size: 24px; font-weight: 600; color: var(--navy-900); letter-spacing: -0.01em; }
+.sidebar__tag {
+  font-size: var(--text-eyebrow);
+  color: var(--text-subtle);
+  padding: 3px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+}
+.sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* position: relative contains the badges' visually-hidden text, which is absolutely positioned: without it, a badge
+   on a nav row scrolled out of view at phone width escapes the strip's overflow and widens the whole page. */
+.nav { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.nav__group {
+  font-size: var(--text-rail);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  padding: 14px 14px 6px;
+}
+.nav__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--control-height);
+  padding: 0 14px;
+  border-radius: var(--radius-row);
+  color: var(--text-nav);
+  text-decoration: none;
+  font-size: var(--text-body);
+}
+.nav__label { display: flex; align-items: center; gap: 12px; }
+.nav__item:hover { background: var(--blue-50); color: var(--navy-900); }
+.nav__item[aria-current="page"] { background: var(--navy-900); color: var(--text-on-navy); font-weight: 500; }
+.nav__badge {
+  font-size: var(--text-eyebrow);
+  background: var(--navy-900);
+  color: var(--text-on-navy);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+}
+.nav__item[aria-current="page"] .nav__badge { background: var(--text-on-navy); color: var(--navy-900); }
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+}
+.status-card__item { display: flex; flex-direction: column; gap: 4px; }
+.status-card__label { font-size: var(--text-caption); color: var(--text-subtle); }
+.status-card__value { font-size: var(--text-body); font-weight: 600; color: var(--navy-900); }
+.status-card__line { font-size: var(--text-caption); color: var(--text-muted); }
+
+.person { display: flex; align-items: center; gap: 12px; padding: 0 8px; }
+.person > .avatar { flex: none; }
+.person__who { min-width: 0; flex: 1; }
+.person__name, .person__role { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person__name { display: block; font-size: var(--text-small); font-weight: 600; color: var(--navy-900); }
+.person__role { display: block; font-size: var(--text-eyebrow); color: var(--text-subtle); }
+.person__out {
+  margin-left: auto;
+  min-height: var(--control-min);
+  min-width: var(--control-min);
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-subtle);
+  font-size: var(--text-caption);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+}
+.person__out:hover { color: var(--navy-900); background: var(--blue-50); }
+
+/* ---- Content ---- */
+.main {
+  flex: 999 1 560px;
+  min-width: 0;
+  padding: var(--content-pad-y) var(--content-pad-x) 72px;
+}
+.content { max-width: var(--content-max); display: flex; flex-direction: column; gap: 36px; }
+.content:focus { outline: none; }
+
+/* ---- Docked team chat ---- */
+.chat-dock {
+  flex: 0 0 var(--chat-width);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px 24px;
+  background: var(--surface-card);
+  border-left: 1px solid var(--border);
+}
+.chat-dock[hidden] { display: none; }
+.chat-dock__title { font-size: 18px; }
+
+/* ---- Narrower screens: the chat dock goes under the content ---- */
+@media (max-width: 1100px) {
+  .shell { flex-wrap: wrap; }
+  .chat-dock { flex: 1 1 100%; position: static; height: auto; border-left: 0; border-top: 1px solid var(--border); }
+}
+
+/* ---- Phones and small tablets: rail on top, sidebar as a compact strip ---- */
+@media (max-width: 860px) {
+  .shell { flex-direction: column; flex-wrap: nowrap; }
+  .rail {
+    position: static;
+    height: auto;
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 2px;
+    padding: 6px;
+    overflow-x: auto;
+  }
+  .rail__logo { display: none; }
+  .rail__item { flex: 1 1 0; width: auto; min-width: 52px; padding: 6px 2px; }
+  .rail__state { display: none; }
+  .sidebar {
+    position: static;
+    height: auto;
+    flex: 0 0 auto;
+    gap: 12px;
+    padding: 14px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-sidebar);
+  }
+  .nav { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 2px; }
+  .nav__group { display: none; }
+  .nav__item { flex: 0 0 auto; white-space: nowrap; }
+  .sidebar__foot { margin-top: 0; }
+  .sidebar__foot .status-card { display: none; } /* person and Sign out stay */
+  .main { padding: 24px 16px 48px; }
+  .chat-dock { padding: 20px 16px; }
+}
+
+/* A page with layout: 'full' (e.g. a graph) hides the sidebar and the chat dock. */
+.shell--full .sidebar, .shell--full .chat-dock { display: none; }
+.person__form { margin-left: auto; flex: none; }
+.person__out { display: inline-flex; align-items: center; gap: 6px; }

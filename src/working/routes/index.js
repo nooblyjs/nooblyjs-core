@@ -15,6 +15,7 @@
 
 const path = require('node:path');
 const express = require('express');
+const { route } = require('../../shared/utils/routePattern');
 
 /**
  * Returns true for plain integer-coercible positive numbers (used by query
@@ -158,7 +159,7 @@ module.exports = (options, eventEmitter, worker, analytics) => {
     });
   }));
 
-  app.get('/services/working/api/analytics/:scriptPath(*)', wrap(async (req, res) => {
+  app.get(...route('/services/working/api/analytics/:scriptPath(*)'), wrap(async (req, res) => {
     if (!analytics) {
       return res.status(503).json({ error: 'Analytics module not available' });
     }

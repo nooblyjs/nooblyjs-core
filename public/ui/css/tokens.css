@@ -1,0 +1,80 @@
+/*
+ * NooblyJS design tokens (build brief §7). Nothing but custom properties and font faces.
+ * Fonts: Lexend and JetBrains Mono, self-hosted under the SIL Open Font License 1.1 (see ../fonts/LICENSE-*.txt).
+ */
+
+@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/lexend-latin-300-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/lexend-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/lexend-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/lexend-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/lexend-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
+
+:root {
+  /* Colour */
+  --navy-900: #14274E;   /* primary buttons, active nav, headings, numbers, rail */
+  --navy-800: #2A3F6E;   /* active rail item */
+  --blue-600: #2F6FE4;   /* accent: second CTA, live progress, value chain */
+  --blue-700: #1D4FB0;   /* links, info pill text */
+  --blue-100: #E3ECFB;   /* info pill fill */
+  --blue-50: #EAF0FC;    /* selected row, info band */
+  --text: #1B2433;
+  --text-muted: #3A4456;
+  --text-subtle: #4A5466; /* the minimum contrast for text */
+  --text-nav: #2A3345;
+  --text-on-navy: #FFFFFF;
+  --text-on-navy-muted: #C3CCDD;
+  --surface-page: #F3F4F6;
+  --surface-sidebar: #EDEFF3;
+  --surface-card: #FFFFFF;
+  --surface-inset: #F4F6FA;
+  --border: #DCE0E7;
+  --border-strong: #C9CFD9;
+  --border-sidebar: #DFE3EA;
+  --divider: #ECEEF2;
+  --track: #E6E9EF;
+  --success-100: #E0F2EF;
+  --success-700: #0B5F58;
+  --warning-100: #FDF0E1;
+  --warning-600: #B45309;
+  --warning-700: #8A4A0B;
+  --danger-100: #FCE8E6;
+  --danger-700: #B42318;
+  --rail-dot: #5B8DEF;
+
+  /* Type */
+  --font-ui: 'Lexend', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --text-page-title: 52px;
+  --text-card-title: 20px;
+  --text-body: 15px;
+  --text-lead: 17px;
+  --text-small: 14px;
+  --text-caption: 13px;
+  --text-eyebrow: 12px;
+  --text-rail: 11px;
+  --tracking-title: -0.025em;
+  --tracking-eyebrow: 0.08em;
+
+  /* Shape and spacing */
+  --radius-card: 22px;
+  --radius-panel: 18px;
+  --radius-tile: 16px;
+  --radius-rail-item: 14px;
+  --radius-row: 12px;
+  --radius-full: 999px;
+  --control-min: 44px;
+  --control-height: 46px;
+  --pad-card: 24px;
+  --gap-grid: 16px;
+
+  /* Shell */
+  --rail-width: 84px;
+  --sidebar-width: 260px;
+  --chat-width: 380px;
+  --content-max: 1240px;
+  --content-pad-y: 44px;
+  --content-pad-x: 48px;
+  --focus-ring: 3px solid var(--blue-600);
+}
