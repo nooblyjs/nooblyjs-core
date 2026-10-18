@@ -40,6 +40,8 @@
     "kill": "node scripts/kill-port.js",
     "kill-test": "node scripts/kill-test-port.js",
     "test": "jest",
+    "test:ai-common": "node --test \"tests/unit/aiservice/common/**/*.test.js\"",
+    "check:ai-common": "tsc -p src/aiservice/common",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed --project=chromium",
     "test:ui:report": "playwright show-report .temp/tests/playwright/report",
@@ -55,7 +57,8 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "<rootDir>/tests/ui/",
-      "<rootDir>/.temp/"
+      "<rootDir>/.temp/",
+      "<rootDir>/tests/unit/aiservice/common/"
     ],
     "coverageDirectory": ".temp/coverage",
     "coverageReporters": [
@@ -67,7 +70,8 @@
       "index.js",
       "src/**/*.js",
       "!src/**/views/**",
-      "!src/**/scripts/**"
+      "!src/**/scripts/**",
+      "!src/aiservice/common/**"
     ],
     "coverageThreshold": {
       "global": {
@@ -84,6 +88,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.2",
     "ioredis-mock": "^8.9.0",
     "javascript-obfuscator": "^5.4.2",
     "jest": "^30.0.3",
@@ -92,7 +97,8 @@
     "nodemon": "^3.1.10",
     "rimraf": "^6.0.1",
     "selfsigned": "^5.5.0",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.60.0",

@@ -10,6 +10,7 @@ nooblyjs-core is also the shared library under the NooblyJS AI host (`../nooblyj
 - `src/shell/`: `createShell()` (rail, sidebar, status cards, the frame page handler) and `css-scope.js`; `scripts/scope-css.js` scopes an app's stylesheet under `[data-module="<name>"]`.
 - `src/store/fs-store.js`: FsStore, the files-only store (Markdown with YAML front matter, YAML config, atomic tmp+rename writes, per-path locks, path-segment validation).
 - `src/shared/utils/routePattern.js`: `route()` turns an Express 4 pattern (`*`, `:name(*)`, `:opt?`) into patterns Express 4 and 5 both accept. Use it for any route with a wildcard or optional parameter, so the registry can mount on an Express 5 app.
+- `src/aiservice/common/`: the AI module, an ESM package named `nooblyjs-ai-common` (its own `package.json`) inside this CommonJS repo: one way to call every model provider (Anthropic, OpenAI, OpenAI-compatible, mock, AWS Bedrock, Google Vertex AI, Azure), the model catalogue and discovery, tokens, cost, retry, SSE. Projects link it as `file:<path to nooblyjs-core>/src/aiservice/common`. Its tests are `node:test` in `tests/unit/aiservice/common` (`npm run test:ai-common`; Jest skips them), and `npm run check:ai-common` type-checks it. It has no dependencies: keep it that way.
 - `src/authservice/modules/redirect.js`: `safeReturnUrl()` and `postLoginRedirect()`: after sign-in a person goes to the page they were heading to (same-origin paths only), then the app's `loginSuccessRedirectUrl`, then `/services`.
 
 ## Project Overview
