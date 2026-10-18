@@ -14,7 +14,7 @@
   color: var(--text-subtle);
   font-weight: 500;
 }
-.page-title { font-size: var(--text-page-title); letter-spacing: var(--tracking-title); line-height: 1.05; }
+.page-title { font-family: var(--font-display); font-weight: 800; font-size: var(--text-page-title); letter-spacing: var(--tracking-title); line-height: 1.05; }
 .lead { font-size: var(--text-lead); color: var(--text-muted); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 
@@ -34,8 +34,9 @@
   cursor: pointer;
   white-space: nowrap;
 }
-.btn--primary { background: var(--navy-900); color: var(--text-on-navy); }
-.btn--primary:hover { background: var(--navy-800); color: var(--text-on-navy); }
+/* Primary is the accent, as styles.css .btn-primary; accent stays as an alias for it. */
+.btn--primary { background: var(--blue-600); color: var(--text-on-navy); }
+.btn--primary:hover { background: var(--blue-700); color: var(--text-on-navy); }
 .btn--accent { background: var(--blue-600); color: var(--text-on-navy); }
 .btn--accent:hover { background: var(--blue-700); color: var(--text-on-navy); }
 .btn--secondary { background: var(--surface-card); color: var(--navy-900); border-color: var(--border-strong); }
@@ -85,7 +86,7 @@
 /* ---- Stat card ---- */
 .stat { display: flex; flex-direction: column; gap: 8px; padding: 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-tile); min-width: 0; }
 .stat__label { font-size: var(--text-caption); color: var(--text-subtle); }
-.stat__value { font-size: 34px; font-weight: 600; color: var(--navy-900); line-height: 1.1; }
+.stat__value { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--navy-900); line-height: 1.1; }
 .stat__note { font-size: var(--text-caption); color: var(--text-muted); }
 .stat--highlight { background: var(--navy-900); border-color: var(--navy-900); }
 .stat--highlight .stat__label, .stat--highlight .stat__note { color: var(--text-on-navy-muted); }
@@ -181,7 +182,7 @@
 .chevron__name { font-weight: 600; font-size: var(--text-small); line-height: 1.25; }
 .chevron__meta { font-size: var(--text-eyebrow); color: var(--text-muted); }
 .chevron--value { background: var(--blue-600); color: var(--text-on-navy); }
-.chevron--value .chevron__code, .chevron--value .chevron__meta { color: var(--text-on-navy); } /* 4.6:1 on blue-600 */
+.chevron--value .chevron__code, .chevron--value .chevron__meta { color: var(--text-on-navy); } /* 4.7:1 on blue-600 */
 .chevron--active { background: var(--navy-900); color: var(--text-on-navy); }
 .chevron--active .chevron__code, .chevron--active .chevron__meta { color: var(--text-on-navy-muted); }
 .chevron:focus-visible { outline-offset: 4px; }
@@ -200,12 +201,12 @@
   text-decoration: none;
 }
 .stage__name { font-size: var(--text-eyebrow); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); }
-.stage__count { font-size: 34px; font-weight: 600; color: var(--navy-900); line-height: 1.1; }
+.stage__count { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--navy-900); line-height: 1.1; }
 .stage__note { font-size: var(--text-caption); color: var(--text-muted); }
 .stage--current { background: var(--navy-900); border-color: var(--navy-900); color: var(--text-on-navy); }
 .stage--current .stage__name { color: var(--text-on-navy-muted); }
 .stage--current .stage__count { color: var(--text-on-navy); }
-.stage--current .stage__note { color: #DCE3F0; }
+.stage--current .stage__note { color: var(--text-on-navy-muted); }
 
 /* ---- Swimlane (item x stage): passed stages are navy bars, the current one says who has it ---- */
 .swimlane { width: 100%; min-width: 980px; border-collapse: collapse; font-size: var(--text-small); }
@@ -217,7 +218,7 @@
 .swimlane__item a { text-decoration: none; }
 .swimlane__item strong { display: block; color: var(--navy-900); font-weight: 500; }
 .swimlane__id { font-family: var(--font-mono); font-size: var(--text-eyebrow); color: var(--text-subtle); }
-.swimlane__bar { display: block; height: 10px; border-radius: var(--radius-full); background: #EEF0F4; }
+.swimlane__bar { display: block; height: 10px; border-radius: var(--radius-full); background: var(--track); }
 .swimlane__bar--done, .swimlane__swatch--done { background: var(--navy-900); }
 .swimlane__cell { display: block; padding: 5px 10px; border-radius: var(--radius-full); font-size: var(--text-eyebrow); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-on-navy); }
 .swimlane__cell--now, .swimlane__swatch--now { background: var(--blue-600); }

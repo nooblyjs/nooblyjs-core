@@ -1,50 +1,57 @@
 /*
  * NooblyJS design tokens (build brief §7). Nothing but custom properties and font faces.
- * Fonts: Lexend and JetBrains Mono, self-hosted under the SIL Open Font License 1.1 (see ../fonts/LICENSE-*.txt).
+ * The palette and type are the shared Noobly theme (nooblyjs/styling/styles.css, also src/views/css/styles.css):
+ * warm paper surfaces, ink text, a terracotta accent. The token names are older than the theme (navy-*, blue-*):
+ * read navy as "ink" and blue as "accent".
+ * Fonts: Figtree, Bricolage Grotesque and JetBrains Mono, self-hosted under the SIL Open Font License 1.1
+ * (see ../fonts/LICENSE-*.txt), because the frame's policy allows fonts from 'self' only.
  */
 
-@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/lexend-latin-300-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/lexend-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/lexend-latin-500-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/lexend-latin-600-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/lexend-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/figtree-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/figtree-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/figtree-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/figtree-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/bricolage-grotesque-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/bricolage-grotesque-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 800; font-display: swap; src: url('../fonts/bricolage-grotesque-latin-800-normal.woff2') format('woff2'); }
 @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
 
 :root {
   /* Colour */
-  --navy-900: #14274E;   /* primary buttons, active nav, headings, numbers, rail */
-  --navy-800: #2A3F6E;   /* active rail item */
-  --blue-600: #2F6FE4;   /* accent: second CTA, live progress, value chain */
-  --blue-700: #1D4FB0;   /* links, info pill text */
-  --blue-100: #E3ECFB;   /* info pill fill */
-  --blue-50: #EAF0FC;    /* selected row, info band */
-  --text: #1B2433;
-  --text-muted: #3A4456;
-  --text-subtle: #4A5466; /* the minimum contrast for text */
-  --text-nav: #2A3345;
-  --text-on-navy: #FFFFFF;
-  --text-on-navy-muted: #C3CCDD;
-  --surface-page: #F3F4F6;
-  --surface-sidebar: #EDEFF3;
+  --navy-900: #241C1A;   /* ink: primary dark, rail, active nav, headings, numbers */
+  --navy-800: #4A3F3A;   /* ink-2: active rail item, primary hover */
+  --blue-600: #C2471F;   /* accent: primary CTA, live progress, value chain */
+  --blue-700: #A63F1C;   /* accent-link: links, info pill text */
+  --blue-100: #FCE3D6;   /* accent-soft: info pill fill */
+  --blue-50: #FFF4EE;    /* accent-tint: selected row, info band */
+  --text: #241C1A;
+  --text-muted: #4A3F3A;
+  --text-subtle: #6B605A; /* the minimum contrast for text */
+  --text-nav: #4A3F3A;
+  --text-on-navy: #FFF8F2;
+  --text-on-navy-muted: #CDBFB7;
+  --surface-page: #F5F1EE;
+  --surface-sidebar: #FBF8F6;
   --surface-card: #FFFFFF;
-  --surface-inset: #F4F6FA;
-  --border: #DCE0E7;
-  --border-strong: #C9CFD9;
-  --border-sidebar: #DFE3EA;
-  --divider: #ECEEF2;
-  --track: #E6E9EF;
-  --success-100: #E0F2EF;
-  --success-700: #0B5F58;
-  --warning-100: #FDF0E1;
-  --warning-600: #B45309;
-  --warning-700: #8A4A0B;
-  --danger-100: #FCE8E6;
-  --danger-700: #B42318;
-  --rail-dot: #5B8DEF;
+  --surface-inset: #FBF8F6;
+  --border: #E6DED8;
+  --border-strong: #DCD2CB;
+  --border-sidebar: #E6DED8;
+  --divider: #F0E9E4;
+  --track: #ECE6E1;
+  --success-100: #DDEFEC;
+  --success-700: #1C5A5F;
+  --warning-100: #FBEFC4;
+  --warning-600: #8A6500;
+  --warning-700: #6B4E00;
+  --danger-100: #FADDE2;
+  --danger-700: #B42335;
+  --rail-dot: #F2A27E;
 
   /* Type */
-  --font-ui: 'Lexend', system-ui, sans-serif;
+  --font-ui: 'Figtree', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif; /* headings and big numbers */
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --text-page-title: 52px;
   --text-card-title: 20px;
@@ -58,7 +65,7 @@
   --tracking-eyebrow: 0.08em;
 
   /* Shape and spacing */
-  --radius-card: 22px;
+  --radius-card: 24px;
   --radius-panel: 18px;
   --radius-tile: 16px;
   --radius-rail-item: 14px;

@@ -28,8 +28,7 @@
   margin-bottom: 14px;
   text-decoration: none;
 }
-.rail__logo span { width: 20px; height: 20px; border-radius: 50%; background: var(--text-on-navy); }
-.rail__logo span + span { background: var(--rail-dot); margin-left: -8px; }
+.rail__logo img { display: block; }
 .rail__item {
   display: flex;
   flex-direction: column;
@@ -66,7 +65,7 @@
   border-right: 1px solid var(--border-sidebar);
 }
 .sidebar__head { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
-.sidebar__title { font-size: 24px; font-weight: 600; color: var(--navy-900); letter-spacing: -0.01em; }
+.sidebar__title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--navy-900); letter-spacing: -0.01em; }
 .sidebar__tag {
   font-size: var(--text-eyebrow);
   color: var(--text-subtle);

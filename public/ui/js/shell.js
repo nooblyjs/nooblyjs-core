@@ -16,7 +16,7 @@ export function renderRail(apps, currentName) {
     const stateText = STATE_TEXT[a.state];
     return html`<a class="rail__item" href="${a.mountPath}" data-app="${a.name}"${current ? html` aria-current="page"` : ''}>${icon(a.icon, { size: 22, stroke: 1.7 })}<span>${a.label}</span>${stateText ? html`<span class="rail__state">${stateText}</span>` : ''}</a>`;
   });
-  return html`<a class="rail__logo" href="/" aria-label="NooblyJS home"><span></span><span></span></a>${items}`;
+  return html`<a class="rail__logo" href="/" aria-label="NooblyJS home"><img src="/ui/img/logo.svg" alt="" width="34" height="24"></a>${items}`;
 }
 
 /** Nav rows, grouped where rows carry a `group` (Product's Stages / Flow, Platform's Build / Govern). */
