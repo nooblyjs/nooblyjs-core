@@ -17,6 +17,8 @@ const { route } = require('../../shared/utils/routePattern');
 const path = require('node:path');
 const express = require('express');
 const { createUploadMiddleware, limitStream, resolveUploadLimits } = require('../modules/uploadLimits');
+const { createFilingAccessMiddleware } = require('../modules/filingAccess');
+const { sendFileContent } = require('../modules/contentDelivery');
 const analytics = require('../modules/analytics');
 const { getServiceInstance } = require('../../appservice/utils/routeUtils');
 const { parseLimit, parseOffset } = require('../../shared/utils/validation');
@@ -70,6 +72,14 @@ module.exports = (options, eventEmitter, filing) => {
     // routes were reachable anonymously.
     const requireApiAuth = options.authMiddleware || ((req, res, next) => next());
     app.use('/services/filing/api', requireApiAuth);
+
+    // Route tiers (feature 15): read for any authenticated caller, write for
+    // editors/admins/integration keys, and admin for settings, git, sync,
+    // instances and analytics. Unclassified routes fall to admin.
+    app.use('/services/filing/api', createFilingAccessMiddleware({
+      serviceRegistry: ServiceRegistry,
+      eventEmitter
+    }));
 
     /**
      * POST /services/filing/api/upload/:key
@@ -126,35 +136,11 @@ module.exports = (options, eventEmitter, filing) => {
         const data = await filing.download(key, encoding);
         analytics.trackRead(key);
 
-        // Determine MIME type based on file extension
-        const mimeType = getMimeTypeForFile(key);
-
-        if (isAttachment) {
-          // Set headers for file download
-          const filename = key.split('/').pop() || 'download';
-          res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${filename}"`,
-          );
-
-          if (Buffer.isBuffer(data)) {
-            res.setHeader('Content-Type', mimeType);
-            res.send(data);
-          } else {
-            res.setHeader('Content-Type', 'text/plain');
-            res.send(data);
-          }
-        } else {
-          // Return as inline data for viewing in browser
-          if (Buffer.isBuffer(data)) {
-            res.setHeader('Content-Type', mimeType);
-            // For inline viewing, use Content-Disposition: inline
-            res.setHeader('Content-Disposition', 'inline');
-            res.send(data);
-          } else {
-            res.status(200).json({ data, encoding: encoding || 'buffer' });
-          }
-        }
+        sendFileContent(res, key, data, {
+          attachment: isAttachment,
+          encoding,
+          mimeType: getMimeTypeForFile(key)
+        });
       } catch (err) {
         sendSafeError(res, err, { status: 500, eventEmitter });
       }
@@ -397,31 +383,11 @@ module.exports = (options, eventEmitter, filing) => {
         const data = await filingInstance.download(key, encoding);
         analytics.trackRead(key);
 
-        const mimeType = getMimeTypeForFile(key);
-
-        if (isAttachment) {
-          const filename = key.split('/').pop() || 'download';
-          res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${filename}"`,
-          );
-
-          if (Buffer.isBuffer(data)) {
-            res.setHeader('Content-Type', mimeType);
-            res.send(data);
-          } else {
-            res.setHeader('Content-Type', 'text/plain');
-            res.send(data);
-          }
-        } else {
-          if (Buffer.isBuffer(data)) {
-            res.setHeader('Content-Type', mimeType);
-            res.setHeader('Content-Disposition', 'inline');
-            res.send(data);
-          } else {
-            res.status(200).json({ data, encoding: encoding || 'buffer' });
-          }
-        }
+        sendFileContent(res, key, data, {
+          attachment: isAttachment,
+          encoding,
+          mimeType: getMimeTypeForFile(key)
+        });
       } catch (err) {
         sendSafeError(res, err, { status: 500, eventEmitter });
       }
@@ -1507,7 +1473,8 @@ module.exports = (options, eventEmitter, filing) => {
 
           // Parse PDF to get metadata and text
           try {
-            const data = await pdfParse(pdfBuffer);
+            // pdf.js 1.10 (inside pdf-parse) misreads a Node Buffer; a plain Uint8Array copy parses.
+            const data = await pdfParse(pdfBuffer instanceof Uint8Array ? new Uint8Array(pdfBuffer) : pdfBuffer);
 
             // Extract text from requested page
             let pageText = '';
@@ -1527,10 +1494,11 @@ module.exports = (options, eventEmitter, filing) => {
               metadata: {
                 numPages: data.numpages,
                 currentPage: page,
-                producer: data.producer || 'Unknown',
-                creator: data.creator || 'Unknown',
-                creationDate: data.creationDate,
-                title: data.title || 'Untitled'
+                // pdf-parse puts the document information dictionary in data.info.
+                producer: data.info?.Producer || 'Unknown',
+                creator: data.info?.Creator || 'Unknown',
+                creationDate: data.info?.CreationDate,
+                title: data.info?.Title || 'Untitled'
               },
               preview: {
                 text: pageText.substring(0, 2000), // First 2000 characters as preview

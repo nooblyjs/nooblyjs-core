@@ -13,6 +13,7 @@
 const { postLoginRedirect } = require('../modules/redirect');
 const rateLimit = require('express-rate-limit');
 const { sendSafeError } = require('../../shared/utils/safeError');
+const { createStateStore, keyPart, SharedRateLimitStore } = require('../../shared/utils/stateStore');
 const { capLimit, validate } = require('../../shared/utils/validation');
 
 /**
@@ -40,9 +41,14 @@ module.exports = (options, eventEmitter, auth, analytics) => {
 
     // P1-3: Brute-force protection on login.
     // (1) Per-IP rate limit on the login endpoint.
+    // With a shared state store (feature 21) the counts are shared too, so the
+    // limit holds across replicas. Otherwise express-rate-limit keeps its own.
+    const sharedStore = options.stateStore && options.stateStore.kind === 'redis' ? options.stateStore : null;
+    const loginWindowMs = Number(process.env.LOGIN_RATE_WINDOW_MS) || 15 * 60 * 1000;
     const loginRateLimiter = rateLimit({
-      windowMs: Number(process.env.LOGIN_RATE_WINDOW_MS) || 15 * 60 * 1000,
+      windowMs: loginWindowMs,
       max: Number(process.env.LOGIN_RATE_LIMIT_MAX) || 10,
+      ...(sharedStore ? { store: new SharedRateLimitStore(sharedStore, loginWindowMs, 'rl:login:') } : {}),
       standardHeaders: true,
       legacyHeaders: false,
       message: {
@@ -57,31 +63,69 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     const LOCK_THRESHOLD = Number(process.env.LOGIN_LOCK_THRESHOLD) || 5;
     const LOCK_WINDOW_MS = Number(process.env.LOGIN_LOCK_WINDOW_MS) || 15 * 60 * 1000;
     const LOCK_DURATION_MS = Number(process.env.LOGIN_LOCK_MS) || 15 * 60 * 1000;
-    const failedLogins = new Map(); // email -> { count, firstAt, lockedUntil }
+    // The counts and locks live in the shared state store, so every replica
+    // sees the same failures (feature 21). The keys hold a hash of the email,
+    // not the address. With the default memory store this behaves as before.
+    const stateStore = options.stateStore || createStateStore();
+    const lockKey = (email) => `auth:lock:${keyPart(email)}`;
+    const failKey = (email) => `auth:fail:${keyPart(email)}`;
 
-    const loginLockUntil = (email) => {
-      const rec = failedLogins.get(email);
-      if (rec && rec.lockedUntil && rec.lockedUntil > Date.now()) {
-        return rec.lockedUntil;
+    // If the shared store is unreachable, a login is not blocked by the lock
+    // check and the failure is logged. That fails open for the lockout only.
+    const stateOrFallback = async (action, fallback) => {
+      try {
+        return await action();
+      } catch (error) {
+        eventEmitter.emit('auth:lockout-state-error', { error: error.message });
+        return fallback;
       }
-      return 0;
     };
 
-    const recordLoginFailure = (email) => {
-      const now = Date.now();
-      const rec = failedLogins.get(email) || { count: 0, firstAt: now, lockedUntil: 0 };
-      if (now - rec.firstAt > LOCK_WINDOW_MS) {
-        rec.count = 0;
-        rec.firstAt = now;
-      }
-      rec.count += 1;
-      if (rec.count >= LOCK_THRESHOLD) {
-        rec.lockedUntil = now + LOCK_DURATION_MS;
-      }
-      failedLogins.set(email, rec);
-    };
+    const loginLockUntil = (email) => stateOrFallback(async () => {
+      const until = await stateStore.get(lockKey(email));
+      return until && until > Date.now() ? until : 0;
+    }, 0);
 
-    const clearLoginFailures = (email) => failedLogins.delete(email);
+    const recordLoginFailure = (email) => stateOrFallback(async () => {
+      const count = await stateStore.incr(failKey(email), LOCK_WINDOW_MS);
+      if (count >= LOCK_THRESHOLD) {
+        await stateStore.set(lockKey(email), Date.now() + LOCK_DURATION_MS, LOCK_DURATION_MS);
+      }
+    }, undefined);
+
+    const clearLoginFailures = (email) => stateOrFallback(async () => {
+      await stateStore.del(failKey(email));
+      await stateStore.del(lockKey(email));
+    }, undefined);
+
+    // Invitation endpoints are public, so they are rate limited per IP. The
+    // code is 128 bits, which makes guessing infeasible; the limit stops a
+    // flood of requests and redemption attempts from one source.
+    const invitationWindowMs = Number(process.env.INVITATION_RATE_WINDOW_MS) || 15 * 60 * 1000;
+    const invitationRateLimiter = rateLimit({
+      windowMs: invitationWindowMs,
+      max: Number(process.env.INVITATION_RATE_LIMIT_MAX) || 20,
+      ...(sharedStore ? { store: new SharedRateLimitStore(sharedStore, invitationWindowMs, 'rl:invite:') } : {}),
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        success: false,
+        error: 'Too many invitation requests. Please try again later.'
+      }
+    });
+
+    // Admin invitation operations need the admin role, not just any session.
+    const requireAdminSession = [
+      requireAuthenticatedSession,
+      (req, res, next) => {
+        const roles = Array.isArray(req.user?.roles) ? req.user.roles : [];
+        if (roles.includes('admin')) return next();
+        return res.status(403).json({
+          success: false,
+          error: 'Administrator role is required'
+        });
+      }
+    ];
 
     /**
      * POST /services/authservice/api/register
@@ -129,7 +173,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         const { email, password, returnUrl } = req.body;
 
         // Per-account lockout check (P1-3).
-        const lockedUntil = email ? loginLockUntil(email) : 0;
+        const lockedUntil = email ? await loginLockUntil(email) : 0;
         if (lockedUntil) {
           const retryAfter = Math.ceil((lockedUntil - Date.now()) / 1000);
           res.set('Retry-After', String(retryAfter));
@@ -142,7 +186,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
 
         try {
           const result = await auth.authenticateUser(email, password);
-          clearLoginFailures(email);
+          await clearLoginFailures(email);
           eventEmitter.emit('auth:login-api', { email });
 
           // Establish Passport session so req.isAuthenticated() returns true
@@ -166,6 +210,12 @@ module.exports = (options, eventEmitter, auth, analytics) => {
           }
 
           // Where to go next: the page they were heading to > the app's loginSuccessRedirectUrl > /services
+          // Feature 23: the browser keeps only the session cookie. The provider session
+          // token stays on the Express session so that logout can revoke it.
+          if (req.session && result.session?.token) {
+            req.session.authToken = result.session.token;
+          }
+
           const redirectUrl = postLoginRedirect(returnUrl, options);
 
           res.status(200).json({
@@ -177,7 +227,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         } catch (error) {
           // Record the failure for per-account lockout (P1-3).
           if (email) {
-            recordLoginFailure(email);
+            await recordLoginFailure(email);
           }
           // Return user-friendly error response
           res.status(401).json({
@@ -187,6 +237,33 @@ module.exports = (options, eventEmitter, auth, analytics) => {
         }
       })
     );
+
+    /**
+     * GET /services/authservice/api/auth/check
+     * Reports whether the browser's session cookie belongs to a signed-in user
+     * (feature 23). Public, and it reveals nothing to an anonymous caller beyond
+     * `authenticated: false`.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.get('/services/authservice/api/auth/check', (req, res) => {
+      const signedIn = typeof req.isAuthenticated === 'function' && req.isAuthenticated() && Boolean(req.user);
+      if (!signedIn) {
+        return res.json({ success: true, authenticated: false, user: null });
+      }
+      const u = req.user;
+      res.json({
+        success: true,
+        authenticated: true,
+        user: {
+          email: u.email,
+          fullName: u.fullName,
+          roles: Array.isArray(u.roles) ? u.roles : [u.role || 'user']
+        }
+      });
+    });
 
     /**
      * POST /services/authservice/api/logout
@@ -204,7 +281,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     app.post(
       '/services/authservice/api/logout',
       asyncHandler(async (req, res) => {
-        const token = extractAuthToken(req);
+        const token = extractAuthToken(req) || req.session?.authToken || null;
 
         if (token) {
           try {
@@ -804,6 +881,64 @@ module.exports = (options, eventEmitter, auth, analytics) => {
     );
 
     /**
+     * POST /services/authservice/api/session/exchange
+     * One-time hand-off: turns a valid session token in the request body into
+     * the httpOnly, SameSite=strict session cookie. Replaces the old
+     * `?authToken=` query parameter, which leaked into logs and Referer headers.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.body.token - Session token
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.post(
+      '/services/authservice/api/session/exchange',
+      loginRateLimiter,
+      validate({ body: { token: { type: 'string', required: true, maxLength: 512 } } }),
+      asyncHandler(async (req, res) => {
+        let session;
+        try {
+          session = await auth.validateSession(req.body.token);
+        } catch (_err) {
+          return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+        }
+        if (typeof req.logIn !== 'function') {
+          return res.status(503).json({ success: false, error: 'Session cookies are not configured' });
+        }
+        const user = await auth.getUser(session.email);
+        await new Promise((resolve, reject) => {
+          req.logIn(user, (err) => (err ? reject(err) : resolve()));
+        });
+        eventEmitter.emit('auth:session-exchanged', { email: session.email });
+        res.status(200).json({ success: true });
+      })
+    );
+
+    /**
+     * DELETE /services/authservice/api/users/:email/tokens/:tokenId
+     * Admin revocation of one of a user's personal access tokens.
+     *
+     * @param {express.Request} req - Express request object
+     * @param {string} req.params.email - Owner of the token
+     * @param {string} req.params.tokenId - Token to revoke
+     * @param {express.Response} res - Express response object
+     * @return {void}
+     */
+    app.delete(
+      '/services/authservice/api/users/:email/tokens/:tokenId',
+      requireAdminSession,
+      asyncHandler(async (req, res) => {
+        await auth.deleteApiToken(req.params.email, req.params.tokenId);
+        eventEmitter.emit('auth:api-token-revoked-by-admin', {
+          email: req.params.email,
+          tokenId: req.params.tokenId,
+          by: req.user?.email
+        });
+        res.status(200).json({ success: true, message: 'API token revoked' });
+      })
+    );
+
+    /**
      * POST /services/authservice/api/profile/tokens
      * Creates a new API token for the authenticated user.
      *
@@ -825,8 +960,8 @@ module.exports = (options, eventEmitter, auth, analytics) => {
           });
         }
 
-        const { name, expiresInDays, expiresAt } = req.body;
-        const token = await auth.createApiToken(email, name, { expiresInDays, expiresAt });
+        const { name, expiresInDays, expiresAt, scopes } = req.body;
+        const token = await auth.createApiToken(email, name, { expiresInDays, expiresAt, scopes });
         eventEmitter.emit('auth:api-token-created-api', { email, name });
 
         res.status(201).json({
@@ -883,15 +1018,30 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.post(
       '/services/authservice/api/invitations',
+      invitationRateLimiter,
+      validate({
+        body: {
+          name: { type: 'string', required: true, maxLength: 200 },
+          email: { type: 'string', required: true, maxLength: 254 },
+          mobile: { type: 'string', maxLength: 40 }
+        }
+      }),
       asyncHandler(async (req, res) => {
-        const invitation = await auth.requestInvitation(req.body);
-        eventEmitter.emit('auth:invitation-requested-api', { email: invitation.email });
+        try {
+          const invitation = await auth.requestInvitation(req.body);
+          eventEmitter.emit('auth:invitation-requested-api', { email: invitation.email, status: invitation.status });
 
-        res.status(201).json({
-          success: true,
-          message: 'Invitation created',
-          data: invitation
-        });
+          const pending = invitation.status === 'pending';
+          res.status(201).json({
+            success: true,
+            message: pending
+              ? 'Request received. An administrator will review it.'
+              : 'Invitation created',
+            data: invitation
+          });
+        } catch (error) {
+          sendSafeError(res, error, { status: 500, eventEmitter });
+        }
       })
     );
 
@@ -906,7 +1056,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.post(
       '/services/authservice/api/invitations/batch',
-      requireAuthenticatedSession,
+      requireAdminSession,
       asyncHandler(async (req, res) => {
         const { invites } = req.body;
         if (!Array.isArray(invites)) {
@@ -939,12 +1089,12 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      * @return {void}
      */
     app.post(
-      '/services/authservice/api/invitations/:code/recreate',
-      requireAuthenticatedSession,
+      '/services/authservice/api/invitations/:id/recreate',
+      requireAdminSession,
       asyncHandler(async (req, res) => {
         try {
-          const invitation = await auth.recreateInvitation(req.params.code);
-          eventEmitter.emit('auth:invitation-recreated-api', { code: invitation.code });
+          const invitation = await auth.recreateInvitation(req.params.id);
+          eventEmitter.emit('auth:invitation-recreated-api', { invitationId: invitation.id });
 
           res.status(200).json({
             success: true,
@@ -952,10 +1102,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
             data: invitation
           });
         } catch (error) {
-          res.status(400).json({
-            success: false,
-            error: error.message
-          });
+          sendSafeError(res, error, { status: 400, eventEmitter, format: 'json' });
         }
       })
     );
@@ -970,7 +1117,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/invitations',
-      requireAuthenticatedSession,
+      requireAdminSession,
       asyncHandler(async (req, res) => {
         const invitations = await auth.listInvitations();
         res.status(200).json({
@@ -992,23 +1139,16 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.get(
       '/services/authservice/api/invitations/:code',
+      invitationRateLimiter,
       asyncHandler(async (req, res) => {
         try {
           const invitation = await auth.getInvitation(req.params.code);
           res.status(200).json({
             success: true,
-            data: {
-              code: invitation.code,
-              status: invitation.status,
-              email: invitation.email,
-              expiresAt: invitation.expiresAt
-            }
+            data: invitation
           });
         } catch (error) {
-          res.status(404).json({
-            success: false,
-            error: error.message
-          });
+          sendSafeError(res, error, { status: 404, eventEmitter, format: 'json' });
         }
       })
     );
@@ -1023,17 +1163,21 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      * @return {void}
      */
     app.put(
-      '/services/authservice/api/invitations/:code/approve',
-      requireAuthenticatedSession,
+      '/services/authservice/api/invitations/:id/approve',
+      requireAdminSession,
       asyncHandler(async (req, res) => {
-        const invitation = await auth.approveInvitation(req.params.code);
-        eventEmitter.emit('auth:invitation-approved-api', { code: req.params.code });
+        try {
+          const invitation = await auth.approveInvitation(req.params.id);
+          eventEmitter.emit('auth:invitation-approved-api', { invitationId: invitation.id });
 
-        res.status(200).json({
-          success: true,
-          message: 'Invitation approved',
-          data: invitation
-        });
+          res.status(200).json({
+            success: true,
+            message: 'Invitation approved. Send the code to the invitee; it is shown only once.',
+            data: invitation
+          });
+        } catch (error) {
+          sendSafeError(res, error, { status: 400, eventEmitter, format: 'json' });
+        }
       })
     );
 
@@ -1050,11 +1194,17 @@ module.exports = (options, eventEmitter, auth, analytics) => {
      */
     app.post(
       '/services/authservice/api/invitations/:code/redeem',
+      invitationRateLimiter,
+      validate({
+        body: {
+          password: { type: 'string', required: true, maxLength: 1024 }
+        }
+      }),
       asyncHandler(async (req, res) => {
         const { password } = req.body;
         try {
           const user = await auth.redeemInvitation(req.params.code, password);
-          eventEmitter.emit('auth:invitation-redeemed-api', { code: req.params.code });
+          eventEmitter.emit('auth:invitation-redeemed-api', { email: user.email });
 
           res.status(201).json({
             success: true,
@@ -1062,10 +1212,7 @@ module.exports = (options, eventEmitter, auth, analytics) => {
             data: user
           });
         } catch (error) {
-          res.status(400).json({
-            success: false,
-            error: error.message
-          });
+          sendSafeError(res, error, { status: 400, eventEmitter, format: 'json' });
         }
       })
     );
@@ -1663,10 +1810,6 @@ function extractAuthToken(req) {
 
   if (typeof req.headers['x-auth-token'] === 'string') {
     return req.headers['x-auth-token'].trim();
-  }
-
-  if (req.query && typeof req.query.authToken === 'string') {
-    return req.query.authToken;
   }
 
   if (req.body && typeof req.body === 'object' && typeof req.body.authToken === 'string') {

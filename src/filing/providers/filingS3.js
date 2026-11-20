@@ -8,8 +8,18 @@
 
 'use strict';
 
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+const { loadOptionalModule } = require('../../shared/utils/optionalRequire');
+
+/** @return {Object} The AWS S3 SDK, loaded on first use */
+const s3sdk = () => loadOptionalModule('@aws-sdk/client-s3', 'S3 filing');
 const { assertSafeRelativePath } = require('../modules/pathSafety');
+const { applyRuntimeSettings, numberRule } = require('../modules/settingsPolicy');
+
+/** Settings that may change while the service runs. Bucket and region are fixed. */
+const RUNTIME_RULES = {
+  maxUploadSize: numberRule('maxUploadSize', { min: 1, max: 5 * 1024 * 1024 * 1024, integer: true })
+};
+
 
 /**
  * A class that implements an AWS S3-based file storage provider.
@@ -49,6 +59,7 @@ class S3FilingProvider {
     }
 
     /** @private @const {S3Client} */
+    const { S3Client } = loadOptionalModule('@aws-sdk/client-s3', 'S3 filing');
     this.s3 = new S3Client(clientConfig);
     /** @private @const {EventEmitter} */
     this.eventEmitter_ = eventEmitter;
@@ -57,13 +68,11 @@ class S3FilingProvider {
     this.settings = {};
     this.settings.description = "Configuration settings for the Filing S3 Provider";
     this.settings.list = [
-      {setting: "bucket", type: "string", values: [this.bucketName]},
-      {setting: "region", type: "string", values: [options.region]},
       {setting: "maxUploadSize", type: "number", values: [104857600]}
     ];
-    this.settings.bucket = options.bucket || this.settings.list[0].values[0];
-    this.settings.region = options.region || this.settings.list[1].values[0];
-    this.settings.maxUploadSize = options.maxUploadSize || this.settings.list[2].values[0];
+    this.settings.bucket = options.bucket || this.bucketName;
+    this.settings.region = options.region;
+    this.settings.maxUploadSize = options.maxUploadSize || 104857600;
   }
 
   /**
@@ -74,7 +83,7 @@ class S3FilingProvider {
    */
   async create(filePath, content) {
     assertSafeRelativePath(filePath);
-    const command = new PutObjectCommand({
+    const command = new (s3sdk().PutObjectCommand)({
       Bucket: this.bucketName,
       Key: filePath,
       Body: content,
@@ -104,7 +113,7 @@ class S3FilingProvider {
    */
   async read(filePath, encoding) {
     assertSafeRelativePath(filePath);
-    const command = new GetObjectCommand({
+    const command = new (s3sdk().GetObjectCommand)({
       Bucket: this.bucketName,
       Key: filePath,
     });
@@ -135,7 +144,7 @@ class S3FilingProvider {
    */
   async delete(filePath) {
     assertSafeRelativePath(filePath);
-    const command = new DeleteObjectCommand({
+    const command = new (s3sdk().DeleteObjectCommand)({
       Bucket: this.bucketName,
       Key: filePath,
     });
@@ -160,7 +169,7 @@ class S3FilingProvider {
    */
   async list(dirPath) {
     assertSafeRelativePath(dirPath);
-    const command = new ListObjectsV2Command({
+    const command = new (s3sdk().ListObjectsV2Command)({
       Bucket: this.bucketName,
       Prefix: dirPath,
     });
@@ -189,7 +198,7 @@ class S3FilingProvider {
   async update(filePath, content) {
     assertSafeRelativePath(filePath);
     // For S3, update is essentially create (put) as it overwrites if exists
-    const command = new PutObjectCommand({
+    const command = new (s3sdk().PutObjectCommand)({
       Bucket: this.bucketName,
       Key: filePath,
       Body: content,
@@ -222,11 +231,17 @@ class S3FilingProvider {
    * Save/update settings
    */
   async saveSettings(settings){
-    for (let i = 0; i < this.settings.list.length; i++){
-      if (settings[this.settings.list[i].setting] != null){
-        this.settings[this.settings.list[i].setting] = settings[this.settings.list[i].setting];
-        this.logger?.info(`[${this.constructor.name}] Setting changed`, { setting: this.settings.list[i].setting, newValue: settings[this.settings.list[i].setting], operation: 'saveSettings' });
-      }
+    const updates = applyRuntimeSettings(settings, {
+      rules: RUNTIME_RULES,
+      fixed: { bucket: this.settings.bucket, region: this.settings.region }
+    });
+    for (const [setting, newValue] of Object.entries(updates)) {
+      this.settings[setting] = newValue;
+      this.logger?.info(`[${this.constructor.name}] Setting changed`, {
+        setting,
+        newValue,
+        operation: 'saveSettings'
+      });
     }
   }
 }

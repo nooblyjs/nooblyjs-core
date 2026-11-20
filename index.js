@@ -18,6 +18,19 @@ const {
 // Implement monitoring
 const systemMonitoring = require('./src/views/modules/monitoring');
 const { sendSafeError } = require('./src/shared/utils/safeError');
+const { assertServiceOptions } = require('./src/shared/utils/optionSchema');
+const OPTION_SCHEMAS = require('./src/shared/config/optionSchemas');
+const { createPermissionGate } = require('./src/authservice/middleware/permissionGate');
+const { createOriginCheck } = require('./src/authservice/middleware/originCheck');
+const { isExcludedPath, DEFAULT_EXCLUDE_PATHS } = require('./src/authservice/middleware/apiKey');
+const { RouteDeclarations, findUndeclaredRoutes, listApiRoutes } = require('./src/authservice/modules/routeDeclarations');
+const { buildOpenApiDocument, loadServiceDocuments, mountedBases } = require('./src/shared/utils/openapi');
+const { mountMcp } = require('./src/mcp');
+const createKnowledgeService = require('./src/knowledge');
+const { normalizeKeyEntries, findKeyEntry } = require('./src/authservice/modules/permissions');
+const { Telemetry } = require('./src/telemetry');
+const { createRequestContextMiddleware } = require('./src/telemetry/requestContext');
+const { createStateStore } = require('./src/shared/utils/stateStore');
 
 const ensureArray = (value) => {
   if (Array.isArray(value)) {
@@ -37,6 +50,11 @@ class ServiceRegistry {
     this.services = new Map();
     this.serviceDependencies = new Map();
     this.initialized = false;
+    this.strictOptions = false;
+    /** @type {boolean} strictAuth: undeclared /services/*\/api routes fail start-up and are refused (feature 19). */
+    this.strictAuth = process.env.NODE_ENV === 'production';
+    /** @type {RouteDeclarations} Permission declared for each built-in API route. */
+    this.routeDeclarations = new RouteDeclarations();
     this.eventEmitter = new EventEmitter();
     this.dependenciesInitialized = false;
     // App-declared default provider/options per service. When set, dependency
@@ -65,6 +83,15 @@ class ServiceRegistry {
     if (eventEmitter) {
       this.eventEmitter = eventEmitter;    
     } 
+
+    // Request context (feature 07): request ids in every log line, with or
+    // without OpenTelemetry. Mounted first so every later middleware sees it.
+    this.telemetry = new Telemetry(globalOptions.telemetry || {}, this.eventEmitter);
+    this.telemetryStatus = this.telemetry.start();
+    if (expressApp) {
+      expressApp.use(createRequestContextMiddleware());
+      if (this.telemetry.active) expressApp.use(this.telemetry.middleware());
+    }
 
     const {
       security: incomingSecurityConfig = {},
@@ -124,6 +151,12 @@ class ServiceRegistry {
     };
 
     // Assign the passed global options
+    // strictOptions turns option warnings into errors (feature 08).
+    this.strictOptions = Boolean(globalOptions.strictOptions);
+    // strictAuth defaults on in production (feature 19); set security.strictAuth to override.
+    this.strictAuth = typeof incomingSecurityConfig.strictAuth === 'boolean'
+      ? incomingSecurityConfig.strictAuth
+      : process.env.NODE_ENV === 'production';
     this.globalOptions = {
       'express-app': expressApp,
       ...legacyOptions,
@@ -131,6 +164,12 @@ class ServiceRegistry {
     };
 
     this.globalOptions.apiKeys = apiKeys;
+
+    // Shared state for horizontal scaling (feature 21): memory by default,
+    // Redis when cluster.redisUrl is set. Services read it from their options.
+    this.clusterConfig = globalOptions.cluster || {};
+    this.stateStore = createStateStore(this.clusterConfig);
+    this.globalOptions.stateStore = this.stateStore;
     this.globalOptions.requireApiKey = requireApiKey;
 
     if (hasCustomExcludePaths) {
@@ -220,9 +259,36 @@ class ServiceRegistry {
       });
     }
 
+    // Feature 23: refuse cross-site state-changing requests that ride on the
+    // session cookie (defence in depth behind SameSite=strict). Opt out with
+    // security.csrf.enabled = false.
+    const csrfConfig = normalizedSecurityConfig.csrf || {};
+    if (csrfConfig.enabled !== false) {
+      const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+      this.expressApp.use('/services', createOriginCheck({
+        allowedOrigins: [...ensureArray(csrfConfig.allowedOrigins || []), ...envOrigins],
+        eventEmitter: this.eventEmitter
+      }));
+    }
+
     // Apply authentication middleware to all /services routes
     // This enforces both authentication and admin role requirement across all service endpoints
     this.expressApp.use('/services', this.servicesAuthMiddleware);
+
+    // Route-level permissions for /services/*/api (feature 19). Runs for every
+    // caller that can be identified: session users, scoped keys and tokens.
+    this.expressApp.use('/services', createPermissionGate({
+      resolvePrincipal: (req) => this.resolveRequestPrincipal(req),
+      eventEmitter: this.eventEmitter,
+      declarations: this.routeDeclarations,
+      strict: () => this.strictAuth,
+      // Anonymous callers are refused on declared routes while API keys are required,
+      // except on the paths the API-key middleware excludes (status pages and the like).
+      anonymousDenied: (req) => requireApiKey === true && !isExcludedPath(
+        [(req.originalUrl || '').split('?')[0], req.path],
+        excludePaths || DEFAULT_EXCLUDE_PATHS
+      )
+    }));
 
     // Serve the service registry landing page
     this.expressApp.get('/services/', (req, res) => {
@@ -264,8 +330,103 @@ class ServiceRegistry {
       }
     });
 
+    // One OpenAPI 3.1 document for the services this app has mounted (feature 10).
+    this.expressApp.get('/services/api/openapi.json', (req, res) => {
+      try {
+        res.status(200).json(this.buildOpenApi());
+      } catch (error) {
+        sendSafeError(res, error, { status: 500, eventEmitter: this.eventEmitter });
+      }
+    });
+
+    // The same document as YAML, for tools that import YAML (feature 10).
+    this.expressApp.get('/services/api/openapi.yaml', (req, res) => {
+      try {
+        const yaml = require('js-yaml');
+        res.status(200).type('application/yaml').send(yaml.dump(this.buildOpenApi(), { noRefs: true, lineWidth: -1 }));
+      } catch (error) {
+        sendSafeError(res, error, { status: 500, eventEmitter: this.eventEmitter });
+      }
+    });
+
+    // Human-readable API documentation over the same document (feature 10).
+    this.expressApp.get('/services/api/docs', (req, res) => {
+      res.sendFile(path.join(__dirname, 'src', 'views', 'api-docs.html'));
+    });
+
+    // MCP server for coding agents (feature 03). Off unless `mcp.enabled` is set.
+    const mcpConfig = globalOptions.mcp || {};
+    this.mcpEnabled = mcpConfig.enabled === true;
+    this.mcpTools = [];
+    if (this.mcpEnabled) {
+      this.mcpTools = mountMcp(this.expressApp, {
+        services: this.mcpServices(),
+        openApi: () => this.buildOpenApi(),
+        allowWrite: mcpConfig.allowWrite === true,
+        resolvePrincipal: (req) => this.resolveRequestPrincipal(req),
+        eventEmitter: this.eventEmitter
+      }).tools;
+    }
+    this.mcpAllowWrite = mcpConfig.allowWrite === true;
+    // Summary for the services dashboard card (feature 03). Counts only, no tool arguments.
+    this.expressApp.get('/services/api/mcp/status', (req, res) => {
+      const reads = this.mcpTools.filter((t) => !t.write).length;
+      const writes = this.mcpTools.filter((t) => t.write).length;
+      res.status(200).json({
+        success: true,
+        data: {
+          enabled: this.mcpEnabled,
+          endpoint: this.mcpEnabled ? '/services/mcp' : null,
+          readTools: reads,
+          writeTools: this.mcpEnabled && this.mcpAllowWrite ? writes : 0,
+          writeEnabled: this.mcpEnabled && this.mcpAllowWrite
+        }
+      });
+    });
+
     this.initialized = true;
     return this;
+  }
+
+  /**
+   * Service accessors for the MCP server. Each one creates the default instance
+   * of its service only when a tool first needs it.
+   *
+   * @return {Object} Accessors used by src/mcp
+   */
+  mcpServices() {
+    return {
+      logger: () => this.logger(),
+      queue: () => this.queue(),
+      dataService: () => this.dataService(),
+      searching: () => this.searching(),
+      workflow: () => this.workflow(),
+      scheduling: () => this.scheduling(),
+      cache: () => this.cache(),
+      settings: () => this.settings(),
+      monitoring: () => systemMonitoring,
+      describe: () => ({ services: this.listServices() })
+    };
+  }
+
+  /**
+   * Builds the merged OpenAPI 3.1 document for the services mounted on this app.
+   * Service documents are read once and reused; the routes are read on each call.
+   *
+   * @return {Object} OpenAPI 3.1 document
+   */
+  buildOpenApi() {
+    if (!this.openApiServices_) {
+      this.openApiServices_ = loadServiceDocuments(path.join(__dirname, 'src'));
+    }
+    const pkg = require('./package.json');
+    return buildOpenApiDocument({
+      services: this.openApiServices_,
+      mounted: mountedBases(this.expressApp),
+      routes: listApiRoutes(this.expressApp),
+      info: { title: 'NooblyJS Core API', version: pkg.version },
+      serverUrl: '/'
+    });
   }
 
   /**
@@ -288,7 +449,8 @@ class ServiceRegistry {
     // Level 1 services (Infrastructure - Use foundation services)
     this.serviceDependencies.set('caching', ['logging']);
     this.serviceDependencies.set('queueing', ['logging']);
-    this.serviceDependencies.set('notifying', ['logging']);
+    // queueing and settings carry webhook deliveries and subscriptions (feature 12).
+    this.serviceDependencies.set('notifying', ['logging', 'queueing', 'settings']);
     this.serviceDependencies.set('appservice', ['logging']);
     this.serviceDependencies.set('fetching', ['logging']);
     this.serviceDependencies.set('settings', ['logging']);
@@ -307,6 +469,7 @@ class ServiceRegistry {
     // Level 4 services (Integration - Use application services)
     this.serviceDependencies.set('authservice', ['logging', 'caching', 'dataservice']);
     this.serviceDependencies.set('aiservice', ['logging', 'caching', 'workflow', 'queueing']);
+    this.serviceDependencies.set('knowledge', ['logging', 'filing', 'searching', 'aiservice']);
 
     this.dependenciesInitialized = true;
 
@@ -344,9 +507,18 @@ class ServiceRegistry {
     // Get dependencies for this service
     const dependencies = this.resolveDependencies(serviceName, providerType);
 
+    // Check the caller's options against the schema for this service and provider (feature 08).
+    const checkedOptions = assertServiceOptions(serviceName, providerType, serviceOptions, OPTION_SCHEMAS, {
+      strict: this.strictOptions,
+      onWarning: (message) => {
+        this.eventEmitter?.emit?.('config:option-warning', { serviceName, providerType, message });
+        if (process.env.NODE_ENV !== 'test') console.warn(`[nooblyjs-core] ${message}`);
+      }
+    });
+
     const mergedOptions = {
       ...this.globalOptions,
-      ...serviceOptions,
+      ...checkedOptions,
       dependencies,
       instanceName, // Include instance name in options for service use
       ServiceRegistry: this, // Include ServiceRegistry reference for multi-instance support
@@ -370,6 +542,9 @@ class ServiceRegistry {
     }
 
     this.services.set(serviceKey, service);
+
+    // Wrap async service methods in spans when telemetry is active (feature 07).
+    this.telemetry?.instrument(service, serviceName, providerType, instanceName);
 
     // Emit event for service creation with dependencies
     this.eventEmitter.emit('service:created', {
@@ -439,7 +614,8 @@ class ServiceRegistry {
       'workflow': 'memory',
       'notifying': 'memory',
       'authservice': 'file',
-      'aiservice': 'claude',
+      'aiservice': 'anthropic',
+      'knowledge': 'default',
       'fetching': 'node',
       'settings': 'file'
     };
@@ -672,6 +848,14 @@ class ServiceRegistry {
    * @returns {Object} Workflow service instance
    */
   workflow(providerType = 'memory', options = {}) {
+    // Clustered: the workflow snapshot lives in the shared store (feature 21).
+    if (this.clusterConfig?.enabled && this.stateStore && !options.stateStore) {
+      options = {
+        ...options,
+        stateStore: this.stateStore,
+        stateKey: options.stateKey || `workflow:state:${options.instanceName || 'default'}`
+      };
+    }
     return this.getService('workflow', providerType, options);
   }
 
@@ -698,14 +882,51 @@ class ServiceRegistry {
   }
 
   /**
+   * Get the knowledge service (feature 05): answers from a filing source with
+   * citations. Creates its own vector search instance (`instanceName: 'knowledge'`)
+   * unless `options.dependencies.searching` is given.
+   *
+   * @param {string} providerType - 'default'
+   * @param {Object} options - instanceName, container, extensions, topK and dependencies overrides
+   * @returns {Object} Knowledge service instance
+   */
+  knowledge(providerType = 'default', options = {}) {
+    if (!this.initialized) {
+      throw new Error('ServiceRegistry must be initialized before getting services');
+    }
+    const instanceName = options.instanceName || 'default';
+    const key = `knowledge:${providerType}:${instanceName}`;
+    if (this.services.has(key)) return this.services.get(key);
+
+    const { dependencies: overrides = {}, ...serviceOptions } = options;
+    // Each default is created only when the caller does not supply that dependency.
+    const dependencies = { ...overrides };
+    if (!dependencies.logging) dependencies.logging = this.logger();
+    if (!dependencies.filing) dependencies.filing = this.filing();
+    if (!dependencies.aiservice) dependencies.aiservice = this.aiservice();
+    if (!dependencies.searching) {
+      dependencies.searching = this.getService('searching', 'vector', { instanceName: 'knowledge', embedding: { backend: 'hash' } });
+    }
+    const service = createKnowledgeService(providerType, {
+      ...serviceOptions,
+      instanceName,
+      dependencies,
+      'express-app': this.expressApp,
+      resolvePrincipal: (req) => this.resolveRequestPrincipal(req)
+    }, this.eventEmitter);
+    this.services.set(key, service);
+    return service;
+  }
+
+  /**
    * Get the AI service
-   * @param {string} providerType - 'claude', 'chatgpt', or 'ollama'
+   * @param {string} providerType - 'anthropic', 'openai-compatible', 'bedrock', 'vertex', 'azure', 'mock', 'openai-kv' or 'tensorflow'
    * @param {Object} options - Provider-specific options
-   * @param {string} options.apiKey - API key for the provider (required for claude/chatgpt)
+   * @param {string} options.apiKey - API key for the provider (anthropic, openai-compatible, ...)
    * @param {string} options.model - Model to use (optional)
    * @returns {Object} AI service instance
    */
-  aiservice(providerType = 'claude', options = {}) {
+  aiservice(providerType = 'anthropic', options = {}) {
     return this.getService('aiservice', providerType, options);
   }
 
@@ -748,6 +969,118 @@ class ServiceRegistry {
    * Get the event emitter for inter-service communication
    * @returns {EventEmitter} The global event emitter
    */
+  /**
+   * Works out who is calling, for the permission gate (feature 19).
+   * A session gives the roles of its user; an API key gives its scopes; a
+   * personal access token gives the roles of its owner.
+   *
+   * @param {import('express').Request} req Request to identify
+   * @return {Promise<?{principal: string, roles?: string[], scopes?: ?string[]}>} Caller, or null when unidentified
+   */
+  async resolveRequestPrincipal(req) {
+    if (req.user) {
+      const roles = Array.isArray(req.user.roles) ? req.user.roles : [req.user.role || 'user'];
+      return { principal: req.user.email || 'session', roles };
+    }
+
+    const authz = req.headers.authorization || '';
+    const headerKey = req.headers['x-api-key'] || req.headers['api-key']
+      || (authz.startsWith('ApiKey ') ? authz.slice(7) : null);
+    const bearer = authz.startsWith('Bearer ') ? authz.slice(7) : null;
+
+    if (headerKey) {
+      const general = this.globalOptions?.apiKeys || this.securityConfig?.apiKeyAuth?.apiKeys || [];
+      const admin = this.globalOptions?.adminApiKeys || this.securityConfig?.servicesAuth?.apiKeys || [];
+      const entry = findKeyEntry(headerKey, normalizeKeyEntries([...admin, ...general]));
+      return entry ? { principal: `key:${entry.name}`, scopes: entry.scopes } : null;
+    }
+
+    if (bearer && bearer.startsWith('dtk_')) {
+      try {
+        const info = await this.authservice().validateApiToken(bearer);
+        // A token may carry fewer permissions than its owner's roles (feature 19).
+        return { principal: info.email, roles: info.roles, tokenScopes: info.scopes ?? null };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    // A browser session token (Bearer, or the cookie's authToken) is validated the
+    // same way the API-key middleware validates it, so the gate sees the owner's roles.
+    const sessionToken = bearer || (req.session && req.session.authToken) || null;
+    if (sessionToken) {
+      const auth = this.getAuthProviderForTokens_();
+      try {
+        const session = auth && typeof auth.validateSession === 'function'
+          ? await auth.validateSession(sessionToken)
+          : null;
+        if (session && session.email) {
+          const roles = Array.isArray(session.roles) ? session.roles : (session.role ? [session.role] : ['user']);
+          return { principal: session.email, roles };
+        }
+      } catch (_err) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Checks that every /services/*\/api route has a declared permission (feature 19).
+   * In strictAuth mode (the default in production) an undeclared route throws, so
+   * start-up fails. Call it once every service is created, since services register
+   * their routes when they are created.
+   *
+   * @return {Array<string>} Undeclared routes (`METHOD pattern`); empty when all are declared
+   * @throws {Error} In strictAuth mode, when any route is undeclared
+   */
+  verifyRouteDeclarations() {
+    if (!this.expressApp) return [];
+    const missing = findUndeclaredRoutes(this.expressApp, this.routeDeclarations);
+    if (missing.length === 0) return missing;
+    const message = `Undeclared API routes (add them to src/authservice/config/routePermissions.js): ${missing.join(', ')}`;
+    if (this.strictAuth) throw new Error(message);
+    this.logger?.warn?.(`[ServiceRegistry] ${message}`);
+    return missing;
+  }
+
+  /**
+   * Refuses to run clustered (cluster.enabled) when a service uses a provider
+   * whose state lives in one process or on one disk (feature 21). Each entry in
+   * the error names the service and provider, and the provider to switch to.
+   * Call it after the services are created, like verifyRouteDeclarations().
+   *
+   * @return {Array<string>} The offending "service:provider" pairs (empty when clustered-safe or not clustered)
+   * @throws {Error} When clustered and any such provider is in use, unless listed in cluster.allowLocalProviders
+   */
+  verifyClusterMode() {
+    if (!this.clusterConfig || !this.clusterConfig.enabled) return [];
+    const allowed = new Set(this.clusterConfig.allowLocalProviders || []);
+    // provider -> the shared alternative to switch to
+    const LOCAL = {
+      'caching:memory': 'a Redis cache (caching redis)',
+      'caching:file': 'a Redis cache (caching redis)',
+      'queueing:memory': 'a Redis queue (queueing redis)',
+      'dataservice:memory': 'a MongoDB dataservice (dataservice mongodb)',
+      'dataservice:file': 'a MongoDB dataservice (dataservice mongodb)',
+      'authservice:memory': 'a database-backed authservice',
+      'authservice:file': 'a database-backed authservice',
+      'filing:local': 'a shared filing provider (filing gcp, filing api or filing sync)',
+      'settings:file': 'a shared settings store, or list it in cluster.allowLocalProviders when every replica shares one volume'
+    };
+    const offending = [];
+    for (const key of this.services.keys()) {
+      const [serviceName, providerType] = key.split(':');
+      const pair = `${serviceName}:${providerType}`;
+      if (LOCAL[pair] && !allowed.has(pair)) offending.push(pair);
+    }
+    const unique = [...new Set(offending)];
+    if (unique.length === 0) return [];
+    const message = `Clustered mode refuses process-local providers: ${unique
+      .map((pair) => `${pair} (use ${LOCAL[pair]})`).join('; ')}`;
+    throw new Error(message);
+  }
+
   getEventEmitter() {
     return this.eventEmitter;
   }
@@ -800,13 +1133,15 @@ class ServiceRegistry {
     if (!this.initialized) {
       return;
     }
+    await this.telemetry?.shutdown();
+    await this.stateStore?.close?.();
 
     // Per-service teardown timeout so one hung disconnect cannot block the
     // whole shutdown (P2-5).
     const perServiceTimeoutMs = options.perServiceTimeoutMs || 5000;
     // Method names a service may expose to release resources, in priority order.
     const TEARDOWN_METHODS = [
-      'close', 'disconnect', 'stop', 'stopIndexing', 'shutdown', 'quit',
+      'stopConsumers', 'close', 'disconnect', 'stop', 'stopIndexing', 'shutdown', 'quit',
       'destroy', 'dispose', 'end'
     ];
 

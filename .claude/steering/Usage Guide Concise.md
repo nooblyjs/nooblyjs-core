@@ -1,3 +1,9 @@
+---
+type: Steering Doc
+title: NooblyJS Core - Concise Usage Guide
+description: Quick reference for using NooblyJS Core in an application.
+---
+
 # NooblyJS Core - Concise Usage Guide
 
 Quick reference for using NooblyJS Core in an application. Method names match the provider classes in `src/*/providers/`. Where an option is provider-specific, check the service's `index.js` for the full list.
@@ -42,7 +48,7 @@ const scheduler = serviceRegistry.scheduling('memory');
 const search    = serviceRegistry.searching('memory');
 const working   = serviceRegistry.working('memory');
 const auth      = serviceRegistry.authservice('file');
-const ai        = serviceRegistry.aiservice('claude');
+const ai        = serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY });
 const filing    = serviceRegistry.filing('local');
 
 // Multiple named instances of the same service
@@ -107,14 +113,14 @@ setInterval(async () => {
 
 ```javascript
 // Runs a script in a worker. The completion callback receives the result.
-working.start('./activities/resize-image.js', { file: 'a.png' }, (status, data) => {
+working.start('resize-image.js', { file: 'a.png' }, (status, data) => {
   logger.info('Resize finished', { status, data });
 });
 ```
 
 ### Workflows
 
-A workflow is a named list of step scripts. Each step runs in order and receives the output of the step before it.
+A workflow is a named list of step scripts. Steps run in order. Each step receives the original input plus a `steps` array holding the output of every step before it.
 
 ```javascript
 await workflow.defineWorkflow('order-flow', ['validate.js', 'charge.js', 'notify.js']);
@@ -138,6 +144,19 @@ await scheduler.startCron({ scriptPath: 'nightly-cleanup.js' }, '0 2 * * *', 'ni
 ```javascript
 await search.add('doc-1', { title: 'Install guide', content: 'Run npm install' });   // resolves false if the key exists
 const results = await search.search('install');                                   // array of matching documents
+
+// Meaning search (vector provider): semantic by default, or keyword / hybrid per call
+const meaning = serviceRegistry.searching('vector', { instanceName: 'meaning' });
+const hits = await meaning.search('how do I set things up', { containerName: 'docs', mode: 'hybrid' });
+```
+
+### Knowledge (ask your docs)
+
+```javascript
+const kb = serviceRegistry.knowledge('default', { dependencies: { aiservice: ai }, watch: true, restore: true });
+await kb.sync({ directory: 'docs' });                       // Markdown, text, HTML, PDF; changed files only
+const { text, citations, confidence } = await kb.ask('How do I rotate the settings secret?');
+const report = await kb.evaluate(yamlCases, { k: 5, answers: true });   // recallAtK, citationAccuracy, ...
 ```
 
 ### Authentication
@@ -156,7 +175,10 @@ await auth.logout(sessionToken);
 
 // Personal access tokens for scripts and APIs. The raw token is returned once: store it.
 const created = await auth.createApiToken('ada@example.com', 'ci-token');
-const owner   = await auth.validateApiToken(created.token);
+const owner   = await auth.validateApiToken(created.token); // throws if invalid or expired
+
+// Narrow a token to some permissions (it can't exceed its owner's)
+const readOnly = await auth.createApiToken('ada@example.com', 'read-only', { scopes: ['caching:read'] });
 ```
 
 ### File Operations
@@ -172,11 +194,30 @@ await filing.delete('reports/summary.txt');
 ### AI
 
 ```javascript
-const answer = await ai.prompt('What is machine learning?');
-const summary = await ai.prompt(text, { maxTokens: 500, temperature: 0.7 });
+const ai = serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY, model: 'claude-sonnet-5-5' });
+const reply = await ai.complete({ messages: [{ role: 'user', content: 'What is machine learning?' }], maxTokens: 300 });
+for await (const e of ai.stream({ messages })) if (e.type === 'text_delta') process.stdout.write(e.text);
+const { vectors } = await openai.embed(['first', 'second']);   // Anthropic has no embeddings: name another provider
+const answer = await ai.prompt('What is machine learning?');   // older shape: { content, usage, model, provider }
 ```
 
-`aiservice` is backed by the provider you choose (`claude`, `openai`, `ollama`, `gemini`, `openai-kv`, `tensorflow`). For one client across providers, see the shared module in `src/aiservice/common/` (`nooblyjs-ai-common`).
+AI Service v2 (`anthropic`, `openai-compatible`, `bedrock`, `vertex`, `azure`, `mock`) has `complete`, `stream`, tools, `generateObject` and `embed`, with budgets. `openai-kv` and `tensorflow` keep `prompt()` only. The 1.x names `claude`, `openai`, `ollama` and `gemini` were removed in 2.0.0: use `anthropic`, or `openai-compatible` with a `baseUrl`.
+
+### MCP and the CLI
+
+```javascript
+serviceRegistry.initialize(app, emitter, { mcp: { enabled: true, allowWrite: false } });   // POST /services/mcp
+```
+
+```bash
+claude mcp add nooblyjs -- npx nooblyjs mcp --url http://localhost:9000   # set NOOBLYJS_TOKEN or NOOBLYJS_API_KEY
+npx nooblyjs create my-app --template api|dashboard|ai --yes
+npx nooblyjs add endpoint GET /hello      # also: add service <name>; add provider <service> <name> (core checkout)
+npx nooblyjs doctor                       # env, npm audit, Redis / MongoDB / S3 reachability; exits 1 on failure
+npx nooblyjs openapi --client ts --out src/api-client.ts
+```
+
+With the login gate on, an MCP personal access token must be admin-owned; give it `scopes`. The merged OpenAPI document is at `/services/api/openapi.json`, rendered at `/services/api/docs`.
 
 ## Patterns
 
@@ -259,8 +300,12 @@ const requireToken = async (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'No token' });
 
-  const user = await auth.validateApiToken(token);
-  if (!user) return res.status(401).json({ error: 'Invalid token' });
+  let user;
+  try {
+    user = await auth.validateApiToken(token); // throws when invalid or expired
+  } catch (_err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
 
   req.user = user;
   next();
@@ -324,7 +369,8 @@ The provider names below are the case labels in each service's `index.js`. The f
 | queueing | memory, redis, rabbitmq, activemq, aws, azure, gcp, api |
 | filing | local, ftp, s3, git, gcp, api, sync |
 | authservice | memory, file, passport, google, azure, secure-email, api |
-| aiservice | claude (default), openai (`chatgpt` alias), openai-kv, ollama, gemini, tensorflow |
+| aiservice | claude (default), openai (`chatgpt` alias), openai-kv, ollama, gemini, tensorflow; AI Service v2: anthropic, openai-compatible, bedrock, vertex, azure, mock |
+| knowledge | default |
 | settings | file, encrypted |
 | fetching | node (default), axios |
 | notifying | default (in-memory), api |
@@ -363,6 +409,22 @@ describe('Order service', () => {
 ```
 
 Tests that write to disk should use the shared `testDataDir()` helper and clean up in `afterEach`. See `CONTRIBUTING.md`.
+
+Apps can use the test kit instead of wiring the registry by hand:
+
+```javascript
+const { createTestRegistry, installMatchers } = require('nooblyjs-core/testing');
+installMatchers();
+let t;
+beforeEach(async () => { t = await createTestRegistry({ services: ['caching'] }); });
+afterEach(() => t.cleanup());
+it('puts', async () => {
+  await t.request('post', '/services/caching/api/put/k').send({ a: 1 }).expect(200);   // API key already set
+  expect(t.events).toHaveEmitted('cache:put:default', { key: 'k' });
+});
+```
+
+New providers must pass their service's contract in `tests/contract/` (`npx nooblyjs add provider <service> <name>` in a core checkout).
 
 ## Key Methods
 

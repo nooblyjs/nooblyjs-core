@@ -16,10 +16,9 @@ const express = require('express');
 // Patch Express so rejected async route handlers are forwarded to the error
 // handler instead of becoming unhandled rejections (P0-5). Must be required
 // before routes are registered.
-require('express-async-errors');
+// Express 5 handles rejected promises in middleware and routes natively.
 const helmet = require('helmet');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
@@ -70,7 +69,7 @@ app.use(cors({
 }));
 
 // Body parsers with explicit size limits (P2-2).
-app.use(bodyParser.json({ limit: BODY_LIMIT }));
+app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 /**
@@ -171,6 +170,23 @@ if (configuredApiKeys.length === 0 && !isProduction) {
 const options = {
   logDir: path.join(__dirname, './.application/', 'logs'),
   dataDir: path.join(__dirname, './.application/', 'data'),
+  // Feature 21: CLUSTER_MODE=true shares login lockouts, invitations and cron fires
+  // through REDIS_URL, and refuses process-local providers at start-up.
+  cluster: {
+    enabled: process.env.CLUSTER_MODE === 'true',
+    redisUrl: process.env.REDIS_URL || process.env.SESSION_REDIS_URL || undefined
+  },
+  // Feature 07: OpenTelemetry tracing and metrics. Off unless OTEL_ENABLED=true
+  // or an OTLP endpoint is set; the SDK packages are optional (see docs).
+  telemetry: {
+    enabled: process.env.OTEL_ENABLED === 'true' || Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT),
+    serviceName: process.env.OTEL_SERVICE_NAME || 'nooblyjs-app',
+    exporter: process.env.OTEL_TRACES_EXPORTER || (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? 'otlp' : 'console'),
+    endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || undefined,
+    metrics: process.env.OTEL_METRICS_ENABLED === 'true',
+    metricsIntervalMs: process.env.OTEL_METRICS_EXPORT_INTERVAL_MS ? Number(process.env.OTEL_METRICS_EXPORT_INTERVAL_MS) : undefined,
+    sampleRatio: process.env.OTEL_SAMPLE_RATIO ? Number(process.env.OTEL_SAMPLE_RATIO) : undefined
+  },
   apiKeys: configuredApiKeys,
   requireApiKey: configuredApiKeys.length > 0,
   excludePaths: [
@@ -206,9 +222,26 @@ const notifying = serviceRegistry.notifying('memory');
 const worker = serviceRegistry.working('memory');
 const workflow = serviceRegistry.workflow('memory');
 const fetching = serviceRegistry.fetching('node');
-const authservice = serviceRegistry.authservice('file');
+// Feature 16: invitation codes are emailed when SMTP_URL and MAIL_FROM are set
+// (nodemailer is an optional peer). Without them, codes are shown to the admin.
+const { createMailer, invitationCodeSender } = require('./src/notifying/modules/mail');
+const invitationMailer = createMailer({ logger: log });
+const authservice = serviceRegistry.authservice('file', invitationMailer
+  ? { invitations: { deliverCode: invitationCodeSender(invitationMailer) } }
+  : {});
 const settings = serviceRegistry.settings('file');
-const aiservice = serviceRegistry.aiservice('ollama', {});
+const aiservice = process.env.ANTHROPIC_API_KEY
+  ? serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY })
+  : serviceRegistry.aiservice('mock', {});
+// Feature 05: ask your documents. Sync a folder of the filing root from the
+// Knowledge dashboard; sync state and ratings are kept as hidden files there.
+const knowledge = serviceRegistry.knowledge('default', { dependencies: { filing, aiservice }, restore: true });
+
+// Feature 19: every /services/*/api route must declare a permission. In production
+// (strictAuth) an undeclared route stops start-up here.
+serviceRegistry.verifyRouteDeclarations();
+// Feature 21: in clustered mode, refuse providers whose state lives in one process.
+serviceRegistry.verifyClusterMode();
 
 /**
  * Setup production health checks for load balancers and orchestration

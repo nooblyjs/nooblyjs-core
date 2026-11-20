@@ -10,6 +10,17 @@
 
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { ClientError } = require('../../shared/utils/httpErrors');
+const { validateTokenScopes } = require('../modules/permissions');
+const {
+  INVITATION_TTL_MS,
+  generateInvitationCode,
+  hashInvitationCode,
+  codeMatchesHash,
+  resolveInvitationPolicy,
+  emailDomain,
+  publicInvitation
+} = require('../modules/invitations');
 
 /**
  * bcrypt cost factor used for password hashing. Defaults to 12; override via
@@ -24,6 +35,27 @@ const BCRYPT_COST = parseInt(process.env.BCRYPT_COST, 10) || 12;
  * Provides user management, role-based access, and session handling.
  * @class
  */
+/** Invitation fields that hold dates. JSON stores them as strings. */
+const INVITATION_DATE_FIELDS = ['createdAt', 'approvedAt', 'expiresAt', 'usedAt'];
+
+/**
+ * Turns a stored invitation back into the shape the provider uses, with Date
+ * objects for its dates.
+ *
+ * @param {Object} raw Stored record
+ * @return {Object} Record with dates restored
+ */
+function reviveInvitation(raw) {
+  const record = { ...raw };
+  for (const field of INVITATION_DATE_FIELDS) {
+    if (typeof record[field] === 'string') record[field] = new Date(record[field]);
+  }
+  return record;
+}
+
+/** Shared-store index of every invitation id, for clustered listings (feature 21). */
+const INVITATION_INDEX = 'invitations';
+
 class AuthBase {
   /**
    * Initializes the authentication provider.
@@ -50,9 +82,40 @@ class AuthBase {
     this.lastTokenUsagePersistAt_ = 0;
     this.eventEmitter_ = eventEmitter;
     this.options_ = options;
+    /**
+     * Invitations by id. Only the hash of an approved code is kept.
+     * @protected {!Map<string, Object>}
+     */
+    this.invitations_ = new Map();
+    /**
+     * Shared store for invitations (feature 21). Set only for a Redis state
+     * store, so that an invitation issued on one replica can be redeemed on
+     * another. Null when invitations live in this process.
+     * @protected {?Object}
+     */
+    this.stateStore_ = options.stateStore && options.stateStore.kind === 'redis' ? options.stateStore : null;
+    /**
+     * Idle timeouts in ms. An admin session that is idle for longer than
+     * `admin` (default 30 minutes) expires; other sessions use `user` (8 hours).
+     * @protected {{admin: number, user: number}}
+     */
+    this.sessionIdleMs_ = {
+      admin: 30 * 60 * 1000,
+      user: 8 * 60 * 60 * 1000,
+      ...(options.sessionIdleTimeoutMs || {})
+    };
+    /** @protected {{mode: string, allowedDomains: string[], deliverCode: ?Function}} */
+    this.invitationPolicy_ = resolveInvitationPolicy(options.invitations);
+    if (this.invitationPolicy_.mode === 'open' && process.env.NODE_ENV === 'production') {
+      this.eventEmitter_?.emit('auth:invitation-mode-warning', {
+        mode: 'open',
+        message: 'invitations.mode "open" lets anyone create an account. Use admin-approval in production.'
+      });
+    }
 
     // Initialize default roles
     this.roles_.set('admin', []);
+    this.roles_.set('editor', []);
     this.roles_.set('user', []);
     this.roles_.set('guest', []);
 
@@ -270,7 +333,9 @@ class AuthBase {
       fullName: user.fullName,
       roles: userRoles,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + (24 * 60 * 60 * 1000)) // 24 hours
+      expiresAt: new Date(Date.now() + (24 * 60 * 60 * 1000)), // 24 hours (absolute)
+      epoch: user.sessionEpoch || 0,
+      lastSeenAt: Date.now()
     };
 
     this.sessions_.set(sessionToken, session);
@@ -310,12 +375,66 @@ class AuthBase {
       throw new Error('Invalid session');
     }
 
+    const user = this.lookupSessionUser_(session.email);
+    if (!user || user.isActive === false || (user.sessionEpoch || 0) !== (session.epoch || 0)) {
+      this.sessions_.delete(token);
+      throw new Error('Session revoked');
+    }
+
+    const now = Date.now();
     if (session.expiresAt < new Date()) {
       this.sessions_.delete(token);
       throw new Error('Session expired');
     }
+    if (now - (session.lastSeenAt || session.createdAt?.getTime() || now) > this.idleTimeoutFor_(user)) {
+      this.sessions_.delete(token);
+      this.eventEmitter_?.emit('auth:session-idle-timeout', { email: session.email });
+      throw new Error('Session expired after inactivity');
+    }
 
+    // Roles are read from the store, so a role change applies at once.
+    session.roles = Array.isArray(user.roles) ? user.roles : [user.role || 'user'];
+    session.lastSeenAt = now;
     return session;
+  }
+
+  /**
+   * Finds the stored record that sessions are checked against. Providers that
+   * keep accounts elsewhere override this.
+   * @protected
+   * @param {string} email Account email
+   * @return {Object|undefined} Stored user record
+   */
+  lookupSessionUser_(email) {
+    return this.users_.get(email);
+  }
+
+  /**
+   * Idle timeout for a user's sessions: the admin timeout when the user is an
+   * administrator, the ordinary timeout otherwise.
+   * @protected
+   * @param {Object} user Stored user record
+   * @return {number} Timeout in milliseconds
+   */
+  idleTimeoutFor_(user) {
+    const roles = Array.isArray(user.roles) ? user.roles : [user.role || 'user'];
+    return roles.includes('admin') ? this.sessionIdleMs_.admin : this.sessionIdleMs_.user;
+  }
+
+  /**
+   * Revokes every session a user holds. Bumping the user's session epoch
+   * invalidates token sessions and cookie sessions alike, because both carry
+   * the epoch they were issued under. The next login issues a fresh session.
+   * @protected
+   * @param {Object} user Stored user record (mutated)
+   * @param {string} reason Why, for the audit event
+   */
+  revokeUserSessions_(user, reason) {
+    user.sessionEpoch = (user.sessionEpoch || 0) + 1;
+    for (const [token, session] of this.sessions_.entries()) {
+      if (session.email === user.email) this.sessions_.delete(token);
+    }
+    this.eventEmitter_?.emit('auth:sessions-revoked', { email: user.email, reason });
   }
 
   /**
@@ -408,6 +527,12 @@ class AuthBase {
 
     Object.assign(user, allowedUpdates);
 
+    // A change to roles, activation or password ends the user's sessions (feature 23).
+    const sensitive = ['roles', 'role', 'isActive', 'password'].filter((k) => k in allowedUpdates);
+    if (sensitive.length) {
+      this.revokeUserSessions_(user, `updated:${sensitive.join(',')}`);
+    }
+
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:user-updated', { email, updates: Object.keys(allowedUpdates) });
     }
@@ -468,6 +593,7 @@ class AuthBase {
       userRoles.push(role);
       user.roles = userRoles;
     }
+    this.revokeUserSessions_(user, `role-assigned:${role}`);
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:role-assigned', { email, role });
@@ -617,6 +743,7 @@ class AuthBase {
     }
 
     user.password = await this.hashPassword_(newPassword);
+    this.revokeUserSessions_(user, 'password-changed');
 
     if (this.eventEmitter_) {
       this.eventEmitter_.emit('auth:password-changed', { email });
@@ -634,6 +761,14 @@ class AuthBase {
    */
   static get TOKEN_PREFIX() {
     return 'dtk_';
+  }
+
+  /**
+   * Default personal access token lifetime in days (feature 23).
+   * @const {number}
+   */
+  static get DEFAULT_TOKEN_TTL_DAYS() {
+    return 90;
   }
 
   /**
@@ -701,7 +836,8 @@ class AuthBase {
    * @param {Object=} options Token options.
    * @param {number=} options.expiresInDays Days until the token expires (omit for no expiry).
    * @param {(string|Date)=} options.expiresAt Explicit expiry timestamp (overrides expiresInDays).
-   * @return {Promise<Object>} Promise resolving to { id, token, tokenPrefix, name, createdAt, expiresAt }.
+   * @param {Array<string>=} options.scopes Permissions the token may use, a subset of the owner's (omit for all of them).
+   * @return {Promise<Object>} Promise resolving to { id, token, tokenPrefix, name, createdAt, expiresAt, scopes }.
    * @throws {Error} When email/tokenName are missing or the user does not exist.
    */
   async createApiToken(email, tokenName, options = {}) {
@@ -718,12 +854,26 @@ class AuthBase {
       user.apiTokens = [];
     }
 
+    // The option is `scopes`. An earlier type declaration called it `permissions`;
+    // refuse that name rather than ignore it, since ignoring it would issue a
+    // token with all of the owner's permissions.
+    if (options.permissions !== undefined) {
+      throw new Error('Unknown option "permissions": use "scopes" to narrow a token');
+    }
+
+    // Scopes narrow the token below its owner's grants (feature 19). Null means all of them.
+    const ownerRoles = Array.isArray(user.roles) ? user.roles : [user.role || 'user'];
+    const scopes = options.scopes === undefined || options.scopes === null
+      ? null
+      : validateTokenScopes(options.scopes, ownerRoles);
+
     const tokenId = 'tok_' + crypto.randomBytes(9).toString('hex');
     const rawSecret = crypto.randomBytes(32).toString('hex');
     const wireToken = AuthBase.TOKEN_PREFIX + rawSecret;
     const hashedToken = crypto.createHash('sha256').update(wireToken).digest('hex');
     const tokenPrefix = wireToken.substring(0, 12); // 'dtk_' + first 8 hex chars
 
+    // Every token expires (feature 23): 90 days unless the caller asks for less.
     let expiresAt = null;
     if (options.expiresAt) {
       const parsed = new Date(options.expiresAt);
@@ -733,6 +883,9 @@ class AuthBase {
     } else if (options.expiresInDays != null && Number(options.expiresInDays) > 0) {
       expiresAt = new Date(Date.now() + Number(options.expiresInDays) * 24 * 60 * 60 * 1000);
     }
+    if (!expiresAt) {
+      expiresAt = new Date(Date.now() + AuthBase.DEFAULT_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+    }
 
     const token = {
       id: tokenId,
@@ -741,7 +894,8 @@ class AuthBase {
       tokenPrefix: tokenPrefix,
       createdAt: new Date(),
       lastUsed: null,
-      expiresAt: expiresAt
+      expiresAt: expiresAt,
+      scopes
     };
 
     user.apiTokens.push(token);
@@ -767,7 +921,8 @@ class AuthBase {
       tokenPrefix: token.tokenPrefix,
       name: token.name,
       createdAt: token.createdAt,
-      expiresAt: token.expiresAt
+      expiresAt: token.expiresAt,
+      scopes: token.scopes
     };
   }
 
@@ -896,153 +1051,194 @@ class AuthBase {
         roles,
         isActive: user.isActive !== false
       },
-      token: this.getSafeToken_(token)
+      token: this.getSafeToken_(token),
+      scopes: token.scopes ?? null
     };
   }
 
   /**
-   * Requests an invitation for account creation.
+   * Public invitation request. What happens depends on `invitations.mode`:
+   * - `admin-only`: refused; an administrator must create the invitation.
+   * - `admin-approval` (default): a pending request is stored. No code is
+   *   returned; an administrator approves it and receives the code once.
+   * - `domain-allowlist`: requests from allowed domains are approved and the
+   *   code goes to `invitations.deliverCode`; other requests stay pending.
+   * - `open`: approved and the code is returned. For demos only.
+   *
    * @param {Object} data Invitation request data.
    * @param {string} data.name Full name.
    * @param {string} data.email Email address.
-   * @param {string} data.mobile Mobile number (optional).
-   * @return {Promise<Object>} Promise resolving to invitation object with code.
+   * @param {string=} data.mobile Mobile number (optional).
+   * @return {Promise<Object>} Client-safe invitation; contains `code` only in `open` mode.
+   * @throws {ClientError} 400 for missing fields, 403 in `admin-only` mode.
    */
   async requestInvitation(data) {
-    const { name, email, mobile } = data;
-
+    const { name, email, mobile } = data || {};
     if (!name || !email) {
-      throw new Error('Name and email are required');
+      throw new ClientError(400, 'Name and email are required');
     }
 
-    if (!this.invitations_) {
-      this.invitations_ = new Map();
+    const policy = this.invitationPolicy_;
+    if (policy.mode === 'admin-only') {
+      throw new ClientError(403, 'Invitations are issued by an administrator');
     }
 
-    const crypto = require('crypto');
-    const code = 'INV-' + crypto.randomBytes(6).toString('hex').toUpperCase();
+    const autoApprove = policy.mode === 'open'
+      || (policy.mode === 'domain-allowlist'
+        && Boolean(policy.deliverCode)
+        && policy.allowedDomains.includes(emailDomain(email)));
 
-    const now = new Date();
-    const invitation = {
-      code,
-      name,
-      email,
-      mobile: mobile || null,
-      // Auto-approved: invite codes are usable immediately on issue
-      status: 'approved',
-      createdAt: now,
-      approvedAt: now,
-      usedAt: null,
-      expiresAt: new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)) // 7 days
-    };
+    const { record, code } = this.newInvitationRecord_({ name, email, mobile, approve: autoApprove });
+    this.invitations_.set(record.id, record);
+    await this.persistInvitations_(record);
 
-    this.invitations_.set(code, invitation);
+    this.eventEmitter_?.emit('auth:invitation-requested', { email, invitationId: record.id, status: record.status });
 
-    if (this.eventEmitter_) {
-      this.eventEmitter_.emit('auth:invitation-requested', { email, code });
+    if (autoApprove) {
+      this.eventEmitter_?.emit('auth:invitation-approved', { email, invitationId: record.id, mode: policy.mode });
+      if (policy.mode === 'domain-allowlist') {
+        try {
+          await policy.deliverCode({ email, name, code });
+        } catch (err) {
+          // The invitation stays approved; an administrator can recreate it.
+          this.eventEmitter_?.emit('auth:invitation-delivery-failed', { email, invitationId: record.id, error: err.message });
+          return publicInvitation(record);
+        }
+      }
     }
 
-    return { code, email, name, status: 'approved', expiresAt: invitation.expiresAt };
+    const view = publicInvitation(record);
+    return policy.mode === 'open' ? { ...view, code } : view;
   }
 
   /**
-   * Approves an invitation request.
-   * @param {string} code Invitation code.
-   * @return {Promise<Object>} Promise resolving to updated invitation.
+   * Creates an approved invitation and returns its code. Administrator only;
+   * the route checks the role. The code is shown once and never stored in plain text.
+   *
+   * @param {Object} data Invitation data.
+   * @param {string} data.name Full name.
+   * @param {string} data.email Email address.
+   * @param {string=} data.mobile Mobile number (optional).
+   * @return {Promise<Object>} Client-safe invitation including the one-time `code`.
    */
-  async approveInvitation(code) {
-    if (!code) {
-      throw new Error('Invitation code is required');
+  async createInvitation(data) {
+    const { name, email, mobile } = data || {};
+    if (!name || !email) {
+      throw new ClientError(400, 'Name and email are required');
     }
-
-    if (!this.invitations_) {
-      throw new Error('Invitation not found');
-    }
-
-    const invitation = this.invitations_.get(code);
-    if (!invitation) {
-      throw new Error('Invitation not found');
-    }
-
-    if (invitation.status !== 'pending') {
-      throw new Error('Only pending invitations can be approved');
-    }
-
-    invitation.status = 'approved';
-    invitation.approvedAt = new Date();
-    invitation.expiresAt = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)); // 7 days
-
-    if (this.eventEmitter_) {
-      this.eventEmitter_.emit('auth:invitation-approved', { code, email: invitation.email });
-    }
-
-    return invitation;
+    const { record, code } = this.newInvitationRecord_({ name, email, mobile, approve: true });
+    this.invitations_.set(record.id, record);
+    await this.persistInvitations_(record);
+    this.eventEmitter_?.emit('auth:invitation-approved', { email, invitationId: record.id, mode: 'admin' });
+    return { ...publicInvitation(record), code };
   }
 
   /**
-   * Redeems an invitation to create a new user account.
-   * The new account's identity is the invited email and its full name is
-   * taken from the invitation.
+   * Approves a pending invitation request and returns its code once.
+   * Administrator only.
+   *
+   * @param {string} id Invitation id.
+   * @return {Promise<Object>} Client-safe invitation including the one-time `code`.
+   * @throws {ClientError} 404 when not found, 409 when not pending.
+   */
+  async approveInvitation(id) {
+    const record = await this.findInvitationById_(id);
+    if (record.status !== 'pending') {
+      throw new ClientError(409, 'Only pending invitations can be approved');
+    }
+    const code = this.issueInvitationCode_(record);
+    await this.persistInvitations_(record);
+    this.eventEmitter_?.emit('auth:invitation-approved', { email: record.email, invitationId: record.id, mode: 'admin' });
+    return { ...publicInvitation(record), code };
+  }
+
+  /**
+   * Redeems an invitation to create a new user account. The code is the only
+   * credential, so it is checked by hash and the invitation is single use.
+   *
    * @param {string} code Invitation code.
-   * @param {string} password Password for new account.
-   * @return {Promise<Object>} Promise resolving to created user object.
+   * @param {string} password Password for the new account.
+   * @return {Promise<Object>} The created user.
+   * @throws {ClientError} 400 when the code is unknown, used, expired or the password is weak.
    */
   async redeemInvitation(code, password) {
     if (!code || !password) {
-      throw new Error('Invitation code and password are required');
+      throw new ClientError(400, 'Invitation code and password are required');
     }
 
-    if (!this.invitations_) {
-      throw new Error('Invitation not found');
+    const record = await this.findInvitationByCode_(code);
+    if (!record || record.status === 'pending') {
+      throw new ClientError(400, 'Invitation code is invalid or expired');
+    }
+    if (record.status === 'used') {
+      throw new ClientError(400, 'This invitation has already been used');
+    }
+    if (record.expiresAt && record.expiresAt < new Date()) {
+      throw new ClientError(400, 'Invitation code is invalid or expired');
+    }
+    // Claim the invitation so two concurrent redemptions cannot both succeed.
+    if (record.redeeming) {
+      throw new ClientError(409, 'This invitation is being redeemed');
     }
 
-    const invitation = this.invitations_.get(code);
-    if (!invitation) {
-      throw new Error('Invitation not found');
+    // Across replicas the in-memory flag above is not enough, so claim the
+    // invitation in the shared store. The claim is released if redemption fails.
+    const claimKey = `auth:invite-redeem:${record.id}`;
+    if (this.stateStore_ && !(await this.stateStore_.setIfAbsent(claimKey, 1, 10 * 60 * 1000))) {
+      throw new ClientError(409, 'This invitation is being redeemed');
     }
 
-    if (invitation.status === 'used') {
-      throw new Error('This invitation has already been used');
+    record.redeeming = true;
+    try {
+      const strength = await this.validatePasswordStrength(password);
+      if (!strength.valid) {
+        // Feature 16: a code that keeps failing is revoked, so a leaked code
+        // cannot be probed with many passwords. An administrator issues a new one.
+        record.failedRedeems = (record.failedRedeems || 0) + 1;
+        if (record.failedRedeems >= this.invitationPolicy_.maxFailedRedeems) {
+          record.status = 'pending';
+          record.codeHash = null;
+          record.approvedAt = null;
+          record.expiresAt = null;
+          record.failedRedeems = 0;
+          await this.persistInvitations_(record);
+          this.eventEmitter_?.emit('auth:invitation-revoked', {
+            invitationId: record.id,
+            email: record.email,
+            reason: 'too-many-failed-redeems'
+          });
+          throw new ClientError(400, 'Too many failed attempts. This invitation code has been revoked; ask an administrator for a new one.');
+        }
+        await this.persistInvitations_(record);
+        throw new ClientError(400, 'Password does not meet strength requirements: ' + strength.errors.join(', '));
+      }
+
+      const user = await this.createUser({
+        email: record.email,
+        fullName: record.name,
+        password,
+        role: 'user'
+      });
+
+      record.status = 'used';
+      record.usedAt = new Date();
+      record.codeHash = null;
+      await this.persistInvitations_(record);
+      this.eventEmitter_?.emit('auth:invitation-redeemed', { invitationId: record.id, email: record.email });
+      return user;
+    } finally {
+      record.redeeming = false;
+      if (this.stateStore_ && record.status !== 'used') {
+        await this.stateStore_.del(claimKey).catch(() => {});
+      }
     }
-
-    if (invitation.status !== 'approved') {
-      throw new Error('Invitation has not been approved');
-    }
-
-    if (invitation.expiresAt && invitation.expiresAt < new Date()) {
-      throw new Error('Invitation has expired');
-    }
-
-    // Validate password strength
-    const strength = await this.validatePasswordStrength(password);
-    if (!strength.valid) {
-      throw new Error('Password does not meet strength requirements: ' + strength.errors.join(', '));
-    }
-
-    // Create user from invitation. The email is the account identity and the
-    // full name is carried over from the invitation.
-    const user = await this.createUser({
-      email: invitation.email,
-      fullName: invitation.name,
-      password: password,
-      role: 'user'
-    });
-
-    // Mark invitation as used
-    invitation.status = 'used';
-    invitation.usedAt = new Date();
-
-    if (this.eventEmitter_) {
-      this.eventEmitter_.emit('auth:invitation-redeemed', { code, email: invitation.email });
-    }
-
-    return user;
   }
 
   /**
-   * Batch creates invitations for multiple users.
-   * Skips rows missing a name or email; collects per-row errors without aborting the batch.
-   * @param {Array<{name: string, email: string}>} invites Array of invitee objects.
+   * Creates several approved invitations. Administrator only. Skips rows with a
+   * missing name or email and reports per-row errors without aborting the batch.
+   *
+   * @param {Array<{name: string, email: string}>} invites Invitee objects.
    * @return {Promise<{created: Array<Object>, errors: Array<{email: string, error: string}>}>}
    */
   async batchCreateInvitations(invites) {
@@ -1051,8 +1247,7 @@ class AuthBase {
 
     for (const item of invites) {
       try {
-        const invitation = await this.requestInvitation({ name: item.name, email: item.email });
-        created.push(invitation);
+        created.push(await this.createInvitation({ name: item.name, email: item.email }));
       } catch (err) {
         errors.push({ email: item.email || '(missing)', error: err.message });
       }
@@ -1062,88 +1257,184 @@ class AuthBase {
   }
 
   /**
-   * Recreates an invitation by generating a fresh code for the same invitee.
-   * The old code is invalidated and a new 7-day expiry is set.
-   * @param {string} oldCode Existing invitation code.
-   * @return {Promise<Object>} Promise resolving to the new invitation object.
+   * Issues a fresh code for an invitee and invalidates the old one. Works for
+   * pending and approved invitations; a used one cannot be recreated. Administrator only.
+   *
+   * @param {string} id Invitation id.
+   * @return {Promise<Object>} Client-safe invitation including the one-time `code`.
+   * @throws {ClientError} 404 when not found, 409 when already redeemed.
    */
-  async recreateInvitation(oldCode) {
-    if (!oldCode) {
-      throw new Error('Invitation code is required');
+  async recreateInvitation(id) {
+    const record = await this.findInvitationById_(id);
+    if (record.status === 'used') {
+      throw new ClientError(409, 'Cannot recreate an invitation that has already been redeemed');
     }
-
-    if (!this.invitations_) {
-      throw new Error('Invitation not found');
-    }
-
-    const existing = this.invitations_.get(oldCode);
-    if (!existing) {
-      throw new Error('Invitation not found');
-    }
-
-    if (existing.status === 'used') {
-      throw new Error('Cannot recreate an invitation that has already been redeemed');
-    }
-
-    // Remove old code
-    this.invitations_.delete(oldCode);
-
-    const crypto = require('crypto');
-    const newCode = 'INV-' + crypto.randomBytes(6).toString('hex').toUpperCase();
-    const now = new Date();
-
-    const invitation = {
-      code: newCode,
-      name: existing.name,
-      email: existing.email,
-      mobile: existing.mobile,
-      status: 'approved',
-      createdAt: now,
-      approvedAt: now,
-      usedAt: null,
-      expiresAt: new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000))
-    };
-
-    this.invitations_.set(newCode, invitation);
-
-    if (this.eventEmitter_) {
-      this.eventEmitter_.emit('auth:invitation-recreated', { oldCode, newCode, email: invitation.email });
-    }
-
-    return { code: newCode, email: invitation.email, name: invitation.name, status: 'approved', expiresAt: invitation.expiresAt };
+    const code = this.issueInvitationCode_(record);
+    await this.persistInvitations_(record);
+    this.eventEmitter_?.emit('auth:invitation-recreated', { invitationId: record.id, email: record.email });
+    return { ...publicInvitation(record), code };
   }
 
   /**
-   * Lists all invitations.
-   * @return {Promise<Array<Object>>} Promise resolving to array of invitations.
+   * Lists every invitation without its code hash. Administrator only.
+   * @return {Promise<Array<Object>>} Client-safe invitations.
    */
   async listInvitations() {
-    if (!this.invitations_) {
-      return [];
-    }
-    return Array.from(this.invitations_.values());
+    if (!this.stateStore_) return Array.from(this.invitations_.values(), publicInvitation);
+    // Clustered: every replica lists the invitations of all replicas, from the shared index.
+    const ids = await this.stateStore_.indexMembers(INVITATION_INDEX);
+    const records = await Promise.all(ids.map((id) => this.loadInvitation_(id)));
+    return records.filter(Boolean).map(publicInvitation);
   }
 
   /**
-   * Gets a specific invitation by code.
+   * Public status check for a code. Reveals only the status, the invitee's
+   * email and the expiry, and nothing when the code is unknown.
+   *
    * @param {string} code Invitation code.
-   * @return {Promise<Object>} Promise resolving to invitation object.
+   * @return {Promise<Object>} `{ status, email, expiresAt }`
+   * @throws {ClientError} 404 when the code is unknown.
    */
   async getInvitation(code) {
     if (!code) {
-      throw new Error('Invitation code is required');
+      throw new ClientError(400, 'Invitation code is required');
     }
-
-    if (!this.invitations_) {
-      throw new Error('Invitation not found');
+    const record = await this.findInvitationByCode_(code);
+    if (!record) {
+      throw new ClientError(404, 'Invitation not found');
     }
+    return { status: record.status, email: record.email, expiresAt: record.expiresAt };
+  }
 
-    const invitation = this.invitations_.get(code);
-    if (!invitation) {
-      throw new Error('Invitation not found');
+  /**
+   * Builds a new invitation record. Only the hash of an approved code is stored.
+   *
+   * @private
+   * @param {{name: string, email: string, mobile: (string|undefined), approve: boolean}} input
+   * @return {{record: Object, code: (string|null)}} The record and, when approved, the plain code
+   */
+  newInvitationRecord_({ name, email, mobile, approve }) {
+    const record = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      mobile: mobile || null,
+      status: 'pending',
+      codeHash: null,
+      createdAt: new Date(),
+      approvedAt: null,
+      usedAt: null,
+      expiresAt: null,
+      redeeming: false
+    };
+    if (!approve) return { record, code: null };
+    const code = this.issueInvitationCode_(record);
+    return { record, code };
+  }
+
+  /**
+   * Gives an invitation a fresh code, replacing any previous one, and marks it approved.
+   *
+   * @private
+   * @param {Object} record Invitation record (mutated)
+   * @return {string} The plain code, to be shown once
+   */
+  issueInvitationCode_(record) {
+    const code = generateInvitationCode();
+    const now = new Date();
+    record.codeHash = hashInvitationCode(code);
+    record.status = 'approved';
+    record.approvedAt = now;
+    record.expiresAt = new Date(now.getTime() + INVITATION_TTL_MS);
+    return code;
+  }
+
+  /**
+   * Finds an invitation by id.
+   *
+   * @private
+   * @param {string} id Invitation id
+   * @return {Object} The record
+   * @throws {ClientError} 404 when not found
+   */
+  async findInvitationById_(id) {
+    const record = id ? await this.loadInvitation_(id) : undefined;
+    if (!record) {
+      throw new ClientError(404, 'Invitation not found');
     }
+    return record;
+  }
 
-    return invitation;
+  /**
+   * Loads an invitation: from this process, or from the shared store when
+   * there is one. A loaded record is cached locally so the file snapshot keeps it.
+   *
+   * @private
+   * @param {string} id Invitation id
+   * @return {Promise<Object|undefined>} The record
+   */
+  async loadInvitation_(id) {
+    if (!this.stateStore_) return this.invitations_.get(id);
+    const raw = await this.stateStore_.get(`auth:invite:${id}`);
+    if (!raw) return undefined;
+    const record = reviveInvitation(raw);
+    this.invitations_.set(record.id, record);
+    return record;
+  }
+
+  /**
+   * Finds the invitation a plain code belongs to, comparing hashes in constant time.
+   *
+   * @private
+   * @param {string} code Plain invitation code
+   * @return {Object|null} The record, or null
+   */
+  async findInvitationByCode_(code) {
+    if (this.stateStore_) {
+      if (typeof code !== 'string' || code === '') return null;
+      const id = await this.stateStore_.get(`auth:invite-code:${hashInvitationCode(code)}`);
+      if (!id) return null;
+      const record = await this.loadInvitation_(id);
+      return record && record.codeHash && codeMatchesHash(code, record.codeHash) ? record : null;
+    }
+    for (const record of this.invitations_.values()) {
+      if (record.codeHash && codeMatchesHash(code, record.codeHash)) {
+        return record;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Persists invitations. Providers with durable storage override
+   * `saveInvitations_()`; the base class keeps them in memory.
+   *
+   * @protected
+   * @return {Promise<void>}
+   */
+  async persistInvitations_(changed) {
+    if (this.stateStore_ && changed) {
+      await this.shareInvitation_(changed);
+    }
+    if (typeof this.saveInvitations_ === 'function') {
+      await this.saveInvitations_(Array.from(this.invitations_.values()));
+    }
+  }
+
+  /**
+   * Writes one invitation to the shared store, and its code hash index entry.
+   *
+   * @private
+   * @param {Object} record The record that changed
+   * @return {Promise<void>}
+   */
+  async shareInvitation_(record) {
+    this.invitations_.set(record.id, record);
+    await this.stateStore_.set(`auth:invite:${record.id}`, record);
+    await this.stateStore_.addToIndex(INVITATION_INDEX, record.id);
+    if (record.codeHash) {
+      await this.stateStore_.set(`auth:invite-code:${record.codeHash}`, record.id);
+    }
   }
 
   /**
@@ -1499,18 +1790,28 @@ class AuthBase {
           if (!user || !user.email) {
             return done(new Error('User object must have an email property'));
           }
-          done(null, user.email);
+          // The epoch travels with the email, so a revoked session stops matching.
+          const stored = this.lookupSessionUser_(user.email);
+          done(null, { email: user.email, epoch: stored ? (stored.sessionEpoch || 0) : 0 });
         } catch (error) {
           done(error);
         }
       },
-      deserializeUser: async (email, done) => {
+      deserializeUser: async (value, done) => {
         try {
+          const email = typeof value === 'string' ? value : value && value.email;
           if (!email) {
             return done(new Error('Email is required for deserialization'));
           }
-          const user = await this.getUser(email);
-          done(null, user);
+          const stored = this.lookupSessionUser_(email);
+          // Unknown, deactivated or revoked sessions are treated as logged out.
+          if (!stored || stored.isActive === false) {
+            return done(null, false);
+          }
+          if (value && typeof value === 'object' && value.epoch !== (stored.sessionEpoch || 0)) {
+            return done(null, false);
+          }
+          done(null, this.getSafeUser_(stored));
         } catch (error) {
           done(error, null);
         }

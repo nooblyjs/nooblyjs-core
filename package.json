@@ -1,6 +1,6 @@
 {
   "name": "nooblyjs-core",
-  "version": "1.0.10",
+  "version": "2.0.0",
   "description": "A powerful set of modular Node.js backend services with singleton pattern - caching, logging, fetching, data serving, filing, measuring, notifying, queueing, scheduling, searching, workflow, and working services.",
   "keywords": [
     "nodejs",
@@ -18,34 +18,97 @@
     "public",
     "README.md",
     "package.json",
-    "index.js"
+    "index.js",
+    "esm",
+    "types",
+    "bin",
+    "testing.js"
   ],
   "license": "ISC",
   "author": "NooblyJS Contributors",
   "type": "commonjs",
   "main": "index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./esm/index.d.mts",
+        "default": "./esm/index.mjs"
+      },
+      "require": {
+        "types": "./types/index.d.ts",
+        "default": "./index.js"
+      },
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "import": {
+        "types": "./esm/testing.d.mts",
+        "default": "./esm/testing.mjs"
+      },
+      "default": "./testing.js"
+    },
+    "./ai": "./src/aiservice/common/index.mjs",
+    "./ai-common": "./src/aiservice/common/index.mjs",
+    "./ai/*": "./src/aiservice/common/*.mjs",
+    "./ai-common/*": "./src/aiservice/common/*.mjs",
+    "./shell": {
+      "import": {
+        "types": "./esm/shell.d.mts",
+        "default": "./esm/shell.mjs"
+      },
+      "default": "./src/shell/index.js"
+    },
+    "./store": {
+      "import": {
+        "types": "./esm/store.d.mts",
+        "default": "./esm/store.mjs"
+      },
+      "default": "./src/store/fs-store.js"
+    },
+    "./route-pattern": {
+      "import": {
+        "types": "./esm/route-pattern.d.mts",
+        "default": "./esm/route-pattern.mjs"
+      },
+      "default": "./src/shared/utils/routePattern.js"
+    },
+    "./src/shell": "./src/shell/index.js",
+    "./src/aiservice/common": "./src/aiservice/common/index.mjs",
+    "./src/*.js": "./src/*.js",
+    "./src/*.json": "./src/*.json",
+    "./src/*": "./src/*.js",
+    "./public/*": "./public/*",
+    "./scripts/*": "./scripts/*",
+    "./types/*": "./types/*"
+  },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/nooblyjs/nooblyjs-core.git"
   },
   "scripts": {
-    "clean": "rimraf node_modules dist",
     "build": "node ./scripts/build.js",
-    "start": "node ./app.js",
+    "build:esm": "node scripts/generate-esm.js --write",
+    "check:esm": "node scripts/generate-esm.js --check",
+    "check:ai-common": "tsc -p src/aiservice/common",
+    "check:types": "tsc -p types/tsconfig.json && tsc -p types/tsconfig.esm.json",
+    "clean": "rimraf node_modules dist",
+    "coverage": "jest --coverage",
     "dev": "nodemon --watch ./src ./app.js",
     "dev:noauth": "nodemon --watch ./src ./app-noauth.js",
     "kill": "node scripts/kill-port.js",
     "kill-test": "node scripts/kill-test-port.js",
+    "start": "node ./app.js",
     "test": "jest",
     "test:ai-common": "node --test \"tests/unit/aiservice/common/**/*.test.js\"",
-    "check:ai-common": "tsc -p src/aiservice/common",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed --project=chromium",
     "test:ui:report": "playwright show-report .temp/tests/playwright/report",
-    "coverage": "jest --coverage"
+    "test:contract": "jest tests/contract",
+    "probe": "node scripts/probe.js"
   },
   "jest": {
     "modulePaths": [
@@ -58,6 +121,7 @@
       "/node_modules/",
       "<rootDir>/tests/ui/",
       "<rootDir>/.temp/",
+      "<rootDir>/src/cli/templates/",
       "<rootDir>/tests/unit/aiservice/common/"
     ],
     "coverageDirectory": ".temp/coverage",
@@ -75,10 +139,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 51,
-        "branches": 45,
-        "functions": 50,
-        "lines": 51
+        "statements": 76,
+        "branches": 64,
+        "functions": 78,
+        "lines": 77
       }
     }
   },
@@ -87,57 +151,133 @@
     "qs": "^6.15.3"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.614.0",
+    "@aws-sdk/client-sqs": "^3.614.0",
+    "@azure/identity": "^4.13.1",
+    "@azure/keyvault-secrets": "^4.11.2",
+    "@azure/storage-queue": "^12.26.0",
+    "@google-cloud/storage": "^5.18.3",
+    "@google-cloud/tasks": "^6.2.2",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.2",
+    "ajv": "^8.17.1",
+    "amqplib": "^0.10.9",
     "ioredis-mock": "^8.9.0",
     "javascript-obfuscator": "^5.4.2",
     "jest": "^30.0.3",
     "knip": "^6.12.2",
+    "memjs": "^1.3.0",
+    "mongodb": "^6.19.0",
     "nock": "^13.5.6",
     "nodemon": "^3.1.10",
+    "path-to-regexp-v0": "npm:path-to-regexp@^0.1.12",
     "rimraf": "^6.0.1",
     "selfsigned": "^5.5.0",
+    "stompit": "^1.0.0",
     "supertest": "^7.1.4",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.60.0",
-    "@aws-sdk/client-s3": "^3.614.0",
-    "@azure/identity": "^4.13.1",
-    "@azure/keyvault-secrets": "^4.11.2",
-    "@google-cloud/storage": "^5.18.3",
-    "@google-cloud/tasks": "^6.2.2",
-    "amqplib": "^0.10.9",
     "axios": "^1.7.7",
     "bcryptjs": "^3.0.3",
-    "body-parser": "^1.20.2",
     "cors": "^2.8.6",
     "dotenv": "^17.2.1",
-    "express": "^4.19.2",
-    "express-async-errors": "^3.1.1",
+    "express": "^5.3.0",
     "express-rate-limit": "^7.5.1",
     "express-session": "^1.17.3",
     "ftp": "^0.3.10",
     "helmet": "^8.2.0",
     "ioredis": "^5.6.1",
     "js-yaml": "^4.3.2",
-    "memjs": "^1.3.0",
-    "mongodb": "^6.19.0",
     "multer": "^2.4.0",
-    "node-fetch": "^3.3.2",
     "openai": "^5.23.2",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "pdf-parse": "^1.1.4",
-    "simple-git": "^3.28.0",
-    "stompit": "^1.0.0",
+    "simple-git": "^4.0.2",
     "uuid": "^11.1.0"
   },
   "allowScripts": {
     "dtrace-provider@0.8.8": true,
     "protobufjs@7.6.6": true,
     "unrs-resolver@1.11.1": true
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.614.0",
+    "@aws-sdk/client-sqs": "^3.614.0",
+    "@azure/identity": "^4.13.1",
+    "@azure/keyvault-secrets": "^4.11.2",
+    "@azure/storage-queue": "^12.26.0",
+    "@google-cloud/storage": "^5.18.3",
+    "@google-cloud/tasks": "^6.2.2",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.200.0",
+    "@opentelemetry/resources": "^2.0.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "@opentelemetry/sdk-trace-node": "^2.0.0",
+    "amqplib": "^0.10.9",
+    "memjs": "^1.3.0",
+    "mongodb": "^6.19.0",
+    "nodemailer": "^10.5.0",
+    "stompit": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@aws-sdk/client-sqs": {
+      "optional": true
+    },
+    "@azure/identity": {
+      "optional": true
+    },
+    "@azure/keyvault-secrets": {
+      "optional": true
+    },
+    "@azure/storage-queue": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
+      "optional": true
+    },
+    "@google-cloud/tasks": {
+      "optional": true
+    },
+    "amqplib": {
+      "optional": true
+    },
+    "memjs": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "stompit": {
+      "optional": true
+    },
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-trace-node": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-trace-base": {
+      "optional": true
+    },
+    "@opentelemetry/resources": {
+      "optional": true
+    },
+    "@opentelemetry/exporter-trace-otlp-http": {
+      "optional": true
+    },
+    "nodemailer": {
+      "optional": true
+    }
+  },
+  "types": "types/index.d.ts",
+  "bin": {
+    "nooblyjs": "bin/nooblyjs.js"
   }
 }

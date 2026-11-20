@@ -1,5 +1,7 @@
 'use strict';
 
+const { normalizeKeyEntries, findKeyEntry } = require('../modules/permissions');
+
 /**
  * @fileoverview API Key Authentication Middleware
  * Provides secure API key validation for all NooblyJS service endpoints.
@@ -54,6 +56,25 @@ function matchesAnyKey(provided, validKeys) {
   return matched;
 }
 
+/** Paths left open to anonymous callers when no `excludePaths` are configured. */
+const DEFAULT_EXCLUDE_PATHS = Object.freeze(['/services/*/status', '/services/', '/services/*/views/*']);
+
+/**
+ * Whether any candidate path matches an exclude pattern. A '*' in a pattern
+ * matches within a segment or across them ('/services/*' matches '/services/a/b').
+ *
+ * @param {string[]} candidates - Request paths to test (full path first)
+ * @param {string[]} excludePaths - Exclude patterns
+ * @return {boolean} True when the request is excluded from API key checks
+ */
+function isExcludedPath(candidates, excludePaths) {
+  return excludePaths.some((pattern) => {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('^' + escaped.replace(/\*/g, '.*') + '$');
+    return candidates.some((candidate) => regex.test(candidate));
+  });
+}
+
 /**
  * API Key Authentication Middleware
  *
@@ -76,10 +97,13 @@ function createApiKeyAuthMiddleware(options = {}, eventEmitter = null) {
   const {
     apiKeys = [],
     requireApiKey = true,
-    excludePaths = ['/services/*/status', '/services/', '/services/*/views/*'],
+    excludePaths = DEFAULT_EXCLUDE_PATHS,
     validateApiToken = null,
     validateSession = null
   } = options;
+
+  // Keys may be plain strings (full access) or { key, name, scopes } objects (feature 19).
+  const keyEntries = normalizeKeyEntries(apiKeys);
 
   return (req, res, next) => {
     if (!requireApiKey) {
@@ -97,12 +121,7 @@ function createApiKeyAuthMiddleware(options = {}, eventEmitter = null) {
       ? req.baseUrl + req.path
       : (req.originalUrl ? req.originalUrl.split('?')[0] : req.path);
 
-    const shouldExclude = excludePaths.some(pattern => {
-      // Escape regex metacharacters, then treat '*' as a wildcard segment.
-      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp('^' + escaped.replace(/\*/g, '.*') + '$');
-      return regex.test(fullPath) || regex.test(req.path);
-    });
+    const shouldExclude = isExcludedPath([fullPath, req.path], excludePaths);
 
     if (shouldExclude) {
       return next();
@@ -195,9 +214,11 @@ function createApiKeyAuthMiddleware(options = {}, eventEmitter = null) {
 
     if (apiKey) {
       // 1. Static API key (machine/admin credential). Synchronous, unchanged.
-      if (matchesAnyKey(apiKey, apiKeys)) {
+      const keyEntry = findKeyEntry(apiKey, keyEntries);
+      if (keyEntry) {
         emitSuccess({ keyPrefix: apiKey.substring(0, 8) + '...' });
         req.apiKey = apiKey;
+        req.apiKeyScopes = keyEntry.scopes;
         return next();
       }
 
@@ -273,9 +294,6 @@ function createApiKeyAuthMiddleware(options = {}, eventEmitter = null) {
       if (req.session && typeof req.session.authToken === 'string') {
         sessionToken = req.session.authToken;
       }
-      if (!sessionToken && typeof req.query.authToken === 'string') {
-        sessionToken = req.query.authToken;
-      }
 
       if (sessionToken) {
         return attemptSessionToken(sessionToken, () => {
@@ -334,6 +352,8 @@ function isValidApiKeyFormat(apiKey) {
 
 module.exports = {
   createApiKeyAuthMiddleware,
+  isExcludedPath,
+  DEFAULT_EXCLUDE_PATHS,
   generateApiKey,
   isValidApiKeyFormat,
   matchesAnyKey,

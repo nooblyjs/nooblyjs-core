@@ -15,6 +15,7 @@ const Routes = require('./routes');
 const Views = require('./views');
 const Scripts = require('./scripts');
 const NotifyingAnalytics = require('./modules/analytics');
+const { WebhookDispatcher } = require('./modules/webhooks');
 
 /**
  * Creates a notification service instance with messaging capabilities.
@@ -71,6 +72,28 @@ function createNotificationService(type, options, eventEmitter) {
   const instanceName = (options && options.instanceName) || 'default';
   analytics = new NotifyingAnalytics(eventEmitter, notifying, instanceName);
 
+  // Outbound webhooks (feature 12). Deliveries run on the reliable queue, so
+  // this needs the queueing and settings services, which the registry injects.
+  const deps = (options && options.dependencies) || {};
+  if (deps.queueing && deps.settings) {
+    const webhookOptions = (options && options.webhooks) || {};
+    const dispatcher = new WebhookDispatcher({
+      queue: deps.queueing,
+      settings: deps.settings,
+      logger: deps.logging,
+      eventEmitter,
+      ...webhookOptions
+    });
+    notifying.webhooks = dispatcher;
+    notifying.subscribeWebhook = (input) => dispatcher.subscribe(input);
+    notifying.listWebhooks = () => dispatcher.list();
+    notifying.unsubscribeWebhook = (id) => dispatcher.unsubscribe(id);
+    notifying.publish = (event, payload) => dispatcher.publish(event, payload);
+    notifying.redeliverWebhook = (deliveryId) => dispatcher.redeliver(deliveryId);
+    notifying.webhookDeliveries = (limit) => dispatcher.deliveries(limit);
+    // The registry calls stopConsumers() on shutdown and reset.
+    notifying.stopConsumers = () => dispatcher.stop();
+  }
   // Initialize routes, views, and scripts for the notification service
   Routes(options, eventEmitter, notifying, analytics);
   Views(options, eventEmitter, notifying);
@@ -86,6 +109,7 @@ function createNotificationService(type, options, eventEmitter) {
   // Expose analytics so the registry can remove its listeners on shutdown/reset
   // (P2-6); the notifying routes also read it per instance.
   service.analytics = analytics;
+
   return service;
 }
 

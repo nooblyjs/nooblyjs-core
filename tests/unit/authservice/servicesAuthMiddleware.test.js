@@ -13,6 +13,8 @@
 
 'use strict';
 
+const { route } = require('../../../src/shared/utils/routePattern');
+
 const express = require('express');
 const request = require('supertest');
 
@@ -46,7 +48,7 @@ function makeApp({ registry: overrides = {}, user, session } = {}) {
     next();
   });
   app.use('/services', createServicesAuthMiddleware(registry));
-  app.all('/services/*', (req, res) => res.json({ reached: true, user: req.user || null, apiKey: req.apiKey || null }));
+  app.all(...route('/services/*'), (req, res) => res.json({ reached: true, user: req.user || null, apiKey: req.apiKey || null }));
   return app;
 }
 
@@ -107,7 +109,11 @@ describe('services auth middleware', () => {
       const app = makeApp({ registry: { globalOptions: { adminApiKeys: ['admin-key'], apiKeys: ['general-key'] } } });
       const ok = await request(app).get('/services/caching/api/list').set('x-api-key', 'admin-key').expect(200);
       expect(ok.body.apiKey).toBe('admin-key');
-      await request(app).get('/services/caching/api/list').set('x-api-key', 'general-key').expect(401);
+      // A general key reaches the API paths (data plane) but not the portal pages.
+      const data = await request(app).get('/services/caching/api/list').set('x-api-key', 'general-key').expect(200);
+      expect(data.body.apiKey).toBe('general-key');
+      const page = await request(app).get('/services/').set('x-api-key', 'general-key');
+      expect(page.status).not.toBe(200);
     });
 
     it('falls back to general keys and reads the security config', async () => {
@@ -128,18 +134,19 @@ describe('services auth middleware', () => {
   describe('session tokens', () => {
     const app = makeApp();
 
-    it('admits admin tokens from the Authorization header or query string', async () => {
+    it('admits admin tokens from the Authorization header only', async () => {
       const res = await request(app).get('/services/caching/api/list').set('Authorization', 'Bearer admin-token').expect(200);
       expect(res.body.user).toEqual(expect.objectContaining({ email: 'admin@x.com', roles: ['admin'] }));
-      await request(app).get('/services/caching/api/list?authToken=admin-token').expect(200);
+      // Query-string tokens are never accepted (feature 23).
+      await request(app).get('/services/caching/api/list?authToken=admin-token').expect(401);
     });
 
     it('admits an admin token stored on the session and stores new tokens', async () => {
       const session = { authToken: 'admin-token' };
       await request(makeApp({ session })).get('/services/caching/api/list').expect(200);
       const fresh = {};
-      await request(makeApp({ session: fresh })).get('/services/caching/api/list?authToken=admin-token').expect(200);
-      expect(fresh.authToken).toBe('admin-token');
+      await request(makeApp({ session: fresh })).get('/services/caching/api/list?authToken=admin-token').expect(401);
+      expect(fresh.authToken).toBeUndefined();
     });
 
     it('rejects non-admin and invalid tokens', async () => {
@@ -150,10 +157,12 @@ describe('services auth middleware', () => {
 
   describe('login pages', () => {
     it('redirects an already-authenticated admin away from the login page', async () => {
-      const login = await request(makeApp()).get('/services/authservice/login').query({ authToken: 'admin-token' }).expect(302);
+      // The redirect now needs the Authorization header, not a query token.
+      const login = await request(makeApp()).get('/services/authservice/login').set('Authorization', 'Bearer admin-token').expect(302);
       expect(login.headers.location).toBe('/services/');
-      await request(makeApp()).get('/services/authservice/login').query({ authToken: 'user-token' }).expect(200);
-      await request(makeApp()).get('/services/authservice/login').query({ authToken: 'bad' }).expect(200);
+      await request(makeApp()).get('/services/authservice/login').query({ authToken: 'admin-token' }).expect(200);
+      await request(makeApp()).get('/services/authservice/login').set('Authorization', 'Bearer user-token').expect(200);
+      await request(makeApp()).get('/services/authservice/login').set('Authorization', 'Bearer bad').expect(200);
       await request(makeApp()).get('/services/authservice/register').expect(200);
     });
   });

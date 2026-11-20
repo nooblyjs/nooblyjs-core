@@ -1,3 +1,9 @@
+---
+type: Steering Doc
+title: NooblyJS Core - Usage Guide
+description: This document gives detailed examples and best practices for integrating NooblyJS Core into an application.
+---
+
 # NooblyJS Core - Usage Guide
 
 This document gives detailed examples and best practices for integrating NooblyJS Core into an application. Method names match the provider classes in `src/*/providers/`. For the short version, see `Usage Guide Concise.md`.
@@ -290,6 +296,42 @@ setInterval(async () => {
 
 Enqueue the first attempt with `attempts: 0`.
 
+#### Reliable Jobs
+
+On the memory and Redis providers, a job can retry with backoff, dead-letter after its last attempt, and be deduplicated by an idempotency key:
+
+```javascript
+const queue = serviceRegistry.queue('redis');
+
+const id = await queue.enqueue('send-email', { to: 'ada@example.com' }, {
+  attempts: 5,
+  backoff: { type: 'exponential', delayMs: 1000 },
+  idempotencyKey: 'welcome-ada',
+  dedupeWindowMs: 86400000
+});
+
+queue.process('send-email', async (job) => {
+  await sendEmail(job.data); // throw to retry; after the last attempt the job is dead-lettered
+});
+
+const job = await queue.getJob(id, 'send-email');
+const counts = await queue.jobCounts('send-email');
+await queue.retryDeadLetters('send-email'); // requeue every dead-lettered job
+```
+
+Other queue providers refuse these options with a 400. Use the plain `enqueue` and `dequeue` calls there.
+
+The same operations are available over HTTP, on the default instance and on named instances (`/services/queueing/api/{instanceName}/queues/...`):
+
+- `POST /services/queueing/api/queues/{queueName}/jobs` with `{ data, options }` returns `201 { data: { id } }`
+- `GET /services/queueing/api/queues/{queueName}/jobs/{jobId}` returns the job, or `404`
+- `POST /services/queueing/api/queues/{queueName}/retry-dead` requeues dead-lettered jobs
+- `GET /services/queueing/api/queues/{queueName}/job-counts` returns counts by state
+
+The queueing dashboard has a Reliable jobs tab that shows the same counts and retries dead letters.
+
+The `working` service uses this on the memory and Redis providers. Each task is enqueued with one attempt. Its failures are recorded by the working service itself, so a failed script is not run again. A task is acknowledged when its worker finishes. If the process dies first, another process redelivers it after the lease runs out, so a script can run twice in that case. Keep scripts safe to repeat.
+
 ### 5. Workflow Service
 
 A workflow is a named list of step scripts. The steps run in order. Each step receives the original input and the outputs of the steps before it. Relative step paths resolve against the working service's activities folder.
@@ -361,7 +403,7 @@ await search.add('article-1', {
 const results = await search.search('getting started');   // array of matching documents
 ```
 
-`add` resolves to `false` when the key already exists. Use `replace` to overwrite a document, `remove` to delete one and `addAll` to index a batch. For remote or semantic search, pick the matching provider (`api`, `solr`, `vector` or `semantic`) and see its provider file for its options.
+`add` resolves to `false` when the key already exists. Use `replace` to overwrite a document, `remove` to delete one and `addAll` to index a batch. For remote or semantic search, pick the matching provider (`api`, `solr`, `vector` or `semantic`) and see its provider file for its options; meaning search is described under the knowledge service below.
 
 Index only the fields you search on. Indexing every field of a large document uses memory with no gain in results.
 
@@ -434,6 +476,20 @@ const owner = await auth.validateApiToken(presentedToken);
 
 Check `src/authservice/providers/authBase.js` for the options `createApiToken` accepts.
 
+#### Roles, Permissions and Token Scopes
+
+Every `/services/*/api` route declares the permission it needs (`src/authservice/config/routePermissions.js`). Roles grant permissions (`src/authservice/modules/permissions.js`): `admin` has everything, `editor` can use filing, searching, dataservice, caching and queueing, and `user` can read filing and searching and manage its own profile.
+
+A personal access token can carry fewer permissions than its owner, but never more. The owner's role is checked when the token is created, so a `user` asking for `filing:write` is refused:
+
+```javascript
+const narrow = await auth.createApiToken('ada@example.com', 'read-only-ci', {
+  scopes: ['filing:read', 'searching:read']
+});
+```
+
+In production, strictAuth is on: an undeclared route is refused and start-up fails.
+
 #### Using Auth in Express Routes
 
 ```javascript
@@ -443,8 +499,12 @@ async function requireUser(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Sign in required' });
 
-  const user = await auth.validateApiToken(token);
-  if (!user) return res.status(401).json({ error: 'Invalid or expired token' });
+  let user;
+  try {
+    user = await auth.validateApiToken(token); // throws when the token is invalid or expired
+  } catch (_err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
 
   req.user = user;
   next();
@@ -480,7 +540,7 @@ Google sign-in uses the `google` provider and the `/services/authservice/api/goo
 #### Using Claude
 
 ```javascript
-const ai = serviceRegistry.aiservice('claude');   // uses ANTHROPIC_API_KEY from the environment
+const ai = serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY });
 
 const answer = await ai.prompt('What is the capital of France?');
 
@@ -493,7 +553,7 @@ const analysis = await ai.prompt(`Summarise this review:\n\n${review}`, {
 #### Using OpenAI
 
 ```javascript
-const ai = serviceRegistry.aiservice('openai');   // reads OPENAI_API_KEY
+const ai = serviceRegistry.aiservice('openai-compatible', { baseUrl: 'https://api.openai.com/v1', apiKey: process.env.OPENAI_API_KEY });
 const reply = await ai.prompt('Write a product description for a laptop', { maxTokens: 200 });
 ```
 
@@ -799,6 +859,153 @@ Index only the fields you search on, and rebuild the index when the document sha
 ---
 
 ## Testing with the Library
+
+### Test Kit (`nooblyjs-core/testing`)
+
+```javascript
+const { createTestRegistry, installMatchers } = require('nooblyjs-core/testing');
+installMatchers();
+
+let t;
+beforeEach(async () => { t = await createTestRegistry({ services: ['caching'] }); });
+afterEach(() => t.cleanup());           // resets the registry and removes its temp directory
+
+it('caches orders', async () => {
+  await t.registry.cache('memory').put('order', { total: 9 });
+  expect(t.events).toHaveEmitted('cache:put:default', { key: 'order' });
+  await t.request('get', '/services/caching/api/settings').expect(200); // sends the test API key
+});
+```
+
+Services: logging, caching, queueing, dataservice, scheduling, searching, measuring, working, workflow, notifying, fetching. Memory providers only; the kit writes under `.temp/tests/data/`. `t.request(method, url)` is supertest against the kit's app with the test API key set, and `t.cleanup()` shuts the registry down, so the analytics listeners are released.
+
+### Provider contracts
+
+`tests/contract/` holds one suite per service that every provider must pass: caching, queueing, filing, dataservice, searching and authservice (AI Service v2 has one under node:test). `npm test` runs the memory, file, local and git providers. Against real backends:
+
+```bash
+docker run -d -p 6379:6379 redis:7-alpine
+RUN_REDIS_TESTS=1 REDIS_URL=redis://127.0.0.1:6379 npm run test:contract
+
+docker run -d -p 27017:27017 mongo:7
+RUN_MONGODB_TESTS=1 MONGODB_URL=mongodb://127.0.0.1:27017 npx jest tests/contract/dataservice.mongodb.test.js
+```
+
+To add a provider in a nooblyjs-core checkout, `npx nooblyjs add provider <service> <name>` writes the provider class (a stub for each method the contract calls) and its contract runner, and prints the `case` to add to the factory. The runner fails until the factory builds the new class, then until every stub is implemented.
+
+The file auth provider loads its files after construction. Await `auth.ready` before the first call when a call may run straight after `authservice('file', ...)`.
+
+## Knowledge Service (ask your docs)
+
+```javascript
+const kb = serviceRegistry.knowledge('default', {
+  dependencies: { aiservice: serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY }) },
+  watch: true       // re-sync after filing create, update and delete events
+});
+await kb.sync({ directory: 'docs' });                  // new and changed Markdown, text, HTML and PDF files only
+const answer = await kb.ask('How do I rotate the settings secret?');
+// { text, confidence: 'cited' | 'low' | 'none', citations: [{ n, path, title, heading, snippet, score }] }
+
+// Streamed: 'sources' first, then 'text' pieces, then 'done' with the full answer
+for await (const event of kb.streamAnswer('What happens after the last retry?')) {
+  if (event.type === 'text') process.stdout.write(event.text);
+}
+```
+
+A file that cannot be read (a scanned PDF with no text, for example) is skipped and listed in `kb.status().skipped`.
+
+To limit who can read a document, give the knowledge base an access rule. A chunk is only returned to, and only cited for, a caller holding one of its roles. `*` means any signed-in caller, and an administrator sees everything:
+
+```javascript
+const kb = serviceRegistry.knowledge('default', {
+  access: (file) => (file.startsWith('hr/') ? ['hr'] : ['*'])
+});
+```
+
+Sync state is saved to `.knowledge-state.json` in the source folder. Pass `restore: true` to restore it on start-up, so the index is back without reading the files again.
+
+Check answer quality with labelled questions, written as YAML:
+
+```yaml
+- question: How do I rotate the settings secret?
+  expectedPath: docs/settings.md
+- question: What happens after the last retry?
+  expectedPath: docs/queues.md
+```
+
+```javascript
+const report = await kb.evaluate(yamlText, { k: 5, answers: true });
+// { cases, recallAtK, meanReciprocalRank, citationAccuracy, results, answerResults }
+await kb.recordFeedback({ question, rating: 'good', answer: answer.text, citations: answer.citations });
+const fromRatings = await kb.evaluate(kb.feedbackCases());   // good ratings as cases
+```
+
+Run the same cases before and after changing chunking, embeddings or the model. Feedback is saved to `.knowledge-feedback.json` next to the sources (capped by `maxFeedback`).
+
+The knowledge service creates its own vector search instance (`instanceName: 'knowledge'`, hash embeddings by default). Pass `embedding: { backend: 'aiservice', aiservice }` through the searching dependency for real embeddings. 
+REST: `POST /services/knowledge/api/ask` and `/retrieve` (body `{ question, k }`), `POST /api/ask/stream` (server-sent events: `sources`, `text`, `done`, or `error`), `GET /api/status` and `/api/sources`, `POST /api/feedback` (read permission); `POST /api/sync`, `GET /api/feedback` and `POST /api/evaluate` (body `cases`, `yaml` or `fromFeedback: true`) need write permission. The editor role has all of these; a plain user has none. The dashboard at `/services/knowledge/` has Ask, Sources and Quality tabs.
+
+Semantic search over any index with a vector provider: `GET /services/searching/api/semantic?query=...&index=...&mode=hybrid|semantic`. The searching dashboard has a Match option (Keywords, hybrid, semantic) for the same search.
+
+Meaning search needs embeddings. With the `aiservice` backend, documents and queries are embedded by the AI service's `embed()`:
+
+```javascript
+const search = serviceRegistry.getService('searching', 'vector', {
+  instanceName: 'meaning',
+  embedding: { backend: 'aiservice', aiservice: serviceRegistry.aiservice('anthropic', { apiKey }), dimensions: 768 }
+});
+```
+
+If embedding fails, the documents stay searchable by keyword. `lastEmbedError` says why, and `search:embed:error` fires with the number of documents that failed.
+
+The vector provider ranks by meaning by default (`mode: 'semantic'`); pass `mode: 'keyword'` or `'hybrid'` per search. Semantic hits appear once the background queue has embedded new documents; `await search.flushEmbeddings(index)` waits for it.
+
+Measure ranking quality with labelled queries: `POST /services/searching/api/evaluate` with `{ cases: [{ query, expectedId }], index, mode, k }` returns `recallAtK`, `meanReciprocalRank` and the rank of each expected document.
+
+## Model Context Protocol (MCP)
+
+Enable the endpoint and let coding agents inspect the running app:
+
+```javascript
+serviceRegistry.initialize(app, eventEmitter, {
+  apiKeys: ['...'],
+  mcp: { enabled: true, allowWrite: false }   // allowWrite adds the write tools (admin only)
+});
+```
+
+`POST /services/mcp` takes JSON-RPC 2.0 messages. Authenticate with an API key or a personal access token. Each tool checks the permission its REST route needs, so a user without `queueing:read` cannot read queue stats through MCP. While the login gate is on (`servicesAuth.requireLogin`, the default), a personal access token is accepted only when an admin owns it; create it with `scopes` to keep the agent read-only:
+
+```javascript
+const { token } = await auth.createApiToken('ops@example.com', 'claude-code', { scopes: ['workflow:read', 'logging:read'] });
+```
+
+Tool results come back as text and as `structuredContent`; a list is wrapped as `{ result: [...] }`, because MCP requires an object there.
+
+From Claude Code, use the stdio bridge:
+
+```bash
+claude mcp add nooblyjs -- npx nooblyjs mcp --url http://localhost:9000
+# set NOOBLYJS_TOKEN (a personal access token) or NOOBLYJS_API_KEY in the environment
+```
+
+Read tools: `logs.recent`, `queue.stats`, `data.count`, `data.find`, `search.query`, `workflow.listRuns`, `workflow.getRun`, `scheduling.listSchedules`, `monitoring.snapshot`. Resources: `nooblyjs://services`, `nooblyjs://openapi`. Prompts: `diagnose-failed-run`, `explain-service-config`.
+
+## Command-Line Tool (`nooblyjs`)
+
+```bash
+npx nooblyjs create my-app --yes      # minimal API app with a test
+npx nooblyjs create my-dash --template dashboard --yes   # service dashboards behind sign-in
+npx nooblyjs create my-ai --template ai --yes            # ask questions of ./docs, with citations
+npx nooblyjs add endpoint GET /hello/:name   # route, test, and the app.js registration line
+npx nooblyjs add service audit-trail         # service class with destroy(), and its test
+npx nooblyjs doctor                   # environment checks; exits 1 on failure (use in CI)
+npx nooblyjs routes --url http://localhost:9000
+npx nooblyjs openapi --url http://localhost:9000 --out openapi.json
+npx nooblyjs openapi --url http://localhost:9000 --client ts --out src/api-client.ts
+npx nooblyjs keys generate --length 48
+```
+
+`doctor` checks that `REDIS_URL`, `SESSION_REDIS_URL`, `MONGODB_URL` (every replica-set host, or the SRV targets of `mongodb+srv`) and S3 (`S3_ENDPOINT`, or the AWS endpoint for `AWS_REGION` when `S3_BUCKET` is set) accept connections, when set; it never prints credentials. In a nooblyjs-core checkout, `npx nooblyjs add provider <service> <name>` scaffolds a provider and its contract test. `add` never overwrites a file. `routes` and `openapi` read `NOOBLYJS_API_KEY` or `NOOBLYJS_TOKEN` from the environment. The merged document is also served at `/services/api/openapi.json`.
 
 ### Unit Testing Services
 

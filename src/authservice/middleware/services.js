@@ -8,6 +8,22 @@
  */
 
 const { matchesAnyKey } = require('./apiKey');
+const { normalizeKeyEntries, findKeyEntry } = require('../modules/permissions');
+
+/** Prefix of personal access tokens (see authBase TOKEN_PREFIX). */
+const USER_TOKEN_PREFIX = 'dtk_';
+
+/**
+ * Whether a path under /services is an API path (a service's /api routes, the
+ * registry's /api routes or the MCP endpoint), as opposed to a dashboard page.
+ * @param {string} servicesPath Path relative to the /services mount
+ * @return {boolean}
+ */
+function isApiPath(servicesPath) {
+  return /^\/[A-Za-z0-9_-]+\/api(\/|$)/.test(servicesPath)
+    || /^\/api(\/|$)/.test(servicesPath)
+    || servicesPath === '/mcp';
+}
 
 /**
  * Creates authentication middleware for protecting the services page.
@@ -28,7 +44,7 @@ function createServicesAuthMiddleware(serviceRegistry) {
       // STEP 2: Special handling for login/register pages
       if (req.path.includes('/login') || req.path.includes('/register')) {
         if (req.path.includes('/login')) {
-          const token = req.query.authToken || req.headers.authorization?.substring(7);
+          const token = req.headers.authorization?.substring(7);
 
           if (token) {
             try {
@@ -54,6 +70,11 @@ function createServicesAuthMiddleware(serviceRegistry) {
         if (!userRoles.includes('admin')) {
           return redirectToInvalid(req, res);
         }
+        // Defence in depth on top of SameSite=strict: a cookie-authenticated
+        // write must come from this origin (feature 23).
+        if (!isSameOriginWrite(req)) {
+          return res.status(403).json({ success: false, error: 'Cross-origin request refused', code: 'CROSS_ORIGIN' });
+        }
         // User is authenticated via Passport session and has admin role
         return next();
       }
@@ -66,13 +87,33 @@ function createServicesAuthMiddleware(serviceRegistry) {
       // general keys for backward compatibility. Comparison is constant-time.
       const apiKey = extractApiKey(req);
       if (apiKey) {
-        const adminKeys = getConfiguredAdminApiKeys(serviceRegistry);
-        const portalKeys = adminKeys.length > 0
-          ? adminKeys
-          : getConfiguredApiKeys(serviceRegistry);
-        if (matchesAnyKey(apiKey, portalKeys)) {
+        // M-1 (feature 19): in production, general keys never open the portal.
+        // Only an admin key does, and it must be unscoped or scoped '*'.
+        const adminEntries = normalizeKeyEntries(getConfiguredAdminApiKeys(serviceRegistry));
+        const production = process.env.NODE_ENV === 'production';
+        const portalEntries = adminEntries.length > 0
+          ? adminEntries
+          : (production ? [] : normalizeKeyEntries(getConfiguredApiKeys(serviceRegistry)));
+        const entry = findKeyEntry(apiKey, portalEntries);
+        const portalScope = entry && (entry.scopes === null || entry.scopes.includes('*'));
+        if (portalScope) {
           req.apiKey = apiKey;
+          req.apiKeyScopes = entry.scopes;
           return next();
+        }
+
+        // Data-plane keys reach the API paths so the programmatic clients of
+        // /services/*/api work. The dashboard pages still need an admin key.
+        // The permission gate applies the key's scopes to each route. In
+        // production a general key must be scoped: an unscoped key (a plain
+        // string) would have full API access.
+        if (isApiPath(req.path)) {
+          const dataEntry = findKeyEntry(apiKey, normalizeKeyEntries(getConfiguredApiKeys(serviceRegistry)));
+          if (dataEntry && !(production && dataEntry.scopes === null)) {
+            req.apiKey = apiKey;
+            req.apiKeyScopes = dataEntry.scopes;
+            return next();
+          }
         }
       }
 
@@ -84,12 +125,31 @@ function createServicesAuthMiddleware(serviceRegistry) {
         token = authHeader.substring(7);
       }
 
-      if (!token && req.query.authToken) {
-        token = req.query.authToken;
-      }
-
       if (!token && req.session && req.session.authToken) {
         token = req.session.authToken;
+      }
+
+      // STEP 4b: A personal access token (dtk_) in the Authorization header
+      // opens the API paths (never the dashboard pages) when its owner is an
+      // admin, the same rule as for a session token. req.user is not set, so
+      // the permission gate and MCP's per-tool checks still apply the token's
+      // scopes (feature 19); a token scoped to workflow:read stays read-only.
+      if (token && token.startsWith(USER_TOKEN_PREFIX) && authHeader?.startsWith('Bearer ') && isApiPath(req.path)) {
+        let info = null;
+        try {
+          const auth = serviceRegistry.getAuthProviderForTokens_?.() || serviceRegistry.authservice();
+          info = await auth.validateApiToken(token);
+        } catch (error) {
+          info = null;
+        }
+        if (info && info.email) {
+          const tokenRoles = Array.isArray(info.roles) ? info.roles : [];
+          if (!tokenRoles.includes('admin')) {
+            return redirectToInvalid(req, res);
+          }
+          return next();
+        }
+        return redirectToLogin(req, res);
       }
 
       // STEP 5: Validate token and check admin role
@@ -134,42 +194,12 @@ function createServicesAuthMiddleware(serviceRegistry) {
           <html>
           <head>
             <title>Authenticating...</title>
-            <style>
-              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-              .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
+            <meta http-equiv="refresh" content="0;url=/services/authservice/views/login.html?returnUrl=${encodeURIComponent(req.path)}">
+            <link rel="stylesheet" href="/services/css/services-checking.css">
           </head>
           <body>
             <h2>Checking authentication...</h2>
             <div class="spinner"></div>
-            <script>
-              const authToken = localStorage.getItem('authToken');
-              if (!authToken) {
-                window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
-              } else {
-                fetch('/services/authservice/api/validate', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ token: authToken })
-                })
-                .then(response => response.json())
-                .then(result => {
-                  if (result.success) {
-                    window.location.href = window.location.pathname + '?authToken=' + authToken;
-                  } else {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('currentUser');
-                    window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
-                  }
-                })
-                .catch(() => {
-                  localStorage.removeItem('authToken');
-                  localStorage.removeItem('currentUser');
-                  window.location.href = '/services/authservice/views/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
-                });
-              }
-            </script>
           </body>
           </html>
         `);
@@ -386,6 +416,25 @@ function redirectToLogin(req, res) {
   res.redirect(`/services/authservice/views/login.html?returnUrl=${returnUrl}`);
 }
 
+/**
+ * True when a state-changing request carries no Origin, or an Origin whose host
+ * matches the request host (honouring a trusted proxy's X-Forwarded-Host).
+ * @param {import('express').Request} req - Express request
+ * @return {boolean} Whether the request may proceed
+ */
+function isSameOriginWrite(req) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return true;
+  const origin = req.get('origin');
+  if (!origin) return true;
+  try {
+    const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim();
+    return new URL(origin).host === host;
+  } catch (_err) {
+    return false;
+  }
+}
+
 module.exports = {
-  createServicesAuthMiddleware
+  createServicesAuthMiddleware,
+  isPathPublic
 };

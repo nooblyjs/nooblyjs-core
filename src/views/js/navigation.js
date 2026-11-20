@@ -69,7 +69,8 @@ const NooblyJSNavigation = {
 
         // Advanced Application Services
         { name: 'authservice', icon: 'bi-lock-fill', title: 'Authentication', path: 'authservice', classification: 'advanced' },
-        { name: 'ai', icon: 'bi-robot', title: 'AI Service', path: 'ai', classification: 'advanced' }
+        { name: 'ai', icon: 'bi-robot', title: 'AI Service', path: 'ai', classification: 'advanced' },
+        { name: 'knowledge', icon: 'bi-book', title: 'Knowledge', path: 'knowledge', classification: 'advanced' }
     ],
 
     /**
@@ -240,11 +241,11 @@ const NooblyJSNavigation = {
 
             navHTML += `
                 <div class="core-sidebar-section">
-                    <div class="core-sidebar-title" role="button" style="cursor: pointer;" onclick="NooblyJSNavigation.toggleClassificationNav('${classification}')">
+                    <div class="inline-8410c989 core-sidebar-title" role="button" data-onclick="NooblyJSNavigation.toggleClassificationNav" data-onclick-args="${nooblyArgs(classification)}">
                         <span><i class="bi ${classConfig.icon}"></i> ${classConfig.label}</span>
                         <span class="toggle" id="toggle-icon-${classification}">▼</span>
                     </div>
-                    <div id="nav-services-${classification}" style="display: block;">
+                    <div id="nav-services-${classification}" class="inline-048b9a2b">
             `;
 
             services.forEach(service => {
@@ -284,7 +285,7 @@ const NooblyJSNavigation = {
      *
      * @example
      * // Used as onclick handler in navigation
-     * onclick="NooblyJSNavigation.toggleClassificationNav('business')"
+     * data-onclick="NooblyJSNavigation.toggleClassificationNav" data-onclick-args="[&quot;business&quot;]"
      */
     toggleClassificationNav(classification) {
         const section = document.getElementById(`nav-services-${classification}`);

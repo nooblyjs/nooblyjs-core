@@ -1,4 +1,5 @@
 ---
+type: Skill
 name: add-endpoint
 description: Add or change a REST endpoint on a nooblyjs-core service — route in routes/index.js (default and :instanceName variants), auth, safe errors, Swagger docs.json, .http example and a test. Use whenever an API route under /services/{service}/api is added or modified.
 argument-hint: "<service> <METHOD> <path> [purpose]"
@@ -10,6 +11,7 @@ Endpoint: $ARGUMENTS
 
 ## Route (`src/{service}/routes/index.js`)
 
+- Declare the route's permission in `src/authservice/config/routePermissions.js`: `'METHOD /services/{service}/api/...': '{service}:read'` (or `:write`, `settings:manage`, or `public` for an unauthenticated route). The `/:instanceName` variant shares the line. In production (strictAuth) an undeclared route fails start-up, and `tests/unit/security/generatedAuthMatrix.test.js` checks it.
 - Implement the behaviour in the provider first; the route should only parse input, call the provider, and shape the response.
 - Register under `/services/{service}/api/...`. The service's `app.use('/services/{service}/api', requireApiAuth)` guard already protects it — don't add endpoints outside that prefix without an auth decision. Paths ending in `/status` bypass the services login guard, so never put sensitive data behind such a path.
 - If the service supports named instances, register both the default path and `/services/{service}/api/:instanceName/...`, resolving the instance with `getServiceInstance('{service}', req.params.instanceName, provider, options, providerType)` (`src/appservice/utils/routeUtils`). Register specific paths before parameterised ones so Express doesn't shadow them.

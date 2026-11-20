@@ -1,7 +1,9 @@
 /**
  * @fileoverview AI Service Factory
  * Factory module for creating AI service instances with multiple provider support.
- * Supports claude, openai, openai-kv, ollama, gemini, api.
+ * Shared-module providers: anthropic, openai-compatible, bedrock, vertex, azure, mock.
+ * Also: openai-kv and tensorflow. The 1.x names claude, openai, chatgpt, ollama
+ * and gemini were removed in 2.0.0 (see the migration notes in the release).
  * @author NooblyJS Team
  * @version 1.0.14
  * @since 1.0.0
@@ -11,11 +13,8 @@
 'use strict';
 
 // Providers
-const AIClaude = require('./provider/aiclaude');
-const AIOpenAI = require('./provider/aiopenai');
+const AICommon = require('./provider/aiCommon');
 const AIOpenAIKv = require('./provider/aiopenaikv');
-const AIOllama = require('./provider/aiollama');
-const AIGemini = require('./provider/gemini');
 const AITensorFlow = require('./provider/aitensorflow');
 
 // Analytics Object
@@ -28,9 +27,9 @@ const Views = require('./views');
 /**
  * Creates an AI service instance with the specified provider and dependency injection.
  * Automatically configures routes and views for the AI service.
- * @param {string} type - The AI provider type ('claude', 'openai', 'openai-kv', 'ollama', 'gemini', 'default')
+ * @param {string} type - The AI provider type ('anthropic', 'openai-compatible', 'bedrock', 'vertex', 'azure', 'mock', 'openai-kv', 'tensorflow')
  * @param {Object} options - Provider-specific configuration options
- * @param {string} [options.apiKey] - API key for the AI provider (required for claude/chatgpt)
+ * @param {string} [options.apiKey] - API key for the AI provider (anthropic, openai-compatible, ...)
  * @param {string} [options.model] - Model identifier (e.g., 'claude-3-sonnet', 'gpt-4', 'llama2')
  * @param {Object} options.dependencies - Injected service dependencies
  * @param {Object} options.dependencies.logging - Logging service instance
@@ -38,12 +37,12 @@ const Views = require('./views');
  * @param {Object} options.dependencies.workflow - Workflow service instance
  * @param {Object} options.dependencies.queueing - Queueing service instance
  * @param {EventEmitter} eventEmitter - Global event emitter for inter-service communication
- * @return {AIClaude|AIOpenAI|AIOllama|AIGemini|AIApi} AI service instance with specified provider
+ * @return {AICommon|AIOpenAIKv|AITensorFlow} AI service instance with specified provider
  * @throws {Error} When unsupported AI provider type is provided
  * @example
- * const aiService = createAIService('claude', {
+ * const aiService = createAIService('anthropic', {
  *   apiKey: process.env.ANTHROPIC_API_KEY,
- *   model: 'claude-3-sonnet-20240229',
+ *   model: 'claude-sonnet-5-5',
  *   dependencies: { logging, caching, workflow, queueing }
  * }, eventEmitter);
  *
@@ -75,29 +74,26 @@ function createAIService(type, options, eventEmitter) {
   // Create AI service instance based on provider type
   let aiservice;
 
-  // Create AI service instance based on provider type
-  switch (type) {
-    case 'claude':
-      aiservice = new AIClaude(providerOptions, eventEmitter);
-      break;
-    case 'openai':
-    case 'chatgpt':
-      aiservice = new AIOpenAI(providerOptions, eventEmitter);
-      break;
-    case 'openai-kv':
-      aiservice = new AIOpenAIKv(providerOptions, eventEmitter);
-      break;
-    case 'ollama':
-      aiservice = new AIOllama(providerOptions, eventEmitter);
-      break;
-    case 'gemini':
-      aiservice = new AIGemini(providerOptions, eventEmitter);
-      break;
-    case 'tensorflow':
-      aiservice = new AITensorFlow(providerOptions, eventEmitter);
-      break;
-    default:
-      throw new Error(`Unsupported AI provider type: ${type}`);
+  // Shared AI module (feature 02): one API for every model host.
+  const SHARED_TYPES = ['anthropic', 'openai-compatible', 'bedrock', 'vertex', 'azure', 'mock'];
+  const REMOVED_TYPES = {
+    claude: 'Use "anthropic".',
+    openai: 'Use "openai-compatible" with a baseUrl such as https://api.openai.com/v1.',
+    chatgpt: 'Use "openai-compatible" with a baseUrl such as https://api.openai.com/v1.',
+    ollama: 'Use "openai-compatible" with a baseUrl such as http://localhost:11434/v1.',
+    gemini: 'Use "openai-compatible" with the Gemini OpenAI-compatible baseUrl.'
+  };
+
+  if (SHARED_TYPES.includes(type)) {
+    aiservice = new AICommon(providerOptions, eventEmitter, { providerId: type });
+  } else if (type === 'openai-kv') {
+    aiservice = new AIOpenAIKv(providerOptions, eventEmitter);
+  } else if (type === 'tensorflow') {
+    aiservice = new AITensorFlow(providerOptions, eventEmitter);
+  } else if (REMOVED_TYPES[type]) {
+    throw new Error(`AI provider "${type}" was removed in 2.0.0. ${REMOVED_TYPES[type]}`);
+  } else {
+    throw new Error(`Unsupported AI provider type: ${type}`);
   }
 
   // Inject dependencies into AI service

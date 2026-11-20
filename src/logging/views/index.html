@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/services/css/styles.css">
     <link rel="stylesheet" href="/services/css/core.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/services/js/actions.js"></script>
 </head>
 
 <body>
@@ -54,7 +55,7 @@
                         <select id="instanceSelector" class="form-select form-select-sm">
                             <option value="default">default</option>
                         </select>
-                        <button id="refreshInstanceBtn" class="btn btn-secondary" style="height: 32px; width: 32px; padding: 0; justify-content: center;" title="Refresh instances list">
+                        <button id="refreshInstanceBtn" class="inline-6f775779 btn btn-secondary" title="Refresh instances list">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                 </div>
@@ -63,12 +64,12 @@
             <!-- CONTENT WRAPPER -->
             <div class="core-page-content">
                 <!-- ALERTS -->
-                <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert" style="margin-bottom: 0;">
+                <div class="inline-648149ce alert alert-success alert-dismissible fade" id="successAlert" role="alert">
                     <strong>Success!</strong> <span id="successMessage"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <div class="alert alert-danger alert-dismissible fade" id="errorAlert" role="alert" style="margin-bottom: 0;">
+                <div class="inline-648149ce alert alert-danger alert-dismissible fade" id="errorAlert" role="alert">
                     <strong>Error!</strong> <span id="errorMessage"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -110,7 +111,7 @@
                                     <p class="card-subtitle">Visual breakdown of log entries by level</p>
                                 </div>
                                 <div class="text-end">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="refreshDashboard()">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-onclick="refreshDashboard" data-onclick-args="[]">
                                         <i class="bi bi-arrow-clockwise"></i> Refresh All
                                     </button>
                                 </div>
@@ -119,7 +120,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div style="position: relative; height: 300px;">
+                                    <div class="inline-619533e7">
                                         <canvas id="logStatsChart"></canvas>
                                     </div>
                                 </div>
@@ -131,9 +132,9 @@
                                                 <span><span class="badge core-loglevel-info">INFO</span></span>
                                                 <strong id="statInfoCount">0</strong>
                                             </div>
-                                            <div class="progress" style="height: 20px;">
-                                                <div id="statInfoBar" class="progress-bar core-loglevel-info" role="progressbar"
-                                                    style="width: 0%">
+                                            <div class="inline-36f18c59 progress">
+                                                <div id="statInfoBar" class="inline-034359d7 progress-bar core-loglevel-info" role="progressbar"
+                                                   >
                                                     <span id="statInfoPercent">0%</span>
                                                 </div>
                                             </div>
@@ -143,9 +144,9 @@
                                                 <span><span class="badge core-loglevel-warn">WARN</span></span>
                                                 <strong id="statWarnCount">0</strong>
                                             </div>
-                                            <div class="progress" style="height: 20px;">
-                                                <div id="statWarnBar" class="progress-bar core-loglevel-warn" role="progressbar"
-                                                    style="width: 0%">
+                                            <div class="inline-36f18c59 progress">
+                                                <div id="statWarnBar" class="inline-034359d7 progress-bar core-loglevel-warn" role="progressbar"
+                                                   >
                                                     <span id="statWarnPercent">0%</span>
                                                 </div>
                                             </div>
@@ -155,9 +156,9 @@
                                                 <span><span class="badge core-loglevel-error">ERROR</span></span>
                                                 <strong id="statErrorCount">0</strong>
                                             </div>
-                                            <div class="progress" style="height: 20px;">
-                                                <div id="statErrorBar" class="progress-bar core-loglevel-error" role="progressbar"
-                                                    style="width: 0%">
+                                            <div class="inline-36f18c59 progress">
+                                                <div id="statErrorBar" class="inline-034359d7 progress-bar core-loglevel-error" role="progressbar"
+                                                   >
                                                     <span id="statErrorPercent">0%</span>
                                                 </div>
                                             </div>
@@ -167,9 +168,9 @@
                                                 <span><span class="badge core-loglevel-log">LOG</span></span>
                                                 <strong id="statLogCount">0</strong>
                                             </div>
-                                            <div class="progress" style="height: 20px;">
-                                                <div id="statLogBar" class="progress-bar core-loglevel-log"
-                                                    role="progressbar" style="width: 0%">
+                                            <div class="inline-36f18c59 progress">
+                                                <div id="statLogBar" class="inline-034359d7 progress-bar core-loglevel-log"
+                                                    role="progressbar">
                                                     <span id="statLogPercent">0%</span>
                                                 </div>
                                             </div>
@@ -196,7 +197,7 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div style="position: relative; height: 400px;">
+                            <div class="inline-aa94e695">
                                 <canvas id="logTimelineChart"></canvas>
                             </div>
                         </div>
@@ -211,8 +212,8 @@
                                     <p class="card-subtitle">Recent log entries (last 1000 logs)</p>
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <select class="form-select sm" id="logLevelFilter"
-                                        style="width: 150px; height: 32px; padding: 0 8px; font-size: 12px;">
+                                    <select class="inline-629b3b8c form-select sm" id="logLevelFilter"
+                                       >
                                         <option value="">All Levels</option>
                                         <option value="INFO">INFO</option>
                                         <option value="WARN">WARN</option>
@@ -227,9 +228,9 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th style="width: 100px;">Level</th>
+                                            <th class="inline-807e5119">Level</th>
                                             <th>Message</th>
-                                            <th style="width: 200px;">Date Created</th>
+                                            <th class="inline-ec060bac">Date Created</th>
                                         </tr>
                                     </thead>
                                     <tbody id="logsTableBody">
@@ -284,18 +285,18 @@
                                     <label class="form-label" for="logMessage">Metadata (JSON)</label>
                                     <textarea id="logMessage" class="form-control"
                                         placeholder='{"provider": "redis", "duration": 5000}'></textarea>
-                                    <div id="logValidation" class="core-validation-message" style="display: none;"></div>
+                                    <div id="logValidation" class="inline-f2892a2e core-validation-message"></div>
                                     <div class="form-text">Optional JSON object with additional context (leave empty for no metadata)</div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="submit" class="btn btn-primary">Submit Log</button>
                                     <button type="button" class="btn btn-secondary"
-                                        onclick="formatJSON('logMessage')">Format JSON</button>
+                                        data-onclick="formatJSON" data-onclick-args="[&quot;logMessage&quot;]">Format JSON</button>
                                     <button type="button" class="btn btn-secondary"
-                                        onclick="loadExample('logMessage')">Load Example</button>
+                                        data-onclick="loadExample" data-onclick-args="[&quot;logMessage&quot;]">Load Example</button>
                                 </div>
                             </form>
-                            <div id="logResponse" class="core-response-container" style="display: none;">
+                            <div id="logResponse" class="inline-f2892a2e core-response-container">
                                 <div class="core-response-title">Response:</div>
                                 <div id="logResponseContent" class="core-response-content"></div>
                             </div>
@@ -312,9 +313,9 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+                                <button type="button" class="btn btn-secondary" data-onclick="checkStatus" data-onclick-args="[]">Check Status</button>
                             </div>
-                            <div id="statusResponse" class="core-response-container" style="display: none;">
+                            <div id="statusResponse" class="inline-f2892a2e core-response-container">
                                 <div class="core-response-title">Service Status:</div>
                                 <div id="statusResponseContent" class="core-response-content"></div>
                             </div>
@@ -338,7 +339,7 @@
                 <!-- End Data Tab -->
 
                 <!-- Settings Tab -->
-                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" style="min-height:1000px">
+                <div class="inline-3ea6f166 tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
 
                     <!-- Settings Card -->
                     <div class="card">
@@ -349,17 +350,17 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="settingsInfo" class="alert alert-info" style="margin-bottom: 16px;"></div>
+                            <div id="settingsInfo" class="inline-045aac89 alert alert-info"></div>
                             <form id="settingsForm">
                                 <div id="settingsFormFields"></div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="submit" class="btn btn-primary">Save Settings</button>
                                     <button type="button" class="btn btn-secondary"
-                                        onclick="loadSettings()">Reload</button>
+                                        data-onclick="loadSettings" data-onclick-args="[]">Reload</button>
                                 </div>
                             </form>
-                            <div id="settingsSaveResponse" class="core-response-container"
-                                style="display: none; margin-top: 1rem;">
+                            <div id="settingsSaveResponse" class="inline-5a89b13a core-response-container"
+                               >
                                 <div class="core-response-title">Save Response:</div>
                                 <div id="settingsSaveResponseContent" class="core-response-content"></div>
                             </div>
@@ -384,163 +385,7 @@
     <script src="/services/logging/scripts"></script>
 
     <!-- Shared Navigation & Swagger -->
-    <script>
-
-        // Initialize header user profile
-        function initializeHeaderUserProfile() {
-            const currentUser = localStorage.getItem('currentUser');
-            const headerUserAvatar = document.getElementById('headerUserAvatar');
-            const headerUserLabel = document.getElementById('headerUserLabel');
-            const headerUserName = document.getElementById('headerUserName');
-            const headerLogoutBtn = document.getElementById('headerLogoutBtn');
-
-            if (currentUser) {
-                try {
-                    const user = JSON.parse(currentUser);
-                    const userName = user.fullName || user.email || 'User';
-                    const initials = userName.substring(0, 1).toUpperCase();
-
-                    if (headerUserAvatar) headerUserAvatar.textContent = initials;
-                    if (headerUserLabel) headerUserLabel.textContent = 'User';
-                    if (headerUserName) headerUserName.textContent = userName;
-                } catch (e) {
-                    console.error('Error parsing user data:', e);
-                }
-            }
-
-            // Setup logout functionality
-            if (headerLogoutBtn) {
-                headerLogoutBtn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const token = localStorage.getItem('authToken');
-                    if (token) {
-                        try {
-                            await fetch('/services/authservice/api/logout', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ token })
-                            });
-                        } catch (error) {
-                            console.error('Logout error:', error);
-                        }
-                    }
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('currentUser');
-                    window.location.href = '/services/authservice/views/login.html?returnUrl=%2Fapplications%2Fdatasources';
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeHeaderUserProfile();
-            if (typeof NooblyJSNavigation !== 'undefined') {
-                NooblyJSNavigation.renderNavigation('navigation-sidebar', 'logging');
-            }
-        });
-
-        // Load Swagger spec from external docs.json file
-        async function initializeSwaggerUI() {
-            try {
-                // Fetch the Swagger specification from the external docs.json file
-                const response = await fetch('/services/logging/api/swagger/docs.json');
-                if (!response.ok) {
-                    throw new Error(`Failed to load Swagger docs: ${response.status}`);
-                }
-                const spec = await response.json();
-
-                // Initialize Swagger UI with the loaded spec
-                initializeSwagger(spec);
-            } catch (error) {
-                console.error('Error loading Swagger documentation:', error);
-                document.getElementById('swagger-ui').innerHTML = `
-                    <div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;">
-                        <strong>Error loading API documentation</strong><br>
-                        Failed to load Swagger specification from docs.json<br>
-                        Error: ${error.message}<br>
-                        <button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button>
-                    </div>
-                `;
-            }
-        }
-
-        // Initialize Swagger UI with the provided spec
-        function initializeSwagger(spec) {
-            // Ensure Swagger UI dependencies are loaded
-            if (typeof SwaggerUIBundle === 'undefined') {
-                console.error('SwaggerUIBundle not loaded');
-                document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px; text-align: center;">Swagger UI failed to load. Please check your internet connection and refresh the page.</div>';
-                return;
-            }
-
-            try {
-                const container = document.getElementById('swagger-ui');
-                container.innerHTML = '';
-
-                const ui = SwaggerUIBundle({
-                    spec: spec,
-                    dom_id: '#swagger-ui',
-                    deepLinking: false,
-                    presets: [
-                        SwaggerUIBundle.presets.apis
-                    ],
-                    plugins: [
-                        SwaggerUIBundle.plugins.DownloadUrl
-                    ],
-                    layout: "BaseLayout",
-                    validatorUrl: null,
-                    tryItOutEnabled: true,
-                    displayOperationId: false,
-                    showExtensions: false,
-                    showCommonExtensions: false,
-                    docExpansion: 'list',
-                    defaultModelsExpandDepth: 1,
-                    defaultModelExpandDepth: 1,
-                    filter: false,
-                    showRequestHeaders: false,
-                    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-                    onComplete: function() {
-                        console.log('Swagger UI initialized successfully');
-                        const topbar = document.querySelector('#swagger-ui .topbar');
-                        if (topbar) {
-                            topbar.style.display = 'none';
-                        }
-                        const swaggerContainer = document.querySelector('#swagger-ui');
-                        if (swaggerContainer) {
-                            swaggerContainer.style.fontFamily = 'inherit';
-                        }
-                    },
-                    onFailure: function(error) {
-                        console.error('Swagger UI initialization failed:', error);
-                        document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px;">Failed to initialize API documentation: ' + error.message + '</div>';
-                    }
-                });
-
-                window.swaggerUI = ui;
-
-                setTimeout(function() {
-                    const swaggerContent = document.querySelector('#swagger-ui .swagger-ui');
-                    if (!swaggerContent) {
-                        console.warn('Swagger UI may not have initialized properly');
-                        document.getElementById('swagger-ui').innerHTML = '<div style="color: orange; padding: 20px;">API documentation is loading... If this message persists, please refresh the page.</div>';
-                    }
-                }, 3000);
-
-            } catch (error) {
-                console.error('Critical error initializing Swagger UI:', error);
-                document.getElementById('swagger-ui').innerHTML = '<div style="color: red; padding: 20px; border: 1px solid red; border-radius: 4px;"><strong>Error loading API documentation</strong><br>Error: ' + error.message + '<br><button onclick="location.reload()" style="margin-top: 10px; padding: 5px 10px;">Reload Page</button></div>';
-            }
-        }
-
-        // Initialize: Load analytics and Swagger docs on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeSwaggerUI();
-
-            // Load data analytics when tab is shown
-            document.getElementById('data-tab').addEventListener('shown.bs.tab', function() {
-                // Data analytics loading handled by script.js
-            });
-        });
-    </script>
+    <script src="js/index.page.js"></script>
     <script src="script.js"></script>
 
 </body>

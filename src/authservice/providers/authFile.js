@@ -47,9 +47,14 @@ class AuthFile extends AuthBase {
     this.usersFile_ = path.join(this.settings.datadir, 'users.json');
     this.rolesFile_ = path.join(this.settings.datadir, 'roles.json');
     this.sessionsFile_ = path.join(this.settings.datadir, 'sessions.json');
+    this.invitationsFile_ = path.join(this.settings.datadir, 'invitations.json');
 
-    // Initialize file storage
-    this.initializeFileStorage_().catch(error => {
+    // Initialize file storage. `ready` settles once the files are loaded (and
+    // the default admin exists); await it before the first call when a caller
+    // may run straight after construction. It never rejects: a failure is
+    // reported on the 'auth:file-storage-error' event.
+    /** @type {Promise<void>} */
+    this.ready = this.initializeFileStorage_().catch(error => {
       if (this.eventEmitter_) {
         this.eventEmitter_.emit('auth:file-storage-error', {
           error: error.message
@@ -141,6 +146,7 @@ class AuthFile extends AuthBase {
       await this.loadUsersFromFile_();
       await this.loadRolesFromFile_();
       await this.loadSessionsFromFile_();
+      await this.loadInvitationsFromFile_();
 
       // Create default admin user if no users exist
       if (this.users_.size === 0) {
@@ -328,6 +334,45 @@ class AuthFile extends AuthBase {
   }
 
   /**
+   * Loads invitations from file so pending and approved codes survive a restart.
+   * Dates are revived from their JSON strings, because expiry checks compare them.
+   * @private
+   * @return {Promise<void>}
+   */
+  async loadInvitationsFromFile_() {
+    let raw;
+    try {
+      raw = await fs.readFile(this.invitationsFile_, 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') return;
+      throw error;
+    }
+    const records = JSON.parse(raw || '[]');
+    this.invitations_.clear();
+    for (const record of records) {
+      for (const field of ['createdAt', 'approvedAt', 'usedAt', 'expiresAt']) {
+        if (record[field]) record[field] = new Date(record[field]);
+      }
+      record.redeeming = false;
+      this.invitations_.set(record.id, record);
+    }
+  }
+
+  /**
+   * Writes invitations to file atomically (temporary file, then rename).
+   * Hashed codes only; plain codes are never stored.
+   * @protected
+   * @param {Array<Object>} records Invitation records
+   * @return {Promise<void>}
+   */
+  async saveInvitations_(records) {
+    await fs.mkdir(this.settings.datadir, { recursive: true });
+    const tmp = `${this.invitationsFile_}.${process.pid}.${Date.now()}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(records, null, 2), { encoding: 'utf8', mode: 0o600 });
+    await fs.rename(tmp, this.invitationsFile_);
+  }
+
+  /**
    * Loads roles from file.
    * @private
    */
@@ -340,9 +385,11 @@ class AuthFile extends AuthBase {
       if (error.code !== 'ENOENT') {
         throw error;
       }
-      // File doesn't exist, initialize with default roles
+      // File doesn't exist, initialize with the same default roles as the
+      // other providers (authBase), including 'editor'.
       this.roles_ = new Map();
       this.roles_.set('admin', []);
+      this.roles_.set('editor', []);
       this.roles_.set('user', []);
       this.roles_.set('guest', []);
       await this.saveRolesToFile_();
@@ -414,6 +461,7 @@ class AuthFile extends AuthBase {
   async createUser(userData) {
     const user = await super.createUser(userData);
     await this.saveUsersToFile_();
+    await this.saveRolesToFile_();
     return user;
   }
 
@@ -427,6 +475,8 @@ class AuthFile extends AuthBase {
   async updateUser(email, updateData) {
     const user = await super.updateUser(email, updateData);
     await this.saveUsersToFile_();
+    await this.saveRolesToFile_();
+    await this.saveSessionsToFile_();
     return user;
   }
 
@@ -439,6 +489,61 @@ class AuthFile extends AuthBase {
   async deleteUser(email) {
     await super.deleteUser(email);
     await this.saveUsersToFile_();
+    await this.saveRolesToFile_();
+    await this.saveSessionsToFile_();
+  }
+
+  /**
+   * Assigns a role and persists the user, the role list and the ended sessions.
+   * @param {string} email User email address.
+   * @param {string} role Role name.
+   * @return {Promise<void>}
+   * @override
+   */
+  async addUserToRole(email, role) {
+    await super.addUserToRole(email, role);
+    await this.saveUsersToFile_();
+    await this.saveRolesToFile_();
+    await this.saveSessionsToFile_();
+  }
+
+  /**
+   * Creates a role and persists the role list.
+   * @param {string} roleName Role name.
+   * @return {Promise<string>} The role name.
+   * @override
+   */
+  async createRole(roleName) {
+    const role = await super.createRole(roleName);
+    await this.saveRolesToFile_();
+    return role;
+  }
+
+  /**
+   * Deletes an empty role and persists the role list.
+   * @param {string} roleName Role name.
+   * @return {Promise<void>}
+   * @override
+   */
+  async deleteRole(roleName) {
+    await super.deleteRole(roleName);
+    await this.saveRolesToFile_();
+  }
+
+  /**
+   * Changes a password and persists it, so the old password stops working
+   * after a restart too, along with the sessions it ended.
+   * @param {string} email User email address.
+   * @param {string} currentPassword Current password.
+   * @param {string} newPassword New password.
+   * @return {Promise<Object>} The user, without secrets.
+   * @override
+   */
+  async changePassword(email, currentPassword, newPassword) {
+    const user = await super.changePassword(email, currentPassword, newPassword);
+    await this.saveUsersToFile_();
+    await this.saveSessionsToFile_();
+    return user;
   }
 
   /**
@@ -455,26 +560,22 @@ class AuthFile extends AuthBase {
   }
 
   /**
-   * Validates a session token and persists any session cleanup to file.
+   * Validates a session token and persists any session removal to file.
    * @param {string} token Session token.
    * @return {Promise<Object>} Promise resolving to session object if valid.
    * @override
    */
   async validateSession(token) {
-    const session = this.sessions_.get(token);
-
-    if (!session) {
-      throw new Error('Invalid session');
+    try {
+      return await super.validateSession(token);
+    } catch (error) {
+      // The base class removes sessions that are expired, idle or revoked.
+      // Persist the removal so it survives a restart.
+      if (!this.sessions_.has(token)) {
+        await this.saveSessionsToFile_();
+      }
+      throw error;
     }
-
-    if (session.expiresAt < new Date()) {
-      this.sessions_.delete(token);
-      // Persist the session deletion to file
-      await this.saveSessionsToFile_();
-      throw new Error('Session expired');
-    }
-
-    return session;
   }
 
   /**

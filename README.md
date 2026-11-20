@@ -4,16 +4,23 @@ A powerful set of modular Node.js backend services built with the singleton patt
 
 ## Features
 
-- **Modular Architecture**: 14+ independent services with clear separation of concerns
+- **Modular Architecture**: 16 services with dashboards, plus AppService base classes for building your own, and the MCP endpoint, with clear separation of concerns
 - **Dependency Injection**: Built-in service dependency resolution and injection
 - **Multiple Providers**: Most services support multiple backends (e.g., Redis/Memcached for caching, MongoDB/File for data)
 - **Event-Driven**: Global event emitter for inter-service communication
-- **Authentication**: API key and OAuth support (Google, Passport)
+- **Authentication**: sessions, API keys, scoped personal access tokens and OAuth (Google, Azure, Passport), with a declared permission on every API route
 - **Workflow Orchestration**: Build complex workflows with step execution and queuing
-- **AI Integration**: Built-in support for Claude, OpenAI, and Ollama
-- **Monitoring & Analytics**: Built-in metrics collection and service dashboards
-- **REST API**: Automatic route generation and service discovery
-- **Scalable**: Support for multi-instance services and cloud providers (AWS, Azure, GCP)
+- **AI Integration**: one API (`complete`, `stream`, tools, `embed`) for Anthropic, OpenAI-compatible (OpenAI, Ollama, Gemini and other compatible servers), AWS Bedrock, Google Vertex AI and Azure
+- **Knowledge (RAG)**: cited answers over documents in any filing source, streamed, with feedback and evaluation
+- **Semantic Search**: vector and hybrid search with embeddings from the AI service
+- **MCP Server**: coding agents such as Claude Code can read logs, queues, data and workflow runs of a running app
+- **Developer CLI**: `npx nooblyjs create`, `add`, `doctor`, `routes`, `openapi` and a typed TypeScript client
+- **OpenAPI 3.1**: one merged, validated document for every mounted service, with Swagger UI at `/services/api/docs`
+- **Test Kit**: `nooblyjs-core/testing` gives app tests a registry, event matchers and authenticated requests
+- **Webhooks and Outbox**: signed outbound webhooks with retries and dead letters, sent from a transactional outbox
+- **Feature Flags**: targeting, percentage rollouts and variants, with REST endpoints and an OpenFeature provider
+- **Monitoring & Analytics**: Built-in metrics collection, service dashboards and OpenTelemetry traces and metrics (off unless `telemetry.enabled` is set)
+- **Scalable**: cloud providers (AWS, Azure, GCP) for caching, queueing and filing; sessions and shared state can live in Redis for multi-replica deployments (horizontal scaling is partly done)
 
 ## Services Overview
 
@@ -25,37 +32,40 @@ Core foundational services that power all other services. These services have no
 | Service | Purpose | Providers |
 |---------|---------|-----------|
 | **Logging** | Centralized logging system | Memory, File, API |
-| **Caching** | In-memory and distributed caching | Memory, Redis, Memcached, File, API |
-| **Queueing** | Message queuing and job processing | Memory, Redis, RabbitMQ, AWS SQS, Azure Queue, GCP Pub/Sub, API |
+| **Caching** | In-memory and distributed caching | Memory, Redis, Memcached, File, AWS, Azure, GCP, API |
+| **Queueing** | Message queuing and job processing; reliable jobs (retries, dead-letter queue) on Memory and Redis | Memory, Redis, RabbitMQ, ActiveMQ, AWS SQS, Azure Queue, GCP Pub/Sub, API |
 | **Fetching** | HTTP requests with caching | Node.js native, Axios |
-| **Notifying** | Notification delivery system | Memory, API |
+| **Settings** | Grouped, encrypted settings; feature flags | File, Encrypted |
+| **Notifying** | Notification delivery; signed webhooks with a transactional outbox | Default (in process), API |
 
 ### 💼 Business Services
 Services that provide extended business logic and data operations. These services build on infrastructure services to provide data management and processing capabilities.
 
 | Service | Purpose | Providers |
 |---------|---------|-----------|
-| **Data Service** | Data persistence and CRUD operations | Memory, File, MongoDB, DocumentDB, SimpleDB |
-| **Working** | Worker/activity execution engine | Memory-based task execution |
-| **Measuring** | Metrics collection and aggregation | Memory-based metrics storage |
+| **Data Service** | Data persistence and CRUD operations | Memory, File, MongoDB, DocumentDB, SimpleDB, API |
+| **Working** | Worker-thread activity execution | Default (worker threads), API |
+| **Measuring** | Metrics collection and aggregation | Default (in memory), API |
 
 ### ⚙️ Application Services
 Services that form user-facing application interfaces. These services leverage both infrastructure and business services to provide application-level functionality.
 
 | Service | Purpose | Providers |
 |---------|---------|-----------|
-| **Scheduling** | Task scheduling and cron jobs | Memory-based scheduler |
-| **Searching** | Full-text and indexed search | Memory-based with caching |
-| **Workflow** | Workflow and pipeline orchestration | Memory-based with step execution |
-| **Filing** | File operations and storage | Local filesystem, FTP, S3, Git, Sync |
+| **Scheduling** | Task scheduling, cron and intervals | In-process scheduler (one instance per process) |
+| **Searching** | Full-text, semantic and hybrid search | Memory, Vector, Semantic, Tokens, Files, Solr, API |
+| **Workflow** | Workflow and pipeline orchestration | Memory, API |
+| **Filing** | File operations and storage | Local filesystem, FTP, S3, Git, GCP, Sync, API |
+| **AppService** | Base classes for building your own application services (routes, services, data access, background work) | Base classes (no provider) |
 
 ### ⭐ Advanced Application Services
 Sophisticated services that leverage most underlying services and are almost fully stand-alone applications.
 
 | Service | Purpose | Providers |
 |---------|---------|-----------|
-| **Auth Service** | User authentication and authorization | File, Memory, Passport, Google OAuth |
-| **AI Service** | AI model integration and prompting | Claude (Anthropic), OpenAI, Ollama |
+| **Auth Service** | User authentication and authorization | File, Memory, Passport, Google OAuth, Azure AD, secure email |
+| **AI Service** | Model calls, streaming, tools and embeddings | Anthropic, OpenAI-compatible, Bedrock, Vertex AI, Azure, mock; openai-kv and TensorFlow |
+| **Knowledge** | Cited answers over a filing source (RAG) | Default (filing + vector search + AI service) |
 
 ## Quick Start
 
@@ -138,7 +148,8 @@ NOOBLYJS_API_KEYS=key1,key2,key3
 # Session secret for authentication
 SESSION_SECRET=your-secret-key
 
-# Node environment
+# Node environment. In production, strictAuth is on by default: every
+# /services/*/api route must declare a permission, or start-up fails.
 NODE_ENV=development
 ```
 
@@ -342,24 +353,94 @@ The Workflow Service includes a comprehensive **UI dashboard** for managing work
 
 Access the UI at: `http://localhost:3001/services/workflow` → **UI Tab**
 
-See [Workflow Service Documentation](./docs/usage/workflow-service-usage.md#web-ui-interface) for detailed usage guide.
+See the workflow section of the [Usage Guide](./.claude/steering/Usage%20Guide.md) for the manager API and UI options.
 
 ### AI Service
 
 ```javascript
-const ai = serviceRegistry.aiservice('claude', {
+const ai = serviceRegistry.aiservice('anthropic', {
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-3-5-sonnet-20241022'
+  model: 'claude-sonnet-5-5',
+  budgets: { maxCostPerDay: 5 }
 });
 
-// Send prompt
+// One reply
+const reply = await ai.complete({ messages: [{ role: 'user', content: 'What is the capital of France?' }], maxTokens: 200 });
+console.log(reply.text);
+
+// Streamed reply
+for await (const event of ai.stream({ messages: [{ role: 'user', content: 'Summarize this text: ' + text }] })) {
+  if (event.type === 'text_delta') process.stdout.write(event.text);
+}
+
+// prompt() keeps the older return shape ({ content, usage, model, provider })
 const response = await ai.prompt('What is the capital of France?');
 
-// Use with context
-const result = await ai.prompt('Summarize this text: ' + text, {
-  maxTokens: 500
+// Embeddings (shared AI module). Anthropic has no embeddings endpoint, so name one that does.
+const embedder = serviceRegistry.aiservice('anthropic', {
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  embeddings: { provider: 'openai', model: 'text-embedding-3-small', apiKey: process.env.OPENAI_API_KEY }
+});
+const { vectors } = await embedder.embed(['first text', 'second text']);
+```
+
+### Knowledge Service
+
+Answers questions from the documents in a filing folder, citing them by number. Markdown, text, HTML and PDF files are chunked by heading; only changed files are re-embedded.
+
+```javascript
+const filing = serviceRegistry.filing('local', { baseDir: './.application/files' });
+const ai = serviceRegistry.aiservice('anthropic', { apiKey: process.env.ANTHROPIC_API_KEY });
+const kb = serviceRegistry.knowledge('default', {
+  dependencies: { filing, aiservice: ai },
+  access: (path) => (path.startsWith('internal/') ? ['support'] : ['*']), // who may read which files
+  watch: true,    // re-sync when files change
+  restore: true   // reload the index after a restart
+});
+
+await kb.sync({ directory: 'docs' });
+const answer = await kb.ask('How do I rotate the settings secret?', { roles: ['support'] });
+// { text: '... [1]', citations: [{ n: 1, path: 'docs/settings.md', ... }], confidence: 'cited' }
+
+const report = await kb.evaluate(fs.readFileSync('eval.yaml', 'utf8'), { k: 5, answers: true });
+// { recallAtK, meanReciprocalRank, citationAccuracy, ... }
+```
+
+REST: `POST /services/knowledge/api/ask`, `POST /services/knowledge/api/ask/stream` (server-sent events), `POST /services/knowledge/api/sync`, `POST /services/knowledge/api/feedback`, `POST /services/knowledge/api/evaluate`. The dashboard is at `/services/knowledge/`.
+
+### MCP Server
+
+Turn on the Model Context Protocol endpoint, and a coding agent can inspect the running app with the caller's permissions:
+
+```javascript
+serviceRegistry.initialize(app, eventEmitter, {
+  mcp: { enabled: true, allowWrite: false } // write tools (queue purge, workflow run, ...) need allowWrite and an admin
 });
 ```
+
+Connect over HTTP (`POST /services/mcp`) with an API key or a personal access token, or through the stdio bridge:
+
+```bash
+claude mcp add nooblyjs -- npx nooblyjs mcp --url http://localhost:9000
+```
+
+Tools cover logs, queues, data, search, workflow runs, schedules and monitoring; the `diagnose-failed-run` prompt walks an agent through a failed workflow run. While the login gate is on, a personal access token must belong to an admin; give it `scopes` to keep it read-only.
+
+### Developer CLI
+
+```bash
+npx nooblyjs create my-app --template api      # or dashboard, ai
+npx nooblyjs add endpoint GET /hello           # route, test and app.js line
+npx nooblyjs add service audit-trail           # service class with destroy(), and its test
+npx nooblyjs doctor                            # environment, npm audit, Redis/MongoDB/S3 reachability
+npx nooblyjs openapi --client ts --out client.ts  # typed client for a running app
+```
+
+In a nooblyjs-core checkout, `npx nooblyjs add provider caching valkey` writes a provider class with a stub for each method the caching contract calls, and its contract test.
+
+### OpenAPI
+
+`GET /services/api/openapi.json` (or `.yaml`) returns one OpenAPI 3.1 document for every mounted service; `GET /services/api/docs` renders it. Every route is documented, and the test suite validates the document against the OpenAPI 3.1 schema and compiles the generated TypeScript client.
 
 ### Auth Service
 
@@ -368,21 +449,22 @@ const auth = serviceRegistry.authservice('file', {
   dataDir: './data/users'
 });
 
-// Register user
-await auth.register({
-  username: 'john',
-  password: 'secret',
-  email: 'john@example.com'
+// Create a user (role: 'admin', 'editor', 'user' or 'guest')
+await auth.createUser({
+  email: 'john@example.com',
+  fullName: 'John',
+  password: 'a-strong-passphrase',
+  role: 'user'
 });
 
-// Authenticate
-const token = await auth.authenticate({
-  username: 'john',
-  password: 'secret'
-});
+// Authenticate with email and password
+const user = await auth.authenticateUser('john@example.com', 'a-strong-passphrase');
 
-// Verify token
-const user = await auth.verifyToken(token);
+// Personal access token, limited to two permissions (it cannot exceed its owner's)
+const created = await auth.createApiToken('john@example.com', 'ci', {
+  scopes: ['caching:read', 'filing:read']
+});
+const owner = await auth.validateApiToken(created.token); // throws when invalid or expired
 ```
 
 ## Testing
@@ -399,9 +481,40 @@ npm test -- tests/unit/caching/cache.test.js
 # Run tests in watch mode
 npm test -- --watch
 
-# Run with coverage
-npm test -- --coverage
+# Run with coverage and the enforced threshold (as CI does)
+npm run coverage
+
+# Shared AI module, the AI Service v2 bridge and its contract (node:test)
+npm run test:ai-common
+
+# Provider contracts (Redis and MongoDB ones need RUN_REDIS_TESTS / RUN_MONGODB_TESTS and a URL)
+npm run test:contract
+
+# Playwright UI tests (desktop and mobile Chromium)
+npm run test:ui
 ```
+
+### Test Kit
+
+Apps built on NooblyJS can test against a real registry in a few lines:
+
+```javascript
+const { createTestRegistry, installMatchers } = require('nooblyjs-core/testing');
+installMatchers();
+
+let t;
+beforeEach(async () => { t = await createTestRegistry({ services: ['caching'] }); });
+afterEach(() => t.cleanup()); // shuts the registry down and removes its temp folder
+
+it('caches orders', async () => {
+  await t.request('post', '/services/caching/api/put/order-1').send({ total: 9 }).expect(200);
+  expect(t.events).toHaveEmitted('cache:put:default', { key: 'order-1' });
+});
+```
+
+### Provider Contracts
+
+`tests/contract/` holds one suite per service that every provider must pass: caching, queueing, filing, dataservice, searching and authservice. Memory, file, local and git providers run in `npm test`; Redis and MongoDB run in their own CI jobs.
 
 ### Writing Tests
 
@@ -439,27 +552,46 @@ See `tests/load/README.md` for detailed load testing information.
 
 Each service exposes REST endpoints at `/services/{serviceName}/api/`:
 
+The full, current list is the OpenAPI document at `/services/api/openapi.json` (rendered at `/services/api/docs`). A few examples:
+
 ### Logging Service
 - `GET /services/logging/api/logs` - Get logs
-- `POST /services/logging/api/logs` - Create log entry
-- `GET /services/logging/api/analytics` - Get log analytics
+- `POST /services/logging/api/info` (also `warn`, `error`) - Write a log entry
+- `GET /services/logging/api/stats` - Get log statistics
 
 ### Caching Service
 - `GET /services/caching/api/get/:key` - Get cached value
-- `POST /services/caching/api/set` - Set cached value
+- `POST /services/caching/api/put/:key` - Set cached value (the body is the value)
 - `DELETE /services/caching/api/delete/:key` - Delete cached value
 - `GET /services/caching/api/analytics` - Get cache analytics
 
 ### Data Service
-- `GET /services/dataservice/api/:collection` - List items
-- `POST /services/dataservice/api/:collection` - Create item
-- `GET /services/dataservice/api/:collection/:id` - Get item
-- `PUT /services/dataservice/api/:collection/:id` - Update item
-- `DELETE /services/dataservice/api/:collection/:id` - Delete item
+- `POST /services/dataservice/api/:container` - Create an object, returns its id
+- `GET /services/dataservice/api/:container/:uuid` - Get an object
+- `PUT /services/dataservice/api/:container/:uuid` - Replace an object
+- `DELETE /services/dataservice/api/:container/:uuid` - Delete an object
+- `GET /services/dataservice/api/find/:container?searchTerm=…` - Find objects by text
 
 ### Monitoring
 - `GET /services/api/monitoring/metrics` - System metrics
 - `GET /services/api/monitoring/snapshot` - Current snapshot
+
+### OpenTelemetry
+
+Tracing and metrics are off by default. Turn them on in the registry options:
+
+```javascript
+serviceRegistry.initialize(app, eventEmitter, {
+  telemetry: {
+    enabled: true,
+    serviceName: 'orders-api',        // defaults to OTEL_SERVICE_NAME, then 'nooblyjs-app'
+    exporter: 'otlp',                 // console (default when enabled), otlp, memory or none
+    sampleRatio: 0.1,                 // share of new traces recorded, 0 to 1 (default 1)
+  },
+});
+```
+
+Requests get a request id and W3C `traceparent` handling, and log lines carry the `request_id`. The `otlp` exporter needs the optional `@opentelemetry/exporter-trace-otlp-http` package, and `@opentelemetry/exporter-metrics-otlp-http` for metrics. Set the collector address with the standard `OTEL_EXPORTER_OTLP_ENDPOINT` variable. A worked example is in `examples/otel/`.
 
 ## Service Dashboards
 
@@ -470,7 +602,9 @@ Each service provides a web dashboard at `/services/{serviceName}/`:
 - `/services/dataservice/` - Data service dashboard
 - `/services/workflow/` - Workflow dashboard
 - `/services/queueing/` - Queue dashboard
-- And more...
+- `/services/knowledge/` - Ask questions, manage sources, check answer quality
+- `/services/searching/` - Search, including meaning (semantic) search
+- And one for every other service
 
 Access requires authentication unless configured otherwise.
 
@@ -507,23 +641,14 @@ eventEmitter.on('auth:login', (data) => {
 
 Services have a dependency hierarchy that's automatically resolved:
 
-```
-logging (foundation)
-├── caching
-├── queueing
-├── notifying
-├── appservice
-├── fetching
-│   ├── dataservice
-│   ├── working
-│   └── measuring
-│       ├── scheduling
-│       ├── searching
-│       ├── workflow
-│       └── filing
-│           ├── authservice
-│           └── aiservice
-```
+| Level | Service → dependencies |
+|---|---|
+| 0 | `logging` |
+| 1 | `caching`, `queueing`, `notifying`, `appservice`, `fetching`, `settings` → logging |
+| 2 | `dataservice` → logging, queueing · `working`, `measuring` → logging, queueing, caching |
+| 3 | `scheduling` → logging, working · `searching` → logging · `workflow` → logging, queueing, scheduling, measuring, working · `filing` → logging, queueing, dataservice |
+| 4 | `authservice` → logging, caching, dataservice · `aiservice` → logging, caching, workflow, queueing |
+| 5 | `knowledge` → logging, filing, searching, aiservice |
 
 The ServiceRegistry ensures dependencies are initialized in order and injects them automatically.
 
@@ -540,8 +665,8 @@ The ServiceRegistry ensures dependencies are initialized in order and injects th
 - Use SimpleDB for lightweight data needs
 
 ### Queue Configuration
-- Use Redis or RabbitMQ for reliable message delivery
-- Implement dead-letter queues for failed messages
+- Use Redis for reliable message delivery; RabbitMQ and ActiveMQ do not take reliable options yet
+- For retries and dead letters, enqueue with options (`queue.enqueue(name, data, { attempts, backoff, idempotencyKey })`) on the memory or Redis provider; other providers refuse these options with a 400
 - Monitor queue depth and processing times
 
 ### Workflow Optimization
@@ -600,12 +725,19 @@ try {
 │   ├── workflow/            # Workflow service
 │   ├── filing/              # Filing service
 │   ├── authservice/         # Auth service
-│   ├── aiservice/           # AI service
+│   ├── aiservice/           # AI service (common/ is the shared AI module)
+│   ├── knowledge/           # Knowledge service (RAG)
+│   ├── mcp/                 # MCP endpoint
+│   ├── cli/                 # nooblyjs command-line tool
+│   ├── testing/             # Test kit (nooblyjs-core/testing)
 │   ├── appservice/          # App base service
 │   └── [other services]/
+├── bin/nooblyjs.js          # CLI entry
 ├── tests/
 │   ├── unit/                # Unit tests
-│   ├── api/                 # API integration tests
+│   ├── contract/            # Provider contract suites
+│   ├── ui/                  # Playwright UI tests
+│   ├── api/                 # .http request examples
 │   └── load/                # Load tests
 ├── public/                  # Static assets
 ├── index.js                 # ServiceRegistry singleton
@@ -618,11 +750,14 @@ try {
 1. Create service directory: `src/newservice/`
 2. Create factory: `src/newservice/index.js`
 3. Create providers: `src/newservice/providers/`
-4. Create routes: `src/newservice/routes/index.js`
-5. Create views: `src/newservice/views/`
-6. Register in ServiceRegistry: `index.js` dependencies
-7. Add tests: `tests/unit/newservice/`
-8. Update documentation
+4. Create routes: `src/newservice/routes/index.js`, with a Swagger document in `routes/swagger/docs.json` (an undocumented route fails the suite)
+5. Declare each route's permission in `src/authservice/config/routePermissions.js`
+6. Create views: `src/newservice/views/` (scripts in files, clicks through `data-onclick`: the CSP has no `unsafe-inline` for scripts)
+7. Register in ServiceRegistry: `index.js` dependencies
+8. Add tests: `tests/unit/newservice/`
+9. Update documentation
+
+To add a provider to an existing service, run `npx nooblyjs add provider <service> <name>` and make its contract test pass.
 
 ### Code Style
 
@@ -646,9 +781,58 @@ const options = {
   excludePaths: ['/public', '/health']
 };
 
-// Requests must include header:
-// Authorization: Bearer <api-key>
+// Send the key in a header, one of:
+//   x-api-key: <api-key>
+//   Authorization: Bearer <api-key>
+//   Authorization: ApiKey <api-key>
+// Keys in the query string are not accepted: they leak into logs and Referer headers.
 ```
+
+Without a key (and with `requireApiKey` on), a request to a declared, non-public route is
+refused with `401 MISSING_API_KEY`, even if the service behind the route has no key check of
+its own. Paths in `excludePaths` (by default `/services/*/status`, `/services/` and
+`/services/*/views/*`) stay open.
+
+### Cross-Site Requests
+
+State-changing requests that authenticate only with the session cookie are refused with
+`403 CSRF_ORIGIN_MISMATCH` when their `Origin` (or `Referer`) names another site. Requests
+that send an `Authorization` header or an `x-api-key` are not affected. Trusted origins come
+from `security.csrf.allowedOrigins` and `CORS_ORIGINS`. Set `security.csrf.enabled: false` to
+turn the check off.
+
+### Dashboard Sign-in
+
+The dashboards authenticate with an httpOnly, SameSite=Strict session cookie set at sign-in. Nothing that grants access is kept in the browser: the page keeps only the display name. Scripts and other services use API keys or personal access tokens in the `Authorization` header.
+
+### Route Permissions
+
+Every `/services/*/api` route declares the permission it needs in
+`src/authservice/config/routePermissions.js`, for example
+`'POST /services/filing/api/upload/*': 'filing:write'`. Permissions are
+`service:action`. The gate matches a request to its most specific declaration.
+
+| Role | Grants |
+|---|---|
+| `admin` | everything (`*`) |
+| `editor` | `filing:*`, `searching:*`, `dataservice:*`, `caching:*`, `queueing:*`, `knowledge:*`, `logging:read`, `measuring:read`, `profile:*`, `flags:evaluate` |
+| `user` | `filing:read`, `searching:read`, `profile:*`, `flags:evaluate` |
+
+Roles are set in `src/authservice/modules/permissions.js` (`ROLE_PERMISSIONS`).
+
+In strictAuth mode, the default in production, a route with no declaration is refused
+for everyone except admins, and start-up fails. Set `security.strictAuth` to override:
+
+```javascript
+serviceRegistry.initialize(app, eventEmitter, {
+  security: { strictAuth: true }
+});
+```
+
+API keys and tokens carry scopes. A plain string key is a full-access key. An object
+key `{ key, name, scopes: ['queueing:*'] }` reaches only those permissions. A personal
+access token may be narrowed the same way when it is created (see the Auth Service
+section).
 
 ### OAuth Integration
 
@@ -715,6 +899,7 @@ SESSION_SECRET=your-session-secret
 - [ ] Set `NODE_ENV=production`
 - [ ] Use strong `SESSION_SECRET`
 - [ ] Configure API keys
+- [ ] Confirm start-up passes the route-declaration check (strictAuth is on in production)
 - [ ] Use external caching (Redis) instead of in-memory
 - [ ] Use external database (MongoDB) instead of file storage
 - [ ] Enable HTTPS
@@ -744,6 +929,8 @@ For issues, questions, or contributions, please contact the NooblyJS Team or ope
 
 ## Version
 
-Current version: 1.0.10
+Current version: 2.0.0
 
-Node.js requirement: >= 12.11.0
+Node.js requirement: >= 22 (CI tests Node 22 and 24)
+
+Release notes and migration notes are in [CHANGELOG.md](CHANGELOG.md).

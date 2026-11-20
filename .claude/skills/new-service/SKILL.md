@@ -1,4 +1,5 @@
 ---
+type: Skill
 name: new-service
 description: Scaffold a new nooblyjs-core service — factory, default and API providers, analytics module, routes with Swagger, dashboard view, registry wiring, navigation entry and tests. Use when the user wants a new top-level service under src/.
 argument-hint: "<serviceName> [dependencies]"
@@ -38,6 +39,7 @@ src/{name}/
 
 ### Routes (`routes/index.js`)
 - Guard with `if (options['express-app'] && provider)`.
+- Declare every route's permission in `src/authservice/config/routePermissions.js` (`'METHOD /services/{name}/api/...': '{name}:read'` or `:write`). Without it, start-up fails in production (strictAuth).
 - Mount auth once: `app.use('/services/{name}/api', options.authMiddleware || ((req, res, next) => next()))`.
 - Always provide: `GET /api/status` (unauthenticated by the services guard because it ends in `/status`), `GET/POST /api/settings`, `GET /api/instances`, `GET /api/swagger/docs.json`, and analytics endpoints.
 - For each operation register both `/services/{name}/api/...` and `/services/{name}/api/:instanceName/...`, resolving the instance with `getServiceInstance('{name}', instanceName, provider, options, providerType)` from `src/appservice/utils/routeUtils`.
